@@ -248,8 +248,8 @@ src/routes/
 ### Typography
 
 - **Body**: DM Sans (`@fontsource-variable/dm-sans`)
-- **Headings**: Crimson Pro (Archive feel)
-- **Code**: JetBrains Mono (Technical precision)
+- **Headings**: Aleo (Archive feel)
+- **Code**: iA Writer Mono (Technical precision)
 
 ### Visual Textures
 

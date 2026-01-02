@@ -63,9 +63,9 @@ read_when: [UI development, styling, component design, theme customization, colo
 
 ### Font Stack
 
-- **Display / Headings:** `'Crimson Pro'`, serif (Variable weight 200-900)
+- **Display / Headings:** `'Aleo'`, serif (Variable weight 200-900)
 - **Body:** `'DM Sans Variable'`, sans-serif (Standard weight 400, Medium 500)
-- **Mono / Code:** `'JetBrains Mono'`, monospace
+- **Mono / Code:** `'iA Writer Mono'`, monospace
 
 ### Type Scale
 
