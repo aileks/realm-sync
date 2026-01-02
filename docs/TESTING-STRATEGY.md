@@ -1,3 +1,8 @@
+---
+summary: This document outlines the testing strategy for the realm-sync project, prioritizing unit and integration tests to achieve 80% code coverage.
+read_when: [testing, integration, unit, end-to-end, regression]
+---
+
 # Testing Strategy
 
 **Status:** Ready for Implementation  
