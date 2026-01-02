@@ -1,21 +1,21 @@
 ---
-summary: Implementation details for the continuity checking system (Conflict detection, Vesper alerts).
-read_when: [continuity checking, conflict resolution, LLM alert generation, Vesper messaging]
+summary: Implementation details for the continuity checking system (Conflict detection, Vellum alerts).
+read_when: [continuity checking, conflict resolution, LLM alert generation, Vellum messaging]
 ---
 
 # Phase 4: Continuity Checking - Realm Sync
 
 ## Overview
+
 Phase 4 focuses on the continuity checking system, the "Archivist's Eye" that detects inconsistencies and conflicts within the canon. This system ensures that new documents remain faithful to established facts, flagging potential errors for user resolution.
 
-**Goal:** Build the system that checks new documents against existing canon and flags inconsistencies.
-**Duration:** 1-2 weeks
-**Dependencies:** Phase 3 complete (canon browser working)
+**Goal:** Build the system that checks new documents against existing canon and flags inconsistencies. **Duration:** 1-2 weeks **Dependencies:** Phase 3 complete (canon browser working)
 
 ---
 
 ## 1. Objectives
-- Design continuity check prompts with the **Vesper** persona.
+
+- Design continuity check prompts with the **Vellum** persona.
 - Build the check pipeline (gather canon → LLM analysis → alerts).
 - Implement alert types: contradictions, timeline issues, and ambiguities.
 - Create an Alerts Dashboard UI for project-wide monitoring.
@@ -27,16 +27,19 @@ Phase 4 focuses on the continuity checking system, the "Archivist's Eye" that de
 ## 2. Alert Types
 
 ### Contradiction
+
 - **Definition:** Two facts about the same entity that directly conflict.
 - **Example:** "Marcus has blue eyes" (Ch.1) vs "Marcus's brown eyes narrowed" (Ch.5).
 - **Severity:** Error
 
 ### Timeline Issue
+
 - **Definition:** Events occurring in an impossible order or with conflicting timestamps.
 - **Example:** A character is reported dead in Chapter 3 but appears as an active participant in Chapter 5.
 - **Severity:** Error or Warning
 
 ### Ambiguity
+
 - **Definition:** Unclear references, alias collisions, or potential identity confusion.
 - **Example:** Two different characters both being referred to as "the Captain" in the same scene without clarification.
 - **Severity:** Warning
@@ -53,17 +56,17 @@ The pipeline follows a structured flow triggered by document updates:
    - Fetch all established facts for those entities.
    - Retrieve surrounding timeline context (events immediately before/after).
 3. **Build Context Window:** Construct a structured prompt including the established canon and the new text.
-4. **Call LLM:** Invoke the check action using the Vesper persona.
+4. **Call LLM:** Invoke the check action using the Vellum persona.
 5. **Parse Response:** Receive structured JSON containing identified alerts.
 6. **Create Alert Records:** Save alerts to the database, linked to the document and relevant entities/facts.
 7. **Notify User:** Display alert notifications in the UI.
 
 ---
 
-## 4. Vesper Check Prompt
+## 4. Vellum Check Prompt
 
 ```text
-You are Vesper, the Archivist Moth. You are reviewing new text against established canon to identify inconsistencies.
+You are Vellum, the Archivist Moth. You are reviewing new text against established canon to identify inconsistencies.
 
 ESTABLISHED CANON:
 {canonContext}
@@ -93,49 +96,49 @@ OUTPUT: Return structured JSON matching the provided schema.
 
 ```typescript
 const CHECK_SCHEMA = {
-  type: "object",
+  type: 'object',
   properties: {
     alerts: {
-      type: "array",
+      type: 'array',
       items: {
-        type: "object",
+        type: 'object',
         properties: {
-          type: { enum: ["contradiction", "timeline", "ambiguity"] },
-          severity: { enum: ["error", "warning"] },
-          title: { type: "string" },
-          description: { type: "string" },
+          type: { enum: ['contradiction', 'timeline', 'ambiguity'] },
+          severity: { enum: ['error', 'warning'] },
+          title: { type: 'string' },
+          description: { type: 'string' },
           evidence: {
-            type: "array",
+            type: 'array',
             items: {
-              type: "object",
+              type: 'object',
               properties: {
-                source: { enum: ["canon", "new_document"] },
-                quote: { type: "string" },
-                entityName: { type: "string" },
+                source: { enum: ['canon', 'new_document'] },
+                quote: { type: 'string' },
+                entityName: { type: 'string' },
               },
-              required: ["source", "quote"],
+              required: ['source', 'quote'],
             },
           },
-          suggestedFix: { type: "string" },
-          affectedEntities: { type: "array", items: { type: "string" } },
+          suggestedFix: { type: 'string' },
+          affectedEntities: { type: 'array', items: { type: 'string' } },
         },
-        required: ["type", "severity", "title", "description", "evidence"],
+        required: ['type', 'severity', 'title', 'description', 'evidence'],
         additionalProperties: false,
       },
     },
     summary: {
-      type: "object",
+      type: 'object',
       properties: {
-        totalIssues: { type: "number" },
-        errors: { type: "number" },
-        warnings: { type: "number" },
-        checkedEntities: { type: "array", items: { type: "string" } },
+        totalIssues: { type: 'number' },
+        errors: { type: 'number' },
+        warnings: { type: 'number' },
+        checkedEntities: { type: 'array', items: { type: 'string' } },
       },
     },
   },
-  required: ["alerts", "summary"],
+  required: ['alerts', 'summary'],
   additionalProperties: false,
-}
+};
 ```
 
 ---
@@ -145,12 +148,14 @@ const CHECK_SCHEMA = {
 To maximize LLM efficiency and accuracy, the context is built dynamically:
 
 **Strategy:**
+
 1. **Entity Identification:** Identify entities in the new document (via NLP or regex).
 2. **Fact Retrieval:** Query the `facts` table for all entities identified.
 3. **Timeline Context:** Fetch events and temporal facts that overlap with the document's chronological scope.
 4. **Token Management:** Limit the context to ~4,000 tokens to ensure the new document fits within the window.
 
 **Context Format:**
+
 ```text
 ## Entity: Marcus Blackwood
 Type: Character
@@ -171,10 +176,12 @@ Facts:
 ## 7. Convex Functions
 
 ### Continuity Checks (`convex/checks.ts`)
+
 - `runCheck` (internalAction): Orchestrates the pipeline (Gather context → LLM call → Schedule creation).
 - `createAlerts` (internalMutation): Batch inserts alert records into the database.
 
 ### Alerts Management (`convex/alerts.ts`)
+
 - `listByProject`: Fetch all alerts for a project (with filtering/sorting).
 - `listByDocument`: Get alerts specific to a single document.
 - `resolve`: Mutation to mark an alert as resolved or dismissed, with optional notes.
@@ -186,11 +193,13 @@ Facts:
 **Route:** `src/routes/projects/$projectId/alerts/index.tsx`
 
 ### Features
+
 - **Global Filters:** Filter by Status (Open, Resolved, Dismissed), Type, and Severity.
 - **Sorting:** Sort by Newest, Oldest, or Severity.
 - **Bulk Actions:** "Resolve All" or "Dismiss All" capabilities for efficient management.
 
 ### Components
+
 - **AlertsDashboard:** Main container and state manager.
 - **AlertFilters:** Side or top bar for refining the alert list.
 - **AlertList:** Scrollable list of `AlertCard` components.
@@ -211,9 +220,9 @@ Facts:
 
 ---
 
-## 10. Vesper Messaging (UI Feedback)
+## 10. Vellum Messaging (UI Feedback)
 
-Vesper provides personality-driven feedback throughout the process:
+Vellum provides personality-driven feedback throughout the process:
 
 - **Alert Found:** "I noticed something in Chapter 5. Marcus's eye color seems to have changed since Chapter 1. Let me show you the evidence."
 - **No Issues:** "I've reviewed the new text against your canon. Everything checks out — no inconsistencies found."

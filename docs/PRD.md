@@ -10,7 +10,7 @@ read_when: [project initialization, product strategy, technical architecture]
 **Realm Sync** is a canon-tracking web app for writers and Game Masters (GMs). It transforms narrative text into a structured, searchable knowledge base while proactively identifying continuity errors. By acting as an "archival engine," it ensures that character attributes, timelines, and world-building facts remain consistent across sprawling narratives.
 
 - **Mascot**: Archivist Moth
-- **AI Agent**: Vesper
+- **AI Agent**: Vellum
 - **Voice**: Calm, meticulous, evidence-oriented librarian. ("I found receipts.")
 
 ---
@@ -65,7 +65,7 @@ Realm Sync provides a "canon engine" that automates the archival and verificatio
 - **Document Ingestion**: Paste raw text or upload files (`.txt`, `.md`).
 - **In-App Editor**: Basic editor for drafting or tweaking documents.
 
-### 6.2 Canon Extraction (Vesper Pipeline)
+### 6.2 Canon Extraction (Vellum Pipeline)
 
 - **Entity Extraction**: Identify Characters, Locations, Items, Concepts, and Events.
 - **Fact Extraction**: Extract triples with confidence scores and evidence snippets.
@@ -131,7 +131,7 @@ erDiagram
 
 ---
 
-## 9. LLM Strategy (Vesper)
+## 9. LLM Strategy (Vellum)
 
 - **Model**: `tngtech/deepseek-r1t2-chimera:free` via OpenRouter.
 - **Structured Outputs**: Mandatory JSON Schema with `strict: true`.
@@ -144,20 +144,20 @@ erDiagram
 ## 10. User Flows
 
 1. **Creation**: User creates a Project → Uploads first Document.
-2. **Extraction**: Vesper processes text → Lists proposed Facts/Entities.
+2. **Extraction**: Vellum processes text → Lists proposed Facts/Entities.
 3. **Approval**: User confirms/edits proposed canon → Canon updated.
-4. **Verification**: User uploads second Document → Vesper flags a contradiction with the first Document.
+4. **Verification**: User uploads second Document → Vellum flags a contradiction with the first Document.
 5. **Resolution**: User edits text or updates canon based on the Alert.
 
 ---
 
-## 11. Vesper (Mascot) Integration
+## 11. Vellum (Mascot) Integration
 
-Vesper is not just a tool but an "Archivist Moth" that lives in the UI:
+Vellum is not just a tool but an "Archivist Moth" that lives in the UI:
 
 - **Notifications**: "I have found some discrepancies in the latest chapter."
-- **Empty States**: Vesper waiting in a library nook for new texts.
-- **Confidence**: Vesper displays confidence scores through subtle visual cues (e.g., wing flutter intensity).
+- **Empty States**: Vellum waiting in a library nook for new texts.
+- **Confidence**: Vellum displays confidence scores through subtle visual cues (e.g., wing flutter intensity).
 
 ---
 

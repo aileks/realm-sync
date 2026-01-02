@@ -154,7 +154,7 @@ Atomic canon statements stored in Subject-Predicate-Object form.
 
 ### `alerts`
 
-Continuity contradictions or ambiguities detected by Vesper.
+Continuity contradictions or ambiguities detected by Vellum.
 
 | Field | Type | Description |
 | :-- | :-- | :-- |

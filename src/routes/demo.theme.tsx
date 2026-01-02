@@ -81,7 +81,7 @@ function ThemeDemo() {
         <section className="grid grid-cols-1 items-center gap-8 md:grid-cols-3">
           <div className="space-y-4 md:col-span-2">
             <h2 className="border-primary border-l-4 pl-4 font-serif text-2xl font-semibold">
-              Vesper, The Archivist
+              Vellum, The Archivist
             </h2>
             <p className="text-muted-foreground max-w-prose text-lg leading-relaxed">
               Every story leaves traces in the dark. I collect them. Names whispered between pages,
@@ -123,7 +123,7 @@ function ThemeDemo() {
               </p>
               <div className="bg-muted border-border rounded-md border p-4">
                 <code className="text-primary block font-mono text-sm">
-                  function summonVesper() {'{'}
+                  function summonVellum() {'{'}
                   <br />
                   &nbsp;&nbsp;return "🦋 Ready to assist";
                   <br />

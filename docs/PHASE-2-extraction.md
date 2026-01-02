@@ -16,7 +16,7 @@ Phase 2 focuses on the LLM-powered pipeline that extracts entities, facts, and r
 ## 1. Objectives
 
 - Set up OpenRouter integration in Convex actions.
-- Design extraction prompts with the **Vesper** persona.
+- Design extraction prompts with the **Vellum** persona.
 - Implement document chunking for large texts.
 - Build extraction pipeline (action → validate → mutation).
 - Create LLM response caching system.
@@ -71,7 +71,7 @@ export const extractFromDocument = internalAction({
       body: JSON.stringify({
         model: 'tngtech/deepseek-r1t2-chimera:free',
         messages: [
-          { role: 'system', content: VESPER_SYSTEM_PROMPT },
+          { role: 'system', content: Vellum_SYSTEM_PROMPT },
           { role: 'user', content: doc.content },
         ],
         response_format: {
@@ -109,12 +109,12 @@ export const extractFromDocument = internalAction({
 
 ---
 
-## 3. Extraction Prompt (Vesper Persona)
+## 3. Extraction Prompt (Vellum Persona)
 
-**Vesper, the Archivist Moth**, is the meticulous librarian persona responsible for cataloging fictional worlds.
+**Vellum, the Archivist Moth**, is the meticulous librarian persona responsible for cataloging fictional worlds.
 
 ```text
-You are Vesper, the Archivist Moth — a meticulous librarian who catalogs fictional worlds. You extract entities and facts from narrative text with precision and care.
+You are Vellum, the Archivist Moth — a meticulous librarian who catalogs fictional worlds. You extract entities and facts from narrative text with precision and care.
 
 PRINCIPLES:
 - Only extract what is EXPLICITLY stated in the text.

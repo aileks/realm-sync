@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-**Realm Sync** is a canon-tracking web application for writers and Game Masters (GMs). It transforms narrative text into a structured, searchable knowledge base while proactively identifying continuity errors. The application uses a "Dark Archival" aesthetic with **Vesper, the Archivist Moth** as the AI mascot and continuity checker.
+**Realm Sync** is a canon-tracking web application for writers and Game Masters (GMs). It transforms narrative text into a structured, searchable knowledge base while proactively identifying continuity errors. The application uses a "Dark Archival" aesthetic with **Vellum, the Archivist Moth** as the AI mascot and continuity checker.
 
 ## Product Vision
 
@@ -39,7 +39,7 @@ A "canon engine" that:
 | **Framework** | TanStack Start (React 19) | SSR via Nitro |
 | **Runtime** | pnpm | Exclusive package manager |
 | **Backend** | Convex | DB, Functions, Auth, Storage |
-| **LLM** | OpenRouter | `tngtech/deepseek-r1t2-chimera:free` (via Vesper) |
+| **LLM** | OpenRouter | `tngtech/deepseek-r1t2-chimera:free` (via Vellum) |
 | **Styling** | Tailwind v4 | CSS-first, OKLCH colors |
 | **UI Components** | Shadcn / Base UI | 13 primitives available |
 | **Monitoring** | Sentry | Error tracking + instrumentation |
@@ -133,7 +133,7 @@ Atomic canon statements (Subject-Predicate-Object).
 
 #### `alerts`
 
-Continuity contradictions detected by Vesper.
+Continuity contradictions detected by Vellum.
 
 - `projectId`: id("projects")
 - `documentId`: id("documents")
@@ -212,7 +212,7 @@ src/routes/
 **Deliverables**:
 
 - OpenRouter integration in Convex actions
-- Vesper extraction prompt (personality + structured output)
+- Vellum extraction prompt (personality + structured output)
 - Document chunking strategy (3,000 tokens, 200 token overlap)
 - Extraction pipeline (action → validate → mutation)
 - LLM response caching (7-day TTL)
@@ -296,7 +296,7 @@ src/routes/projects/$projectId/
 
 **Deliverables**:
 
-- Continuity check prompts (Vesper persona)
+- Continuity check prompts (Vellum persona)
 - Check pipeline (gather canon → LLM analysis → alerts)
 - Alert types: contradictions, timeline issues, ambiguities
 - Alerts Dashboard UI
@@ -338,11 +338,11 @@ src/routes/projects/$projectId/
 
 ### Phase 5: Polish
 
-**Goal**: Refine UX, integrate Vesper mascot, add quality-of-life features. **Duration**: Ongoing
+**Goal**: Refine UX, integrate Vellum mascot, add quality-of-life features. **Duration**: Ongoing
 
 **Deliverables**:
 
-- Full Vesper mascot integration (visual + voice)
+- Full Vellum mascot integration (visual + voice)
 - Meaningful animations (staggered reveals, micro-interactions)
 - Guided onboarding flow
 - Keyboard shortcuts (`Cmd+K` for search, `Cmd+S` to save, etc.)
@@ -433,10 +433,10 @@ src/routes/projects/$projectId/
 - ❌ Auth implementation (Convex Auth: Google OAuth + Email/Password)
 - ❌ Real schema (`users`, `projects`, `documents`, `entities`, `facts`, `alerts`, `llmCache`)
 - ❌ Project/Document CRUD functions
-- ❌ LLM integration (OpenRouter, Vesper extraction prompts)
+- ❌ LLM integration (OpenRouter, Vellum extraction prompts)
 - ❌ Canon Browser routes and components
 - ❌ Continuity checking system
-- ❌ Vesper mascot integration
+- ❌ Vellum mascot integration
 
 ---
 

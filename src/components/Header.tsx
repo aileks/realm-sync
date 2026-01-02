@@ -87,7 +87,7 @@ export default function Header() {
         </nav>
 
         <div className="border-border bg-card/50 border-t p-4">
-          <p className="text-muted-foreground font-mono text-xs">🦋 Vesper guides the archive</p>
+          <p className="text-muted-foreground font-mono text-xs">🦋 Vellum guides the archive</p>
         </div>
       </aside>
     </>

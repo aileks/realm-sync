@@ -10,7 +10,7 @@ read_when: [UI development, styling, component design, theme customization, colo
 **Theme:** Dark Archival, Cozy Nook
 
 - **Vibe:** Warm, inviting darkness, candlelit study, aged parchment, dusty archives.
-- **Mascot:** **Vesper, the Archivist Moth**. A stylized silhouette in amber/gold, appearing as a guide and notifier throughout the interface.
+- **Mascot:** **Vellum, the Archivist Moth**. A stylized silhouette in amber/gold, appearing as a guide and notifier throughout the interface.
 - **Core Principle:** "Warmth in the shadows." Avoid sterile, cold grays. Use rich, deep oklch(60) hues.
 
 ---
@@ -197,14 +197,14 @@ read_when: [UI development, styling, component design, theme customization, colo
 - **Default Duration:** `200ms`
 - **Easing:** `ease-out` (cubic-bezier(0, 0, 0.2, 1))
 - **Stagger:** `50ms` delay between list items.
-- **Vesper (Mascot):** Floating animation (sine wave path), soft glow pulse.
+- **Vellum (Mascot):** Floating animation (sine wave path), soft glow pulse.
 
 ---
 
 ## 9. Accessibility
 
 - **Contrast:** Maintain WCAG AAA color contrast (7:1) for all body text against the background.
-- **Motion:** Full support for `prefers-reduced-motion` media queries. Disable non-essential Vesper animations when active.
+- **Motion:** Full support for `prefers-reduced-motion` media queries. Disable non-essential Vellum animations when active.
 - **Interactions:** Keyboard navigation requirements for all interactive elements (focus rings must be `oklch(0.72 0.15 75)`).
 - **Semantics:** Proper ARIA labels for entity types and status indicators.
 
