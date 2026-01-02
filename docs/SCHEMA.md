@@ -184,15 +184,15 @@ Continuity contradictions or ambiguities detected by Vesper.
 
 Cache for LLM responses to optimize costs and performance.
 
-| Field           | Type                     | Description                                         |
-| :-------------- | :----------------------- | :-------------------------------------------------- |
-| `inputHash`     | `v.string()`             | SHA-256 hash of input text and prompt version.      |
-| `promptVersion` | `v.string()`             | Version identifier for the extraction prompt.       |
-| `modelId`       | `v.string()`             | Identifier for the LLM used (e.g., `gpt-oss-120b`). |
-| `response`      | `v.string()`             | Stringified JSON of the LLM response.               |
-| `tokenCount`    | `v.optional(v.number())` | Estimated tokens used.                              |
-| `createdAt`     | `v.number()`             | Cache entry timestamp.                              |
-| `expiresAt`     | `v.number()`             | TTL expiration timestamp.                           |
+| Field           | Type                     | Description                                    |
+| :-------------- | :----------------------- | :--------------------------------------------- |
+| `inputHash`     | `v.string()`             | SHA-256 hash of input text and prompt version. |
+| `promptVersion` | `v.string()`             | Version identifier for the extraction prompt.  |
+| `modelId`       | `v.string()`             | Identifier for the LLM used.                   |
+| `response`      | `v.string()`             | Stringified JSON of the LLM response.          |
+| `tokenCount`    | `v.optional(v.number())` | Estimated tokens used.                         |
+| `createdAt`     | `v.number()`             | Cache entry timestamp.                         |
+| `expiresAt`     | `v.number()`             | TTL expiration timestamp.                      |
 
 **Indexes:**
 

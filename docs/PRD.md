@@ -94,15 +94,15 @@ Realm Sync provides a "canon engine" that automates the archival and verificatio
 
 ## 7. Technical Stack
 
-| Component         | Technology                               |
-| :---------------- | :--------------------------------------- |
-| **Framework**     | TanStack Start (React 19, SSR via Nitro) |
-| **Runtime**       | pnpm                                     |
-| **Backend**       | Convex (DB, Functions, Auth, Storage)    |
-| **LLM**           | OpenRouter (`gpt-oss-120b:free`)         |
-| **Styling**       | Tailwind v4 (CSS-first, OKLCH colors)    |
-| **UI Components** | Shadcn / Base UI                         |
-| **Monitoring**    | Sentry                                   |
+| Component         | Technology                                        |
+| :---------------- | :------------------------------------------------ |
+| **Framework**     | TanStack Start (React 19, SSR via Nitro)          |
+| **Runtime**       | pnpm                                              |
+| **Backend**       | Convex (DB, Functions, Auth, Storage)             |
+| **LLM**           | OpenRouter (`tngtech/deepseek-r1t2-chimera:free`) |
+| **Styling**       | Tailwind v4 (CSS-first, OKLCH colors)             |
+| **UI Components** | Shadcn / Base UI                                  |
+| **Monitoring**    | Sentry                                            |
 
 ---
 
@@ -133,7 +133,7 @@ erDiagram
 
 ## 9. LLM Strategy (Vesper)
 
-- **Model**: `gpt-oss-120b:free` via OpenRouter.
+- **Model**: `tngtech/deepseek-r1t2-chimera:free` via OpenRouter.
 - **Structured Outputs**: Mandatory JSON Schema with `strict: true`.
 - **Response Healing**: Auto-correction of malformed LLM responses.
 - **Caching**: 7-day TTL based on `inputHash` + `promptVersion`.

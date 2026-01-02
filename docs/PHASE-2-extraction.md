@@ -6,15 +6,15 @@ read_when: [LLM integration, data extraction, document processing]
 # Phase 2: Canon Extraction Pipeline - Realm Sync
 
 ## Overview
+
 Phase 2 focuses on the LLM-powered pipeline that extracts entities, facts, and relationships from documents. This pipeline transforms raw narrative text into structured data for the canon tracking system.
 
-**Goal:** Build the LLM-powered pipeline that extracts entities and facts from documents.
-**Duration:** 1-2 weeks
-**Dependencies:** Phase 1 complete (schema, auth, document CRUD)
+**Goal:** Build the LLM-powered pipeline that extracts entities and facts from documents. **Duration:** 1-2 weeks **Dependencies:** Phase 1 complete (schema, auth, document CRUD)
 
 ---
 
 ## 1. Objectives
+
 - Set up OpenRouter integration in Convex actions.
 - Design extraction prompts with the **Vesper** persona.
 - Implement document chunking for large texts.
@@ -28,55 +28,56 @@ Phase 2 focuses on the LLM-powered pipeline that extracts entities, facts, and r
 ## 2. OpenRouter Integration
 
 ### Convex Action Pattern
+
 Convex actions are used for external API calls like OpenRouter.
 
 ```typescript
 // convex/llm/extract.ts
-import { v } from "convex/values";
-import { internalAction, internalMutation } from "../_generated/server";
-import { api, internal } from "../_generated/api";
+import { v } from 'convex/values';
+import { internalAction, internalMutation } from '../_generated/server';
+import { api, internal } from '../_generated/api';
 
 export const extractFromDocument = internalAction({
-  args: { documentId: v.id("documents") },
+  args: { documentId: v.id('documents') },
   handler: async (ctx, { documentId }) => {
     // 1. Get document content
     const doc = await ctx.runQuery(api.documents.get, { id: documentId });
-    if (!doc || !doc.content) throw new Error("Document not found or empty");
+    if (!doc || !doc.content) throw new Error('Document not found or empty');
 
     // 2. Check cache by hash
     const contentHash = await computeHash(doc.content);
-    const cached = await ctx.runQuery(internal.llm.cache.checkCache, { 
+    const cached = await ctx.runQuery(internal.llm.cache.checkCache, {
       hash: contentHash,
-      promptVersion: "v1" 
+      promptVersion: 'v1',
     });
-    
+
     if (cached) {
       await ctx.runMutation(internal.llm.extract.processExtractionResult, {
         documentId,
-        result: cached.response
+        result: cached.response,
       });
       return;
     }
 
     // 3. Call OpenRouter with structured output
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://realmsync.app",
-        "X-Title": "Realm Sync",
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://realmsync.app',
+        'X-Title': 'Realm Sync',
       },
       body: JSON.stringify({
-        model: "gpt-oss-120b:free",
+        model: 'tngtech/deepseek-r1t2-chimera:free',
         messages: [
-          { role: "system", content: VESPER_SYSTEM_PROMPT },
-          { role: "user", content: doc.content },
+          { role: 'system', content: VESPER_SYSTEM_PROMPT },
+          { role: 'user', content: doc.content },
         ],
         response_format: {
-          type: "json_schema",
+          type: 'json_schema',
           json_schema: {
-            name: "canon_extraction",
+            name: 'canon_extraction',
             strict: true,
             schema: EXTRACTION_SCHEMA,
           },
@@ -92,15 +93,15 @@ export const extractFromDocument = internalAction({
     // 5. Cache result
     await ctx.runMutation(internal.llm.cache.saveToCache, {
       hash: contentHash,
-      promptVersion: "v1",
-      modelId: "gpt-oss-120b:free",
+      promptVersion: 'v1',
+      modelId: 'tngtech/deepseek-r1t2-chimera:free',
       response: result,
     });
 
     // 6. Schedule mutation to save entities/facts
     await ctx.runMutation(internal.llm.extract.processExtractionResult, {
       documentId,
-      result
+      result,
     });
   },
 });
@@ -133,69 +134,71 @@ OUTPUT: Return structured JSON matching the provided schema.
 
 ```typescript
 const EXTRACTION_SCHEMA = {
-  type: "object",
+  type: 'object',
   properties: {
     entities: {
-      type: "array",
+      type: 'array',
       items: {
-        type: "object",
+        type: 'object',
         properties: {
-          name: { type: "string" },
-          type: { enum: ["character", "location", "item", "concept", "event"] },
-          description: { type: "string" },
-          aliases: { type: "array", items: { type: "string" } },
+          name: { type: 'string' },
+          type: { enum: ['character', 'location', 'item', 'concept', 'event'] },
+          description: { type: 'string' },
+          aliases: { type: 'array', items: { type: 'string' } },
         },
-        required: ["name", "type"],
+        required: ['name', 'type'],
         additionalProperties: false,
       },
     },
     facts: {
-      type: "array",
+      type: 'array',
       items: {
-        type: "object",
+        type: 'object',
         properties: {
-          entityName: { type: "string" },
-          subject: { type: "string" },
-          predicate: { type: "string" },
-          object: { type: "string" },
-          confidence: { type: "number", minimum: 0, maximum: 1 },
-          evidence: { type: "string" },
+          entityName: { type: 'string' },
+          subject: { type: 'string' },
+          predicate: { type: 'string' },
+          object: { type: 'string' },
+          confidence: { type: 'number', minimum: 0, maximum: 1 },
+          evidence: { type: 'string' },
           temporalBound: {
-            type: "object",
+            type: 'object',
             properties: {
-              type: { enum: ["point", "range", "relative"] },
-              value: { type: "string" },
+              type: { enum: ['point', 'range', 'relative'] },
+              value: { type: 'string' },
             },
           },
         },
-        required: ["entityName", "subject", "predicate", "object", "confidence", "evidence"],
+        required: ['entityName', 'subject', 'predicate', 'object', 'confidence', 'evidence'],
         additionalProperties: false,
       },
     },
     relationships: {
-      type: "array",
+      type: 'array',
       items: {
-        type: "object",
+        type: 'object',
         properties: {
-          sourceEntity: { type: "string" },
-          targetEntity: { type: "string" },
-          relationshipType: { type: "string" },
-          evidence: { type: "string" },
+          sourceEntity: { type: 'string' },
+          targetEntity: { type: 'string' },
+          relationshipType: { type: 'string' },
+          evidence: { type: 'string' },
         },
-        required: ["sourceEntity", "targetEntity", "relationshipType", "evidence"],
+        required: ['sourceEntity', 'targetEntity', 'relationshipType', 'evidence'],
         additionalProperties: false,
       },
     },
   },
-  required: ["entities", "facts", "relationships"],
+  required: ['entities', 'facts', 'relationships'],
   additionalProperties: false,
-}
+};
 ```
 
 ---
 
 ## 5. Document Chunking Strategy
+
 For documents exceeding LLM context limits or to improve extraction precision:
+
 - **Max Chunk Size:** ~3,000 tokens (~12,000 characters).
 - **Overlap:** 200 tokens for context continuity across chunks.
 - **Boundaries:** Preserve paragraph boundaries to avoid splitting mid-sentence.
@@ -204,6 +207,7 @@ For documents exceeding LLM context limits or to improve extraction precision:
 ---
 
 ## 6. Caching Implementation
+
 - **Hash:** SHA-256 of `(content + promptVersion)`.
 - **TTL:** 7 days for extraction results (configurable).
 - **Invalidation:** Automatically invalidate on prompt version bump or manual trigger.
@@ -214,15 +218,18 @@ For documents exceeding LLM context limits or to improve extraction precision:
 ## 7. Convex Functions
 
 ### LLM Pipeline (`convex/llm/extract.ts`)
+
 - `extractFromDocument` (internalAction): Main orchestrator for LLM extraction.
 - `processExtractionResult` (internalMutation): Saves LLM output into pending entities/facts.
 
 ### Cache Management (`convex/llm/cache.ts`)
+
 - `checkCache`: Query to see if a result exists for a given hash.
 - `saveToCache`: Mutation to store a new LLM response.
 - `invalidateCache`: Mutation to clear expired or specific cache entries.
 
 ### Entities (`convex/entities.ts`)
+
 - `create`: Add a new confirmed entity.
 - `update`: Edit entity metadata.
 - `merge`: Combine two entities (e.g., character and their alias).
@@ -230,6 +237,7 @@ For documents exceeding LLM context limits or to improve extraction precision:
 - `getWithFacts`: Get entity details including associated facts.
 
 ### Facts (`convex/facts.ts`)
+
 - `create`: Add a confirmed fact.
 - `confirm`: Approve a pending fact from the extraction queue.
 - `reject`: Discard an incorrect fact.
@@ -249,6 +257,7 @@ For documents exceeding LLM context limits or to improve extraction precision:
 ---
 
 ## 9. Error Handling
+
 - **Retries:** Implement exponential backoff for OpenRouter API failures (max 3 attempts).
 - **Response Healing:** Use structured output features to ensure JSON validity; manual fix-up logic for edge cases.
 - **Fail-safe:** If LLM fails repeatedly, mark the document as `failed` and allow the user to trigger a manual retry or enter data manually.
