@@ -1,6 +1,6 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-01-02 **Commit:** 5340f7e **Branch:** main **Stack:** TanStack Start + Convex + Bun + Tailwind v4 + React 19
+Be extremely concise. Sacrifice grammer for the sake of concision.
 
 ## OVERVIEW
 
@@ -50,7 +50,7 @@ Full-stack React 19 app with TanStack Router file-based routing, Convex real-tim
 
 ## CONVENTIONS
 
-- **Runtime**: `bun` exclusively (not npm/yarn/pnpm)
+- **Runtime**: `pnpm` exclusively (not npm/yarn/pnpm)
 - **Path aliases**: `@/*` → `./src/*`
 - **Routing**: Dotted filenames for nested routes
 - **Typography**: DM Sans (`@fontsource-variable/dm-sans`)
@@ -77,18 +77,14 @@ Full-stack React 19 app with TanStack Router file-based routing, Convex real-tim
 
 ```bash
 # Dev (run both in parallel)
-bun run dev              # Vite + Sentry instrumentation (port 3000)
-npx convex dev           # Convex local dev server
+pnpm dev
 
 # Build/Prod
-bun run build            # Production build → .output/
-bun run start            # Run production (requires build)
+pnpm run build
+pnpm run start
 
 # Test
-bun run test             # Vitest (infra ready, tests pending)
-
-# Convex
-npx convex deploy        # Deploy to prod
+pnpm run test
 ```
 
 ## CURRENT STATE
@@ -104,6 +100,7 @@ npx convex deploy        # Deploy to prod
 
 ## NOTES
 
+- ALWAYS RUN `pnpm docs:list`
 - No `index.html` or `main.tsx`—TanStack Start handles entry via `__root.tsx`
 - React Compiler enabled via `babel-plugin-react-compiler`
 - Nitro is the server engine (configured in vite.config.ts)

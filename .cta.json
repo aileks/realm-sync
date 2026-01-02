@@ -3,18 +3,10 @@
   "mode": "file-router",
   "typescript": true,
   "tailwind": true,
-  "packageManager": "bun",
+  "packageManager": "pnpm",
   "addOnOptions": {},
   "git": true,
   "version": 1,
   "framework": "react-cra",
-  "chosenAddOns": [
-    "nitro",
-    "start",
-    "convex",
-    "sentry",
-    "compiler",
-    "form",
-    "t3env"
-  ]
+  "chosenAddOns": ["nitro", "start", "convex", "sentry", "compiler", "form", "t3env"]
 }

@@ -97,7 +97,7 @@ Realm Sync provides a "canon engine" that automates the archival and verificatio
 | Component         | Technology                               |
 | :---------------- | :--------------------------------------- |
 | **Framework**     | TanStack Start (React 19, SSR via Nitro) |
-| **Runtime**       | Bun                                      |
+| **Runtime**       | pnpm                                     |
 | **Backend**       | Convex (DB, Functions, Auth, Storage)    |
 | **LLM**           | OpenRouter (`gpt-oss-120b:free`)         |
 | **Styling**       | Tailwind v4 (CSS-first, OKLCH colors)    |

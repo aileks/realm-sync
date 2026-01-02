@@ -5,9 +5,7 @@ read_when: [testing, integration, unit, end-to-end, regression]
 
 # Testing Strategy
 
-**Status:** Ready for Implementation  
-**Coverage Target:** 80% (Unit + Integration)  
-**E2E/Visual:** Deferred until MVP
+**Status:** Ready for Implementation **Coverage Target:** 80% (Unit + Integration) **E2E/Visual:** Deferred until MVP
 
 ---
 
@@ -34,7 +32,7 @@ This document outlines the testing strategy for the realm-sync project, prioriti
 ### Dependencies
 
 ```bash
-bun add -D convex-test @edge-runtime/vm
+pnpm add -D convex-test @edge-runtime/vm
 ```
 
 ### vitest.config.ts
@@ -567,24 +565,24 @@ on: [push, pull_request]
 
 jobs:
   unit-integration:
-    runs-on: ubuntu-latest
+    runs-on: upnpmtu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
-      - run: bun run test:coverage
+      - uses: oven-sh/setup-pnpm@v1
+      - run: pnpm install
+      - run: pnpm run test:coverage
       - uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   visual-regression:
-    runs-on: ubuntu-latest
+    runs-on: upnpmtu-latest
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
-      - run: bun run chromatic --exit-zero-on-changes
+      - uses: oven-sh/setup-pnpm@v1
+      - run: pnpm install
+      - run: pnpm run chromatic --exit-zero-on-changes
 ```
 
 ---
@@ -593,13 +591,13 @@ jobs:
 
 ```bash
 # Run tests
-bun test
+pnpm test
 
 # Run with coverage
-bun run test:coverage
+pnpm run test:coverage
 
 # Run with UI
-bun run test:ui
+pnpm run test:ui
 ```
 
 ---
