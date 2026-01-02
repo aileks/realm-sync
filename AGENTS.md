@@ -6,7 +6,7 @@
 
 ## OVERVIEW
 
-Full-stack React 19 application using TanStack Router file-based routing, Convex backend, and server-side rendering via Nitro. Bun as primary runtime.
+Full-stack React 19 application using TanStack Router file-based routing, Convex backend, and server-side rendering via Nitro. Bun as primary runtime. Created using TanStack Start.
 
 ## STRUCTURE
 
@@ -27,13 +27,13 @@ Full-stack React 19 application using TanStack Router file-based routing, Convex
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Add route | `src/routes/` | File-based; auto-generates route tree |
-| Backend logic | `convex/` | Schema in `schema.ts`, functions in `todos.ts` |
-| Env config | `src/env.ts` | T3Env with Zod validation |
-| Styling | `src/styles.css` | Tailwind v4 CSS-first config |
-| Server instrumentation | `instrument.server.mjs` | Sentry/OpenTelemetry |
+| Task                   | Location                | Notes                                          |
+| ---------------------- | ----------------------- | ---------------------------------------------- |
+| Add route              | `src/routes/`           | File-based; auto-generates route tree          |
+| Backend logic          | `convex/`               | Schema in `schema.ts`, functions in `todos.ts` |
+| Env config             | `src/env.ts`            | T3Env with Zod validation                      |
+| Styling                | `src/styles.css`        | Tailwind v4 CSS-first config                   |
+| Server instrumentation | `instrument.server.mjs` | Sentry/OpenTelemetry                           |
 
 ## CONVENTIONS
 
@@ -75,3 +75,34 @@ npx convex deploy   # Deploy to prod
 - No `index.html` or `main.tsx`; TanStack Start handles entry dynamically
 - Server instrumentation injected via `NODE_OPTIONS='--import ./instrument.server.mjs'`
 - Tailwind v4 uses CSS-first config (no `tailwind.config.js`)
+
+## General Coding Guildlines
+
+- **Follow Instructions:** Execute the request immediately. Do not deviate.
+- **Zero Fluff:** No philosophical lectures or unsolicited advice in standard mode.
+- **Stay Focused:** Concise answers only. No wandering.
+- **Output First:** Prioritize code and visual solutions.
+- _Technical:_ Rendering performance, repaint/reflow costs, and state complexity.
+- _Accessibility:_ WCAG AAA strictness.
+- _Scalability:_ Long-term maintenance and modularity.
+
+## Genearl Design Philosophy
+
+- **Anti-Generic:** Reject standard "bootstrapped" layouts. If it looks like a template, it is wrong.
+- **Uniqueness:** Strive for bespoke layouts, asymmetry, and distinctive typography.
+- **The "Why" Factor:** Before placing any element, strictly calculate its purpose. If it has no purpose, delete it.
+- **Minimalism:** Reduction is the ultimate sophistication.
+
+## General Coding Standards
+
+- **Library Discipline (CRITICAL):** If a UI library (e.g., Shadcn UI, Radix, MUI) is detected or active in the project, **YOU MUST USE IT**.
+  - **Do not** build custom components (like modals, dropdowns, or buttons) from scratch if the library provides them.
+  - **Do not** pollute the codebase with redundant CSS.
+  - _Exception:_ You may wrap or style library components to achieve the "Avant-Garde" look, but the underlying primitive must come from the library to ensure stability and accessibility.
+- **Stack:** Modern (React/Vue/Svelte), Tailwind/Custom CSS, semantic HTML5.
+- **Visuals:** Focus on micro-interactions, perfect spacing, and "invisible" UX.
+
+## General Response Format
+
+1.  **Rationale:** 3 sentences MAX on why the elements were placed there.
+2.  **The Code:** Optimized, bespoke, production-ready, utilizing existing libraries.
