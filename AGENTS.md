@@ -1,108 +1,104 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-01-02 13:15
-**Branch:** (current)
-**Stack:** TanStack Start + Convex + Bun + Tailwind v4
+**Generated:** 2026-01-02
+**Commit:** 9c30a82
+**Branch:** main
+**Stack:** TanStack Start + Convex + Bun + Tailwind v4 + React 19
 
 ## OVERVIEW
 
-Full-stack React 19 application using TanStack Router file-based routing, Convex backend, and server-side rendering via Nitro. Bun as primary runtime. Created using TanStack Start.
+Full-stack React 19 app with TanStack Router file-based routing, Convex real-time backend, SSR via Nitro, and React Compiler enabled. Sentry instrumentation required for all server functions.
 
 ## STRUCTURE
 
 ```
 ./
-├── convex/           # Convex backend (schema, functions, auth)
+├── convex/           # Backend (schema, functions) → see convex/AGENTS.md
 ├── src/
-│   ├── routes/       # File-based routes (TanStack Router)
-│   ├── hooks/        # Custom React hooks
-│   ├── components/   # UI components
-│   ├── integrations/ # External service providers (Convex)
-│   ├── data/         # Static data
-│   ├── router.tsx    # Router initialization
-│   ├── env.ts        # Type-safe env vars (T3Env)
-│   └── routeTree.gen.ts  # Auto-generated (NEVER EDIT)
-└── instrument.server.mjs  # Sentry instrumentation
+│   ├── routes/       # File-based routes (auto-generates routeTree.gen.ts)
+│   ├── components/   # UI components (Shadcn "base-maia" style)
+│   ├── integrations/ # External providers (Convex)
+│   ├── lib/          # Utilities (cn, etc.)
+│   ├── router.tsx    # Router init + client Sentry
+│   ├── env.ts        # Type-safe env (T3Env + Zod)
+│   └── styles.css    # Tailwind v4 CSS-first config
+├── instrument.server.mjs  # Server-side Sentry (injected via NODE_OPTIONS)
+└── vite.config.ts    # Nitro + TanStack Start + React Compiler
 ```
 
 ## WHERE TO LOOK
 
-| Task                   | Location                | Notes                                          |
-| ---------------------- | ----------------------- | ---------------------------------------------- |
-| Add route              | `src/routes/`           | File-based; auto-generates route tree          |
-| Backend logic          | `convex/`               | Schema in `schema.ts`, functions in `todos.ts` |
-| Env config             | `src/env.ts`            | T3Env with Zod validation                      |
-| Styling                | `src/styles.css`        | Tailwind v4 CSS-first config                   |
-| Server instrumentation | `instrument.server.mjs` | Sentry/OpenTelemetry                           |
+| Task | Location | Notes |
+|------|----------|-------|
+| Add route | `src/routes/` | File-based; dotted nesting (e.g., `demo.start.tsx`) |
+| Backend logic | `convex/` | Schema in `schema.ts`, functions in separate files |
+| Env vars | `src/env.ts` | T3Env; add before use |
+| Styling | `src/styles.css` | Tailwind v4; OKLCH colors |
+| UI components | `src/components/ui/` | Shadcn "base-maia" style |
+| Root layout | `src/routes/__root.tsx` | Shell, providers, global Header |
+| Server instrumentation | `instrument.server.mjs` | Sentry/OpenTelemetry |
+
+## CODE MAP
+
+| Symbol | Location | Role |
+|--------|----------|------|
+| `getRouter` | `src/router.tsx` | Router factory + Sentry init |
+| `RootDocument` | `src/routes/__root.tsx` | HTML shell, ConvexProvider wrapper |
+| `AppConvexProvider` | `src/integrations/convex/provider.tsx` | Convex + TanStack Query bridge |
+| `env` | `src/env.ts` | Type-safe env access |
 
 ## CONVENTIONS
 
+- **Runtime**: `bun` (not npm/yarn/pnpm)
 - **Path aliases**: `@/*` → `./src/*`
-- **Package manager**: `bun` (not npm/yarn/pnpm)
-- **Routing**: Dotted nesting (`.` in filename) for flat route structure
-- **Demo files**: `demo.*` prefixed files are placeholders; delete when stabilizing
-- **Route tree**: `routeTree.gen.ts` is auto-generated; mark read-only in VS Code
+- **Routing**: Dotted filenames for nested routes
+- **Typography**: DM Sans (`@fontsource-variable/dm-sans`)
+- **Colors**: OKLCH exclusively
+- **UI primitives**: Shadcn/Base UI—never build custom modals/dropdowns/buttons
+- **Demo files**: `demo.*` prefixed = placeholders; delete when stabilizing
 
-## ANTI-PATTERNS (THIS PROJECT)
+## ANTI-PATTERNS
 
-- **Convex system indices**: NEVER add indices for `_id` or `_creationTime` (auto-handled)
-- **Empty strings in `.env`**: Unless `emptyStringAsUndefined: true`, empty strings are values, not defaults
-- **Mishandled validators**: Convex `v` validators are "often mishandled"
-- **Uninstrumented server functions**: All `createServerFn` should wrap with `Sentry.startSpan`
+| Pattern | Why Forbidden |
+|---------|---------------|
+| Edit `routeTree.gen.ts` | Auto-generated; will be overwritten |
+| Edit `convex/_generated/` | Auto-generated |
+| `createServerFn` without Sentry | Must wrap with `Sentry.startSpan` |
+| Convex indices on `_id`/`_creationTime` | Auto-handled by Convex |
+| Empty env strings without `emptyStringAsUndefined` | Empty string ≠ undefined |
+| Custom UI components when Shadcn provides | Use library primitives |
+| Mishandled Convex `v` validators | Follow existing patterns strictly |
 
 ## COMMANDS
 
 ```bash
-# Dev with instrumentation
-bun run dev
+# Dev
+bun run dev              # Vite + Sentry instrumentation (port 3000)
+npx convex dev           # Convex local dev server
 
-# Build production
-bun run build
+# Build/Prod
+bun run build            # Production build
+bun run start            # Run production (requires build)
 
-# Run tests
-bun run test
-
-# Start production (requires build)
-bun run start
+# Test
+bun run test             # Vitest
 
 # Convex
-npx convex dev      # Local dev
-npx convex deploy   # Deploy to prod
+npx convex deploy        # Deploy to prod
 ```
 
 ## NOTES
 
-- No `index.html` or `main.tsx`; TanStack Start handles entry dynamically
-- Server instrumentation injected via `NODE_OPTIONS='--import ./instrument.server.mjs'`
-- Tailwind v4 uses CSS-first config (no `tailwind.config.js`)
+- No `index.html` or `main.tsx`—TanStack Start handles entry dynamically
+- React Compiler enabled via `babel-plugin-react-compiler`
+- Nitro is the server engine (configured in vite.config.ts)
+- Tailwind v4 = CSS-first (no `tailwind.config.js`)
+- Header has dead links to removed demo routes (`/demo/*`)—cleanup pending
 
-## General Coding Guildlines
+## CODING GUIDELINES
 
-- **Follow Instructions:** Execute the request immediately. Do not deviate.
-- **Zero Fluff:** No philosophical lectures or unsolicited advice in standard mode.
-- **Stay Focused:** Concise answers only. No wandering.
-- **Output First:** Prioritize code and visual solutions.
-- _Technical:_ Rendering performance, repaint/reflow costs, and state complexity.
-- _Accessibility:_ WCAG AAA strictness.
-- _Scalability:_ Long-term maintenance and modularity.
-
-## Genearl Design Philosophy
-
-- **Anti-Generic:** Reject standard "bootstrapped" layouts. If it looks like a template, it is wrong.
-- **Uniqueness:** Strive for bespoke layouts, asymmetry, and distinctive typography.
-- **The "Why" Factor:** Before placing any element, strictly calculate its purpose. If it has no purpose, delete it.
-- **Minimalism:** Reduction is the ultimate sophistication.
-
-## General Coding Standards
-
-- **Library Discipline (CRITICAL):** If a UI library (e.g., Shadcn UI, Radix, MUI) is detected or active in the project, **YOU MUST USE IT**.
-  - **Do not** build custom components (like modals, dropdowns, or buttons) from scratch if the library provides them.
-  - **Do not** pollute the codebase with redundant CSS.
-  - _Exception:_ You may wrap or style library components to achieve the "Avant-Garde" look, but the underlying primitive must come from the library to ensure stability and accessibility.
-- **Stack:** Modern (React/Vue/Svelte), Tailwind/Custom CSS, semantic HTML5.
-- **Visuals:** Focus on micro-interactions, perfect spacing, and "invisible" UX.
-
-## General Response Format
-
-1.  **Rationale:** 3 sentences MAX on why the elements were placed there.
-2.  **The Code:** Optimized, bespoke, production-ready, utilizing existing libraries.
+- Execute requests immediately; no fluff
+- WCAG AAA accessibility
+- Rendering performance awareness (repaint/reflow costs)
+- Minimalism: if element has no purpose, delete it
+- Anti-generic: reject template layouts; strive for bespoke design

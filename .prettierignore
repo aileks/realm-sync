@@ -1,0 +1,8 @@
+convex/_generated/*
+routeTree.gen.ts
+.output/*
+.tanstack/*
+.wrangler/*
+.vinxi/*
+.cursor/*
+.vscode/*
