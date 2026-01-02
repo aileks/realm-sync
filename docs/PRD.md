@@ -94,15 +94,16 @@ Realm Sync provides a "canon engine" that automates the archival and verificatio
 
 ## 7. Technical Stack
 
-| Component         | Technology                                        |
-| :---------------- | :------------------------------------------------ |
-| **Framework**     | TanStack Start (React 19, SSR via Nitro)          |
-| **Runtime**       | pnpm                                              |
-| **Backend**       | Convex (DB, Functions, Auth, Storage)             |
-| **LLM**           | OpenRouter (`tngtech/deepseek-r1t2-chimera:free`) |
-| **Styling**       | Tailwind v4 (CSS-first, OKLCH colors)             |
-| **UI Components** | Shadcn / Base UI                                  |
-| **Monitoring**    | Sentry                                            |
+| Component          | Technology                                        |
+| :----------------- | :------------------------------------------------ |
+| **Framework**      | TanStack Start (React 19, SSR via Nitro)          |
+| **Runtime**        | pnpm                                              |
+| **Backend**        | Convex (DB, Functions, Auth, Storage)             |
+| **LLM**            | OpenRouter (`tngtech/deepseek-r1t2-chimera:free`) |
+| **Error Handling** | NeverThrow (type-safe Result pattern)             |
+| **Styling**        | Tailwind v4 (CSS-first, OKLCH colors)             |
+| **UI Components**  | Shadcn / Base UI                                  |
+| **Monitoring**     | Sentry                                            |
 
 ---
 
@@ -190,5 +191,5 @@ Vellum is not just a tool but an "Archivist Moth" that lives in the UI:
 
 ## 15. Open Questions
 
-- **Chunking**: What is the optimal chunk size for `gpt-oss-120b` to maintain context across facts?
+- **Chunking**: What is the optimal chunk size for `tngtech/deepseek-r1t2-chimera:free` to maintain context across facts?
 - **Export**: Which formats are highest priority (Markdown, JSON, or CSV)?

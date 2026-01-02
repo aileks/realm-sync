@@ -1,3 +1,8 @@
+---
+summary: Detailed technical specification for Realm Sync with database schema, API specs, and implementation details.
+read_when: [architecture decisions, API implementation, database queries, testing patterns]
+---
+
 # Realm Sync - Technical Specification
 
 ## Executive Summary
@@ -40,6 +45,7 @@ A "canon engine" that:
 | **Runtime** | pnpm | Exclusive package manager |
 | **Backend** | Convex | DB, Functions, Auth, Storage |
 | **LLM** | OpenRouter | `tngtech/deepseek-r1t2-chimera:free` (via Vellum) |
+| **Error Handling** | NeverThrow | Type-safe Result pattern for LLM/async operations |
 | **Styling** | Tailwind v4 | CSS-first, OKLCH colors |
 | **UI Components** | Shadcn / Base UI | 13 primitives available |
 | **Monitoring** | Sentry | Error tracking + instrumentation |
@@ -555,7 +561,7 @@ pnpm docs:list         # List all docs
 
 ## Open Questions
 
-1. **Chunking**: What is optimal chunk size for `gpt-oss-120b` to maintain context across facts? (Current target: ~3,000 tokens)
+1. **Chunking**: What is optimal chunk size for `tngtech/deepseek-r1t2-chimera:free` to maintain context across facts? (Current target: ~3,000 tokens)
 2. **Export**: Which formats are highest priority (Markdown, JSON, or CSV)?
 3. **Collaboration**: Should Phase 5 include real-time collaboration via Convex subscriptions, or focus on export/import first?
 

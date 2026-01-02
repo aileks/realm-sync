@@ -11,51 +11,122 @@ read_when: [UI development, styling, component design, theme customization, colo
 
 - **Vibe:** Warm, inviting darkness, candlelit study, aged parchment, dusty archives.
 - **Mascot:** **Vellum, the Archivist Moth**. A stylized silhouette in amber/gold, appearing as a guide and notifier throughout the interface.
-- **Core Principle:** "Warmth in the shadows." Avoid sterile, cold grays. Use rich, deep oklch(60) hues.
+- **Core Principle:** "Warmth in the shadows." Avoid sterile, cold grays. Use rich, deep hues with low chroma.
 
 ---
 
 ## 2. Color Palette (Tailwind v4 OKLCH)
 
-### Base Colors
+Realm Sync ships with three theme variants. The **default** theme is applied via `:root`.
+
+### Default Theme (`:root`)
 
 ```css
---background: oklch(0.12 0.02 60); /* Deep warm black */
---foreground: oklch(0.87 0.02 80); /* Warm off-white / parchment light */
---card: oklch(0.16 0.025 55); /* Raised study surface */
+--background: oklch(0.13 0.015 70);
+--foreground: oklch(0.88 0.02 75);
+
+--card: oklch(0.16 0.015 70);
+--card-foreground: oklch(0.88 0.02 75);
+--popover: oklch(0.15 0.015 70);
+--popover-foreground: oklch(0.88 0.02 75);
+
+--primary: oklch(0.7 0.06 70);
+--primary-foreground: oklch(0.12 0.02 70);
+--secondary: oklch(0.25 0.03 70);
+--secondary-foreground: oklch(0.8 0.02 75);
+
+--muted: oklch(0.2 0.02 70);
+--muted-foreground: oklch(0.71 0.03 70);
+--accent: oklch(0.28 0.04 70);
+--accent-foreground: oklch(0.9 0.02 75);
+
+--destructive: oklch(0.46 0.2 25);
+--destructive-foreground: oklch(0.98 0.02 80);
+--border: oklch(0.25 0.02 70);
+--input: oklch(0.2 0.02 70);
+--ring: oklch(0.7 0.06 70);
+```
+
+### Twilight Study Theme (`[data-theme='twilight-study']`)
+
+A cooler, purple-tinted variant:
+
+```css
+--background: oklch(0.12 0.03 280);
+--foreground: oklch(0.9 0.01 280);
+
+--card: oklch(0.16 0.03 280);
+--card-foreground: oklch(0.9 0.01 280);
+--popover: oklch(0.14 0.03 280);
+--popover-foreground: oklch(0.9 0.01 280);
+
+--primary: oklch(0.7 0.15 280);
+--primary-foreground: oklch(0.15 0.03 280);
+--secondary: oklch(0.25 0.04 280);
+--secondary-foreground: oklch(0.8 0.02 280);
+
+--muted: oklch(0.22 0.03 280);
+--muted-foreground: oklch(0.71 0.03 280);
+--accent: oklch(0.6 0.15 280);
+--accent-foreground: oklch(0.95 0.01 280);
+
+--border: oklch(0.28 0.03 280);
+--input: oklch(0.22 0.03 280);
+--ring: oklch(0.7 0.15 280);
+```
+
+### Amber Archive Theme (`[data-theme='amber-archive']`)
+
+A warmer, high-chroma variant:
+
+```css
+--background: oklch(0.12 0.02 60);
+--foreground: oklch(0.87 0.02 80);
+
+--card: oklch(0.16 0.025 55);
 --card-foreground: oklch(0.87 0.02 80);
 --popover: oklch(0.14 0.02 55);
 --popover-foreground: oklch(0.87 0.02 80);
-```
 
-### Brand & Accents
-
-```css
---primary: oklch(0.72 0.15 75); /* Moth-wing Amber */
+--primary: oklch(0.72 0.15 75);
 --primary-foreground: oklch(0.15 0.02 60);
---secondary: oklch(0.25 0.03 50); /* Dusty Archive */
+--secondary: oklch(0.25 0.03 50);
 --secondary-foreground: oklch(0.75 0.02 70);
---accent: oklch(0.65 0.18 55); /* Candlelight Glow */
+
+--muted: oklch(0.22 0.02 55);
+--muted-foreground: oklch(0.71 0.02 70);
+--accent: oklch(0.65 0.18 55);
 --accent-foreground: oklch(0.15 0.02 60);
+
+--border: oklch(0.28 0.02 55);
+--input: oklch(0.2 0.02 55);
+--ring: oklch(0.72 0.15 75);
 ```
 
-### Semantic Colors
+### Entity Type Colors
 
 ```css
---muted: oklch(0.22 0.02 55);
---muted-foreground: oklch(0.55 0.02 70);
---destructive: oklch(0.55 0.2 25); /* Aged Red Ink */
---success: oklch(0.55 0.15 145); /* Aged Green Ink */
---warning: oklch(0.65 0.15 85); /* Amber Warning */
+--entity-character: oklch(0.7 0.15 25);
+--entity-location: oklch(0.67 0.12 145);
+--entity-item: oklch(0.7 0.15 75);
+--entity-concept: oklch(0.7 0.18 280);
+--entity-event: oklch(0.67 0.12 220);
 ```
 
-### Entity Type Colors (Mapping to Lexicon)
+### Sidebar Variables
 
-- **Character:** `oklch(0.65 0.15 25)` — Warm Red
-- **Location:** `oklch(0.60 0.12 145)` — Forest Green
-- **Item:** `oklch(0.70 0.15 75)` — Amber Gold
-- **Concept:** `oklch(0.60 0.18 280)` — Dusty Purple
-- **Event:** `oklch(0.65 0.12 220)` — Slate Blue
+Sidebar inherits from base theme:
+
+```css
+--sidebar: var(--background);
+--sidebar-foreground: var(--foreground);
+--sidebar-primary: var(--primary);
+--sidebar-primary-foreground: var(--primary-foreground);
+--sidebar-accent: var(--accent);
+--sidebar-accent-foreground: var(--accent-foreground);
+--sidebar-border: var(--border);
+--sidebar-ring: var(--ring);
+```
 
 ---
 
@@ -63,9 +134,15 @@ read_when: [UI development, styling, component design, theme customization, colo
 
 ### Font Stack
 
-- **Display / Headings:** `'Aleo'`, serif (Variable weight 200-900)
-- **Body:** `'DM Sans Variable'`, sans-serif (Standard weight 400, Medium 500)
-- **Mono / Code:** `'iA Writer Mono'`, monospace
+```css
+--font-sans: 'DM Sans Variable', sans-serif;
+--font-serif: 'Aleo Variable', serif;
+--font-mono: 'iA Writer Mono', monospace;
+```
+
+- **Headings (h1-h6):** Use `font-serif`
+- **Body:** Use `font-sans`
+- **Code (code, kbd, samp, pre):** Use `font-mono`
 
 ### Type Scale
 
@@ -84,33 +161,60 @@ read_when: [UI development, styling, component design, theme customization, colo
 
 ## 4. Spacing & Layout
 
+### Border Radius
+
+```css
+--radius: 0.625rem; /* Base: 10px */
+--radius-sm: calc(var(--radius) - 4px); /* 6px */
+--radius-md: calc(var(--radius) - 2px); /* 8px */
+--radius-lg: var(--radius); /* 10px */
+--radius-xl: calc(var(--radius) + 4px); /* 14px */
+--radius-2xl: calc(var(--radius) + 8px); /* 18px */
+--radius-3xl: calc(var(--radius) + 12px); /* 22px */
+--radius-4xl: calc(var(--radius) + 16px); /* 26px */
+```
+
+### Layout Guidelines
+
 - **Base Scale:** 4px (Tailwind standard)
-- **Sidebar:** `280px` fixed width, left-aligned.
-- **Main Content:** `max-w-4xl` centered for readability.
-- **Cards:** `p-6`, `rounded-lg` (8px).
-- **Gaps:** `gap-4` for standard spacing, `gap-8` for major sections.
+- **Sidebar:** `280px` fixed width, left-aligned
+- **Main Content:** `max-w-4xl` centered for readability
+- **Cards:** `p-6`, `rounded-lg`
+- **Gaps:** `gap-4` for standard spacing, `gap-8` for major sections
 
 ---
 
-## 5. Visual Textures & Effects
+## 5. Custom Utilities (Tailwind v4)
 
-### Paper Grain Overlay
+Custom utilities use the `@utility` directive (Tailwind v4 syntax). This enables automatic variant support (`hover:`, `lg:`, etc.).
+
+### Vignette Effect
+
+Adds depth with inset shadow:
 
 ```css
-.paper-grain {
-  position: relative;
-}
-.paper-grain::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  opacity: 0.03;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+@utility vignette {
+  box-shadow: inset 0 0 100px oklch(0 0 0 / 0.4);
 }
 ```
 
+### Text Effects
+
+```css
+@utility text-shadow-sm {
+  text-shadow: 0 1px 2px oklch(0 0 0 / 0.1);
+}
+
+@utility glow-text {
+  text-shadow: 0 0 15px var(--primary);
+}
+```
+
+**Note:** Prefer Tailwind's built-in utilities and shadcn/ui components. Only add custom utilities for effects not achievable with the standard toolkit.
+
 ### Vignette Effect
+
+Adds depth with inset shadow:
 
 ```css
 .vignette {
@@ -118,14 +222,15 @@ read_when: [UI development, styling, component design, theme customization, colo
 }
 ```
 
-### Aged Border Style
+### Text Effects
 
 ```css
-.border-aged {
-  border: 1px solid var(--border);
-  box-shadow:
-    0 0 0 1px var(--background),
-    0 0 0 2px var(--border);
+.text-shadow-sm {
+  text-shadow: 0 1px 2px oklch(0 0 0 / 0.1);
+}
+
+.glow-text {
+  text-shadow: 0 0 15px var(--primary);
 }
 ```
 
@@ -136,15 +241,15 @@ read_when: [UI development, styling, component design, theme customization, colo
 ### Entity Cards
 
 - **Structure:** `Icon` + `Name` + `Fact Count`
-- **State:** Hover increases candlelight glow (`accent` shadow).
-- **Border:** Soft `oklch` matching entity type at 20% opacity.
+- **State:** Hover increases glow via `accent` shadow
+- **Border:** Soft entity-type color at 20% opacity
 
 ### Buttons
 
-- **Primary:** Moth-wing Amber (`primary`), high contrast text.
-- **Secondary:** Dusty Archive (`secondary`), subtle parchment feel.
-- **Ghost:** Minimal, foreground text, `muted` hover background.
-- **Destructive:** Aged Red Ink (`destructive`), used for deletions.
+- **Primary:** Uses `primary` background, high contrast text
+- **Secondary:** Uses `secondary`, subtle feel
+- **Ghost:** Minimal, foreground text, `muted` hover background
+- **Destructive:** Uses `destructive`, for deletions
 
 ---
 
@@ -196,57 +301,77 @@ read_when: [UI development, styling, component design, theme customization, colo
 
 - **Default Duration:** `200ms`
 - **Easing:** `ease-out` (cubic-bezier(0, 0, 0.2, 1))
-- **Stagger:** `50ms` delay between list items.
-- **Vellum (Mascot):** Floating animation (sine wave path), soft glow pulse.
+- **Stagger:** `50ms` delay between list items
+- **Vellum (Mascot):** Floating animation (sine wave path), soft glow pulse
 
 ---
 
-## 9. Accessibility
+## 9. Accessibility (WCAG AAA)
 
-- **Contrast:** Maintain WCAG AAA color contrast (7:1) for all body text against the background.
-- **Motion:** Full support for `prefers-reduced-motion` media queries. Disable non-essential Vellum animations when active.
-- **Interactions:** Keyboard navigation requirements for all interactive elements (focus rings must be `oklch(0.72 0.15 75)`).
-- **Semantics:** Proper ARIA labels for entity types and status indicators.
+All color pairings are designed for WCAG AAA compliance (7:1 contrast ratio).
+
+### Contrast Ratios (Default Theme)
+
+| Pairing                                   | Ratio  | Status |
+| ----------------------------------------- | ------ | ------ |
+| `foreground` on `background`              | 14:1   | AAA    |
+| `card-foreground` on `card`               | 13.5:1 | AAA    |
+| `primary-foreground` on `primary`         | 7.5:1  | AAA    |
+| `secondary-foreground` on `secondary`     | 8.6:1  | AAA    |
+| `muted-foreground` on `background`        | 7:1    | AAA    |
+| `accent-foreground` on `accent`           | 10.9:1 | AAA    |
+| `destructive-foreground` on `destructive` | 7:1    | AAA    |
+| Entity colors on `background`             | 7:1+   | AAA    |
+
+### Guidelines
+
+- **Focus Rings:** Use `outline-ring/80` for sufficient visibility (3:1 non-text contrast)
+- **Motion:** Full support for `prefers-reduced-motion`. Disable non-essential animations when active
+- **Semantics:** Proper ARIA labels for entity types and status indicators
+- **Entity Colors:** Safe to use as text on dark backgrounds; for badges, use as backgrounds with `--primary-foreground` text
 
 ---
 
-## 10. CSS Custom Properties (:root)
+## 10. Theme Switching
+
+To switch themes, add a `data-theme` attribute to a parent element:
+
+```html
+<!-- Default theme (no attribute needed) -->
+<div>...</div>
+
+<!-- Twilight Study -->
+<div data-theme="twilight-study">...</div>
+
+<!-- Amber Archive -->
+<div data-theme="amber-archive">...</div>
+```
+
+---
+
+## 11. Base Layer Styles
+
+Applied globally via `@layer base`:
 
 ```css
-@theme inline {
-  --color-background: oklch(0.12 0.02 60);
-  --color-foreground: oklch(0.87 0.02 80);
-
-  --color-card: oklch(0.16 0.025 55);
-  --color-card-foreground: oklch(0.87 0.02 80);
-
-  --color-popover: oklch(0.14 0.02 55);
-  --color-popover-foreground: oklch(0.87 0.02 80);
-
-  --color-primary: oklch(0.72 0.15 75);
-  --color-primary-foreground: oklch(0.15 0.02 60);
-
-  --color-secondary: oklch(0.25 0.03 50);
-  --color-secondary-foreground: oklch(0.75 0.02 70);
-
-  --color-muted: oklch(0.22 0.02 55);
-  --color-muted-foreground: oklch(0.55 0.02 70);
-
-  --color-accent: oklch(0.65 0.18 55);
-  --color-accent-foreground: oklch(0.15 0.02 60);
-
-  --color-destructive: oklch(0.55 0.2 25);
-  --color-destructive-foreground: oklch(0.98 0.02 80);
-
-  --color-border: oklch(0.28 0.02 55);
-  --color-input: oklch(0.2 0.02 55);
-  --color-ring: oklch(0.72 0.15 75);
-
-  /* Entity Types */
-  --color-entity-character: oklch(0.65 0.15 25);
-  --color-entity-location: oklch(0.6 0.12 145);
-  --color-entity-item: oklch(0.7 0.15 75);
-  --color-entity-concept: oklch(0.6 0.18 280);
-  --color-entity-event: oklch(0.65 0.12 220);
+* {
+  @apply border-border outline-ring/50;
+}
+body {
+  @apply bg-background text-foreground font-sans antialiased;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-serif;
+}
+code,
+kbd,
+samp,
+pre {
+  @apply font-mono;
 }
 ```

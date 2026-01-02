@@ -565,7 +565,7 @@ on: [push, pull_request]
 
 jobs:
   unit-integration:
-    runs-on: upnpmtu-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-pnpm@v1
@@ -576,7 +576,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   visual-regression:
-    runs-on: upnpmtu-latest
+    runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4

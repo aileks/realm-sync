@@ -59,6 +59,7 @@ Full-stack React 19 app with TanStack Router file-based routing, Convex real-tim
 - **Styling**: Use `cn()` from `@/lib/utils` for all class merging
 - **Demo files**: `demo.*` prefixed = placeholders; delete when stabilizing
 - **Components**: `@base-ui/react` primitives + CVA variants + `data-slot` attributes
+- **Error handling**: NeverThrow for type-safe Result pattern; avoid try/catch when possible
 
 ## ANTI-PATTERNS
 

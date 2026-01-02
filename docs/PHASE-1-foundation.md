@@ -238,12 +238,14 @@ src/routes/
 
 ## 5. Design Foundation (Dark Archival)
 
-### OKLCH Color Tokens
+### OKLCH Color Tokens (Default Theme)
 
-- **Background**: `oklch(0.12 0.02 60)` (Near-black warm)
-- **Foreground**: `oklch(0.87 0.02 80)` (Warm off-white)
-- **Primary**: `oklch(0.72 0.15 75)` (Moth-wing amber)
-- **Accent**: `oklch(0.65 0.18 55)` (Candlelight glow)
+- **Background**: `oklch(0.13 0.015 70)` (Deep warm black)
+- **Foreground**: `oklch(0.88 0.02 75)` (Warm off-white)
+- **Primary**: `oklch(0.7 0.06 70)` (Moth-wing amber)
+- **Accent**: `oklch(0.28 0.04 70)` (Candlelight glow)
+
+See `docs/UI-DESIGN.md` for full theme system including `amber-archive` and `twilight-study` variants.
 
 ### Typography
 
