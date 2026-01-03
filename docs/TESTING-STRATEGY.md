@@ -5,7 +5,7 @@ read_when: [testing, integration, unit, end-to-end, regression]
 
 # Testing Strategy
 
-**Status:** Ready for Implementation **Coverage Target:** 80% (Unit + Integration) **E2E/Visual:** Deferred until MVP
+**Status:** Ready for Implementation **Coverage Target:** 80% (Unit + Integration) **E2E/Visual:** Deferred until MVP **Current Test Count:** 73 passing
 
 ---
 
@@ -367,6 +367,9 @@ describe('FormExample', () => {
 | Module                                 | Target  | Type                   |
 | -------------------------------------- | ------- | ---------------------- |
 | `convex/todos.ts`                      | 100%    | Unit (convex-test)     |
+| `convex/entities.ts`                   | 100%    | Unit (convex-test)     |
+| `convex/facts.ts`                      | 100%    | Unit (convex-test)     |
+| `convex/llm/extract.ts`                | 90%     | Unit (convex-test)     |
 | `src/lib/utils.ts`                     | 100%    | Unit                   |
 | `src/env.ts`                           | 100%    | Unit                   |
 | `src/components/ui/alert-dialog.tsx`   | 90%     | Integration            |
@@ -388,7 +391,13 @@ describe('FormExample', () => {
 - [x] Write `convex/projects.test.ts` (100% coverage)
 - [x] Write `src/lib/utils.test.ts` (100% coverage)
 
-### Phase 2: Component Testing (In Progress)
+### Phase 2: Core Logic (Completed)
+
+- [x] Write `convex/entities.test.ts` (18 tests)
+- [x] Write `convex/facts.test.ts` (17 tests)
+- [x] Write `convex/llm/extract.test.ts` (8 tests)
+
+### Phase 3: Component Testing (In Progress)
 
 - [ ] Write `src/components/ui/alert-dialog.test.tsx`
 - [ ] Write `src/components/Header.test.tsx`
