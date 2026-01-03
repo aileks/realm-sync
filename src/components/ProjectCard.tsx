@@ -43,14 +43,19 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   };
 
   return (
-    <Card className="group hover:ring-primary/20 transition-all duration-200 hover:ring-2">
+    <Card
+      className="group hover:ring-primary/20 cursor-pointer transition-all duration-200 hover:ring-2"
+      onClick={() => onEdit?.(project)}
+    >
       <CardHeader>
         <Link
           to="/projects/$projectId"
           params={{ projectId: project._id }}
-          className="hover:text-primary transition-colors"
+          className="group-hover:text-primary transition-colors"
         >
-          <CardTitle className="font-serif text-lg">{project.name}</CardTitle>
+          <CardTitle className="group-hover:text-primary font-serif text-lg">
+            {project.name}
+          </CardTitle>
         </Link>
         {project.description && (
           <CardDescription className="line-clamp-2">{project.description}</CardDescription>
