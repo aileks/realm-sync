@@ -1,6 +1,6 @@
-import { Link, useRouterState } from '@tanstack/react-router';
+import { Link, useRouterState, useParams } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
-import { FolderOpen, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FolderOpen, BookOpen, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -12,6 +12,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { isAuthenticated } = useConvexAuth();
+  const params = useParams({ strict: false });
 
   return (
     <aside
@@ -48,6 +49,29 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           <NavItem to="/projects" icon={FolderOpen} collapsed={collapsed}>
             Projects
           </NavItem>
+        )}
+
+        {isAuthenticated && params.projectId && (
+          <>
+            <div className="my-4 px-2">
+              <div className="border-border border-t" />
+            </div>
+
+            {!collapsed && (
+              <p className="text-muted-foreground mb-2 px-3 font-mono text-[10px] tracking-widest uppercase">
+                Project Tools
+              </p>
+            )}
+
+            <ProjectNavItem
+              projectId={params.projectId}
+              to="review"
+              icon={Sparkles}
+              collapsed={collapsed}
+            >
+              Review Extractions
+            </ProjectNavItem>
+          </>
         )}
 
         <div className="my-4 px-2">
@@ -105,6 +129,46 @@ function NavItem({ to, icon: Icon, children, collapsed }: NavItemProps) {
   const content = (
     <Link
       to={to}
+      className={cn(
+        'flex items-center gap-3 rounded-lg p-3 transition-colors',
+        collapsed && 'justify-center',
+        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground'
+      )}
+    >
+      <Icon className="size-5" />
+      {!collapsed && <span className="text-sm font-medium">{children}</span>}
+    </Link>
+  );
+
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger render={content} />
+        <TooltipContent side="right">{children}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return content;
+}
+
+interface ProjectNavItemProps {
+  projectId: string;
+  to: 'review';
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  collapsed: boolean;
+}
+
+function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: ProjectNavItemProps) {
+  const routerState = useRouterState();
+  const fullPath = `/projects/${projectId}/${to}`;
+  const isActive = routerState.location.pathname.startsWith(fullPath);
+
+  const content = (
+    <Link
+      to="/projects/$projectId/review"
+      params={{ projectId }}
       className={cn(
         'flex items-center gap-3 rounded-lg p-3 transition-colors',
         collapsed && 'justify-center',

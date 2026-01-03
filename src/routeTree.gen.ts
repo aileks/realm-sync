@@ -14,7 +14,9 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsNewRouteImport } from './routes/projects_.new'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects_.$projectId'
+import { Route as ProjectsProjectIdReviewRouteImport } from './routes/projects_.$projectId_.review'
 import { Route as ProjectsProjectIdDocumentsRouteImport } from './routes/projects_.$projectId_.documents'
+import { Route as ProjectsProjectIdReviewDocumentIdRouteImport } from './routes/projects_.$projectId_.review.$documentId'
 import { Route as ProjectsProjectIdDocumentsNewRouteImport } from './routes/projects_.$projectId_.documents.new'
 import { Route as ProjectsProjectIdDocumentsDocumentIdRouteImport } from './routes/projects_.$projectId_.documents.$documentId'
 
@@ -43,11 +45,22 @@ const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
   path: '/projects/$projectId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsProjectIdReviewRoute = ProjectsProjectIdReviewRouteImport.update({
+  id: '/projects_/$projectId_/review',
+  path: '/projects/$projectId/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsProjectIdDocumentsRoute =
   ProjectsProjectIdDocumentsRouteImport.update({
     id: '/projects_/$projectId_/documents',
     path: '/projects/$projectId/documents',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const ProjectsProjectIdReviewDocumentIdRoute =
+  ProjectsProjectIdReviewDocumentIdRouteImport.update({
+    id: '/$documentId',
+    path: '/$documentId',
+    getParentRoute: () => ProjectsProjectIdReviewRoute,
   } as any)
 const ProjectsProjectIdDocumentsNewRoute =
   ProjectsProjectIdDocumentsNewRouteImport.update({
@@ -69,8 +82,10 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects/$projectId/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
+  '/projects/$projectId/review': typeof ProjectsProjectIdReviewRouteWithChildren
   '/projects/$projectId/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects/$projectId/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
+  '/projects/$projectId/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -79,8 +94,10 @@ export interface FileRoutesByTo {
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects/$projectId/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
+  '/projects/$projectId/review': typeof ProjectsProjectIdReviewRouteWithChildren
   '/projects/$projectId/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects/$projectId/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
+  '/projects/$projectId/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -90,8 +107,10 @@ export interface FileRoutesById {
   '/projects_/$projectId': typeof ProjectsProjectIdRoute
   '/projects_/new': typeof ProjectsNewRoute
   '/projects_/$projectId_/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
+  '/projects_/$projectId_/review': typeof ProjectsProjectIdReviewRouteWithChildren
   '/projects_/$projectId_/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects_/$projectId_/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
+  '/projects_/$projectId_/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -102,8 +121,10 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/projects/new'
     | '/projects/$projectId/documents'
+    | '/projects/$projectId/review'
     | '/projects/$projectId/documents/$documentId'
     | '/projects/$projectId/documents/new'
+    | '/projects/$projectId/review/$documentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -112,8 +133,10 @@ export interface FileRouteTypes {
     | '/projects/$projectId'
     | '/projects/new'
     | '/projects/$projectId/documents'
+    | '/projects/$projectId/review'
     | '/projects/$projectId/documents/$documentId'
     | '/projects/$projectId/documents/new'
+    | '/projects/$projectId/review/$documentId'
   id:
     | '__root__'
     | '/'
@@ -122,8 +145,10 @@ export interface FileRouteTypes {
     | '/projects_/$projectId'
     | '/projects_/new'
     | '/projects_/$projectId_/documents'
+    | '/projects_/$projectId_/review'
     | '/projects_/$projectId_/documents/$documentId'
     | '/projects_/$projectId_/documents/new'
+    | '/projects_/$projectId_/review/$documentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -133,6 +158,7 @@ export interface RootRouteChildren {
   ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
   ProjectsProjectIdDocumentsRoute: typeof ProjectsProjectIdDocumentsRouteWithChildren
+  ProjectsProjectIdReviewRoute: typeof ProjectsProjectIdReviewRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -172,12 +198,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects_/$projectId_/review': {
+      id: '/projects_/$projectId_/review'
+      path: '/projects/$projectId/review'
+      fullPath: '/projects/$projectId/review'
+      preLoaderRoute: typeof ProjectsProjectIdReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects_/$projectId_/documents': {
       id: '/projects_/$projectId_/documents'
       path: '/projects/$projectId/documents'
       fullPath: '/projects/$projectId/documents'
       preLoaderRoute: typeof ProjectsProjectIdDocumentsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/projects_/$projectId_/review/$documentId': {
+      id: '/projects_/$projectId_/review/$documentId'
+      path: '/$documentId'
+      fullPath: '/projects/$projectId/review/$documentId'
+      preLoaderRoute: typeof ProjectsProjectIdReviewDocumentIdRouteImport
+      parentRoute: typeof ProjectsProjectIdReviewRoute
     }
     '/projects_/$projectId_/documents/new': {
       id: '/projects_/$projectId_/documents/new'
@@ -213,6 +253,21 @@ const ProjectsProjectIdDocumentsRouteWithChildren =
     ProjectsProjectIdDocumentsRouteChildren,
   )
 
+interface ProjectsProjectIdReviewRouteChildren {
+  ProjectsProjectIdReviewDocumentIdRoute: typeof ProjectsProjectIdReviewDocumentIdRoute
+}
+
+const ProjectsProjectIdReviewRouteChildren: ProjectsProjectIdReviewRouteChildren =
+  {
+    ProjectsProjectIdReviewDocumentIdRoute:
+      ProjectsProjectIdReviewDocumentIdRoute,
+  }
+
+const ProjectsProjectIdReviewRouteWithChildren =
+  ProjectsProjectIdReviewRoute._addFileChildren(
+    ProjectsProjectIdReviewRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
@@ -220,6 +275,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectsProjectIdRoute: ProjectsProjectIdRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   ProjectsProjectIdDocumentsRoute: ProjectsProjectIdDocumentsRouteWithChildren,
+  ProjectsProjectIdReviewRoute: ProjectsProjectIdReviewRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

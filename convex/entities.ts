@@ -310,3 +310,126 @@ export const findByName = query({
       .first();
   },
 });
+
+export const confirm = mutation({
+  args: { id: v.id('entities') },
+  handler: async (ctx, { id }) => {
+    await requireAuth(ctx);
+
+    const entity = await ctx.db.get(id);
+    if (!entity) {
+      throw new Error('Entity not found');
+    }
+
+    const isOwner = await verifyProjectOwnership(ctx, entity.projectId);
+    if (!isOwner) {
+      throw new Error('Unauthorized');
+    }
+
+    await ctx.db.patch(id, {
+      status: 'confirmed',
+      updatedAt: Date.now(),
+    });
+
+    return id;
+  },
+});
+
+export const reject = mutation({
+  args: { id: v.id('entities') },
+  handler: async (ctx, { id }) => {
+    await requireAuth(ctx);
+
+    const entity = await ctx.db.get(id);
+    if (!entity) {
+      throw new Error('Entity not found');
+    }
+
+    const isOwner = await verifyProjectOwnership(ctx, entity.projectId);
+    if (!isOwner) {
+      throw new Error('Unauthorized');
+    }
+
+    const facts = await ctx.db
+      .query('facts')
+      .withIndex('by_entity', (q) => q.eq('entityId', id))
+      .collect();
+
+    const nonRejectedCount = facts.filter((f) => f.status !== 'rejected').length;
+    for (const fact of facts) {
+      await ctx.db.delete(fact._id);
+    }
+
+    await ctx.db.delete(id);
+
+    const project = await ctx.db.get(entity.projectId);
+    if (project) {
+      const stats = project.stats ?? {
+        documentCount: 0,
+        entityCount: 0,
+        factCount: 0,
+        alertCount: 0,
+      };
+      await ctx.db.patch(entity.projectId, {
+        updatedAt: Date.now(),
+        stats: {
+          ...stats,
+          entityCount: Math.max(0, stats.entityCount - 1),
+          factCount: Math.max(0, stats.factCount - nonRejectedCount),
+        },
+      });
+    }
+
+    return id;
+  },
+});
+
+export const listPending = query({
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
+    const isOwner = await verifyProjectOwnership(ctx, projectId);
+    if (!isOwner) return [];
+
+    return await ctx.db
+      .query('entities')
+      .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', 'pending'))
+      .collect();
+  },
+});
+
+export const findSimilar = query({
+  args: {
+    projectId: v.id('projects'),
+    name: v.string(),
+    excludeId: v.optional(v.id('entities')),
+  },
+  handler: async (ctx, { projectId, name, excludeId }) => {
+    const isOwner = await verifyProjectOwnership(ctx, projectId);
+    if (!isOwner) return [];
+
+    const allEntities = await ctx.db
+      .query('entities')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .collect();
+
+    const normalizedName = name.toLowerCase().trim();
+
+    return allEntities.filter((entity) => {
+      if (excludeId && entity._id === excludeId) return false;
+
+      const entityName = entity.name.toLowerCase().trim();
+      if (entityName === normalizedName) return false;
+
+      if (entityName.includes(normalizedName) || normalizedName.includes(entityName)) {
+        return true;
+      }
+
+      const entityAliases = entity.aliases.map((a) => a.toLowerCase().trim());
+      if (entityAliases.includes(normalizedName)) {
+        return true;
+      }
+
+      return false;
+    });
+  },
+});
