@@ -1,9 +1,8 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router';
+import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { TanStackDevtools } from '@tanstack/react-devtools';
 
-import Header from '../components/Header';
-
+import { AppLayout } from '../components/AppLayout';
 import ConvexProvider from '../integrations/convex/provider';
 
 import appCss from '../styles.css?url';
@@ -30,6 +29,7 @@ export const Route = createRootRoute({
     ],
   }),
 
+  component: RootLayout,
   shellComponent: RootDocument,
 });
 
@@ -40,23 +40,30 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ConvexProvider>
-          <Header />
-          {children}
-          <TanStackDevtools
-            config={{
-              position: 'bottom-right',
-            }}
-            plugins={[
-              {
-                name: 'Tanstack Router',
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-            ]}
-          />
-        </ConvexProvider>
+        {children}
         <Scripts />
       </body>
     </html>
+  );
+}
+
+function RootLayout() {
+  return (
+    <ConvexProvider>
+      <AppLayout>
+        <Outlet />
+      </AppLayout>
+      <TanStackDevtools
+        config={{
+          position: 'bottom-right',
+        }}
+        plugins={[
+          {
+            name: 'Tanstack Router',
+            render: <TanStackRouterDevtoolsPanel />,
+          },
+        ]}
+      />
+    </ConvexProvider>
   );
 }
