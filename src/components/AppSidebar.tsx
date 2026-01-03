@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useRouterState, useParams, useNavigate } from '@tanstack/react-router';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { useConvexAuth } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import {
@@ -51,6 +53,7 @@ function getStoredTheme(): Theme {
 
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.users.viewer);
   const params = useParams({ strict: false });
   const navigate = useNavigate();
   const { signOut } = useAuthActions();
@@ -194,8 +197,25 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                 collapsed ? 'justify-center px-0' : 'justify-start'
               )}
             >
-              <User className="size-4" />
-              {!collapsed && <span className="ml-2">Account</span>}
+              <div className="relative flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full">
+                {user?.image ?
+                  <img
+                    src={user.image}
+                    alt={user.name ?? 'User'}
+                    className="aspect-square h-full w-full object-cover"
+                  />
+                : user?.name ?
+                  <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center text-[8px] font-medium">
+                    {user.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </div>
+                : <User className="size-4" />}
+              </div>
+              {!collapsed && <span className="ml-2 truncate">{user?.name ?? 'Account'}</span>}
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align={collapsed ? 'center' : 'start'}
@@ -319,6 +339,7 @@ function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: Proj
 
 export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
   const { isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.users.viewer);
   const navigate = useNavigate();
   const { signOut } = useAuthActions();
 
@@ -397,8 +418,25 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
                 'w-full cursor-pointer justify-start'
               )}
             >
-              <User className="size-4" />
-              <span className="ml-2">Account</span>
+              <div className="relative flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full">
+                {user?.image ?
+                  <img
+                    src={user.image}
+                    alt={user.name ?? 'User'}
+                    className="aspect-square h-full w-full object-cover"
+                  />
+                : user?.name ?
+                  <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center text-[8px] font-medium">
+                    {user.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase()}
+                  </div>
+                : <User className="size-4" />}
+              </div>
+              <span className="ml-2 truncate">{user?.name ?? 'Account'}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="bottom">
               <DropdownMenuGroup>

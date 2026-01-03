@@ -43,7 +43,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           collapsed && 'lg:ml-16'
         )}
       >
-        <header className="bg-card border-border sticky top-0 z-20 flex h-16 items-center justify-between border-b px-4">
+        <header className="bg-card border-border sticky top-0 z-20 flex h-16 items-center justify-between border-b px-4 lg:hidden">
           <div className="flex items-center gap-4">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger
