@@ -121,7 +121,9 @@ export const extractFromDocument = internalAction({
       throw new Error(`OpenRouter API error: ${response.statusText}`);
     }
 
-    const data = await response.json();
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('OpenRouter API returned empty response');
+    }
     const result = JSON.parse(data.choices[0].message.content);
 
     return result;
