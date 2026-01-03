@@ -48,7 +48,18 @@ function AuthPage() {
 
       await signIn('password', formData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+      const message = err instanceof Error ? err.message : 'Authentication failed';
+      if (message.includes('InvalidAccountId') || message.includes('Could not find')) {
+        setError(
+          mode === 'signin' ?
+            'Account not found. Please sign up first.'
+          : 'Failed to create account.'
+        );
+      } else if (message.includes('InvalidSecret') || message.includes('password')) {
+        setError('Invalid email or password.');
+      } else {
+        setError(message);
+      }
     } finally {
       setIsLoading(false);
     }
