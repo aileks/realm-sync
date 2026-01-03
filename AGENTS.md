@@ -89,7 +89,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 pnpm dev              # Dev server (port 3000, Sentry injected)
 pnpm run build        # Production build
 pnpm run start        # Production server
-pnpm test             # Vitest (73 tests)
+pnpm test             # Vitest (94 tests)
 pnpm run lint         # Oxlint with --fix
 pnpm run typecheck    # tsc --noEmit
 pnpm run format       # Prettier
@@ -103,7 +103,7 @@ pnpm docs:list        # List docs with front-matter check
 | Core routing  | Working | TanStack Start file-based + SSR               |
 | Backend       | Working | Convex schema, auth, CRUD                     |
 | UI components | Ready   | 15 Shadcn/Base UI primitives                  |
-| Testing       | Working | Vitest + convex-test, 73 passing              |
+| Testing       | Working | Vitest + convex-test, 94 passing              |
 | CI/CD         | Working | 4 parallel jobs: lint, typecheck, test, build |
 | Auth          | Working | Google OAuth + Password                       |
 | Themes        | Ready   | 3 OKLCH themes in styles.css                  |
@@ -132,3 +132,4 @@ pnpm docs:list        # List docs with front-matter check
 - Server instrumentation via NODE_OPTIONS `--import` flag
 - Entity colors defined: character (red), location (green), item (gold), concept (purple), event (blue)
 - Before commits: `pnpm run format && pnpm run lint && pnpm run typecheck`
+- Follow TDD when implementing new features

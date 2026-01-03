@@ -20,7 +20,7 @@ Phase 2 focuses on the LLM-powered pipeline that extracts entities, facts, and r
 | 2.1 OpenRouter Integration                       | ✅ Complete | #2  |
 | 2.2 LLM Cache                                    | ✅ Complete | #3  |
 | 2.3 Entity & Fact CRUD + processExtractionResult | ✅ Complete | #4  |
-| 2.4 Document Chunking                            | ⏳ Pending  | -   |
+| 2.4 Document Chunking                            | ✅ Complete | #5  |
 | 2.5 Extraction Review UI                         | ⏳ Pending  | -   |
 | 2.6 Entity Merging UI                            | ⏳ Pending  | -   |
 
@@ -30,7 +30,7 @@ Phase 2 focuses on the LLM-powered pipeline that extracts entities, facts, and r
 
 - ✅ Set up OpenRouter integration in Convex actions.
 - ✅ Design extraction prompts with the **Vellum** persona.
-- ⏳ Implement document chunking for large texts.
+- ✅ Implement document chunking for large texts.
 - ✅ Build extraction pipeline (action → validate → mutation).
 - ✅ Create LLM response caching system.
 - ⏳ Build extraction review UI.
