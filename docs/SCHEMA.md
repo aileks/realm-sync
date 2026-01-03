@@ -37,13 +37,15 @@ erDiagram
 
 Extended from Convex Auth. Stores user accounts and global preferences.
 
-| Field       | Type                          | Description                         |
-| :---------- | :---------------------------- | :---------------------------------- |
-| `name`      | `v.optional(v.string())`      | User's display name.                |
-| `email`     | `v.string()`                  | User's email address (unique).      |
-| `image`     | `v.optional(v.string())`      | URL to user's avatar.               |
-| `createdAt` | `v.number()`                  | Unix timestamp of account creation. |
-| `settings`  | `v.optional(v.object({...}))` | Theme and notification preferences. |
+| Field                   | Type                          | Description                         |
+| :---------------------- | :---------------------------- | :---------------------------------- |
+| `name`                  | `v.optional(v.string())`      | User's display name.                |
+| `email`                 | `v.optional(v.string())`      | User's email address.               |
+| `emailVerificationTime` | `v.optional(v.float64())`     | Verification timestamp.             |
+| `image`                 | `v.optional(v.string())`      | URL to user's avatar.               |
+| `isAnonymous`           | `v.optional(v.boolean())`     | Guest user flag.                    |
+| `createdAt`             | `v.number()`                  | Account creation timestamp.         |
+| `settings`              | `v.optional(v.object({...}))` | Theme and notification preferences. |
 
 **Indexes:**
 

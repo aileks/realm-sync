@@ -30,7 +30,7 @@ convex/
 
 | Table | Fields | Notes |
 | --- | --- | --- |
-| `users` | `name`, `email`, `image`, `createdAt`, `settings` | Extended from Convex Auth |
+| `users` | `name`, `email`, `emailVerificationTime`, `image`, `isAnonymous`, `createdAt`, `settings` | Extended from Convex Auth |
 | `projects` | `userId`, `name`, `description`, `createdAt`, `updatedAt`, `stats` | Project management |
 | `documents` | `projectId`, `title`, `content`, `storageId`, `contentType`, `orderIndex`, `wordCount`, `createdAt`, `updatedAt`, `processedAt`, `processingStatus` | Document storage & tracking |
 | `entities` | `projectId`, `name`, `type`, `description`, `aliases`, `firstMentionedIn`, `createdAt`, `updatedAt` | Placeholder for Phase 2 |
@@ -131,3 +131,4 @@ npx convex deploy        # Deploy to production
 - Real-time via Convex query hooks
 - Functions auto-reload during `npx convex dev`
 - Phase 1 complete: Schema, Auth, Projects, Documents, Storage all implemented
+- All 23 tests passing (projects, utils)
