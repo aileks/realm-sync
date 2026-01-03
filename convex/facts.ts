@@ -283,15 +283,17 @@ export const remove = mutation({
 
     await ctx.db.delete(id);
 
-    const project = await ctx.db.get(fact.projectId);
-    if (project?.stats) {
-      await ctx.db.patch(fact.projectId, {
-        updatedAt: Date.now(),
-        stats: {
-          ...project.stats,
-          factCount: Math.max(0, project.stats.factCount - 1),
-        },
-      });
+    if (fact.status !== 'rejected') {
+      const project = await ctx.db.get(fact.projectId);
+      if (project?.stats) {
+        await ctx.db.patch(fact.projectId, {
+          updatedAt: Date.now(),
+          stats: {
+            ...project.stats,
+            factCount: Math.max(0, project.stats.factCount - 1),
+          },
+        });
+      }
     }
 
     return id;

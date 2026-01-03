@@ -247,7 +247,7 @@ export const remove = mutation({
       .withIndex('by_entity', (q) => q.eq('entityId', id))
       .collect();
 
-    const factCount = facts.length;
+    const nonRejectedCount = facts.filter((f) => f.status !== 'rejected').length;
     for (const fact of facts) {
       await ctx.db.delete(fact._id);
     }
@@ -261,7 +261,7 @@ export const remove = mutation({
         stats: {
           ...project.stats,
           entityCount: Math.max(0, project.stats.entityCount - 1),
-          factCount: Math.max(0, project.stats.factCount - factCount),
+          factCount: Math.max(0, project.stats.factCount - nonRejectedCount),
         },
       });
     }

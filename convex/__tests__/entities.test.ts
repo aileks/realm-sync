@@ -646,6 +646,89 @@ describe('entities', () => {
   });
 
   describe('remove mutation', () => {
+    it('only decrements factCount for non-rejected facts when cascading', async () => {
+      const t = convexTest(schema, modules);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const { projectId, entityId } = await t.run(async (ctx) => {
+        const pId = await ctx.db.insert('projects', {
+          userId,
+          name: 'Test',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          stats: { documentCount: 0, entityCount: 1, factCount: 3, alertCount: 0 },
+        });
+
+        const docId = await ctx.db.insert('documents', {
+          projectId: pId,
+          title: 'Doc',
+          contentType: 'text',
+          orderIndex: 0,
+          wordCount: 0,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          processingStatus: 'completed',
+        });
+
+        const eId = await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Mixed Facts Entity',
+          type: 'character',
+          aliases: [],
+          status: 'confirmed',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await ctx.db.insert('facts', {
+          projectId: pId,
+          entityId: eId,
+          documentId: docId,
+          subject: 'Confirmed Fact',
+          predicate: 'is',
+          object: 'counted',
+          confidence: 1.0,
+          evidenceSnippet: 'text',
+          status: 'confirmed',
+          createdAt: Date.now(),
+        });
+
+        await ctx.db.insert('facts', {
+          projectId: pId,
+          entityId: eId,
+          documentId: docId,
+          subject: 'Pending Fact',
+          predicate: 'is',
+          object: 'also counted',
+          confidence: 1.0,
+          evidenceSnippet: 'text',
+          status: 'pending',
+          createdAt: Date.now(),
+        });
+
+        await ctx.db.insert('facts', {
+          projectId: pId,
+          entityId: eId,
+          documentId: docId,
+          subject: 'Rejected Fact',
+          predicate: 'is',
+          object: 'NOT counted',
+          confidence: 1.0,
+          evidenceSnippet: 'text',
+          status: 'rejected',
+          createdAt: Date.now(),
+        });
+
+        return { projectId: pId, entityId: eId };
+      });
+
+      await asUser.mutation(api.entities.remove, { id: entityId });
+
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.stats?.entityCount).toBe(0);
+      expect(project?.stats?.factCount).toBe(1);
+    });
+
     it('deletes entity and cascades to facts', async () => {
       const t = convexTest(schema, modules);
       const { userId, asUser } = await setupAuthenticatedUser(t);
