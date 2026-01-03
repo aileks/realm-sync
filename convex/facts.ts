@@ -85,15 +85,18 @@ export const create = mutation({
       createdAt: Date.now(),
     });
 
-    const project = await ctx.db.get(projectId);
-    if (project?.stats) {
-      await ctx.db.patch(projectId, {
-        updatedAt: Date.now(),
-        stats: {
-          ...project.stats,
-          factCount: project.stats.factCount + 1,
-        },
-      });
+    const effectiveStatus = status ?? 'pending';
+    if (effectiveStatus !== 'rejected') {
+      const project = await ctx.db.get(projectId);
+      if (project?.stats) {
+        await ctx.db.patch(projectId, {
+          updatedAt: Date.now(),
+          stats: {
+            ...project.stats,
+            factCount: project.stats.factCount + 1,
+          },
+        });
+      }
     }
 
     return factId;
@@ -318,14 +321,17 @@ export const update = mutation({
       ...(status !== undefined && { status }),
     });
 
-    if (status === 'rejected' && oldStatus !== 'rejected') {
+    const newStatus = status ?? oldStatus;
+    const delta = (newStatus === 'rejected' ? 0 : 1) - (oldStatus === 'rejected' ? 0 : 1);
+
+    if (status !== undefined && delta !== 0) {
       const project = await ctx.db.get(fact.projectId);
       if (project?.stats) {
         await ctx.db.patch(fact.projectId, {
           updatedAt: Date.now(),
           stats: {
             ...project.stats,
-            factCount: Math.max(0, project.stats.factCount - 1),
+            factCount: Math.max(0, project.stats.factCount + delta),
           },
         });
       }
