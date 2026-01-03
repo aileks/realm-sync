@@ -248,14 +248,25 @@ For documents exceeding LLM context limits or to improve extraction precision:
 - `merge`: Combine two entities (e.g., character and their alias).
 - `listByProject`: Fetch all entities for a specific project.
 - `getWithFacts`: Get entity details including associated facts.
+- `confirm`: Approve a pending entity from extraction queue.
+- `reject`: Discard an incorrect entity.
+- `listPending`: Get all facts awaiting review for a project.
+- `findSimilar`: Find potential duplicate entities for merging.
 
 ### Facts (`convex/facts.ts`)
 
 - `create`: Add a confirmed fact.
-- `confirm`: Approve a pending fact from the extraction queue.
+- `confirm`: Approve a pending fact from extraction queue.
 - `reject`: Discard an incorrect fact.
 - `listByEntity`: Get all facts related to a specific entity.
 - `listPending`: Get all facts awaiting review for a project.
+
+### Seed Data (`convex/seed.ts`)
+
+- `seedProject`: Creates a sample fantasy project with 2 documents, 7 entities, 8 facts for development testing.
+- `clearSeedData`: Deletes all seed data for a project.
+
+**Note**: To use seed data, run `api.seed.seedProject` mutation via Convex dashboard with a valid `userId`.
 
 ---
 

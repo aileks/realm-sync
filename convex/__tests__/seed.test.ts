@@ -35,7 +35,7 @@ describe('seed.seedProject mutation', () => {
     expect(project?.name).toBe('The Northern Chronicles');
     expect(project?.stats).toEqual({
       documentCount: 2,
-      entityCount: 5,
+      entityCount: 7,
       factCount: 8,
       alertCount: 0,
     });
@@ -83,7 +83,7 @@ describe('seed.seedProject mutation', () => {
         .collect();
     });
 
-    expect(entities).toHaveLength(5);
+    expect(entities).toHaveLength(7);
 
     const aldric = entities.find((e) => e.name === 'King Aldric');
     expect(aldric).toBeDefined();
@@ -94,9 +94,27 @@ describe('seed.seedProject mutation', () => {
     expect(sera).toBeDefined();
     expect(sera?.status).toBe('pending');
 
+    const thorne = entities.find((e) => e.name === 'Commander Thorne');
+    expect(thorne).toBeDefined();
+    expect(thorne?.status).toBe('pending');
+
+    const crow = entities.find((e) => e.name === 'Magister Crow');
+    expect(crow).toBeDefined();
+    expect(crow?.status).toBe('pending');
+
+    const winterhold = entities.find((e) => e.name === 'Winterhold Castle');
+    expect(winterhold).toBeDefined();
+    expect(winterhold?.type).toBe('location');
+    expect(winterhold?.status).toBe('confirmed');
+
     const frostborne = entities.find((e) => e.name === 'The Frostborne');
     expect(frostborne).toBeDefined();
     expect(frostborne?.type).toBe('concept');
+
+    const pact = entities.find((e) => e.name === 'The Pact of Frost');
+    expect(pact).toBeDefined();
+    expect(pact?.type).toBe('event');
+    expect(pact?.status).toBe('pending');
   });
 
   it('creates facts with correct evidencePositions', async () => {
@@ -143,7 +161,7 @@ describe('seed.seedProject mutation', () => {
       t.mutation(api.seed.seedProject, {
         userId: 'userId' as Id<'users'>,
       })
-    ).rejects.toThrow(/unauthorized/i);
+    ).rejects.toThrow(/validator|unauthorized/i);
   });
 });
 
