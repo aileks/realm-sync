@@ -1,9 +1,9 @@
 import { convexTest } from 'convex-test';
 import { describe, it, expect } from 'vitest';
-import { api } from './_generated/api';
-import schema from './schema';
+import { api } from '../_generated/api';
+import schema from '../schema';
 
-const modules = import.meta.glob('./**/*.ts');
+const modules = import.meta.glob('../**/*.ts');
 
 async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
   const userId = await t.run(async (ctx) => {
