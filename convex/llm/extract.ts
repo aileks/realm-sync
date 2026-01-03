@@ -115,16 +115,13 @@ export const extractFromDocument = internalAction({
       content: doc.content,
     });
 
-    const cached: { response: string; expiresAt: number } | null = await ctx.runQuery(
-      internal.llm.cache.checkCache,
-      {
-        inputHash: contentHash,
-        promptVersion: PROMPT_VERSION,
-      }
-    );
+    const cached: ExtractionResult | null = await ctx.runQuery(internal.llm.cache.checkCache, {
+      inputHash: contentHash,
+      promptVersion: PROMPT_VERSION,
+    });
 
     if (cached) {
-      return JSON.parse(cached.response);
+      return cached;
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
