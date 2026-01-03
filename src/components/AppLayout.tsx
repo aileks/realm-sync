@@ -1,16 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
-import { useAuthActions } from '@convex-dev/auth/react';
-import { Menu, LogOut, User, FolderOpen } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { AppSidebar, MobileSidebarContent } from './AppSidebar';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
@@ -20,7 +13,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const routerState = useRouterState();
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const { signOut } = useAuthActions();
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
@@ -33,11 +25,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
   }, [collapsed]);
-
-  async function handleSignOut() {
-    await signOut();
-    void navigate({ to: '/' });
-  }
 
   if (isAuthPage || isLandingPage) {
     return <>{children}</>;
@@ -60,12 +47,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger
-                render={
-                  <Button variant="ghost" size="icon" className="lg:hidden">
-                    <Menu className="size-5" />
-                  </Button>
-                }
-              />
+                className={cn(
+                  'hover:bg-muted flex items-center justify-center rounded-md p-2 transition-colors lg:hidden'
+                )}
+              >
+                <Menu className="size-5" />
+                <span className="sr-only">Toggle menu</span>
+              </SheetTrigger>
               <SheetContent side="left" showCloseButton={true}>
                 <SheetHeader>
                   <SheetTitle className="font-serif">Navigation</SheetTitle>
@@ -76,28 +64,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {isLoading ?
-              null
-            : isAuthenticated ?
-              <DropdownMenu>
-                <DropdownMenuTrigger className="hover:bg-muted flex items-center gap-2 rounded-lg p-2 transition-colors">
-                  <User className="size-5" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate({ to: '/projects' })}>
-                    <FolderOpen className="mr-2 size-4" />
-                    Projects
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 size-4" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            : <Button size="sm" onClick={() => navigate({ to: '/auth' })}>
+            {!isLoading && !isAuthenticated && (
+              <Button size="sm" onClick={() => navigate({ to: '/auth' })}>
                 Sign In
               </Button>
-            }
+            )}
           </div>
         </header>
 

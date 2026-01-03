@@ -1,4 +1,14 @@
-import { User, MapPin, Package, Lightbulb, Calendar, Check, X, Pencil } from 'lucide-react';
+import {
+  User,
+  MapPin,
+  Package,
+  Lightbulb,
+  Calendar,
+  Check,
+  X,
+  Pencil,
+  HelpCircle,
+} from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardAction } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,6 +16,7 @@ import { cn } from '@/lib/utils';
 import type { Doc, Id } from '../../convex/_generated/dataModel';
 
 type Entity = Doc<'entities'>;
+type EntityType = Entity['type'];
 
 interface EntityCardProps {
   entity: Entity;
@@ -16,7 +27,12 @@ interface EntityCardProps {
   onMerge?: (sourceId: Id<'entities'>, targetId: Id<'entities'>) => void;
 }
 
-const entityTypeConfig = {
+const defaultConfig = {
+  icon: HelpCircle,
+  colorClass: 'bg-muted text-muted-foreground ring-muted',
+};
+
+const entityTypeConfig: Record<EntityType, { icon: typeof User; colorClass: string }> = {
   character: {
     icon: User,
     colorClass: 'bg-entity-character/15 text-entity-character ring-entity-character/20',
@@ -44,7 +60,7 @@ export function EntityCard({
   similarEntities,
   onMerge,
 }: EntityCardProps) {
-  const config = entityTypeConfig[entity.type];
+  const config = entityTypeConfig[entity.type] ?? defaultConfig;
   const Icon = config.icon;
 
   return (
