@@ -1,9 +1,9 @@
-import { createRouter } from '@tanstack/react-router'
+import { createRouter } from '@tanstack/react-router';
 
-import * as Sentry from '@sentry/tanstackstart-react'
+import * as Sentry from '@sentry/tanstackstart-react';
 
 // Import the generated route tree
-import { routeTree } from './routeTree.gen'
+import { routeTree } from './routeTree.gen';
 
 // Create a new router instance
 export const getRouter = () => {
@@ -13,7 +13,7 @@ export const getRouter = () => {
 
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
-  })
+  });
 
   if (!router.isServer) {
     Sentry.init({
@@ -21,8 +21,8 @@ export const getRouter = () => {
       integrations: [],
       tracesSampleRate: 1.0,
       sendDefaultPii: true,
-    })
+    });
   }
 
-  return router
-}
+  return router;
+};

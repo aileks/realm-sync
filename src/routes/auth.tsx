@@ -28,7 +28,7 @@ function AuthPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate({ to: '/projects' });
+      void navigate({ to: '/projects' });
     }
   }, [isAuthenticated, navigate]);
 

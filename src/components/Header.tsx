@@ -20,7 +20,7 @@ export default function Header() {
 
   async function handleSignOut() {
     await signOut();
-    navigate({ to: '/' });
+    void navigate({ to: '/' });
   }
 
   return (

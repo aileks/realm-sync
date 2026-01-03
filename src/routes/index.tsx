@@ -15,7 +15,7 @@ function LandingPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate({ to: '/projects' });
+      void navigate({ to: '/projects' });
     }
   }, [isLoading, isAuthenticated, navigate]);
 

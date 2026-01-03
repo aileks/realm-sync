@@ -10,7 +10,8 @@
     "start": "node --import ./.output/server/instrument.server.mjs .output/server/index.mjs",
     "docs:list": "node scripts/docs.mjs",
     "format": "prettier --write .",
-    "lint": "oxlint --fix --fix-suggestions --type-aware -c ./.oxlintrc.json ."
+    "lint": "oxlint --fix --fix-suggestions --type-aware -c ./.oxlintrc.json .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@auth/core": "0.37.0",

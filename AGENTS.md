@@ -108,6 +108,7 @@ pnpm run test
 - Tailwind v4 = CSS-first (no `tailwind.config.js`)
 - Header has dead links to removed demo routes—cleanup pending
 - Test infrastructure ready per `docs/TESTING-STRATEGY.md` but no tests exist
+- After **EVERY** major change, and before **EVERY** commit, format the code, check linting, and run type-checking.
 
 ## CODING GUIDELINES
 

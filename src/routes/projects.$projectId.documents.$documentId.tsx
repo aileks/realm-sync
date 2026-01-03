@@ -3,13 +3,12 @@ import { useQuery, useMutation } from 'convex/react';
 import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Save, Loader2, CheckCircle, Clock } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/LoadingState';
-import { cn } from '@/lib/utils';
+import { cn, toId } from '@/lib/utils';
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -22,7 +21,7 @@ export const Route = createFileRoute('/projects/$projectId/documents/$documentId
 function DocumentEditorPage() {
   const navigate = useNavigate();
   const { projectId, documentId } = Route.useParams();
-  const document = useQuery(api.documents.get, { id: documentId as Id<'documents'> });
+  const document = useQuery(api.documents.get, { id: toId<'documents'>(documentId) });
   const updateDocument = useMutation(api.documents.update);
 
   const [title, setTitle] = useState('');
@@ -67,7 +66,7 @@ function DocumentEditorPage() {
     if (!hasChanges) return;
 
     const timer = setTimeout(() => {
-      save();
+      void save();
     }, 2000);
 
     return () => clearTimeout(timer);
@@ -77,7 +76,7 @@ function DocumentEditorPage() {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        save();
+        void save();
       }
     }
 

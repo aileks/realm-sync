@@ -3,7 +3,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { useState } from 'react';
 import { FileText, Users, Lightbulb, AlertTriangle, Plus, Settings, ArrowLeft } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import { toId } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,8 +28,8 @@ export const Route = createFileRoute('/projects/$projectId')({
 function ProjectDashboard() {
   const navigate = useNavigate();
   const { projectId } = Route.useParams();
-  const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
-  const documents = useQuery(api.documents.list, { projectId: projectId as Id<'projects'> });
+  const project = useQuery(api.projects.get, { id: toId<'projects'>(projectId) });
+  const documents = useQuery(api.documents.list, { projectId: toId<'projects'>(projectId) });
   const deleteProject = useMutation(api.projects.remove);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -59,8 +59,8 @@ function ProjectDashboard() {
   };
 
   async function handleDelete() {
-    await deleteProject({ id: projectId as Id<'projects'> });
-    navigate({ to: '/projects' });
+    await deleteProject({ id: toId<'projects'>(projectId) });
+    void navigate({ to: '/projects' });
   }
 
   if (isEditing) {
