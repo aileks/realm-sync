@@ -6,12 +6,19 @@
     "suspicious": "warn"
   },
   "rules": {
-    "no-debugger": "error",
+    "typescript/consistent-type-imports": "error",
+    "typescript/consistent-type-definitions": "error",
+    "typescript/tsconfig-error": "off",
     "typescript/no-explicit-any": "error",
+    "typescript/no-unused-vars": "error",
+
     "react/exhaustive-deps": "warn",
     "react/rules-of-hooks": "error",
+
+    "import/consistent-type-specifier-style": "error",
     "eslint-plugin-react/react-in-jsx-scope": "off",
-    "typescript/tsconfig-error": "off"
+    "jest/no-conditional-expect": "off",
+    "no-debugger": "error"
   },
   "settings": {
     "react": {

@@ -8,7 +8,11 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}', 'convex/__tests__/**/*.test.ts'],
+    include: [
+      'src/**/*.{test,spec}.{ts,tsx}',
+      'src/test/**/*.test.ts',
+      'convex/__tests__/**/*.test.ts',
+    ],
     server: {
       deps: {
         inline: ['convex-test'],

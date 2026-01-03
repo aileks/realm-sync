@@ -21,7 +21,7 @@ import { ProjectForm } from '@/components/ProjectForm';
 import { LoadingState } from '@/components/LoadingState';
 import { cn } from '@/lib/utils';
 
-export const Route = createFileRoute('/projects/$projectId')({
+export const Route = createFileRoute('/projects_/$projectId')({
   component: ProjectDashboard,
 });
 

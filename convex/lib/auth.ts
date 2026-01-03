@@ -1,16 +1,9 @@
-import { Id } from '../_generated/dataModel';
-import { MutationCtx, QueryCtx } from '../_generated/server';
+import { getAuthUserId as convexGetAuthUserId } from '@convex-dev/auth/server';
+import type { Id } from '../_generated/dataModel';
+import type { MutationCtx, QueryCtx } from '../_generated/server';
 
 export async function getAuthUserId(ctx: QueryCtx | MutationCtx): Promise<Id<'users'> | null> {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) return null;
-
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_email', (q) => q.eq('email', identity.email))
-    .first();
-
-  return user?._id ?? null;
+  return await convexGetAuthUserId(ctx);
 }
 
 export async function getCurrentUser(ctx: QueryCtx | MutationCtx) {

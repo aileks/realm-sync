@@ -1,4 +1,5 @@
-import { useState, FormEvent } from 'react';
+import type { FormEvent } from 'react';
+import { useState } from 'react';
 import { useMutation } from 'convex/react';
 import { Loader2 } from 'lucide-react';
 import { api } from '../../convex/_generated/api';

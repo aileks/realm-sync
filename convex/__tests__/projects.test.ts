@@ -14,7 +14,7 @@ async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
     });
   });
 
-  const asUser = t.withIdentity({ email: 'test@example.com' });
+  const asUser = t.withIdentity({ subject: userId });
   return { userId, asUser };
 }
 

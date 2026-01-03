@@ -1,6 +1,6 @@
 import { Link, useRouterState } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
-import { Home, FolderOpen, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FolderOpen, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -44,10 +44,6 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2">
-        <NavItem to="/" icon={Home} collapsed={collapsed}>
-          Home
-        </NavItem>
-
         {isAuthenticated && (
           <NavItem to="/projects" icon={FolderOpen} collapsed={collapsed}>
             Projects
@@ -137,10 +133,6 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
 
   return (
     <nav className="flex flex-col gap-1 p-4">
-      <MobileNavItem to="/" icon={Home} onClick={onClose}>
-        Home
-      </MobileNavItem>
-
       {isAuthenticated && (
         <MobileNavItem to="/projects" icon={FolderOpen} onClick={onClose}>
           Projects
