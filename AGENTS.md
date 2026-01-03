@@ -115,6 +115,5 @@ pnpm run test
 - WCAG AAA accessibility
 - Rendering performance awareness (repaint/reflow costs)
 - Minimalism: if element has no purpose, delete it
-- Anti-generic: reject template layouts; strive for bespoke design
 - Library Discipline (CRITICAL): If a UI library (e.g., Shadcn UI, Radix, MUI) is detected or active in the project, **YOU MUST USE IT**.
   - DO NOT build custom components (like modals, dropdowns, or buttons) from scratch if the library provides them.
