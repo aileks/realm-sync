@@ -306,6 +306,8 @@ export const update = mutation({
       throw new Error('Unauthorized');
     }
 
+    const oldStatus = fact.status;
+
     await ctx.db.patch(id, {
       ...(subject !== undefined && { subject }),
       ...(predicate !== undefined && { predicate }),
@@ -315,6 +317,19 @@ export const update = mutation({
       ...(temporalBound !== undefined && { temporalBound }),
       ...(status !== undefined && { status }),
     });
+
+    if (status === 'rejected' && oldStatus !== 'rejected') {
+      const project = await ctx.db.get(fact.projectId);
+      if (project?.stats) {
+        await ctx.db.patch(fact.projectId, {
+          updatedAt: Date.now(),
+          stats: {
+            ...project.stats,
+            factCount: Math.max(0, project.stats.factCount - 1),
+          },
+        });
+      }
+    }
 
     return id;
   },
