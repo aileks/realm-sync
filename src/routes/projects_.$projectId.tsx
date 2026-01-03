@@ -112,13 +112,21 @@ function ProjectDashboard() {
           label="Entities"
           value={stats.entityCount}
           variant="entity-character"
+          onClick={() => navigate({ to: '/projects/$projectId/entities', params: { projectId } })}
         />
-        <StatCard icon={Lightbulb} label="Facts" value={stats.factCount} variant="entity-concept" />
+        <StatCard
+          icon={Lightbulb}
+          label="Facts"
+          value={stats.factCount}
+          variant="entity-concept"
+          onClick={() => navigate({ to: '/projects/$projectId/facts', params: { projectId } })}
+        />
         <StatCard
           icon={AlertTriangle}
           label="Alerts"
           value={stats.alertCount}
           variant={stats.alertCount > 0 ? 'destructive' : undefined}
+          onClick={() => navigate({ to: '/projects/$projectId/alerts', params: { projectId } })}
         />
       </div>
 
@@ -150,6 +158,12 @@ function ProjectDashboard() {
               key={doc._id}
               size="sm"
               className="hover:bg-muted/50 cursor-pointer transition-colors"
+              onClick={() =>
+                navigate({
+                  to: '/projects/$projectId/documents/$documentId',
+                  params: { projectId, documentId: doc._id },
+                })
+              }
             >
               <CardHeader className="py-3">
                 <CardTitle className="text-base font-medium">{doc.title}</CardTitle>

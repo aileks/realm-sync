@@ -13,18 +13,26 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const routerState = useRouterState();
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const [collapsed, setCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
-  });
+  const [collapsed, setCollapsed] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+    if (stored === 'true') {
+      setCollapsed(true);
+    }
+    setIsLoaded(true);
+  }, []);
 
   const isAuthPage = routerState.location.pathname === '/auth';
   const isLandingPage = routerState.location.pathname === '/' && !isAuthenticated;
 
   useEffect(() => {
-    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
-  }, [collapsed]);
+    if (isLoaded) {
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
+    }
+  }, [collapsed, isLoaded]);
 
   if (isAuthPage || isLandingPage) {
     return <>{children}</>;

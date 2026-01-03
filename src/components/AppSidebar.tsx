@@ -58,9 +58,19 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const navigate = useNavigate();
   const { signOut } = useAuthActions();
 
-  const [theme, setTheme] = useState<Theme>(getStoredTheme);
+  const [theme, setTheme] = useState<Theme>('default');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    const stored = getStoredTheme();
+    if (stored !== 'default') {
+      setTheme(stored);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     const root = document.documentElement;
     if (theme === 'default') {
       root.removeAttribute('data-theme');
@@ -68,7 +78,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       root.setAttribute('data-theme', theme);
     }
     localStorage.setItem('theme', theme);
-  }, [theme]);
+  }, [theme, mounted]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -343,9 +353,19 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const { signOut } = useAuthActions();
 
-  const [theme, setTheme] = useState<Theme>(getStoredTheme);
+  const [theme, setTheme] = useState<Theme>('default');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    const stored = getStoredTheme();
+    if (stored !== 'default') {
+      setTheme(stored);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     const root = document.documentElement;
     if (theme === 'default') {
       root.removeAttribute('data-theme');
@@ -353,7 +373,7 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
       root.setAttribute('data-theme', theme);
     }
     localStorage.setItem('theme', theme);
-  }, [theme]);
+  }, [theme, mounted]);
 
   const handleSignOut = async () => {
     await signOut();
