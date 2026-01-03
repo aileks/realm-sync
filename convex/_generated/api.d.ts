@@ -10,6 +10,8 @@
 
 import type * as auth from "../auth.js";
 import type * as documents from "../documents.js";
+import type * as entities from "../entities.js";
+import type * as facts from "../facts.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as llm_cache from "../llm/cache.js";
@@ -27,6 +29,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   documents: typeof documents;
+  entities: typeof entities;
+  facts: typeof facts;
   http: typeof http;
   "lib/auth": typeof lib_auth;
   "llm/cache": typeof llm_cache;

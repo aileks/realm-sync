@@ -107,6 +107,12 @@ Source text (chapters, session notes).
 - `processedAt`: optional number
 - `processingStatus`: "pending" | "processing" | "completed" | "failed"
 
+**Indices**:
+
+- `by_project`: `["projectId", "orderIndex"]`
+- `by_project_status`: `["projectId", "processingStatus"]`
+- `search_content`: `searchField: content`, `filterFields: [projectId]`
+
 #### `entities`
 
 Canon objects (characters, locations, items, etc.).
@@ -117,8 +123,16 @@ Canon objects (characters, locations, items, etc.).
 - `description`: optional string
 - `aliases`: array of strings
 - `firstMentionedIn`: optional id("documents")
+- `status`: "pending" | "confirmed"
 - `createdAt`: number
 - `updatedAt`: number
+
+**Indices**:
+
+- `by_project`: `["projectId", "type"]`
+- `by_project_status`: `["projectId", "status"]`
+- `by_name`: `["projectId", "name"]`
+- `search_name`: `searchField: name`, `filterFields: [projectId]`
 
 #### `facts`
 
@@ -136,6 +150,12 @@ Atomic canon statements (Subject-Predicate-Object).
 - `temporalBound`: optional object { type, value }
 - `status`: "pending" | "confirmed" | "rejected"
 - `createdAt`: number
+
+**Indices**:
+
+- `by_entity`: `["entityId", "status"]`
+- `by_document`: `["documentId"]`
+- `by_project`: `["projectId", "status"]`
 
 #### `alerts`
 
@@ -223,14 +243,16 @@ src/routes/
 - Extraction pipeline (action → validate → mutation)
 - LLM response caching (7-day TTL)
 - Extraction review UI (proposed entities/facts)
-- Entity merging/aliasing
+- Entity merging/aliasing (merges aliases, reassigns facts)
+- Status flows: Entity (pending → confirmed), Fact (pending → confirmed/rejected)
+- Relationships stored as facts (predicate = relationshipType)
 
 **Convex Functions**:
 
-- `llm/extract.ts`: extractFromDocument (action), processExtractionResult (mutation)
-- `llm/cache.ts`: checkCache, saveToCache, invalidateCache
-- `entities.ts`: create, update, merge, listByProject, getWithFacts
-- `facts.ts`: create, confirm, reject, listByEntity, listPending
+- `llm/extract.ts`: `extractFromDocument` (action), `processExtractionResult` (internalMutation)
+- `llm/cache.ts`: `checkCache`, `saveToCache`, `invalidateCache`
+- `entities.ts`: `create`, `update`, `merge`, `listByProject`, `getWithFacts`, `remove`, `get`, `findByName`
+- `facts.ts`: `create`, `confirm`, `reject`, `listByEntity`, `listPending`, `listByDocument`, `listByProject`, `remove`, `update`, `get`
 
 **JSON Schema for Extraction**:
 

@@ -16,3 +16,4 @@ todos.json
 !.cursor/settings.json
 .vscode/*
 !.vscode/settings.json
+coverage/

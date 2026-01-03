@@ -96,13 +96,16 @@ export const create = mutation({
     });
 
     const project = await ctx.db.get(projectId);
-    if (project?.stats) {
+    if (project) {
+      const stats = project.stats ?? {
+        documentCount: 0,
+        entityCount: 0,
+        factCount: 0,
+        alertCount: 0,
+      };
       await ctx.db.patch(projectId, {
         updatedAt: now,
-        stats: {
-          ...project.stats,
-          documentCount: project.stats.documentCount + 1,
-        },
+        stats: { ...stats, documentCount: stats.documentCount + 1 },
       });
     }
 
@@ -167,13 +170,16 @@ export const remove = mutation({
     }
 
     const project = await ctx.db.get(doc.projectId);
-    if (project?.stats) {
+    if (project) {
+      const stats = project.stats ?? {
+        documentCount: 0,
+        entityCount: 0,
+        factCount: 0,
+        alertCount: 0,
+      };
       await ctx.db.patch(doc.projectId, {
         updatedAt: Date.now(),
-        stats: {
-          ...project.stats,
-          documentCount: Math.max(0, project.stats.documentCount - 1),
-        },
+        stats: { ...stats, documentCount: Math.max(0, stats.documentCount - 1) },
       });
     }
 

@@ -58,7 +58,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 - **Types**: Use types over interfaces unless an interface is explicitly need; use a comment for explanation/justification
 - **Runtime**: `pnpm` exclusively
 - **Path aliases**: `@/*` → `./src/*` (but Convex uses relative `../../convex/_generated/api`)
-- **Routing**: Dotted filenames for nested routes (`$projectId.documents.new.tsx`)
+- **Routing**: Underscore-escaped filenames for nested routes (`projects_.$projectId_.documents.tsx` → `/projects/:projectId/documents`); `_.` escapes prevent folder nesting
 - **Typography**: DM Sans (body), Aleo (headings), iA Writer Mono (code)
 - **Colors**: OKLCH exclusively; 3 themes: default, twilight-study, amber-archive
 - **UI primitives**: @base-ui/react + CVA variants + `data-slot` attributes
@@ -89,7 +89,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 pnpm dev              # Dev server (port 3000, Sentry injected)
 pnpm run build        # Production build
 pnpm run start        # Production server
-pnpm test             # Vitest (23 tests)
+pnpm test             # Vitest (73 tests)
 pnpm run lint         # Oxlint with --fix
 pnpm run typecheck    # tsc --noEmit
 pnpm run format       # Prettier
@@ -103,7 +103,7 @@ pnpm docs:list        # List docs with front-matter check
 | Core routing  | Working | TanStack Start file-based + SSR               |
 | Backend       | Working | Convex schema, auth, CRUD                     |
 | UI components | Ready   | 15 Shadcn/Base UI primitives                  |
-| Testing       | Working | Vitest + convex-test, 23 passing              |
+| Testing       | Working | Vitest + convex-test, 73 passing              |
 | CI/CD         | Working | 4 parallel jobs: lint, typecheck, test, build |
 | Auth          | Working | Google OAuth + Password                       |
 | Themes        | Ready   | 3 OKLCH themes in styles.css                  |
