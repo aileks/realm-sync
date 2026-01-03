@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
@@ -165,21 +166,22 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             {!collapsed && <span className="ml-2">Theme</span>}
           </DropdownMenuTrigger>
           <DropdownMenuContent align={collapsed ? 'center' : 'start'} side="right" sideOffset={10}>
-            <DropdownMenuLabel>Select Theme</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {THEMES.map((t) => (
-              <DropdownMenuItem
-                key={t.id}
-                onClick={() => setTheme(t.id)}
-                className="justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  <t.icon className="size-4" />
-                  <span>{t.name}</span>
-                </div>
-                {theme === t.id && <Check className="size-4" />}
-              </DropdownMenuItem>
-            ))}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Select Theme</DropdownMenuLabel>
+              {THEMES.map((t) => (
+                <DropdownMenuItem
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  className="justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <t.icon className="size-4" />
+                    <span>{t.name}</span>
+                  </div>
+                  {theme === t.id && <Check className="size-4" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -201,12 +203,13 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               sideOffset={10}
               className="w-48"
             >
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate({ to: '/projects' })}>
-                <FolderOpen className="mr-2 size-4" />
-                Projects
-              </DropdownMenuItem>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => navigate({ to: '/projects' })}>
+                  <FolderOpen className="mr-2 size-4" />
+                  Projects
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="mr-2 size-4" />
@@ -365,21 +368,22 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
             <span className="ml-2">Theme</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="bottom">
-            <DropdownMenuLabel>Select Theme</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {THEMES.map((t) => (
-              <DropdownMenuItem
-                key={t.id}
-                onClick={() => setTheme(t.id)}
-                className="justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  <t.icon className="size-4" />
-                  <span>{t.name}</span>
-                </div>
-                {theme === t.id && <Check className="size-4" />}
-              </DropdownMenuItem>
-            ))}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Select Theme</DropdownMenuLabel>
+              {THEMES.map((t) => (
+                <DropdownMenuItem
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  className="justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <t.icon className="size-4" />
+                    <span>{t.name}</span>
+                  </div>
+                  {theme === t.id && <Check className="size-4" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -397,17 +401,18 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
               <span className="ml-2">Account</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="bottom">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  onClose();
-                  void navigate({ to: '/projects' });
-                }}
-              >
-                <FolderOpen className="mr-2 size-4" />
-                Projects
-              </DropdownMenuItem>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => {
+                    onClose();
+                    void navigate({ to: '/projects' });
+                  }}
+                >
+                  <FolderOpen className="mr-2 size-4" />
+                  Projects
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut}>
                 <LogOut className="mr-2 size-4" />
