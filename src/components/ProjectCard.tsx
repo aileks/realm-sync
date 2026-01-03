@@ -124,7 +124,7 @@ function StatBadge({ icon: Icon, count, label, variant = 'default' }: StatBadgeP
     >
       <Icon className="size-3" />
       <span>{count}</span>
-      <span className="text-muted-foreground">{label}</span>
+      <span>{label}</span>
     </Badge>
   );
 }

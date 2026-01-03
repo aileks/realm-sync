@@ -668,6 +668,256 @@ describe('entities', () => {
     });
   });
 
+  describe('confirm mutation', () => {
+    it('confirms a pending entity', async () => {
+      const t = convexTest(schema, modules);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const entityId = await t.run(async (ctx) => {
+        const pId = await ctx.db.insert('projects', {
+          userId,
+          name: 'Test',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        return await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Pending Entity',
+          type: 'character',
+          aliases: [],
+          status: 'pending',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      });
+
+      await asUser.mutation(api.entities.confirm, { id: entityId });
+
+      const entity = await t.run(async (ctx) => ctx.db.get(entityId));
+      expect(entity?.status).toBe('confirmed');
+    });
+
+    it('throws when entity not found', async () => {
+      const t = convexTest(schema, modules);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { entityId } = await setupProjectWithEntities(t, userId);
+
+      await t.run(async (ctx) => ctx.db.delete(entityId));
+
+      await expect(asUser.mutation(api.entities.confirm, { id: entityId })).rejects.toThrow(
+        /not found/i
+      );
+    });
+  });
+
+  describe('reject mutation', () => {
+    it('rejects entity and cascades to delete facts', async () => {
+      const t = convexTest(schema, modules);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const { projectId, entityId, factId } = await t.run(async (ctx) => {
+        const pId = await ctx.db.insert('projects', {
+          userId,
+          name: 'Test',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          stats: { documentCount: 0, entityCount: 1, factCount: 1, alertCount: 0 },
+        });
+
+        const docId = await ctx.db.insert('documents', {
+          projectId: pId,
+          title: 'Doc',
+          contentType: 'text',
+          orderIndex: 0,
+          wordCount: 0,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          processingStatus: 'completed',
+        });
+
+        const eId = await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'To Reject',
+          type: 'character',
+          aliases: [],
+          status: 'pending',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        const fId = await ctx.db.insert('facts', {
+          projectId: pId,
+          entityId: eId,
+          documentId: docId,
+          subject: 'To Reject',
+          predicate: 'has',
+          object: 'fact',
+          confidence: 1.0,
+          evidenceSnippet: 'text',
+          status: 'pending',
+          createdAt: Date.now(),
+        });
+
+        return { projectId: pId, entityId: eId, factId: fId };
+      });
+
+      await asUser.mutation(api.entities.reject, { id: entityId });
+
+      const entity = await t.run(async (ctx) => ctx.db.get(entityId));
+      expect(entity).toBeNull();
+
+      const fact = await t.run(async (ctx) => ctx.db.get(factId));
+      expect(fact).toBeNull();
+
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.stats?.entityCount).toBe(0);
+      expect(project?.stats?.factCount).toBe(0);
+    });
+  });
+
+  describe('listPending query', () => {
+    it('returns only pending entities for project', async () => {
+      const t = convexTest(schema, modules);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const projectId = await t.run(async (ctx) => {
+        const pId = await ctx.db.insert('projects', {
+          userId,
+          name: 'Test',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Pending 1',
+          type: 'character',
+          aliases: [],
+          status: 'pending',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Pending 2',
+          type: 'location',
+          aliases: [],
+          status: 'pending',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Confirmed',
+          type: 'item',
+          aliases: [],
+          status: 'confirmed',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        return pId;
+      });
+
+      const pending = await asUser.query(api.entities.listPending, { projectId });
+      expect(pending).toHaveLength(2);
+      expect(pending.every((e) => e.status === 'pending')).toBe(true);
+    });
+  });
+
+  describe('findSimilar query', () => {
+    it('finds entities with overlapping names', async () => {
+      const t = convexTest(schema, modules);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const { projectId, entityId } = await t.run(async (ctx) => {
+        const pId = await ctx.db.insert('projects', {
+          userId,
+          name: 'Test',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        const eId = await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Jon',
+          type: 'character',
+          aliases: [],
+          status: 'pending',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Jon Snow',
+          type: 'character',
+          aliases: ['Lord Snow'],
+          status: 'confirmed',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Daenerys',
+          type: 'character',
+          aliases: [],
+          status: 'confirmed',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        return { projectId: pId, entityId: eId };
+      });
+
+      const similar = await asUser.query(api.entities.findSimilar, {
+        projectId,
+        name: 'Jon',
+        excludeId: entityId,
+      });
+
+      expect(similar).toHaveLength(1);
+      expect(similar[0].name).toBe('Jon Snow');
+    });
+
+    it('finds entities by alias match', async () => {
+      const t = convexTest(schema, modules);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const projectId = await t.run(async (ctx) => {
+        const pId = await ctx.db.insert('projects', {
+          userId,
+          name: 'Test',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Jon Snow',
+          type: 'character',
+          aliases: ['Lord Snow', 'The White Wolf'],
+          status: 'confirmed',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        return pId;
+      });
+
+      const similar = await asUser.query(api.entities.findSimilar, {
+        projectId,
+        name: 'Lord Snow',
+      });
+
+      expect(similar).toHaveLength(1);
+      expect(similar[0].name).toBe('Jon Snow');
+    });
+  });
+
   describe('remove mutation', () => {
     it('only decrements factCount for non-rejected facts when cascading', async () => {
       const t = convexTest(schema, modules);

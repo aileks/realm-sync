@@ -245,3 +245,44 @@ export const search = query({
       .collect();
   },
 });
+
+export const listNeedingReview = query({
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
+    const isOwner = await verifyProjectOwnership(ctx, projectId);
+    if (!isOwner) return [];
+
+    const completedDocs = await ctx.db
+      .query('documents')
+      .withIndex('by_project_status', (q) =>
+        q.eq('projectId', projectId).eq('processingStatus', 'completed')
+      )
+      .collect();
+
+    const docsWithPendingItems = [];
+
+    for (const doc of completedDocs) {
+      const pendingEntities = await ctx.db
+        .query('entities')
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', 'pending'))
+        .filter((q) => q.eq(q.field('firstMentionedIn'), doc._id))
+        .collect();
+
+      const pendingFacts = await ctx.db
+        .query('facts')
+        .withIndex('by_document', (q) => q.eq('documentId', doc._id))
+        .filter((q) => q.eq(q.field('status'), 'pending'))
+        .collect();
+
+      if (pendingEntities.length > 0 || pendingFacts.length > 0) {
+        docsWithPendingItems.push({
+          ...doc,
+          pendingEntityCount: pendingEntities.length,
+          pendingFactCount: pendingFacts.length,
+        });
+      }
+    }
+
+    return docsWithPendingItems;
+  },
+});

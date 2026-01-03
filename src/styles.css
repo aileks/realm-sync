@@ -23,7 +23,7 @@
 
   --muted: oklch(0.2 0.02 70);
   --muted-foreground: oklch(0.71 0.03 70);
-  --accent: oklch(0.58 0.15 35);
+  --accent: oklch(0.6 0.111 328.62);
   --accent-foreground: oklch(0.12 0.02 35);
 
   --destructive: oklch(0.46 0.2 25);
@@ -40,8 +40,8 @@
 
   --radius: 0.625rem;
 
-  --sidebar: var(--background);
-  --sidebar-foreground: var(--foreground);
+  --sidebar: var(--card);
+  --sidebar-foreground: var(--card-foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: var(--accent);
