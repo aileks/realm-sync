@@ -19,9 +19,11 @@ function loadEnvFile() {
 
 loadEnvFile();
 
-const sentryDsn = process.env.SENTRY_DSN ?? process.env.VITE_SENTRY_DSN;
+const sentryDsn = import.meta.env.VITE_SENTRY_DSN ?? '';
 
-if (sentryDsn) {
+if (!sentryDsn) {
+  console.warn('VITE_SENTRY_DSN is not defined, Sentry is not running.');
+} else {
   Sentry.init({
     dsn: sentryDsn,
     sendDefaultPii: true,
