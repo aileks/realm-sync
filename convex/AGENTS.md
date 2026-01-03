@@ -12,7 +12,8 @@ convex/
 │   └── auth.ts      # Auth helpers (getAuthUserId, requireAuth, getCurrentUser, requireAuthUser)
 ├── llm/
 │   ├── cache.ts     # LLM response caching
-│   ├── extract.ts   # Extraction action + processExtractionResult
+│   ├── chunk.ts     # Document chunking for large texts
+│   ├── extract.ts   # Extraction action + processExtractionResult (with chunking)
 │   └── utils.ts     # Hash utilities
 ├── auth.config.ts   # Auth provider configuration
 ├── auth.ts          # Convex Auth setup (Google + Password)
@@ -149,5 +150,5 @@ npx convex deploy        # Deploy to production
 - Schema changes may prompt migration
 - Real-time via Convex query hooks (useQuery)
 - Functions auto-reload during `npx convex dev`
-- All 73 tests passing (projects, entities, facts, llm/cache, llm/extract, utils)
+- All 94 tests passing (projects, entities, facts, llm/cache, llm/chunk, llm/extract, utils)
 - Cascade deletes: manually delete related documents before project

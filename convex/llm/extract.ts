@@ -2,6 +2,7 @@ import { internalAction, internalMutation } from '../_generated/server';
 import { api, internal } from '../_generated/api';
 import { v } from 'convex/values';
 import type { Id } from '../_generated/dataModel';
+import { chunkDocument, needsChunking, mapEvidenceToDocument, type Chunk } from './chunk';
 
 export const PROMPT_VERSION = 'v1';
 
@@ -95,13 +96,123 @@ interface ExtractionResult {
       type: 'point' | 'range' | 'relative';
       value: string;
     };
+    evidencePosition?: {
+      start: number;
+      end: number;
+    };
   }>;
   relationships: Array<{
     sourceEntity: string;
     targetEntity: string;
     relationshipType: string;
     evidence: string;
+    evidencePosition?: {
+      start: number;
+      end: number;
+    };
   }>;
+}
+
+async function callLLM(content: string, apiKey: string, model: string): Promise<ExtractionResult> {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://realmsync.app',
+      'X-Title': 'Realm Sync',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: VELLUM_SYSTEM_PROMPT },
+        { role: 'user', content },
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'canon_extraction',
+          strict: true,
+          schema: EXTRACTION_SCHEMA,
+        },
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`
+    );
+  }
+
+  const data = await response.json();
+  if (!data.choices?.[0]?.message?.content) {
+    throw new Error('Invalid response from OpenRouter API');
+  }
+
+  return JSON.parse(data.choices[0].message.content);
+}
+
+function mergeExtractionResults(results: ExtractionResult[]): ExtractionResult {
+  const entityMap = new Map<string, ExtractionResult['entities'][0]>();
+  const facts: ExtractionResult['facts'] = [];
+  const relationships: ExtractionResult['relationships'] = [];
+
+  for (const result of results) {
+    for (const entity of result.entities) {
+      const existing = entityMap.get(entity.name.toLowerCase());
+      if (existing) {
+        const mergedAliases = [
+          ...new Set([...(existing.aliases ?? []), ...(entity.aliases ?? [])]),
+        ];
+        entityMap.set(entity.name.toLowerCase(), {
+          ...existing,
+          description: existing.description ?? entity.description,
+          aliases: mergedAliases.length > 0 ? mergedAliases : undefined,
+        });
+      } else {
+        entityMap.set(entity.name.toLowerCase(), entity);
+      }
+    }
+
+    facts.push(...result.facts);
+    relationships.push(...result.relationships);
+  }
+
+  return {
+    entities: Array.from(entityMap.values()),
+    facts,
+    relationships,
+  };
+}
+
+function adjustEvidencePositions(
+  result: ExtractionResult,
+  chunk: Chunk,
+  documentContent: string
+): ExtractionResult {
+  const adjustedFacts = result.facts.map((fact) => {
+    const position = mapEvidenceToDocument(fact.evidence, chunk, documentContent);
+    return {
+      ...fact,
+      evidencePosition: position ?? undefined,
+    };
+  });
+
+  const adjustedRelationships = result.relationships.map((rel) => {
+    const position = mapEvidenceToDocument(rel.evidence, chunk, documentContent);
+    return {
+      ...rel,
+      evidencePosition: position ?? undefined,
+    };
+  });
+
+  return {
+    ...result,
+    facts: adjustedFacts,
+    relationships: adjustedRelationships,
+  };
 }
 
 export const extractFromDocument = internalAction({
@@ -135,44 +246,44 @@ export const extractFromDocument = internalAction({
       throw new Error('MODEL not configured');
     }
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://realmsync.app',
-        'X-Title': 'Realm Sync',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: VELLUM_SYSTEM_PROMPT },
-          { role: 'user', content: doc.content },
-        ],
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'canon_extraction',
-            strict: true,
-            schema: EXTRACTION_SCHEMA,
-          },
-        },
-      }),
-    });
+    let result: ExtractionResult;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`
-      );
+    if (needsChunking(doc.content)) {
+      const chunks = chunkDocument(doc.content);
+      const chunkResults: ExtractionResult[] = [];
+
+      for (const chunk of chunks) {
+        const chunkHash: string = await ctx.runQuery(internal.llm.utils.computeHash, {
+          content: chunk.text,
+        });
+
+        const cachedChunk: ExtractionResult | null = await ctx.runQuery(
+          internal.llm.cache.checkCache,
+          { inputHash: chunkHash, promptVersion: PROMPT_VERSION }
+        );
+
+        let chunkResult: ExtractionResult;
+        if (cachedChunk) {
+          chunkResult = cachedChunk;
+        } else {
+          chunkResult = await callLLM(chunk.text, apiKey, model);
+
+          await ctx.runMutation(internal.llm.cache.saveToCache, {
+            inputHash: chunkHash,
+            promptVersion: PROMPT_VERSION,
+            modelId: model,
+            response: chunkResult,
+          });
+        }
+
+        const adjustedResult = adjustEvidencePositions(chunkResult, chunk, doc.content);
+        chunkResults.push(adjustedResult);
+      }
+
+      result = mergeExtractionResults(chunkResults);
+    } else {
+      result = await callLLM(doc.content, apiKey, model);
     }
-
-    const data = await response.json();
-    if (!data.choices?.[0]?.message?.content) {
-      throw new Error('Invalid response from OpenRouter API');
-    }
-
-    const result = JSON.parse(data.choices[0].message.content);
 
     await ctx.runMutation(internal.llm.cache.saveToCache, {
       inputHash: contentHash,
