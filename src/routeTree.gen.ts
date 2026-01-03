@@ -9,48 +9,145 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DemoThemeRouteImport } from './routes/demo.theme'
+import { Route as ProjectsNewRouteImport } from './routes/projects.new'
+import { Route as ProjectsProjectIdRouteImport } from './routes/projects.$projectId'
+import { Route as ProjectsProjectIdDocumentsRouteImport } from './routes/projects.$projectId.documents'
+import { Route as ProjectsProjectIdDocumentsNewRouteImport } from './routes/projects.$projectId.documents.new'
+import { Route as ProjectsProjectIdDocumentsDocumentIdRouteImport } from './routes/projects.$projectId.documents.$documentId'
 
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DemoThemeRoute = DemoThemeRouteImport.update({
-  id: '/demo/theme',
-  path: '/demo/theme',
-  getParentRoute: () => rootRouteImport,
+const ProjectsNewRoute = ProjectsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => ProjectsRoute,
 } as any)
+const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
+  id: '/$projectId',
+  path: '/$projectId',
+  getParentRoute: () => ProjectsRoute,
+} as any)
+const ProjectsProjectIdDocumentsRoute =
+  ProjectsProjectIdDocumentsRouteImport.update({
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => ProjectsProjectIdRoute,
+  } as any)
+const ProjectsProjectIdDocumentsNewRoute =
+  ProjectsProjectIdDocumentsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => ProjectsProjectIdDocumentsRoute,
+  } as any)
+const ProjectsProjectIdDocumentsDocumentIdRoute =
+  ProjectsProjectIdDocumentsDocumentIdRouteImport.update({
+    id: '/$documentId',
+    path: '/$documentId',
+    getParentRoute: () => ProjectsProjectIdDocumentsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/demo/theme': typeof DemoThemeRoute
+  '/auth': typeof AuthRoute
+  '/projects': typeof ProjectsRouteWithChildren
+  '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/projects/new': typeof ProjectsNewRoute
+  '/projects/$projectId/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
+  '/projects/$projectId/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
+  '/projects/$projectId/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/demo/theme': typeof DemoThemeRoute
+  '/auth': typeof AuthRoute
+  '/projects': typeof ProjectsRouteWithChildren
+  '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/projects/new': typeof ProjectsNewRoute
+  '/projects/$projectId/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
+  '/projects/$projectId/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
+  '/projects/$projectId/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/demo/theme': typeof DemoThemeRoute
+  '/auth': typeof AuthRoute
+  '/projects': typeof ProjectsRouteWithChildren
+  '/projects/$projectId': typeof ProjectsProjectIdRouteWithChildren
+  '/projects/new': typeof ProjectsNewRoute
+  '/projects/$projectId/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
+  '/projects/$projectId/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
+  '/projects/$projectId/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/demo/theme'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/projects'
+    | '/projects/$projectId'
+    | '/projects/new'
+    | '/projects/$projectId/documents'
+    | '/projects/$projectId/documents/$documentId'
+    | '/projects/$projectId/documents/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/demo/theme'
-  id: '__root__' | '/' | '/demo/theme'
+  to:
+    | '/'
+    | '/auth'
+    | '/projects'
+    | '/projects/$projectId'
+    | '/projects/new'
+    | '/projects/$projectId/documents'
+    | '/projects/$projectId/documents/$documentId'
+    | '/projects/$projectId/documents/new'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/projects'
+    | '/projects/$projectId'
+    | '/projects/new'
+    | '/projects/$projectId/documents'
+    | '/projects/$projectId/documents/$documentId'
+    | '/projects/$projectId/documents/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DemoThemeRoute: typeof DemoThemeRoute
+  AuthRoute: typeof AuthRoute
+  ProjectsRoute: typeof ProjectsRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -58,19 +155,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/demo/theme': {
-      id: '/demo/theme'
-      path: '/demo/theme'
-      fullPath: '/demo/theme'
-      preLoaderRoute: typeof DemoThemeRouteImport
-      parentRoute: typeof rootRouteImport
+    '/projects/new': {
+      id: '/projects/new'
+      path: '/new'
+      fullPath: '/projects/new'
+      preLoaderRoute: typeof ProjectsNewRouteImport
+      parentRoute: typeof ProjectsRoute
+    }
+    '/projects/$projectId': {
+      id: '/projects/$projectId'
+      path: '/$projectId'
+      fullPath: '/projects/$projectId'
+      preLoaderRoute: typeof ProjectsProjectIdRouteImport
+      parentRoute: typeof ProjectsRoute
+    }
+    '/projects/$projectId/documents': {
+      id: '/projects/$projectId/documents'
+      path: '/documents'
+      fullPath: '/projects/$projectId/documents'
+      preLoaderRoute: typeof ProjectsProjectIdDocumentsRouteImport
+      parentRoute: typeof ProjectsProjectIdRoute
+    }
+    '/projects/$projectId/documents/new': {
+      id: '/projects/$projectId/documents/new'
+      path: '/new'
+      fullPath: '/projects/$projectId/documents/new'
+      preLoaderRoute: typeof ProjectsProjectIdDocumentsNewRouteImport
+      parentRoute: typeof ProjectsProjectIdDocumentsRoute
+    }
+    '/projects/$projectId/documents/$documentId': {
+      id: '/projects/$projectId/documents/$documentId'
+      path: '/$documentId'
+      fullPath: '/projects/$projectId/documents/$documentId'
+      preLoaderRoute: typeof ProjectsProjectIdDocumentsDocumentIdRouteImport
+      parentRoute: typeof ProjectsProjectIdDocumentsRoute
     }
   }
 }
 
+interface ProjectsProjectIdDocumentsRouteChildren {
+  ProjectsProjectIdDocumentsDocumentIdRoute: typeof ProjectsProjectIdDocumentsDocumentIdRoute
+  ProjectsProjectIdDocumentsNewRoute: typeof ProjectsProjectIdDocumentsNewRoute
+}
+
+const ProjectsProjectIdDocumentsRouteChildren: ProjectsProjectIdDocumentsRouteChildren =
+  {
+    ProjectsProjectIdDocumentsDocumentIdRoute:
+      ProjectsProjectIdDocumentsDocumentIdRoute,
+    ProjectsProjectIdDocumentsNewRoute: ProjectsProjectIdDocumentsNewRoute,
+  }
+
+const ProjectsProjectIdDocumentsRouteWithChildren =
+  ProjectsProjectIdDocumentsRoute._addFileChildren(
+    ProjectsProjectIdDocumentsRouteChildren,
+  )
+
+interface ProjectsProjectIdRouteChildren {
+  ProjectsProjectIdDocumentsRoute: typeof ProjectsProjectIdDocumentsRouteWithChildren
+}
+
+const ProjectsProjectIdRouteChildren: ProjectsProjectIdRouteChildren = {
+  ProjectsProjectIdDocumentsRoute: ProjectsProjectIdDocumentsRouteWithChildren,
+}
+
+const ProjectsProjectIdRouteWithChildren =
+  ProjectsProjectIdRoute._addFileChildren(ProjectsProjectIdRouteChildren)
+
+interface ProjectsRouteChildren {
+  ProjectsProjectIdRoute: typeof ProjectsProjectIdRouteWithChildren
+  ProjectsNewRoute: typeof ProjectsNewRoute
+}
+
+const ProjectsRouteChildren: ProjectsRouteChildren = {
+  ProjectsProjectIdRoute: ProjectsProjectIdRouteWithChildren,
+  ProjectsNewRoute: ProjectsNewRoute,
+}
+
+const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
+  ProjectsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DemoThemeRoute: DemoThemeRoute,
+  AuthRoute: AuthRoute,
+  ProjectsRoute: ProjectsRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

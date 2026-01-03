@@ -13,13 +13,13 @@ Establish the core data model, authentication, and basic CRUD operations for pro
 
 ## Deliverables Checklist
 
-- [ ] **Convex Schema Implementation**: All tables (users, projects, documents, entities, facts, alerts, llmCache) defined with proper indexes.
-- [ ] **Authentication Integration**: Convex Auth configured with Google OAuth and Email/Password providers.
-- [ ] **Project Management**: CRUD operations for projects including real-time stats tracking.
-- [ ] **Document Management**: CRUD for documents supporting text, markdown, and file uploads (>1MB).
-- [ ] **File Storage**: Convex storage integration for large document handling.
-- [ ] **Frontend Foundation**: Route structure established and base layout components built.
-- [ ] **Dark Archival UI**: Design tokens (OKLCH) and typography applied across the application.
+- [x] **Convex Schema Implementation**: All tables (users, projects, documents, entities, facts, alerts, llmCache) defined with proper indexes.
+- [x] **Authentication Integration**: Convex Auth configured with Google OAuth and Email/Password providers.
+- [x] **Project Management**: CRUD operations for projects including real-time stats tracking.
+- [x] **Document Management**: CRUD for documents supporting text, markdown, and file uploads (>1MB).
+- [x] **File Storage**: Convex storage integration for large document handling.
+- [x] **Frontend Foundation**: Route structure established and base layout components built.
+- [x] **Dark Archival UI**: Design tokens (OKLCH) and typography applied across the application.
 
 ---
 
@@ -34,7 +34,9 @@ export default defineSchema({
   users: defineTable({
     name: v.optional(v.string()),
     email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.float64()),
     image: v.optional(v.string()),
+    isAnonymous: v.optional(v.boolean()),
     createdAt: v.number(),
     settings: v.optional(
       v.object({
@@ -199,11 +201,15 @@ export default defineSchema({
 - `update`: Update document title or content.
 - `remove`: Delete document and clean up storage.
 - `reorder`: Batch update `orderIndex` for a project's documents.
+- `updateProcessingStatus`: Update document extraction state.
+- `search`: Full-text search within project documents.
 
 ### Storage (`convex/storage.ts`)
 
 - `generateUploadUrl`: Get a signed URL for client-side uploads.
 - `getFileUrl`: Retrieve the public URL for a storage item.
+- `deleteFile`: Remove file from storage.
+- `getFileMetadata`: Get file size and content type.
 
 ---
 
@@ -213,17 +219,13 @@ export default defineSchema({
 src/routes/
 ├── __root.tsx           # Layout with auth check
 ├── index.tsx            # Landing/Dashboard
-├── auth/
-│   └── index.tsx        # Sign in/up
-├── projects/
-│   ├── index.tsx        # Project list
-│   ├── new.tsx          # Create project
-│   └── $projectId/
-│       ├── index.tsx    # Project dashboard
-│       └── documents/
-│           ├── index.tsx      # Document list
-│           ├── new.tsx        # Add document
-│           └── $documentId.tsx # Editor
+├── auth.tsx             # Sign in/up
+├── projects.tsx         # Project list
+├── projects.new.tsx     # Create project
+├── projects.$projectId.tsx # Project dashboard
+├── projects.$projectId.documents.tsx # Document list
+├── projects.$projectId.documents.new.tsx # Add document
+└── projects.$projectId.documents.$documentId.tsx # Editor
 ```
 
 ---

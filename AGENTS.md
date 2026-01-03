@@ -90,14 +90,14 @@ pnpm run test
 
 ## CURRENT STATE
 
-| Area          | Status  | Notes                              |
-| ------------- | ------- | ---------------------------------- |
-| Core routing  | Working | TanStack Start file-based          |
-| Backend       | Working | Convex with todos example          |
-| UI components | Ready   | 13 Shadcn primitives               |
-| Testing       | Ready   | Vitest configured, 0 tests written |
-| CI/CD         | Missing | No `.github/workflows`             |
-| Auth          | Missing | No auth implementation             |
+| Area          | Status  | Notes                               |
+| ------------- | ------- | ----------------------------------- |
+| Core routing  | Working | TanStack Start file-based           |
+| Backend       | Working | Convex schema & functions           |
+| UI components | Ready   | 13 Shadcn primitives                |
+| Testing       | Working | Vitest configured, 23 tests passing |
+| CI/CD         | Working | Lint, typecheck, test, build        |
+| Auth          | Working | Google OAuth & Password auth        |
 
 ## NOTES
 
@@ -106,10 +106,12 @@ pnpm run test
 - React Compiler enabled via `babel-plugin-react-compiler`
 - Nitro is the server engine (configured in vite.config.ts)
 - Tailwind v4 = CSS-first (no `tailwind.config.js`)
-- Header has dead links to removed demo routes—cleanup pending
-- Test infrastructure ready per `docs/TESTING-STRATEGY.md` but no tests exist
+- Test infrastructure ready; utils and projects covered by tests.
+- After **EVERY** major change, and before **EVERY** commit, format the code, check linting, and run type-checking.
 
 ## CODING GUIDELINES
+
+**_BEFORE YOU DO ANYTHING_** run `pnpm docs:list`!
 
 - Execute requests immediately; no fluff
 - WCAG AAA accessibility

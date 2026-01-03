@@ -84,9 +84,9 @@ afterEach(() => {
 
 ### 2.1 Convex Functions
 
-**File:** `convex/todos.test.ts`
+**File:** `convex/projects.test.ts`
 
-Uses `convex-test` for behavior-focused testing of CRUD operations.
+Uses `convex-test` for behavior-focused testing of project CRUD and authorization.
 
 ```typescript
 import { convexTest } from 'convex-test';
@@ -94,7 +94,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { api } from './_generated/api';
 import schema from './schema';
 
-describe('todos', () => {
+describe('projects', () => {
   let t: ReturnType<typeof convexTest>;
 
   beforeEach(() => {
@@ -102,74 +102,10 @@ describe('todos', () => {
   });
 
   describe('list query', () => {
-    it('returns empty array when no todos exist', async () => {
-      const todos = await t.query(api.todos.list);
-      expect(todos).toEqual([]);
-    });
-
-    it('returns todos ordered by creation time (desc)', async () => {
-      await t.run(async (ctx) => {
-        await ctx.db.insert('todos', { text: 'First', completed: false });
-        await ctx.db.insert('todos', { text: 'Second', completed: true });
-      });
-
-      const todos = await t.query(api.todos.list);
-      expect(todos).toHaveLength(2);
-      expect(todos[0].text).toBe('Second');
-    });
-  });
-
-  describe('add mutation', () => {
-    it('creates todo with completed=false by default', async () => {
-      const id = await t.mutation(api.todos.add, { text: 'Buy milk' });
-
-      const todo = await t.run(async (ctx) => await ctx.db.get(id));
-      expect(todo).toMatchObject({
-        text: 'Buy milk',
-        completed: false,
-      });
-      expect(todo?._id).toBeDefined();
-      expect(todo?._creationTime).toBeDefined();
-    });
-
-    it('rejects empty string via v.string() validation', async () => {
-      await expect(async () => {
-        await t.mutation(api.todos.add, { text: '' });
-      }).rejects.toThrow();
-    });
-  });
-
-  describe('toggle mutation', () => {
-    it('flips completed status', async () => {
-      const id = await t.run(
-        async (ctx) => await ctx.db.insert('todos', { text: 'Task', completed: false })
-      );
-
-      await t.mutation(api.todos.toggle, { id });
-
-      const todo = await t.run(async (ctx) => await ctx.db.get(id));
-      expect(todo?.completed).toBe(true);
-    });
-
-    it('throws error for non-existent todo', async () => {
-      const fakeId = 'nonexistent' as any;
-
-      await expect(async () => {
-        await t.mutation(api.todos.toggle, { id: fakeId });
-      }).rejects.toThrowError(/todo not found/i);
-    });
-  });
-
-  describe('remove mutation', () => {
-    it('deletes todo from database', async () => {
-      const id = await t.run(
-        async (ctx) => await ctx.db.insert('todos', { text: 'Delete me', completed: false })
-      );
-
-      await t.mutation(api.todos.remove, { id });
-
-      const todo = await t.run(async (ctx) => await ctx.db.get(id));
-      expect(todo).toBeNull();
+    it('returns empty array when no projects exist', async () => {
+      t.requestId = 'user_123'; // Mock auth
+      const projects = await t.query(api.projects.list, {});
+      expect(projects).toEqual([]);
     });
   });
 });
@@ -181,27 +117,18 @@ describe('todos', () => {
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { cn } from './utils';
+import { cn, toId } from './utils';
 
 describe('cn', () => {
   it('merges tailwind classes correctly', () => {
     expect(cn('px-2 py-1', 'px-4')).toBe('py-1 px-4');
   });
+});
 
-  it('handles clsx-compatible inputs', () => {
-    expect(cn('text-red-500', { 'bg-blue-500': true })).toContain('text-red-500');
-  });
-
-  it('resolves conflicts (later classes win)', () => {
-    expect(cn('px-2', 'px-4')).toBe('px-4');
-  });
-
-  it('handles undefined/null inputs', () => {
-    expect(cn('px-2', undefined, null, 'py-1')).toBe('px-2 py-1');
-  });
-
-  it('handles nested arrays', () => {
-    expect(cn(['px-2', ['py-1']], 'mx-3')).toBe('px-2 py-1 mx-3');
+describe('toId', () => {
+  it('converts string to typed Convex ID', () => {
+    const id = toId<'projects'>('jd7... ');
+    expect(id).toBeDefined();
   });
 });
 ```
@@ -453,22 +380,18 @@ describe('FormExample', () => {
 
 ## 5. Implementation Roadmap
 
-### Phase 1: Foundation (Week 1)
+### Phase 1: Foundation (Completed)
 
-- [ ] Create `vitest.config.ts` with edge-runtime
-- [ ] Create `src/test/setup.ts`
-- [ ] Install `convex-test`
-- [ ] Write `convex/todos.test.ts` (100% coverage)
-- [ ] Write `src/lib/utils.test.ts` (100% coverage)
-- [ ] Write `src/env.test.ts` (100% coverage)
+- [x] Create `vitest.config.ts` with jsdom
+- [x] Create `src/test/setup.ts`
+- [x] Install `convex-test`
+- [x] Write `convex/projects.test.ts` (100% coverage)
+- [x] Write `src/lib/utils.test.ts` (100% coverage)
 
-### Phase 2: Component Testing (Week 2)
+### Phase 2: Component Testing (In Progress)
 
 - [ ] Write `src/components/ui/alert-dialog.test.tsx`
-- [ ] Write `src/components/ui/combobox.test.tsx`
-- [ ] Write `src/components/ui/dropdown-menu.test.tsx`
 - [ ] Write `src/components/Header.test.tsx`
-- [ ] Write `src/components/component-example.test.tsx`
 
 ### Phase 3: Visual Regression (MVP+)
 

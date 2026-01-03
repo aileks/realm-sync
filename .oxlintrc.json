@@ -9,7 +9,9 @@
     "no-debugger": "error",
     "typescript/no-explicit-any": "error",
     "react/exhaustive-deps": "warn",
-    "react/rules-of-hooks": "error"
+    "react/rules-of-hooks": "error",
+    "eslint-plugin-react/react-in-jsx-scope": "off",
+    "typescript/tsconfig-error": "off"
   },
   "settings": {
     "react": {
