@@ -12,6 +12,8 @@ import type * as auth from "../auth.js";
 import type * as documents from "../documents.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as llm_extract from "../llm/extract.js";
+import type * as llm_utils from "../llm/utils.js";
 import type * as projects from "../projects.js";
 import type * as storage from "../storage.js";
 
@@ -26,6 +28,8 @@ declare const fullApi: ApiFromModules<{
   documents: typeof documents;
   http: typeof http;
   "lib/auth": typeof lib_auth;
+  "llm/extract": typeof llm_extract;
+  "llm/utils": typeof llm_utils;
   projects: typeof projects;
   storage: typeof storage;
 }>;
