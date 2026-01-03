@@ -1,14 +1,29 @@
 import * as Sentry from '@sentry/tanstackstart-react';
+import { readFileSync } from 'node:fs';
 
-const sentryDsn = import.meta.env?.VITE_SENTRY_DSN ?? process.env.VITE_SENTRY_DSN;
+function loadEnvFile() {
+  try {
+    const envContent = readFileSync('.env.local', 'utf-8');
+    for (const line of envContent.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const [key, ...valueParts] = trimmed.split('=');
+      if (key && valueParts.length) {
+        process.env[key.trim()] = valueParts.join('=').trim();
+      }
+    }
+  } catch {
+    console.warn('No .env.local file found, please create one.');
+  }
+}
 
-if (!sentryDsn) {
-  console.warn('VITE_SENTRY_DSN is not defined. Sentry is not running.');
-} else {
+loadEnvFile();
+
+const sentryDsn = process.env.SENTRY_DSN ?? process.env.VITE_SENTRY_DSN;
+
+if (sentryDsn) {
   Sentry.init({
     dsn: sentryDsn,
-    // Adds request headers and IP for users, for more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/tanstackstart-react/configuration/options/#sendDefaultPii
     sendDefaultPii: true,
     tracesSampleRate: 1.0,
     replaysSessionSampleRate: 1.0,
