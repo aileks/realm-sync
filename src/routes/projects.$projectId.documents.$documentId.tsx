@@ -11,6 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/LoadingState';
 import { cn } from '@/lib/utils';
 
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
 export const Route = createFileRoute('/projects/$projectId/documents/$documentId')({
   component: DocumentEditorPage,
 });
@@ -98,10 +102,6 @@ function DocumentEditorPage() {
         </Button>
       </div>
     );
-  }
-
-  function countWords(text: string): number {
-    return text.trim().split(/\s+/).filter(Boolean).length;
   }
 
   const wordCount = countWords(content);

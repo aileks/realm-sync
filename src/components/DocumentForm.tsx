@@ -155,10 +155,11 @@ export function DocumentForm({ projectId, document, onSuccess, onCancel }: Docum
       {contentType === 'file' ?
         <div className="space-y-2">
           <Label>Upload File</Label>
-          <div
+          <button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
             className={cn(
-              'border-border hover:border-primary/50 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors',
+              'border-border hover:border-primary/50 flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors',
               selectedFile && 'border-primary bg-primary/5'
             )}
           >
@@ -170,7 +171,7 @@ export function DocumentForm({ projectId, document, onSuccess, onCancel }: Docum
                 <p className="text-muted-foreground text-xs">TXT, MD, or other text files</p>
               </>
             }
-          </div>
+          </button>
           <input
             ref={fileInputRef}
             type="file"
