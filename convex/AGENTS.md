@@ -8,13 +8,15 @@
 convex/
 ├── _generated/      # Auto-generated types (NEVER EDIT)
 ├── lib/
-│   └── auth.ts      # Auth helper functions (getAuthUserId, requireAuth)
-├── auth.ts          # Convex Auth configuration (Google + Password)
+│   └── auth.ts      # Auth helpers (getAuthUserId, requireAuth, getCurrentUser, requireAuthUser)
+├── auth.config.ts   # Auth provider configuration
+├── auth.ts          # Convex Auth setup (Google + Password)
 ├── http.ts          # HTTP router for auth endpoints
 ├── schema.ts        # Table definitions (defineSchema, defineTable)
 ├── projects.ts      # Project CRUD operations
 ├── documents.ts     # Document CRUD operations
 ├── storage.ts       # File upload/download
+├── projects.test.ts # Backend tests (convex-test)
 └── tsconfig.json    # Convex-specific TS config
 ```
 
@@ -25,98 +27,109 @@ convex/
 | Define tables   | `schema.ts`              | Use `v` validators strictly                  |
 | Write functions | `*.ts` (not \_generated) | Named exports: `export const x = query(...)` |
 | Types           | `_generated/server.d.ts` | Auto-regenerated on schema change            |
+| Auth helpers    | `lib/auth.ts`            | 4 functions for different auth patterns      |
+| Tests           | `projects.test.ts`       | convex-test patterns                         |
 
 ## CURRENT SCHEMA
 
-| Table | Fields | Notes |
-| --- | --- | --- |
-| `users` | `name`, `email`, `emailVerificationTime`, `image`, `isAnonymous`, `createdAt`, `settings` | Extended from Convex Auth |
-| `projects` | `userId`, `name`, `description`, `createdAt`, `updatedAt`, `stats` | Project management |
-| `documents` | `projectId`, `title`, `content`, `storageId`, `contentType`, `orderIndex`, `wordCount`, `createdAt`, `updatedAt`, `processedAt`, `processingStatus` | Document storage & tracking |
-| `entities` | `projectId`, `name`, `type`, `description`, `aliases`, `firstMentionedIn`, `createdAt`, `updatedAt` | Placeholder for Phase 2 |
-| `facts` | `projectId`, `entityId`, `documentId`, `subject`, `predicate`, `object`, `confidence`, `evidenceSnippet`, `evidencePosition`, `temporalBound`, `status`, `createdAt` | Placeholder for Phase 2 |
-| `alerts` | `projectId`, `documentId`, `factIds`, `entityIds`, `type`, `severity`, `title`, `description`, `evidence`, `suggestedFix`, `status`, `resolutionNotes`, `createdAt`, `resolvedAt` | Placeholder for Phase 4 |
-| `llmCache` | `inputHash`, `promptVersion`, `modelId`, `response`, `tokenCount`, `createdAt`, `expiresAt` | LLM response caching |
+| Table       | Key Fields                                      | Notes                     |
+| ----------- | ----------------------------------------------- | ------------------------- |
+| `users`     | name, email, settings                           | Extended from Convex Auth |
+| `projects`  | userId, name, stats                             | User-owned projects       |
+| `documents` | projectId, title, content, processingStatus     | Document storage          |
+| `entities`  | projectId, name, type, aliases                  | Phase 2 placeholder       |
+| `facts`     | projectId, entityId, subject, predicate, object | Phase 2 placeholder       |
+| `alerts`    | projectId, type, severity, status               | Phase 4 placeholder       |
+| `llmCache`  | inputHash, promptVersion, response              | LLM response caching      |
 
-## FUNCTION PATTERNS
+## AUTH PATTERNS
 
 ```typescript
-import { query, mutation } from './_generated/server';
-import { v } from 'convex/values';
-import * as Sentry from '@sentry/tanstackstart-react';
-
-// Query with index filtering
+// Query: return empty/null for unauthenticated
 export const list = query({
-  args: {},
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
-    return await ctx.db
-      .query('projects')
-      .withIndex('by_user', (q) => q.eq('userId', userId))
-      .order('desc')
-      .collect();
+    // ... fetch user's data
   },
 });
 
-// Mutation with Sentry instrumentation
+// Mutation: throw for unauthenticated
 export const create = mutation({
-  args: { name: v.string() },
-  handler: Sentry.startSpan({ name: 'createProject' }, async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error('Unauthorized');
-    return await ctx.db.insert('projects', { userId, name: args.name });
-  }),
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    // ... create with userId
+  },
 });
 
-// Update pattern
-export const update = mutation({
-  args: { id: v.id('projects'), name: v.optional(v.string()) },
-  handler: Sentry.startSpan({ name: 'updateProject' }, async (ctx, args) => {
-    const project = await ctx.db.get(args.id);
-    if (!project) throw new Error('Project not found');
-    const userId = await getAuthUserId(ctx);
-    if (project.userId !== userId) throw new Error('Unauthorized');
-    return await ctx.db.patch(args.id, { name: args.name, updatedAt: Date.now() });
-  }),
+// Get full user object
+export const getProfile = query({
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return null;
+    return user;
+  },
 });
+```
 
-async function getAuthUserId(ctx) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) return null;
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_email', (q) => q.eq('email', identity.email))
-    .first();
-  return user?._id || null;
-}
+## VALIDATOR PATTERNS
+
+```typescript
+// Reusable validators
+const statusValidator = v.union(
+  v.literal('pending'),
+  v.literal('processing'),
+  v.literal('completed')
+);
+
+// Complex nested objects
+stats: v.optional(
+  v.object({
+    documentCount: v.number(),
+    entityCount: v.number(),
+  })
+);
+
+// Foreign keys
+projectId: v.id('projects');
+userId: v.id('users');
+```
+
+## INDEX PATTERNS
+
+```typescript
+// Single-field index
+.index('by_email', ['email'])
+
+// Multi-field index (for user + ordering)
+.index('by_user', ['userId', 'updatedAt'])
+
+// Search index
+.searchIndex('search_content', {
+  searchField: 'content',
+  filterFields: ['projectId']
+})
 ```
 
 ## CONVENTIONS
 
 - Named exports: `export const funcName = query(...)`
 - Always define `args` with `v` validators
-- Use proper indexes for queries (see schema indices)
+- Use proper indexes for queries
 - Use `ctx.db.get(id)` + `ctx.db.patch(id, {...})` for updates
-- Throw explicit errors for not-found cases
-- Wrap mutations with `Sentry.startSpan({ name: '...' }, async (ctx, args) => {...})`
+- Throw explicit errors: `throw new Error('Project not found')`
+- Queries return null/empty for auth failures (no throw)
+- Mutations throw for auth failures
 
 ## ANTI-PATTERNS
 
 | Pattern                             | Why                              |
 | ----------------------------------- | -------------------------------- |
 | Indices on `_id` or `_creationTime` | Auto-handled by Convex           |
-| Manual partial writes               | Convex mutations are atomic      |
 | Validation in handler (not args)    | Use `v` validators in `args`     |
 | Editing `_generated/*`              | Will be overwritten              |
 | Silent failures                     | Throw errors when data not found |
-
-## INTEGRATION
-
-- Frontend uses `ConvexAuthProvider` from `@convex-dev/auth/react`
-- Provider in `src/integrations/convex/provider.tsx`
-- Auth helpers in `convex/lib/auth.ts`: `getAuthUserId()`, `requireAuth()`, `getCurrentUser()`
-- Auth providers: Google OAuth, Email/Password
+| `getAuthUserId` in mutations        | Use `requireAuth` instead        |
 
 ## COMMANDS
 
@@ -128,7 +141,7 @@ npx convex deploy        # Deploy to production
 ## NOTES
 
 - Schema changes may prompt migration
-- Real-time via Convex query hooks
+- Real-time via Convex query hooks (useQuery)
 - Functions auto-reload during `npx convex dev`
-- Phase 1 complete: Schema, Auth, Projects, Documents, Storage all implemented
 - All 23 tests passing (projects, utils)
+- Cascade deletes: manually delete related documents before project
