@@ -298,7 +298,7 @@ describe('facts', () => {
       expect(fact?.status).toBe('rejected');
     });
 
-    it('decrements project factCount when rejecting confirmed fact', async () => {
+    it('decrements project factCount when rejecting fact', async () => {
       const t = convexTest(schema, modules);
       const { userId, asUser } = await setupAuthenticatedUser(t);
 

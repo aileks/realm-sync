@@ -135,11 +135,11 @@ export const reject = mutation({
       throw new Error('Unauthorized');
     }
 
-    const wasConfirmed = fact.status === 'confirmed';
+    const wasAlreadyRejected = fact.status === 'rejected';
 
     await ctx.db.patch(id, { status: 'rejected' });
 
-    if (wasConfirmed) {
+    if (!wasAlreadyRejected) {
       const project = await ctx.db.get(fact.projectId);
       if (project?.stats) {
         await ctx.db.patch(fact.projectId, {

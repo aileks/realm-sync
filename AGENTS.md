@@ -58,7 +58,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 - **Types**: Use types over interfaces unless an interface is explicitly need; use a comment for explanation/justification
 - **Runtime**: `pnpm` exclusively
 - **Path aliases**: `@/*` → `./src/*` (but Convex uses relative `../../convex/_generated/api`)
-- **Routing**: Dotted filenames for nested routes (`$projectId.documents.new.tsx`)
+- **Routing**: Underscore-escaped filenames for nested routes (`projects_.$projectId_.documents.tsx` → `/projects/:projectId/documents`); `_.` escapes prevent folder nesting
 - **Typography**: DM Sans (body), Aleo (headings), iA Writer Mono (code)
 - **Colors**: OKLCH exclusively; 3 themes: default, twilight-study, amber-archive
 - **UI primitives**: @base-ui/react + CVA variants + `data-slot` attributes
