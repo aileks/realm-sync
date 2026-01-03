@@ -182,7 +182,13 @@ export const listByProject = query({
 
     let entities;
 
-    if (type) {
+    if (type && status) {
+      entities = await ctx.db
+        .query('entities')
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
+        .filter((q) => q.eq(q.field('type'), type))
+        .collect();
+    } else if (type) {
       entities = await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', type))
@@ -197,10 +203,6 @@ export const listByProject = query({
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .collect();
-    }
-
-    if (status && type) {
-      entities = entities.filter((e) => e.status === status);
     }
 
     return entities;

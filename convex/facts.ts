@@ -265,7 +265,7 @@ export const remove = mutation({
     await ctx.db.delete(id);
 
     const project = await ctx.db.get(fact.projectId);
-    if (project?.stats && fact.status === 'confirmed') {
+    if (project?.stats) {
       await ctx.db.patch(fact.projectId, {
         updatedAt: Date.now(),
         stats: {
