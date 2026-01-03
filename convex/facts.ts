@@ -118,7 +118,23 @@ export const confirm = mutation({
       throw new Error('Unauthorized');
     }
 
+    const wasRejected = fact.status === 'rejected';
+
     await ctx.db.patch(id, { status: 'confirmed' });
+
+    if (wasRejected) {
+      const project = await ctx.db.get(fact.projectId);
+      if (project?.stats) {
+        await ctx.db.patch(fact.projectId, {
+          updatedAt: Date.now(),
+          stats: {
+            ...project.stats,
+            factCount: project.stats.factCount + 1,
+          },
+        });
+      }
+    }
+
     return id;
   },
 });
