@@ -123,6 +123,54 @@ describe('facts', () => {
       expect(project?.stats?.factCount).toBe(1);
     });
 
+    it('works on projects without pre-existing stats', async () => {
+      const t = convexTest(schema, modules);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const { projectId, documentId, entityId } = await t.run(async (ctx) => {
+        const pId = await ctx.db.insert('projects', {
+          userId,
+          name: 'No Stats Project',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        const dId = await ctx.db.insert('documents', {
+          projectId: pId,
+          title: 'Doc',
+          contentType: 'text',
+          orderIndex: 0,
+          wordCount: 0,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          processingStatus: 'completed',
+        });
+        const eId = await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Entity',
+          type: 'character',
+          aliases: [],
+          status: 'confirmed',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        return { projectId: pId, documentId: dId, entityId: eId };
+      });
+
+      await asUser.mutation(api.facts.create, {
+        projectId,
+        entityId,
+        documentId,
+        subject: 'Test',
+        predicate: 'is',
+        object: 'fact',
+        confidence: 1.0,
+        evidenceSnippet: 'text',
+      });
+
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.stats?.factCount).toBe(1);
+    });
+
     it('stores temporal bound when provided', async () => {
       const t = convexTest(schema, modules);
       const { userId, asUser } = await setupAuthenticatedUser(t);

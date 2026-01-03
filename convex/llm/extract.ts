@@ -315,13 +315,19 @@ export const processExtractionResult = internalMutation({
     });
 
     const project = await ctx.db.get(projectId);
-    if (project?.stats) {
+    if (project) {
+      const stats = project.stats ?? {
+        documentCount: 0,
+        entityCount: 0,
+        factCount: 0,
+        alertCount: 0,
+      };
       await ctx.db.patch(projectId, {
         updatedAt: now,
         stats: {
-          ...project.stats,
-          entityCount: project.stats.entityCount + newEntityCount,
-          factCount: project.stats.factCount + newFactCount,
+          ...stats,
+          entityCount: stats.entityCount + newEntityCount,
+          factCount: stats.factCount + newFactCount,
         },
       });
     }

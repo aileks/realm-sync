@@ -138,6 +138,29 @@ describe('entities', () => {
       expect(project?.stats?.entityCount).toBe(1);
     });
 
+    it('works on projects without pre-existing stats', async () => {
+      const t = convexTest(schema, modules);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const projectId = await t.run(async (ctx) => {
+        return await ctx.db.insert('projects', {
+          userId,
+          name: 'No Stats Project',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      });
+
+      await asUser.mutation(api.entities.create, {
+        projectId,
+        name: 'Test Entity',
+        type: 'character',
+      });
+
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.stats?.entityCount).toBe(1);
+    });
+
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, modules);
 

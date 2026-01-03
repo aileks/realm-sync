@@ -88,13 +88,16 @@ export const create = mutation({
     const effectiveStatus = status ?? 'pending';
     if (effectiveStatus !== 'rejected') {
       const project = await ctx.db.get(projectId);
-      if (project?.stats) {
+      if (project) {
+        const stats = project.stats ?? {
+          documentCount: 0,
+          entityCount: 0,
+          factCount: 0,
+          alertCount: 0,
+        };
         await ctx.db.patch(projectId, {
           updatedAt: Date.now(),
-          stats: {
-            ...project.stats,
-            factCount: project.stats.factCount + 1,
-          },
+          stats: { ...stats, factCount: stats.factCount + 1 },
         });
       }
     }
@@ -124,13 +127,16 @@ export const confirm = mutation({
 
     if (wasRejected) {
       const project = await ctx.db.get(fact.projectId);
-      if (project?.stats) {
+      if (project) {
+        const stats = project.stats ?? {
+          documentCount: 0,
+          entityCount: 0,
+          factCount: 0,
+          alertCount: 0,
+        };
         await ctx.db.patch(fact.projectId, {
           updatedAt: Date.now(),
-          stats: {
-            ...project.stats,
-            factCount: project.stats.factCount + 1,
-          },
+          stats: { ...stats, factCount: stats.factCount + 1 },
         });
       }
     }
@@ -160,13 +166,16 @@ export const reject = mutation({
 
     if (!wasAlreadyRejected) {
       const project = await ctx.db.get(fact.projectId);
-      if (project?.stats) {
+      if (project) {
+        const stats = project.stats ?? {
+          documentCount: 0,
+          entityCount: 0,
+          factCount: 0,
+          alertCount: 0,
+        };
         await ctx.db.patch(fact.projectId, {
           updatedAt: Date.now(),
-          stats: {
-            ...project.stats,
-            factCount: Math.max(0, project.stats.factCount - 1),
-          },
+          stats: { ...stats, factCount: Math.max(0, stats.factCount - 1) },
         });
       }
     }
@@ -285,13 +294,16 @@ export const remove = mutation({
 
     if (fact.status !== 'rejected') {
       const project = await ctx.db.get(fact.projectId);
-      if (project?.stats) {
+      if (project) {
+        const stats = project.stats ?? {
+          documentCount: 0,
+          entityCount: 0,
+          factCount: 0,
+          alertCount: 0,
+        };
         await ctx.db.patch(fact.projectId, {
           updatedAt: Date.now(),
-          stats: {
-            ...project.stats,
-            factCount: Math.max(0, project.stats.factCount - 1),
-          },
+          stats: { ...stats, factCount: Math.max(0, stats.factCount - 1) },
         });
       }
     }
@@ -344,13 +356,16 @@ export const update = mutation({
 
     if (status !== undefined && delta !== 0) {
       const project = await ctx.db.get(fact.projectId);
-      if (project?.stats) {
+      if (project) {
+        const stats = project.stats ?? {
+          documentCount: 0,
+          entityCount: 0,
+          factCount: 0,
+          alertCount: 0,
+        };
         await ctx.db.patch(fact.projectId, {
           updatedAt: Date.now(),
-          stats: {
-            ...project.stats,
-            factCount: Math.max(0, project.stats.factCount + delta),
-          },
+          stats: { ...stats, factCount: Math.max(0, stats.factCount + delta) },
         });
       }
     }

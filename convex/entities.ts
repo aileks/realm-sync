@@ -62,13 +62,16 @@ export const create = mutation({
     });
 
     const project = await ctx.db.get(projectId);
-    if (project?.stats) {
+    if (project) {
+      const stats = project.stats ?? {
+        documentCount: 0,
+        entityCount: 0,
+        factCount: 0,
+        alertCount: 0,
+      };
       await ctx.db.patch(projectId, {
         updatedAt: now,
-        stats: {
-          ...project.stats,
-          entityCount: project.stats.entityCount + 1,
-        },
+        stats: { ...stats, entityCount: stats.entityCount + 1 },
       });
     }
 
@@ -156,13 +159,16 @@ export const merge = mutation({
     await ctx.db.delete(sourceId);
 
     const project = await ctx.db.get(source.projectId);
-    if (project?.stats) {
+    if (project) {
+      const stats = project.stats ?? {
+        documentCount: 0,
+        entityCount: 0,
+        factCount: 0,
+        alertCount: 0,
+      };
       await ctx.db.patch(source.projectId, {
         updatedAt: Date.now(),
-        stats: {
-          ...project.stats,
-          entityCount: Math.max(0, project.stats.entityCount - 1),
-        },
+        stats: { ...stats, entityCount: Math.max(0, stats.entityCount - 1) },
       });
     }
 
@@ -255,13 +261,19 @@ export const remove = mutation({
     await ctx.db.delete(id);
 
     const project = await ctx.db.get(entity.projectId);
-    if (project?.stats) {
+    if (project) {
+      const stats = project.stats ?? {
+        documentCount: 0,
+        entityCount: 0,
+        factCount: 0,
+        alertCount: 0,
+      };
       await ctx.db.patch(entity.projectId, {
         updatedAt: Date.now(),
         stats: {
-          ...project.stats,
-          entityCount: Math.max(0, project.stats.entityCount - 1),
-          factCount: Math.max(0, project.stats.factCount - nonRejectedCount),
+          ...stats,
+          entityCount: Math.max(0, stats.entityCount - 1),
+          factCount: Math.max(0, stats.factCount - nonRejectedCount),
         },
       });
     }
