@@ -1,7 +1,7 @@
-import { query } from '../_generated/server';
+import { internalQuery } from '../_generated/server';
 import { v } from 'convex/values';
 
-export const computeHash = query({
+export const computeHash = internalQuery({
   args: {
     content: v.string(),
   },
