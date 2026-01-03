@@ -12,6 +12,10 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         if (typeof params.email !== 'string') {
           throw new ConvexError('Email is required');
         }
+        if (typeof params.name !== 'string') {
+          throw new ConvexError('Name is required');
+        }
+
         return {
           email: params.email,
           name: params.name,
