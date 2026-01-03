@@ -282,7 +282,14 @@ export const extractFromDocument = internalAction({
 
       result = mergeExtractionResults(chunkResults);
     } else {
-      result = await callLLM(doc.content, apiKey, model);
+      const rawResult = await callLLM(doc.content, apiKey, model);
+      const fullDocChunk: Chunk = {
+        text: doc.content,
+        startOffset: 0,
+        endOffset: doc.content.length,
+        index: 0,
+      };
+      result = adjustEvidencePositions(rawResult, fullDocChunk, doc.content);
     }
 
     await ctx.runMutation(internal.llm.cache.saveToCache, {
