@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useForm } from '@tanstack/react-form';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { useConvexAuth } from 'convex/react';
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, BookOpen } from 'lucide-react';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,56 +16,84 @@ export const Route = createFileRoute('/auth')({
   component: AuthPage,
 });
 
+const signInSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+const signUpSchema = signInSchema
+  .extend({
+    name: z.string().min(1, 'Name is required'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
+
 function AuthPage() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const { signIn } = useAuthActions();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+    onSubmit: async ({ value }) => {
+      setError(null);
+      setIsLoading(true);
+
+      try {
+        const schema = mode === 'signup' ? signUpSchema : signInSchema;
+        const result = schema.safeParse(value);
+
+        if (!result.success) {
+          setError(result.error.issues[0].message);
+          setIsLoading(false);
+          return;
+        }
+
+        const formData = new FormData();
+        formData.set('email', value.email);
+        formData.set('password', value.password);
+        formData.set('flow', mode === 'signup' ? 'signUp' : 'signIn');
+        if (mode === 'signup' && value.name) {
+          formData.set('name', value.name);
+        }
+
+        await signIn('password', formData);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Authentication failed';
+        if (message.includes('InvalidAccountId') || message.includes('Could not find')) {
+          setError(
+            mode === 'signin' ?
+              'Account not found. Please sign up first.'
+            : 'Failed to create account.'
+          );
+        } else if (message.includes('InvalidSecret') || message.includes('password')) {
+          setError('Invalid email or password.');
+        } else {
+          setError(message);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+  });
 
   useEffect(() => {
     if (isAuthenticated) {
       void navigate({ to: '/projects' });
     }
   }, [isAuthenticated, navigate]);
-
-  async function handlePasswordAuth(e: FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
-
-    try {
-      const formData = new FormData();
-      formData.set('email', email);
-      formData.set('password', password);
-      formData.set('flow', mode === 'signup' ? 'signUp' : 'signIn');
-      if (mode === 'signup' && name) {
-        formData.set('name', name);
-      }
-
-      await signIn('password', formData);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Authentication failed';
-      if (message.includes('InvalidAccountId') || message.includes('Could not find')) {
-        setError(
-          mode === 'signin' ?
-            'Account not found. Please sign up first.'
-          : 'Failed to create account.'
-        );
-      } else if (message.includes('InvalidSecret') || message.includes('password')) {
-        setError('Invalid email or password.');
-      } else {
-        setError(message);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   async function handleGoogleAuth() {
     setError(null);
@@ -76,6 +106,12 @@ function AuthPage() {
     }
   }
 
+  function switchMode() {
+    setMode(mode === 'signin' ? 'signup' : 'signin');
+    setError(null);
+    form.reset();
+  }
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -85,7 +121,7 @@ function AuthPage() {
   }
 
   return (
-    <div className="bg-background vignette flex min-h-screen items-center justify-center p-4">
+    <div className="bg-background flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="bg-primary/10 mx-auto mb-4 flex size-12 items-center justify-center rounded-full">
@@ -127,47 +163,84 @@ function AuthPage() {
             <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-sm">{error}</div>
           )}
 
-          <form onSubmit={handlePasswordAuth} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void form.handleSubmit();
+            }}
+            className="space-y-4"
+          >
             {mode === 'signup' && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
+              <form.Field name="name">
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      placeholder="Your name"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      disabled={isLoading}
+                    />
+                  </div>
+                )}
+              </form.Field>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
+            <form.Field name="email">
+              {(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+            </form.Field>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                disabled={isLoading}
-              />
-            </div>
+            <form.Field name="password">
+              {(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter password"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    disabled={isLoading}
+                  />
+                </div>
+              )}
+            </form.Field>
+
+            {mode === 'signup' && (
+              <form.Field name="confirmPassword">
+                {(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Confirm password"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      disabled={isLoading}
+                    />
+                  </div>
+                )}
+              </form.Field>
+            )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
@@ -181,10 +254,7 @@ function AuthPage() {
             </span>
             <button
               type="button"
-              onClick={() => {
-                setMode(mode === 'signin' ? 'signup' : 'signin');
-                setError(null);
-              }}
+              onClick={switchMode}
               className={cn(
                 'text-primary font-medium hover:underline',
                 isLoading && 'pointer-events-none opacity-50'
