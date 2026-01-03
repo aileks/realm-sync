@@ -96,7 +96,7 @@ pnpm run test
 | Backend       | Working | Convex schema & functions           |
 | UI components | Ready   | 13 Shadcn primitives                |
 | Testing       | Working | Vitest configured, 23 tests passing |
-| CI/CD         | Missing | No `.github/workflows`              |
+| CI/CD         | Working | Lint, typecheck, test, build        |
 | Auth          | Working | Google OAuth & Password auth        |
 
 ## NOTES
