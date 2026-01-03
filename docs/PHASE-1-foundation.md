@@ -13,13 +13,13 @@ Establish the core data model, authentication, and basic CRUD operations for pro
 
 ## Deliverables Checklist
 
-- [ ] **Convex Schema Implementation**: All tables (users, projects, documents, entities, facts, alerts, llmCache) defined with proper indexes.
-- [ ] **Authentication Integration**: Convex Auth configured with Google OAuth and Email/Password providers.
-- [ ] **Project Management**: CRUD operations for projects including real-time stats tracking.
-- [ ] **Document Management**: CRUD for documents supporting text, markdown, and file uploads (>1MB).
-- [ ] **File Storage**: Convex storage integration for large document handling.
-- [ ] **Frontend Foundation**: Route structure established and base layout components built.
-- [ ] **Dark Archival UI**: Design tokens (OKLCH) and typography applied across the application.
+- [x] **Convex Schema Implementation**: All tables (users, projects, documents, entities, facts, alerts, llmCache) defined with proper indexes.
+- [x] **Authentication Integration**: Convex Auth configured with Google OAuth and Email/Password providers.
+- [x] **Project Management**: CRUD operations for projects including real-time stats tracking.
+- [x] **Document Management**: CRUD for documents supporting text, markdown, and file uploads (>1MB).
+- [x] **File Storage**: Convex storage integration for large document handling.
+- [x] **Frontend Foundation**: Route structure established and base layout components built.
+- [x] **Dark Archival UI**: Design tokens (OKLCH) and typography applied across the application.
 
 ---
 

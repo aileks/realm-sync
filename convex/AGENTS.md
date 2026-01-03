@@ -7,11 +7,14 @@
 ```
 convex/
 ├── _generated/      # Auto-generated types (NEVER EDIT)
+├── lib/
+│   └── auth.ts      # Auth helper functions (getAuthUserId, requireAuth)
+├── auth.ts          # Convex Auth configuration (Google + Password)
+├── http.ts          # HTTP router for auth endpoints
 ├── schema.ts        # Table definitions (defineSchema, defineTable)
 ├── projects.ts      # Project CRUD operations
 ├── documents.ts     # Document CRUD operations
 ├── storage.ts       # File upload/download
-├── todos.ts         # Legacy CRUD example (to remove)
 └── tsconfig.json    # Convex-specific TS config
 ```
 
@@ -110,9 +113,10 @@ async function getAuthUserId(ctx) {
 
 ## INTEGRATION
 
-- Frontend uses `@convex-dev/react-query` bridge
+- Frontend uses `ConvexAuthProvider` from `@convex-dev/auth/react`
 - Provider in `src/integrations/convex/provider.tsx`
-- Auth: `getAuthUserId()` helper checks Convex Auth identity
+- Auth helpers in `convex/lib/auth.ts`: `getAuthUserId()`, `requireAuth()`, `getCurrentUser()`
+- Auth providers: Google OAuth, Email/Password
 
 ## COMMANDS
 
@@ -126,4 +130,4 @@ npx convex deploy        # Deploy to production
 - Schema changes may prompt migration
 - Real-time via Convex query hooks
 - Functions auto-reload during `npx convex dev`
-- `todos.ts` is legacy - to remove when Phase 1 is complete
+- Phase 1 complete: Schema, Auth, Projects, Documents, Storage all implemented
