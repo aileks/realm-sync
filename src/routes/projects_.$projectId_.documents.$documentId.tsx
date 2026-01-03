@@ -3,12 +3,13 @@ import { useQuery, useMutation } from 'convex/react';
 import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Save, Loader2, CheckCircle, Clock } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/LoadingState';
-import { cn, toId } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -21,7 +22,7 @@ export const Route = createFileRoute('/projects_/$projectId_/documents/$document
 function DocumentEditorPage() {
   const navigate = useNavigate();
   const { projectId, documentId } = Route.useParams();
-  const document = useQuery(api.documents.get, { id: toId<'documents'>(documentId) });
+  const document = useQuery(api.documents.get, { id: documentId as Id<'documents'> });
   const updateDocument = useMutation(api.documents.update);
 
   const [title, setTitle] = useState('');

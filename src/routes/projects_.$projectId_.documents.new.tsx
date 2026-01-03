@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DocumentForm } from '@/components/DocumentForm';
-import { toId } from '@/lib/utils';
+import type { Id } from '../../convex/_generated/dataModel';
 
 export const Route = createFileRoute('/projects_/$projectId_/documents/new')({
   component: NewDocumentPage,
@@ -25,7 +25,7 @@ function NewDocumentPage() {
       </Button>
       <h1 className="mb-6 font-serif text-2xl font-bold">Add Document</h1>
       <DocumentForm
-        projectId={toId<'projects'>(projectId)}
+        projectId={projectId as Id<'projects'>}
         onSuccess={(documentId) =>
           navigate({
             to: '/projects/$projectId/documents/$documentId',

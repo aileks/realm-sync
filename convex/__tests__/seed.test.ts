@@ -161,7 +161,7 @@ describe('seed.seedProject mutation', () => {
       t.mutation(api.seed.seedProject, {
         userId: 'userId' as Id<'users'>,
       })
-    ).rejects.toThrow(/validator|unauthorized/i);
+    ).rejects.toThrow(/unauthorized/i);
   });
 });
 

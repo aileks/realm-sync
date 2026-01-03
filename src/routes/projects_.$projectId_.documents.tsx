@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Plus, FileText, ArrowLeft } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
-import { toId } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -27,8 +26,8 @@ export const Route = createFileRoute('/projects_/$projectId_/documents')({
 function DocumentsPage() {
   const navigate = useNavigate();
   const { projectId } = Route.useParams();
-  const project = useQuery(api.projects.get, { id: toId<'projects'>(projectId) });
-  const documents = useQuery(api.documents.list, { projectId: toId<'projects'>(projectId) });
+  const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
+  const documents = useQuery(api.documents.list, { projectId: projectId as Id<'projects'> });
   const deleteDocument = useMutation(api.documents.remove);
 
   const [deletingDocument, setDeletingDocument] = useState<{

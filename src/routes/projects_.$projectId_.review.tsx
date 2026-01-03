@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { Sparkles, FileText, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
-import { toId } from '@/lib/utils';
+import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,9 +16,9 @@ export const Route = createFileRoute('/projects_/$projectId_/review')({
 function ReviewQueuePage() {
   const navigate = useNavigate();
   const { projectId } = Route.useParams();
-  const project = useQuery(api.projects.get, { id: toId<'projects'>(projectId) });
+  const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
   const docsNeedingReview = useQuery(api.documents.listNeedingReview, {
-    projectId: toId<'projects'>(projectId),
+    projectId: projectId as Id<'projects'>,
   });
 
   if (project === undefined || docsNeedingReview === undefined) {

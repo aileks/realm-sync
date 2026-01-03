@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import { ArrowLeft, FileText, Users, List, CheckCircle2 } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
-import { toId } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -20,12 +19,12 @@ function ReviewDocumentPage() {
   const navigate = useNavigate();
   const { projectId, documentId } = Route.useParams();
 
-  const document = useQuery(api.documents.get, { id: toId<'documents'>(documentId) });
+  const document = useQuery(api.documents.get, { id: documentId as Id<'documents'> });
   const pendingEntities = useQuery(api.entities.listByProject, {
-    projectId: toId<'projects'>(projectId),
+    projectId: projectId as Id<'projects'>,
     status: 'pending',
   });
-  const facts = useQuery(api.facts.listByDocument, { documentId: toId<'documents'>(documentId) });
+  const facts = useQuery(api.facts.listByDocument, { documentId: documentId as Id<'documents'> });
 
   const confirmEntity = useMutation(api.entities.confirm);
   const rejectEntity = useMutation(api.entities.reject);
