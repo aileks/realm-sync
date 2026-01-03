@@ -346,4 +346,112 @@ describe('processExtractionResult', () => {
     expect(facts).toHaveLength(1);
     expect(facts[0].object).toBe('valid');
   });
+
+  it('persists evidencePosition for facts when provided', async () => {
+    const t = convexTest(schema, modules);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
+
+    const extractionResult = {
+      entities: [{ name: 'Jon Snow', type: 'character' as const }],
+      facts: [
+        {
+          entityName: 'Jon Snow',
+          subject: 'Jon Snow',
+          predicate: 'is',
+          object: 'King in the North',
+          confidence: 1.0,
+          evidence: 'Jon Snow is King in the North',
+          evidencePosition: { start: 0, end: 30 },
+        },
+      ],
+      relationships: [],
+    };
+
+    await t.mutation(internal.llm.extract.processExtractionResult, {
+      documentId,
+      result: extractionResult,
+    });
+
+    const facts = await t.run(async (ctx) => {
+      return await ctx.db
+        .query('facts')
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
+        .collect();
+    });
+
+    expect(facts).toHaveLength(1);
+    expect(facts[0].evidencePosition).toEqual({ start: 0, end: 30 });
+  });
+
+  it('persists evidencePosition for relationships when provided', async () => {
+    const t = convexTest(schema, modules);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
+
+    const extractionResult = {
+      entities: [
+        { name: 'Jon Snow', type: 'character' as const },
+        { name: 'Daenerys', type: 'character' as const },
+      ],
+      facts: [],
+      relationships: [
+        {
+          sourceEntity: 'Jon Snow',
+          targetEntity: 'Daenerys',
+          relationshipType: 'allied_with',
+          evidence: 'Jon Snow bent the knee',
+          evidencePosition: { start: 100, end: 122 },
+        },
+      ],
+    };
+
+    await t.mutation(internal.llm.extract.processExtractionResult, {
+      documentId,
+      result: extractionResult,
+    });
+
+    const facts = await t.run(async (ctx) => {
+      return await ctx.db
+        .query('facts')
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
+        .collect();
+    });
+
+    expect(facts).toHaveLength(1);
+    expect(facts[0].evidencePosition).toEqual({ start: 100, end: 122 });
+  });
+
+  it('handles facts without evidencePosition', async () => {
+    const t = convexTest(schema, modules);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
+
+    const extractionResult = {
+      entities: [{ name: 'Jon Snow', type: 'character' as const }],
+      facts: [
+        {
+          entityName: 'Jon Snow',
+          subject: 'Jon Snow',
+          predicate: 'is',
+          object: 'brave',
+          confidence: 0.8,
+          evidence: 'some evidence',
+        },
+      ],
+      relationships: [],
+    };
+
+    await t.mutation(internal.llm.extract.processExtractionResult, {
+      documentId,
+      result: extractionResult,
+    });
+
+    const facts = await t.run(async (ctx) => {
+      return await ctx.db
+        .query('facts')
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
+        .collect();
+    });
+
+    expect(facts).toHaveLength(1);
+    expect(facts[0].evidencePosition).toBeUndefined();
+  });
 });

@@ -9,6 +9,8 @@ read_when: [testing, integration, unit, end-to-end, regression]
 
 **_FOLLOW TDD! TEST BEHAVIOR, NOT IMPLEMENTATION!_**
 
+- Exception: Specific edge cases must be verified.
+
 ---
 
 ## Overview

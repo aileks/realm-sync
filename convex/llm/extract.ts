@@ -325,6 +325,12 @@ const extractionResultValidator = v.object({
           value: v.string(),
         })
       ),
+      evidencePosition: v.optional(
+        v.object({
+          start: v.number(),
+          end: v.number(),
+        })
+      ),
     })
   ),
   relationships: v.array(
@@ -333,6 +339,12 @@ const extractionResultValidator = v.object({
       targetEntity: v.string(),
       relationshipType: v.string(),
       evidence: v.string(),
+      evidencePosition: v.optional(
+        v.object({
+          start: v.number(),
+          end: v.number(),
+        })
+      ),
     })
   ),
 });
@@ -393,6 +405,7 @@ export const processExtractionResult = internalMutation({
         object: extractedFact.object,
         confidence: extractedFact.confidence,
         evidenceSnippet: extractedFact.evidence,
+        evidencePosition: extractedFact.evidencePosition,
         temporalBound: extractedFact.temporalBound,
         status: 'pending',
         createdAt: now,
@@ -413,6 +426,7 @@ export const processExtractionResult = internalMutation({
         object: relationship.targetEntity,
         confidence: 1.0,
         evidenceSnippet: relationship.evidence,
+        evidencePosition: relationship.evidencePosition,
         status: 'pending',
         createdAt: now,
       });

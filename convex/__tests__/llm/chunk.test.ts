@@ -97,6 +97,38 @@ describe('chunkDocument', () => {
     expect(chunks.length).toBeGreaterThan(2);
     expect(chunks[0].text.length).toBeLessThanOrEqual(2000);
   });
+
+  it('handles content starting with newlines without index error', () => {
+    const content = '\n\nParagraph after blank lines. '.repeat(500);
+    const chunks = chunkDocument(content, 3000, 300);
+
+    expect(chunks.length).toBeGreaterThan(1);
+    for (const chunk of chunks) {
+      expect(chunk.text.length).toBeLessThanOrEqual(3000);
+    }
+  });
+
+  it('handles boundary search near start of content', () => {
+    const content = 'Short. '.repeat(200) + '\n\n' + 'More text. '.repeat(200);
+    const chunks = chunkDocument(content, 1500, 100);
+
+    expect(chunks.length).toBeGreaterThan(1);
+    for (const chunk of chunks) {
+      expect(chunk.startOffset).toBeGreaterThanOrEqual(0);
+      expect(chunk.endOffset).toBeLessThanOrEqual(content.length);
+    }
+  });
+
+  it('handles content with only newlines at boundaries', () => {
+    const content = '\n'.repeat(100) + 'text'.repeat(1000) + '\n'.repeat(100);
+    const chunks = chunkDocument(content, 2000, 200);
+
+    expect(chunks.length).toBeGreaterThanOrEqual(1);
+    for (const chunk of chunks) {
+      const extracted = content.slice(chunk.startOffset, chunk.endOffset);
+      expect(extracted).toBe(chunk.text);
+    }
+  });
 });
 
 describe('needsChunking', () => {

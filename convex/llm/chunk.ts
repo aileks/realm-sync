@@ -55,7 +55,7 @@ function findParagraphBoundary(content: string, start: number, maxEnd: number): 
   const searchStart = Math.max(start + MIN_CHUNK_CHARS, maxEnd - 2000);
 
   for (let i = maxEnd; i >= searchStart; i--) {
-    if (content[i] === '\n' && content[i - 1] === '\n') {
+    if (i > 0 && content[i] === '\n' && content[i - 1] === '\n') {
       return i + 1;
     }
   }
