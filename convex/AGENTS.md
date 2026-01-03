@@ -7,16 +7,22 @@
 ```
 convex/
 ├── _generated/      # Auto-generated types (NEVER EDIT)
+├── __tests__/       # Test files (convex-test)
 ├── lib/
 │   └── auth.ts      # Auth helpers (getAuthUserId, requireAuth, getCurrentUser, requireAuthUser)
+├── llm/
+│   ├── cache.ts     # LLM response caching
+│   ├── extract.ts   # Extraction action + processExtractionResult
+│   └── utils.ts     # Hash utilities
 ├── auth.config.ts   # Auth provider configuration
 ├── auth.ts          # Convex Auth setup (Google + Password)
-├── http.ts          # HTTP router for auth endpoints
-├── schema.ts        # Table definitions (defineSchema, defineTable)
-├── projects.ts      # Project CRUD operations
 ├── documents.ts     # Document CRUD operations
+├── entities.ts      # Entity CRUD + merge
+├── facts.ts         # Fact CRUD + confirm/reject
+├── http.ts          # HTTP router for auth endpoints
+├── projects.ts      # Project CRUD operations
+├── schema.ts        # Table definitions (defineSchema, defineTable)
 ├── storage.ts       # File upload/download
-├── projects.test.ts # Backend tests (convex-test)
 └── tsconfig.json    # Convex-specific TS config
 ```
 
@@ -32,15 +38,15 @@ convex/
 
 ## CURRENT SCHEMA
 
-| Table       | Key Fields                                      | Notes                     |
-| ----------- | ----------------------------------------------- | ------------------------- |
-| `users`     | name, email, settings                           | Extended from Convex Auth |
-| `projects`  | userId, name, stats                             | User-owned projects       |
-| `documents` | projectId, title, content, processingStatus     | Document storage          |
-| `entities`  | projectId, name, type, aliases                  | Phase 2 placeholder       |
-| `facts`     | projectId, entityId, subject, predicate, object | Phase 2 placeholder       |
-| `alerts`    | projectId, type, severity, status               | Phase 4 placeholder       |
-| `llmCache`  | inputHash, promptVersion, response              | LLM response caching      |
+| Table | Key Fields | Notes |
+| --- | --- | --- |
+| `users` | name, email, settings | Extended from Convex Auth |
+| `projects` | userId, name, stats | User-owned projects |
+| `documents` | projectId, title, content, processingStatus | Document storage |
+| `entities` | projectId, name, type, aliases, status | Canon entities (pending/confirmed) |
+| `facts` | projectId, entityId, subject, predicate, object, status | Canon facts (pending/confirmed/rejected) |
+| `alerts` | projectId, type, severity, status | Phase 4 placeholder |
+| `llmCache` | inputHash, promptVersion, response | LLM response caching |
 
 ## AUTH PATTERNS
 
@@ -143,5 +149,5 @@ npx convex deploy        # Deploy to production
 - Schema changes may prompt migration
 - Real-time via Convex query hooks (useQuery)
 - Functions auto-reload during `npx convex dev`
-- All 23 tests passing (projects, utils)
+- All 73 tests passing (projects, entities, facts, llm/cache, llm/extract, utils)
 - Cascade deletes: manually delete related documents before project

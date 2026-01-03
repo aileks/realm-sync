@@ -64,7 +64,7 @@ export default defineSchema({
       filterFields: ['projectId'],
     }),
 
-  // Entities (Placeholder for Phase 2)
+  // Entities
   entities: defineTable({
     projectId: v.id('projects'),
     name: v.string(),
@@ -78,17 +78,19 @@ export default defineSchema({
     description: v.optional(v.string()),
     aliases: v.array(v.string()),
     firstMentionedIn: v.optional(v.id('documents')),
+    status: v.union(v.literal('pending'), v.literal('confirmed')),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index('by_project', ['projectId', 'type'])
+    .index('by_project_status', ['projectId', 'status'])
     .index('by_name', ['projectId', 'name'])
     .searchIndex('search_name', {
       searchField: 'name',
       filterFields: ['projectId'],
     }),
 
-  // Facts (Placeholder for Phase 2)
+  // Facts
   facts: defineTable({
     projectId: v.id('projects'),
     entityId: v.id('entities'),

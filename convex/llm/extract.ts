@@ -1,6 +1,7 @@
-import { internalAction } from '../_generated/server';
+import { internalAction, internalMutation } from '../_generated/server';
 import { api, internal } from '../_generated/api';
 import { v } from 'convex/values';
+import type { Id } from '../_generated/dataModel';
 
 export const PROMPT_VERSION = 'v1';
 
@@ -181,5 +182,150 @@ export const extractFromDocument = internalAction({
     });
 
     return result;
+  },
+});
+
+const extractionResultValidator = v.object({
+  entities: v.array(
+    v.object({
+      name: v.string(),
+      type: v.union(
+        v.literal('character'),
+        v.literal('location'),
+        v.literal('item'),
+        v.literal('concept'),
+        v.literal('event')
+      ),
+      description: v.optional(v.string()),
+      aliases: v.optional(v.array(v.string())),
+    })
+  ),
+  facts: v.array(
+    v.object({
+      entityName: v.string(),
+      subject: v.string(),
+      predicate: v.string(),
+      object: v.string(),
+      confidence: v.number(),
+      evidence: v.string(),
+      temporalBound: v.optional(
+        v.object({
+          type: v.union(v.literal('point'), v.literal('range'), v.literal('relative')),
+          value: v.string(),
+        })
+      ),
+    })
+  ),
+  relationships: v.array(
+    v.object({
+      sourceEntity: v.string(),
+      targetEntity: v.string(),
+      relationshipType: v.string(),
+      evidence: v.string(),
+    })
+  ),
+});
+
+export const processExtractionResult = internalMutation({
+  args: {
+    documentId: v.id('documents'),
+    result: extractionResultValidator,
+  },
+  handler: async (ctx, { documentId, result }) => {
+    const doc = await ctx.db.get(documentId);
+    if (!doc) {
+      throw new Error('Document not found');
+    }
+
+    const projectId = doc.projectId;
+    const now = Date.now();
+
+    const entityNameToId = new Map<string, Id<'entities'>>();
+    let newEntityCount = 0;
+    let newFactCount = 0;
+
+    for (const extractedEntity of result.entities) {
+      const existing = await ctx.db
+        .query('entities')
+        .withIndex('by_name', (q) => q.eq('projectId', projectId).eq('name', extractedEntity.name))
+        .first();
+
+      if (existing) {
+        entityNameToId.set(extractedEntity.name, existing._id);
+      } else {
+        const entityId = await ctx.db.insert('entities', {
+          projectId,
+          name: extractedEntity.name,
+          type: extractedEntity.type,
+          description: extractedEntity.description,
+          aliases: extractedEntity.aliases ?? [],
+          firstMentionedIn: documentId,
+          status: 'pending',
+          createdAt: now,
+          updatedAt: now,
+        });
+        entityNameToId.set(extractedEntity.name, entityId);
+        newEntityCount++;
+      }
+    }
+
+    for (const extractedFact of result.facts) {
+      const entityId = entityNameToId.get(extractedFact.entityName);
+      if (!entityId) continue;
+
+      await ctx.db.insert('facts', {
+        projectId,
+        entityId,
+        documentId,
+        subject: extractedFact.subject,
+        predicate: extractedFact.predicate,
+        object: extractedFact.object,
+        confidence: extractedFact.confidence,
+        evidenceSnippet: extractedFact.evidence,
+        temporalBound: extractedFact.temporalBound,
+        status: 'pending',
+        createdAt: now,
+      });
+      newFactCount++;
+    }
+
+    for (const relationship of result.relationships) {
+      const sourceEntityId = entityNameToId.get(relationship.sourceEntity);
+      if (!sourceEntityId) continue;
+
+      await ctx.db.insert('facts', {
+        projectId,
+        entityId: sourceEntityId,
+        documentId,
+        subject: relationship.sourceEntity,
+        predicate: relationship.relationshipType,
+        object: relationship.targetEntity,
+        confidence: 1.0,
+        evidenceSnippet: relationship.evidence,
+        status: 'pending',
+        createdAt: now,
+      });
+      newFactCount++;
+    }
+
+    await ctx.db.patch(documentId, {
+      processingStatus: 'completed',
+      processedAt: now,
+      updatedAt: now,
+    });
+
+    const project = await ctx.db.get(projectId);
+    if (project?.stats) {
+      await ctx.db.patch(projectId, {
+        updatedAt: now,
+        stats: {
+          ...project.stats,
+          entityCount: project.stats.entityCount + newEntityCount,
+          factCount: project.stats.factCount + newFactCount,
+        },
+      });
+    }
+
+    return { entitiesCreated: newEntityCount, factsCreated: newFactCount };
   },
 });

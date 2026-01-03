@@ -113,12 +113,14 @@ Canon objects (characters, locations, items, etc.) tracked across documents.
 | `description` | `v.optional(v.string())` | Summary of the entity. |
 | `aliases` | `v.array(v.string())` | Alternate names (e.g., nicknames, titles). |
 | `firstMentionedIn` | `v.optional(v.id("documents"))` | Reference to the document where first discovered. |
+| `status` | `v.union(...)` | `"pending"`, `"confirmed"`. |
 | `createdAt` | `v.number()` | Creation timestamp. |
 | `updatedAt` | `v.number()` | Last update timestamp. |
 
 **Indexes:**
 
 - `by_project`: `["projectId", "type"]` (List entities by type)
+- `by_project_status`: `["projectId", "status"]` (Filter by status)
 - `by_name`: `["projectId", "name"]` (Unique name lookup within project)
 
 **Search Index:**
