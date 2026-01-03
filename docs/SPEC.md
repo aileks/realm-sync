@@ -251,8 +251,9 @@ src/routes/
 
 - `llm/extract.ts`: `extractFromDocument` (action), `processExtractionResult` (internalMutation)
 - `llm/cache.ts`: `checkCache`, `saveToCache`, `invalidateCache`
-- `entities.ts`: `create`, `update`, `merge`, `listByProject`, `getWithFacts`, `remove`, `get`, `findByName`
+- `entities.ts`: `create`, `update`, `merge`, `listByProject`, `getWithFacts`, `remove`, `get`, `findByName`, `confirm`, `reject`, `listPending`, `findSimilar`
 - `facts.ts`: `create`, `confirm`, `reject`, `listByEntity`, `listPending`, `listByDocument`, `listByProject`, `remove`, `update`, `get`
+- `seed.ts`: `seedProject`, `clearSeedData`
 
 **JSON Schema for Extraction**:
 

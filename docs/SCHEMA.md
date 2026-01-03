@@ -64,7 +64,7 @@ World or campaign containers. Each user can manage multiple isolated canons.
 | `description` | `v.optional(v.string())` | Brief overview of the project. |
 | `createdAt` | `v.number()` | Creation timestamp. |
 | `updatedAt` | `v.number()` | Last modification timestamp. |
-| `stats` | `v.optional(v.object({...}))` | Cached counts for docs, entities, facts, and alerts. |
+| `stats` | `v.optional(v.object({...}))` | Cached counts: `documentCount`, `entityCount`, `factCount`, `alertCount`. |
 
 **Indexes:**
 

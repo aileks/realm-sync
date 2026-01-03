@@ -21,7 +21,7 @@ Phase 2 focuses on the LLM-powered pipeline that extracts entities, facts, and r
 | 2.2 LLM Cache                                    | ✅ Complete | #3  |
 | 2.3 Entity & Fact CRUD + processExtractionResult | ✅ Complete | #4  |
 | 2.4 Document Chunking                            | ✅ Complete | #5  |
-| 2.5 Extraction Review UI                         | ⏳ Pending  | -   |
+| 2.5 Extraction Review UI                         | ✅ Complete | #7  |
 | 2.6 Entity Merging UI                            | ⏳ Pending  | -   |
 
 ---
@@ -33,8 +33,9 @@ Phase 2 focuses on the LLM-powered pipeline that extracts entities, facts, and r
 - ✅ Implement document chunking for large texts.
 - ✅ Build extraction pipeline (action → validate → mutation).
 - ✅ Create LLM response caching system.
-- ⏳ Build extraction review UI.
+- ✅ Build extraction review UI.
 - ✅ Implement entity merging/aliasing (backend).
+- ⏳ Build entity merging UI.
 
 ---
 
@@ -250,7 +251,7 @@ For documents exceeding LLM context limits or to improve extraction precision:
 - `getWithFacts`: Get entity details including associated facts.
 - `confirm`: Approve a pending entity from extraction queue.
 - `reject`: Discard an incorrect entity.
-- `listPending`: Get all facts awaiting review for a project.
+- `listPending`: Get all entities awaiting review for a project.
 - `findSimilar`: Find potential duplicate entities for merging.
 
 ### Facts (`convex/facts.ts`)
@@ -263,10 +264,18 @@ For documents exceeding LLM context limits or to improve extraction precision:
 
 ### Seed Data (`convex/seed.ts`)
 
-- `seedProject`: Creates a sample fantasy project with 2 documents, 7 entities, 8 facts for development testing.
+- `seedProject`: Creates a sample fantasy project ("The Northern Chronicles") with:
+  - 2 documents with narrative content
+  - 7 entities (characters, locations, concepts, events)
+  - 8 facts with evidence positions
 - `clearSeedData`: Deletes all seed data for a project.
 
 **Note**: To use seed data, run `api.seed.seedProject` mutation via Convex dashboard with a valid `userId`.
+
+**Usage Instructions:**
+
+1. Run `api.seed.seedProject({ userId: "<your-user-id>" })` in the Convex dashboard.
+2. To clean up seed data, run `api.seed.clearSeedData({ projectId })`.
 
 ---
 

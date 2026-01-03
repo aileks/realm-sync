@@ -52,6 +52,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
           to="/projects/$projectId"
           params={{ projectId: project._id }}
           className="group-hover:text-primary transition-colors"
+          onClick={(e) => e.stopPropagation()}
         >
           <CardTitle className="group-hover:text-primary font-serif text-lg">
             {project.name}
