@@ -45,6 +45,31 @@ describe('checkCache', () => {
 
       expect(cached).toBe(null);
     });
+
+    it('returns null for expired cache entry', async () => {
+      const t = convexTest(schema, modules);
+      const hash = await t.query(internal.llm.utils.computeHash, {
+        content: 'Expired content',
+      });
+
+      await t.run(async (ctx) => {
+        await ctx.db.insert('llmCache', {
+          inputHash: hash,
+          promptVersion: 'v1',
+          response: JSON.stringify({ test: 'expired' }),
+          modelId: 'test-model',
+          createdAt: Date.now() - 604800000,
+          expiresAt: Date.now() - 1000,
+        });
+      });
+
+      const cached = await t.query(internal.llm.cache.checkCache, {
+        inputHash: hash,
+        promptVersion: 'v1',
+      });
+
+      expect(cached).toBe(null);
+    });
   });
 
   describe('cache hit', () => {
