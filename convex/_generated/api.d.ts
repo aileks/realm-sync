@@ -19,6 +19,7 @@ import type * as llm_chunk from "../llm/chunk.js";
 import type * as llm_extract from "../llm/extract.js";
 import type * as llm_utils from "../llm/utils.js";
 import type * as projects from "../projects.js";
+import type * as seed from "../seed.js";
 import type * as storage from "../storage.js";
 
 import type {
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   "llm/extract": typeof llm_extract;
   "llm/utils": typeof llm_utils;
   projects: typeof projects;
+  seed: typeof seed;
   storage: typeof storage;
 }>;
 
