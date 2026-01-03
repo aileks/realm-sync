@@ -20,7 +20,7 @@ import { DocumentCard } from '@/components/DocumentCard';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 
-export const Route = createFileRoute('/projects/$projectId/documents')({
+export const Route = createFileRoute('/projects_/$projectId_/documents')({
   component: DocumentsPage,
 });
 

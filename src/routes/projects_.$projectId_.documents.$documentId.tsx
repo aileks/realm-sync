@@ -14,7 +14,7 @@ function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-export const Route = createFileRoute('/projects/$projectId/documents/$documentId')({
+export const Route = createFileRoute('/projects_/$projectId_/documents/$documentId')({
   component: DocumentEditorPage,
 });
 

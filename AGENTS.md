@@ -55,6 +55,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 
 ## CONVENTIONS
 
+- **Types**: Use types over interfaces unless an interface is explicitly need; use a comment for explanation/justification
 - **Runtime**: `pnpm` exclusively
 - **Path aliases**: `@/*` → `./src/*` (but Convex uses relative `../../convex/_generated/api`)
 - **Routing**: Dotted filenames for nested routes (`$projectId.documents.new.tsx`)

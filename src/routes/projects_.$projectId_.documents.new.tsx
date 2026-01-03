@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { DocumentForm } from '@/components/DocumentForm';
 import { toId } from '@/lib/utils';
 
-export const Route = createFileRoute('/projects/$projectId/documents/new')({
+export const Route = createFileRoute('/projects_/$projectId_/documents/new')({
   component: NewDocumentPage,
 });
 

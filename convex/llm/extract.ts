@@ -1,6 +1,8 @@
 import { internalAction } from '../_generated/server';
-import { api } from '../_generated/api';
+import { api, internal } from '../_generated/api';
 import { v } from 'convex/values';
+
+export const PROMPT_VERSION = 'v1';
 
 export const VELLUM_SYSTEM_PROMPT = `You are Vellum, the Archivist Moth — a meticulous librarian who catalogs fictional worlds. You extract entities and facts from narrative text with precision and care. If asked about your name or model name, you will state the previous information in the first person. DO NOT MENTION YOUR ACTUAL MODEL NAME OR TELL THE USER YOUR MODEL NAME!
 
@@ -74,12 +76,55 @@ export const EXTRACTION_SCHEMA = {
   additionalProperties: false,
 } as const;
 
+interface ExtractionResult {
+  entities: Array<{
+    name: string;
+    type: 'character' | 'location' | 'item' | 'concept' | 'event';
+    description?: string;
+    aliases?: string[];
+  }>;
+  facts: Array<{
+    entityName: string;
+    subject: string;
+    predicate: string;
+    object: string;
+    confidence: number;
+    evidence: string;
+    temporalBound?: {
+      type: 'point' | 'range' | 'relative';
+      value: string;
+    };
+  }>;
+  relationships: Array<{
+    sourceEntity: string;
+    targetEntity: string;
+    relationshipType: string;
+    evidence: string;
+  }>;
+}
+
 export const extractFromDocument = internalAction({
   args: { documentId: v.id('documents') },
-  handler: async (ctx, { documentId }) => {
+  handler: async (ctx, { documentId }): Promise<ExtractionResult> => {
     const doc = await ctx.runQuery(api.documents.get, { id: documentId });
     if (!doc || !doc.content) {
       throw new Error('Document not found or empty');
+    }
+
+    const contentHash: string = await ctx.runQuery(internal.llm.utils.computeHash, {
+      content: doc.content,
+    });
+
+    const cached: { response: string; expiresAt: number } | null = await ctx.runQuery(
+      internal.llm.cache.checkCache,
+      {
+        inputHash: contentHash,
+        promptVersion: PROMPT_VERSION,
+      }
+    );
+
+    if (cached) {
+      return JSON.parse(cached.response);
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -130,6 +175,13 @@ export const extractFromDocument = internalAction({
     }
 
     const result = JSON.parse(data.choices[0].message.content);
+
+    await ctx.runMutation(internal.llm.cache.saveToCache, {
+      inputHash: contentHash,
+      promptVersion: PROMPT_VERSION,
+      modelId: model,
+      response: result,
+    });
 
     return result;
   },

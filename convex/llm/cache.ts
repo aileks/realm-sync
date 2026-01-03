@@ -16,7 +16,7 @@ export const checkCache = internalQuery({
       return null;
     }
 
-    return cache;
+    return JSON.parse(cache.response);
   },
 });
 
