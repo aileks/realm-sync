@@ -7,6 +7,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     Google,
     Password({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
       profile(params) {
         return {
           email: params.email as string,
