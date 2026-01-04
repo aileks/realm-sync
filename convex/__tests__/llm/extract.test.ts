@@ -454,4 +454,36 @@ describe('processExtractionResult', () => {
     expect(facts).toHaveLength(1);
     expect(facts[0].evidencePosition).toBeUndefined();
   });
+
+  it('handles entity with missing aliases array', async () => {
+    const t = convexTest(schema, modules);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
+
+    const extractionResult = {
+      entities: [
+        {
+          name: 'No Aliases Entity',
+          type: 'character' as const,
+          aliases: undefined as unknown as string[],
+        },
+      ],
+      facts: [],
+      relationships: [],
+    };
+
+    await t.mutation(internal.llm.extract.processExtractionResult, {
+      documentId,
+      result: extractionResult,
+    });
+
+    const entities = await t.run(async (ctx) => {
+      return await ctx.db
+        .query('entities')
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
+        .collect();
+    });
+
+    expect(entities).toHaveLength(1);
+    expect(entities[0].aliases).toEqual([]);
+  });
 });
