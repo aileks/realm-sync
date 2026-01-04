@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsNewRouteImport } from './routes/projects_.new'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects_.$projectId'
+import { Route as EntitiesEntityIdRouteImport } from './routes/entities.$entityId'
 import { Route as DevChatRouteImport } from './routes/dev.chat'
 import { Route as ProjectsProjectIdReviewRouteImport } from './routes/projects_.$projectId_.review'
 import { Route as ProjectsProjectIdFactsRouteImport } from './routes/projects_.$projectId_.facts'
@@ -51,6 +52,11 @@ const ProjectsNewRoute = ProjectsNewRouteImport.update({
 const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
   id: '/projects_/$projectId',
   path: '/projects/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntitiesEntityIdRoute = EntitiesEntityIdRouteImport.update({
+  id: '/entities/$entityId',
+  path: '/entities/$entityId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevChatRoute = DevChatRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/projects': typeof ProjectsRoute
   '/dev/chat': typeof DevChatRoute
+  '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/projects': typeof ProjectsRoute
   '/dev/chat': typeof DevChatRoute
+  '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRoute
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/projects': typeof ProjectsRoute
   '/dev/chat': typeof DevChatRoute
+  '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/projects_/$projectId': typeof ProjectsProjectIdRoute
   '/projects_/new': typeof ProjectsNewRoute
   '/projects_/$projectId_/alerts': typeof ProjectsProjectIdAlertsRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/projects'
     | '/dev/chat'
+    | '/entities/$entityId'
     | '/projects/$projectId'
     | '/projects/new'
     | '/projects/$projectId/alerts'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/projects'
     | '/dev/chat'
+    | '/entities/$entityId'
     | '/projects/$projectId'
     | '/projects/new'
     | '/projects/$projectId/alerts'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/projects'
     | '/dev/chat'
+    | '/entities/$entityId'
     | '/projects_/$projectId'
     | '/projects_/new'
     | '/projects_/$projectId_/alerts'
@@ -250,6 +262,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ProjectsRoute: typeof ProjectsRoute
   DevChatRoute: typeof DevChatRoute
+  EntitiesEntityIdRoute: typeof EntitiesEntityIdRoute
   ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
   ProjectsProjectIdAlertsRoute: typeof ProjectsProjectIdAlertsRoute
@@ -295,6 +308,13 @@ declare module '@tanstack/react-router' {
       path: '/projects/$projectId'
       fullPath: '/projects/$projectId'
       preLoaderRoute: typeof ProjectsProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entities/$entityId': {
+      id: '/entities/$entityId'
+      path: '/entities/$entityId'
+      fullPath: '/entities/$entityId'
+      preLoaderRoute: typeof EntitiesEntityIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dev/chat': {
@@ -446,6 +466,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ProjectsRoute: ProjectsRoute,
   DevChatRoute: DevChatRoute,
+  EntitiesEntityIdRoute: EntitiesEntityIdRoute,
   ProjectsProjectIdRoute: ProjectsProjectIdRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   ProjectsProjectIdAlertsRoute: ProjectsProjectIdAlertsRoute,

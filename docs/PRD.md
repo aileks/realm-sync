@@ -64,6 +64,7 @@ Realm Sync provides a "canon engine" that automates the archival and verificatio
 - **Project Isolation**: Manage multiple worlds/campaigns with separate canon.
 - **Document Ingestion**: Paste raw text or upload files (`.txt`, `.md`).
 - **In-App Editor**: Basic editor for drafting or tweaking documents.
+- **Notes**: A centralized, free-form writing space for ideas, story drafts, DnD campaign notes, and brainstorming. Vellum can pull from Notes for collaboration and context when processing documents.
 
 ### 6.2 Canon Extraction (Vellum Pipeline)
 
@@ -115,6 +116,7 @@ erDiagram
     PROJECT ||--o{ DOCUMENT : contains
     PROJECT ||--o{ ENTITY : tracks
     PROJECT ||--o{ ALERT : generates
+    PROJECT ||--o{ NOTE : contains
     DOCUMENT ||--o{ FACT : provides
     ENTITY ||--o{ FACT : defines
     FACT ||--o{ EVIDENCE : "supported by"
@@ -125,6 +127,7 @@ erDiagram
 - **Users**: Identity and preferences.
 - **Projects**: The root of a specific canon.
 - **Documents**: Raw text sources with metadata.
+- **Notes**: Free-form writing space for ideas, drafts, and brainstorming.
 - **Entities**: Unique identifiers for characters, places, etc.
 - **Facts**: Atomic pieces of knowledge (Triples).
 - **Evidence**: Specific text excerpts linking Facts to Documents.
@@ -159,6 +162,7 @@ Vellum is not just a tool but an "Archivist Moth" that lives in the UI:
 - **Notifications**: "I have found some discrepancies in the latest chapter."
 - **Empty States**: Vellum waiting in a library nook for new texts.
 - **Confidence**: Vellum displays confidence scores through subtle visual cues (e.g., wing flutter intensity).
+- **Notes Collaboration**: Vellum can pull context from Notes when processing documents or generating suggestions, treating them as additional source material for understanding the world.
 
 ---
 
@@ -183,7 +187,7 @@ Vellum is not just a tool but an "Archivist Moth" that lives in the UI:
 
 1. **Phase 1: Foundation**: Schema definition, Auth integration, basic CRUD for Projects/Documents. [See Foundation Specs](./PHASE-1-foundation.md)
 2. **Phase 2: Extraction**: Implementation of the LLM pipeline and fact extraction UI. [See Extraction Pipeline Specs](./PHASE-2-extraction.md)
-3. **Phase 3: Browser**: Entity detail pages, search, and relationship views.
+3. **Phase 3: Browser**: Entity detail pages, search, and relationship views. Includes Notes feature for collaborative writing.
 4. **Phase 4: Continuity**: Development of the contradiction detection logic and Alert UI.
 5. **Phase 5: Polish**: Mascot animations, UX refinement, and performance optimization.
 

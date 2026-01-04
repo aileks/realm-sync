@@ -22,6 +22,7 @@ erDiagram
     projects ||--o{ entities : tracks
     projects ||--o{ facts : contains
     projects ||--o{ alerts : generates
+    projects ||--o{ notes : contains
     documents ||--o{ facts : sources
     documents ||--o{ alerts : triggers
     entities ||--o{ facts : subject
@@ -64,7 +65,7 @@ World or campaign containers. Each user can manage multiple isolated canons.
 | `description` | `v.optional(v.string())` | Brief overview of the project. |
 | `createdAt` | `v.number()` | Creation timestamp. |
 | `updatedAt` | `v.number()` | Last modification timestamp. |
-| `stats` | `v.optional(v.object({...}))` | Cached counts: `documentCount`, `entityCount`, `factCount`, `alertCount`. |
+| `stats` | `v.optional(v.object({...}))` | Cached counts: `documentCount`, `noteCount`, `entityCount`, `factCount`, `alertCount`. |
 
 **Indexes:**
 
@@ -126,6 +127,31 @@ Canon objects (characters, locations, items, etc.) tracked across documents.
 **Search Index:**
 
 - `search_name`: `searchField: name`, `filterFields: [projectId]`
+
+---
+
+### `notes`
+
+Free-form writing space for ideas, drafts, and collaborative brainstorming.
+
+| Field         | Type                  | Description                           |
+| :------------ | :-------------------- | :------------------------------------ |
+| `projectId`   | `v.id("projects")`    | Parent project reference.             |
+| `title`       | `v.string()`          | Note title.                           |
+| `content`     | `v.string()`          | Note content (rich text or markdown). |
+| `contentType` | `v.union(...)`        | `"text"`, `"markdown"`.               |
+| `tags`        | `v.array(v.string())` | Optional tags for organization.       |
+| `pinned`      | `v.boolean()`         | Whether note is pinned to top.        |
+| `createdAt`   | `v.number()`          | Creation timestamp.                   |
+| `updatedAt`   | `v.number()`          | Last edit timestamp.                  |
+
+**Indexes:**
+
+- `by_project`: `["projectId", "pinned", "updatedAt"]` (Ordered list with pinned first)
+
+**Search Index:**
+
+- `search_content`: `searchField: content`, `filterFields: [projectId]`
 
 ---
 
@@ -208,7 +234,7 @@ Cache for LLM responses to optimize costs and performance.
 
 - **Document Size**: Document content stored in the `content` field is limited to **1MB**. For larger files, the `storageId` field is used to link to Convex Storage.
 - **Fact Confidence**: Confidence scores should be between `0.0` and `1.0`.
-- **Search Latency**: Full-text search on `documents.content` is handled by Convex Search Indexes and may have a slight propagation delay (typically <1s).
+- **Search Latency**: Full-text search on `documents.content` and `notes.content` is handled by Convex Search Indexes and may have a slight propagation delay (typically <1s).
 
 ## TypeScript Definitions
 
@@ -221,6 +247,7 @@ import { Doc, Id } from './_generated/dataModel';
 export type User = Doc<'users'>;
 export type Project = Doc<'projects'>;
 export type Document = Doc<'documents'>;
+export type Note = Doc<'notes'>;
 export type Entity = Doc<'entities'>;
 export type Fact = Doc<'facts'>;
 export type Alert = Doc<'alerts'>;
@@ -228,6 +255,7 @@ export type Alert = Doc<'alerts'>;
 // ID Types
 export type ProjectId = Id<'projects'>;
 export type DocumentId = Id<'documents'>;
+export type NoteId = Id<'notes'>;
 ```
 
 ## Common Query Examples
@@ -238,6 +266,26 @@ export type DocumentId = Id<'documents'>;
 const entities = await ctx.db
   .query('entities')
   .withIndex('by_project', (q) => q.eq('projectId', projectId))
+  .collect();
+```
+
+### Fetching Project Notes
+
+```typescript
+const notes = await ctx.db
+  .query('notes')
+  .withIndex('by_project', (q) => q.eq('projectId', projectId))
+  .collect();
+```
+
+### Searching Note Content
+
+```typescript
+const results = await ctx.db
+  .query('notes')
+  .withSearchIndex('search_content', (q) =>
+    q.search('content', queryText).eq('projectId', projectId)
+  )
   .collect();
 ```
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useRouterState, useParams, useNavigate } from '@tanstack/react-router';
+import { Link, useRouterState, useParams, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useConvexAuth } from 'convex/react';
@@ -55,8 +55,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.users.viewer);
   const params = useParams({ strict: false });
+  const search = useSearch({ strict: false });
   const navigate = useNavigate();
   const { signOut } = useAuthActions();
+
+  // projectId from route params OR search params (for entity detail page)
+  const projectId = params.projectId ?? search.project;
 
   const [theme, setTheme] = useState<Theme>('default');
   const [mounted, setMounted] = useState(false);
@@ -122,7 +126,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           </NavItem>
         )}
 
-        {isAuthenticated && params.projectId && (
+        {isAuthenticated && projectId && (
           <>
             <div className="my-4 px-2">
               <div className="border-sidebar-border border-t" />
@@ -134,36 +138,15 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               </p>
             )}
 
-            <ProjectNavItem
-              projectId={params.projectId}
-              to="review"
-              icon={Sparkles}
-              collapsed={collapsed}
-            >
+            <ProjectNavItem projectId={projectId} to="canon" icon={BookOpen} collapsed={collapsed}>
+              Canon Browser
+            </ProjectNavItem>
+
+            <ProjectNavItem projectId={projectId} to="review" icon={Sparkles} collapsed={collapsed}>
               Review Extractions
             </ProjectNavItem>
           </>
         )}
-
-        <div className="my-4 px-2">
-          <div className="border-sidebar-border border-t" />
-        </div>
-
-        {!collapsed && (
-          <p className="text-muted-foreground mb-2 px-3 font-mono text-[10px] tracking-widest uppercase">
-            Coming Soon
-          </p>
-        )}
-
-        <div
-          className={cn(
-            'text-muted-foreground/50 flex cursor-not-allowed items-center gap-3 rounded-lg p-3',
-            collapsed && 'justify-center'
-          )}
-        >
-          <BookOpen className="size-5" />
-          {!collapsed && <span className="text-sm">Canon Browser</span>}
-        </div>
       </nav>
 
       <div className="border-sidebar-border flex flex-col gap-1 border-t p-2">
@@ -178,7 +161,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             <Palette className="size-4" />
             {!collapsed && <span className="ml-2">Theme</span>}
           </DropdownMenuTrigger>
-          <DropdownMenuContent align={collapsed ? 'center' : 'start'} side="right" sideOffset={10}>
+          <DropdownMenuContent align="start" side="top" sideOffset={8}>
             <DropdownMenuGroup>
               <DropdownMenuLabel>Select Theme</DropdownMenuLabel>
               {THEMES.map((t) => (
@@ -309,11 +292,16 @@ function NavItem({ to, icon: Icon, children, collapsed }: NavItemProps) {
 
 type ProjectNavItemProps = {
   projectId: string;
-  to: 'review';
+  to: 'review' | 'canon';
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
 };
+
+const projectRoutes = {
+  review: '/projects/$projectId/review',
+  canon: '/projects/$projectId/canon',
+} as const;
 
 function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: ProjectNavItemProps) {
   const routerState = useRouterState();
@@ -322,7 +310,7 @@ function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: Proj
 
   const content = (
     <Link
-      to="/projects/$projectId/review"
+      to={projectRoutes[to]}
       params={{ projectId }}
       className={cn(
         'flex items-center gap-3 rounded-lg p-3 transition-colors',
@@ -388,14 +376,6 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
           Projects
         </MobileNavItem>
       )}
-
-      <div className="my-4">
-        <div className="border-sidebar-border border-t" />
-      </div>
-
-      <p className="text-muted-foreground mb-2 px-3 font-mono text-[10px] tracking-widest uppercase">
-        Project Tools
-      </p>
 
       <div className="mb-2">
         <DropdownMenu>
@@ -480,19 +460,6 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
           </DropdownMenu>
         </div>
       )}
-
-      <div className="my-4">
-        <div className="border-border border-t" />
-      </div>
-
-      <p className="text-muted-foreground mb-2 px-3 font-mono text-[10px] tracking-widest uppercase">
-        Coming Soon
-      </p>
-
-      <div className="text-muted-foreground/50 flex cursor-not-allowed items-center gap-3 rounded-lg p-3">
-        <BookOpen className="size-5" />
-        <span className="text-sm">Canon Browser</span>
-      </div>
     </nav>
   );
 }

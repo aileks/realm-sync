@@ -15,15 +15,44 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 
 ## Implementation Progress
 
-| Sub-Phase                       | Status       | PR  |
-| ------------------------------- | ------------ | --- |
-| 3.1 Canon Browser Shell         | 🔄 In Review | #16 |
-| 3.2 Entity Detail Page          | 🔲 Pending   | -   |
-| 3.3 Full-Text Search            | 🔲 Pending   | -   |
-| 3.4 Entity Editing & Management | 🔲 Pending   | -   |
-| 3.5 Timeline View               | 🔲 Pending   | -   |
-| 3.6 Relationship Visualization  | 🔲 Pending   | -   |
-| 3.7 Polish & Integration        | 🔲 Pending   | -   |
+| Sub-Phase                       | Status      | PR  | Notes                              |
+| ------------------------------- | ----------- | --- | ---------------------------------- |
+| 3.1 Canon Browser Shell         | ✅ Complete | #16 | Merged 2026-01-04                  |
+| 3.2 Entity Detail Page          | 🔲 Pending  | -   | Sheet exists, needs dedicated page |
+| 3.3 Full-Text Search            | 🔲 Pending  | -   | Nav link ready, route missing      |
+| 3.4 Entity Editing & Management | 🟡 Partial  | #16 | Inline editing in Sheet works      |
+| 3.5 Timeline View               | 🔲 Pending  | -   | Nav link ready, route missing      |
+| 3.6 Relationship Visualization  | 🔲 Pending  | -   | Backend functions missing          |
+| 3.7 Polish & Integration        | 🔲 Pending  | -   | -                                  |
+
+### What's Implemented (from PR #16)
+
+**Backend:**
+
+- `entities.listByProjectWithStats` - Entities with fact counts + sorting
+
+**Frontend:**
+
+- Canon layout with Browse/Timeline/Search nav tabs
+- Entity type filtering (All, Characters, Locations, Items, Concepts, Events)
+- Grid/list view toggle + sort dropdown
+- Entity detail Sheet (slide-over) with inline editing
+- Three themes: Fireside (default), Twilight, Daylight
+
+### What's Missing
+
+**Backend functions needed:**
+
+- `entities.getWithDetails` - Entity + facts + relationships + appearances
+- `entities.search` - Full-text search using search index
+- `entities.getRelationships` - Facts linking to other entities
+- `entities.getRelationshipGraph` - Nodes and edges for visualization
+
+**Routes needed:**
+
+- `projects_.$projectId_.canon_.entities.$entityId.tsx` - Dedicated entity detail page
+- `projects_.$projectId_.canon_.search.tsx` - Search results page
+- `projects_.$projectId_.canon_.timeline.tsx` - Timeline view
 
 ---
 

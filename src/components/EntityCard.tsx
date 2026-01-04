@@ -84,8 +84,8 @@ export function EntityCard({
               <Icon className="size-5" />
             </div>
             <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex items-center gap-2">
-                <CardTitle className="truncate font-serif text-base leading-none font-medium">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <CardTitle className="font-serif text-base leading-tight font-medium">
                   {entity.name}
                 </CardTitle>
                 <Badge
@@ -96,6 +96,17 @@ export function EntityCard({
                   )}
                 >
                   {entity.type}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'h-5 px-1.5 py-0 text-xs font-normal capitalize',
+                    entity.status === 'confirmed' ?
+                      'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400'
+                    : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                  )}
+                >
+                  {entity.status}
                 </Badge>
               </div>
               {entity.description && (

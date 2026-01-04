@@ -17,15 +17,16 @@ async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
   return { userId };
 }
 
-describe('seed.seedProject internal mutation', () => {
+describe('seed.seedDemoData internal mutation', () => {
   it('creates project with correct stats', async () => {
     const t = convexTest(schema, getModules());
     const { userId } = await setupAuthenticatedUser(t);
 
-    const result = await t.mutation(internal.seed.seedProject, { userId });
+    const result = await t.mutation(internal.seed.seedDemoData, { userId });
+    const firstProject = result.projects[0];
 
     const project = await t.run(async (ctx) => {
-      return await ctx.db.get(result.projectId);
+      return await ctx.db.get(firstProject.projectId);
     });
 
     expect(project).not.toBeNull();
@@ -33,7 +34,7 @@ describe('seed.seedProject internal mutation', () => {
     expect(project?.name).toBe('The Northern Chronicles');
     expect(project?.stats).toEqual({
       documentCount: 2,
-      entityCount: 7,
+      entityCount: 12,
       factCount: 8,
       alertCount: 0,
     });
@@ -43,12 +44,13 @@ describe('seed.seedProject internal mutation', () => {
     const t = convexTest(schema, getModules());
     const { userId } = await setupAuthenticatedUser(t);
 
-    const result = await t.mutation(internal.seed.seedProject, { userId });
+    const result = await t.mutation(internal.seed.seedDemoData, { userId });
+    const firstProject = result.projects[0];
 
     const docs = await t.run(async (ctx) => {
       return await ctx.db
         .query('documents')
-        .withIndex('by_project', (q) => q.eq('projectId', result.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', firstProject.projectId))
         .collect();
     });
 
@@ -72,16 +74,17 @@ describe('seed.seedProject internal mutation', () => {
     const t = convexTest(schema, getModules());
     const { userId } = await setupAuthenticatedUser(t);
 
-    const result = await t.mutation(internal.seed.seedProject, { userId });
+    const result = await t.mutation(internal.seed.seedDemoData, { userId });
+    const firstProject = result.projects[0];
 
     const entities = await t.run(async (ctx) => {
       return await ctx.db
         .query('entities')
-        .withIndex('by_project', (q) => q.eq('projectId', result.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', firstProject.projectId))
         .collect();
     });
 
-    expect(entities).toHaveLength(7);
+    expect(entities).toHaveLength(12);
 
     const aldric = entities.find((e) => e.name === 'King Aldric');
     expect(aldric).toBeDefined();
@@ -112,26 +115,27 @@ describe('seed.seedProject internal mutation', () => {
     const pact = entities.find((e) => e.name === 'The Pact of Frost');
     expect(pact).toBeDefined();
     expect(pact?.type).toBe('event');
-    expect(pact?.status).toBe('pending');
+    expect(pact?.status).toBe('confirmed');
   });
 
   it('creates facts with correct evidencePositions', async () => {
     const t = convexTest(schema, getModules());
     const { userId } = await setupAuthenticatedUser(t);
 
-    const result = await t.mutation(internal.seed.seedProject, { userId });
+    const result = await t.mutation(internal.seed.seedDemoData, { userId });
+    const firstProject = result.projects[0];
 
     const facts = await t.run(async (ctx) => {
       return await ctx.db
         .query('facts')
-        .withIndex('by_project', (q) => q.eq('projectId', result.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', firstProject.projectId))
         .collect();
     });
 
     expect(facts).toHaveLength(8);
 
     const aldricAgeFact = facts.find(
-      (f) => f.subject === 'King Aldric' && f.predicate === 'has age'
+      (f) => f.subject === 'King Aldric' && f.predicate === 'has_age'
     );
     expect(aldricAgeFact).toBeDefined();
     expect(aldricAgeFact?.evidencePosition).toEqual({ start: 456, end: 505 });
@@ -142,14 +146,19 @@ describe('seed.seedProject internal mutation', () => {
     expect(pactFact?.confidence).toBe(0.85);
   });
 
-  it('returns projectId and documentIds', async () => {
+  it('returns all 3 projects with their documentIds', async () => {
     const t = convexTest(schema, getModules());
     const { userId } = await setupAuthenticatedUser(t);
 
-    const result = await t.mutation(internal.seed.seedProject, { userId });
+    const result = await t.mutation(internal.seed.seedDemoData, { userId });
 
-    expect(result.projectId).toBeDefined();
-    expect(result.documentIds).toHaveLength(2);
+    expect(result.projects).toHaveLength(3);
+    expect(result.projects[0].projectId).toBeDefined();
+    expect(result.projects[0].documentIds).toHaveLength(2);
+    expect(result.projects[1].projectId).toBeDefined();
+    expect(result.projects[1].documentIds).toHaveLength(2);
+    expect(result.projects[2].projectId).toBeDefined();
+    expect(result.projects[2].documentIds).toHaveLength(2);
   });
 });
 
@@ -158,8 +167,8 @@ describe('seed.clearSeedData internal mutation', () => {
     const t = convexTest(schema, getModules());
     const { userId } = await setupAuthenticatedUser(t);
 
-    const seedResult = await t.mutation(internal.seed.seedProject, { userId });
-    const projectId = seedResult.projectId;
+    const seedResult = await t.mutation(internal.seed.seedDemoData, { userId });
+    const projectId = seedResult.projects[0].projectId;
 
     await t.mutation(internal.seed.clearSeedData, { projectId });
 

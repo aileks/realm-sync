@@ -30,7 +30,7 @@ convex/
 ├── http.ts          # HTTP router for auth + chat endpoints
 ├── projects.ts      # Project CRUD operations
 ├── schema.ts        # Table definitions (defineSchema, defineTable)
-├── seed.ts          # Demo data seeding (seedProject, clearSeedData)
+├── seed.ts          # Demo data seeding (seedDemoData, clearSeedData)
 ├── storage.ts       # File upload/download
 ├── users.ts         # User query (viewer)
 └── tsconfig.json    # Convex-specific TS config
