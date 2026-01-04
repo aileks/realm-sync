@@ -313,11 +313,9 @@ function EntityDetailSheet({ entity, onClose }: EntityDetailSheetProps) {
     <Sheet open={!!entity} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="overflow-y-auto p-6 sm:max-w-lg">
         <SheetHeader className="pr-12">
-          <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
+          <div className="flex items-center gap-3">
             <SheetTitle className="font-serif text-2xl">{entity.name}</SheetTitle>
-            <Badge className={cn('mt-1.5', typeColors[entity.type])}>
-              {typeLabels[entity.type]}
-            </Badge>
+            <Badge className={cn(typeColors[entity.type])}>{typeLabels[entity.type]}</Badge>
           </div>
         </SheetHeader>
 
