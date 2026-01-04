@@ -476,3 +476,60 @@ export const findSimilar = query({
     });
   },
 });
+
+export const getWithDetails = query({
+  args: { id: v.id('entities') },
+  handler: async (ctx, { id }) => {
+    const entity = await ctx.db.get(id);
+    if (!entity) return null;
+
+    const isOwner = await verifyProjectOwnership(ctx, entity.projectId);
+    if (!isOwner) return null;
+
+    const facts = await ctx.db
+      .query('facts')
+      .withIndex('by_entity', (q) => q.eq('entityId', id))
+      .filter((q) => q.neq(q.field('status'), 'rejected'))
+      .collect();
+
+    const documentIds = [...new Set(facts.map((f) => f.documentId))];
+    const documents = await Promise.all(documentIds.map((docId) => ctx.db.get(docId)));
+    const appearances = documents
+      .filter((doc): doc is Doc<'documents'> => doc !== null)
+      .map((doc) => ({
+        _id: doc._id,
+        title: doc.title,
+        orderIndex: doc.orderIndex,
+      }))
+      .slice()
+      .toSorted((a, b) => a.orderIndex - b.orderIndex);
+
+    const allEntities = await ctx.db
+      .query('entities')
+      .withIndex('by_project', (q) => q.eq('projectId', entity.projectId))
+      .collect();
+
+    const relatedEntityIds = new Set<Id<'entities'>>();
+    for (const fact of facts) {
+      const objectLower = fact.object.toLowerCase().trim();
+      for (const otherEntity of allEntities) {
+        if (otherEntity._id === id) continue;
+        const nameLower = otherEntity.name.toLowerCase().trim();
+        const aliasesLower = otherEntity.aliases.map((a) => a.toLowerCase().trim());
+
+        if (objectLower.includes(nameLower) || aliasesLower.some((a) => objectLower.includes(a))) {
+          relatedEntityIds.add(otherEntity._id);
+        }
+      }
+    }
+
+    const relatedEntities = allEntities.filter((e) => relatedEntityIds.has(e._id));
+
+    return {
+      entity,
+      facts,
+      appearances,
+      relatedEntities,
+    };
+  },
+});

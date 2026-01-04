@@ -27,6 +27,7 @@ import { Route as ProjectsProjectIdCanonIndexRouteImport } from './routes/projec
 import { Route as ProjectsProjectIdReviewDocumentIdRouteImport } from './routes/projects_.$projectId_.review.$documentId'
 import { Route as ProjectsProjectIdDocumentsNewRouteImport } from './routes/projects_.$projectId_.documents.new'
 import { Route as ProjectsProjectIdDocumentsDocumentIdRouteImport } from './routes/projects_.$projectId_.documents.$documentId'
+import { Route as ProjectsProjectIdCanonEntitiesEntityIdRouteImport } from './routes/projects_.$projectId_.canon_.entities.$entityId'
 
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
@@ -126,6 +127,12 @@ const ProjectsProjectIdDocumentsDocumentIdRoute =
     path: '/$documentId',
     getParentRoute: () => ProjectsProjectIdDocumentsRoute,
   } as any)
+const ProjectsProjectIdCanonEntitiesEntityIdRoute =
+  ProjectsProjectIdCanonEntitiesEntityIdRouteImport.update({
+    id: '/projects_/$projectId_/canon_/entities/$entityId',
+    path: '/projects/$projectId/canon/entities/$entityId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/canon/': typeof ProjectsProjectIdCanonIndexRoute
   '/projects/$projectId/documents/': typeof ProjectsProjectIdDocumentsIndexRoute
   '/projects/$projectId/review/': typeof ProjectsProjectIdReviewIndexRoute
+  '/projects/$projectId/canon/entities/$entityId': typeof ProjectsProjectIdCanonEntitiesEntityIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -163,6 +171,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/canon': typeof ProjectsProjectIdCanonIndexRoute
   '/projects/$projectId/documents': typeof ProjectsProjectIdDocumentsIndexRoute
   '/projects/$projectId/review': typeof ProjectsProjectIdReviewIndexRoute
+  '/projects/$projectId/canon/entities/$entityId': typeof ProjectsProjectIdCanonEntitiesEntityIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -184,6 +193,7 @@ export interface FileRoutesById {
   '/projects_/$projectId_/canon/': typeof ProjectsProjectIdCanonIndexRoute
   '/projects_/$projectId_/documents/': typeof ProjectsProjectIdDocumentsIndexRoute
   '/projects_/$projectId_/review/': typeof ProjectsProjectIdReviewIndexRoute
+  '/projects_/$projectId_/canon_/entities/$entityId': typeof ProjectsProjectIdCanonEntitiesEntityIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/canon/'
     | '/projects/$projectId/documents/'
     | '/projects/$projectId/review/'
+    | '/projects/$projectId/canon/entities/$entityId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/canon'
     | '/projects/$projectId/documents'
     | '/projects/$projectId/review'
+    | '/projects/$projectId/canon/entities/$entityId'
   id:
     | '__root__'
     | '/'
@@ -243,6 +255,7 @@ export interface FileRouteTypes {
     | '/projects_/$projectId_/canon/'
     | '/projects_/$projectId_/documents/'
     | '/projects_/$projectId_/review/'
+    | '/projects_/$projectId_/canon_/entities/$entityId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -258,6 +271,7 @@ export interface RootRouteChildren {
   ProjectsProjectIdEntitiesRoute: typeof ProjectsProjectIdEntitiesRoute
   ProjectsProjectIdFactsRoute: typeof ProjectsProjectIdFactsRoute
   ProjectsProjectIdReviewRoute: typeof ProjectsProjectIdReviewRouteWithChildren
+  ProjectsProjectIdCanonEntitiesEntityIdRoute: typeof ProjectsProjectIdCanonEntitiesEntityIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -388,6 +402,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdDocumentsDocumentIdRouteImport
       parentRoute: typeof ProjectsProjectIdDocumentsRoute
     }
+    '/projects_/$projectId_/canon_/entities/$entityId': {
+      id: '/projects_/$projectId_/canon_/entities/$entityId'
+      path: '/projects/$projectId/canon/entities/$entityId'
+      fullPath: '/projects/$projectId/canon/entities/$entityId'
+      preLoaderRoute: typeof ProjectsProjectIdCanonEntitiesEntityIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -454,6 +475,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectsProjectIdEntitiesRoute: ProjectsProjectIdEntitiesRoute,
   ProjectsProjectIdFactsRoute: ProjectsProjectIdFactsRoute,
   ProjectsProjectIdReviewRoute: ProjectsProjectIdReviewRouteWithChildren,
+  ProjectsProjectIdCanonEntitiesEntityIdRoute:
+    ProjectsProjectIdCanonEntitiesEntityIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

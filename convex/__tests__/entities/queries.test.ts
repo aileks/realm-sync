@@ -323,4 +323,125 @@ describe('entities queries', () => {
       expect(similar[0].name).toBe('Jon Snow');
     });
   });
+
+  describe('getWithDetails', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+    });
+
+    it('returns entity with facts and appearances', async () => {
+      const projectId = await setupProject(t, userId);
+      const doc1 = await setupDocument(t, projectId, { title: 'Chapter 1' });
+      const doc2 = await setupDocument(t, projectId, { title: 'Chapter 2' });
+      const entityId = await setupEntity(t, projectId, {
+        name: 'Jon Snow',
+        description: 'King in the North',
+        aliases: ['Lord Snow'],
+        status: 'confirmed',
+      });
+
+      await setupFact(
+        t,
+        { projectId, entityId, documentId: doc1 },
+        { subject: 'Jon Snow', predicate: 'eye_color', object: 'grey', status: 'confirmed' }
+      );
+      await setupFact(
+        t,
+        { projectId, entityId, documentId: doc2 },
+        {
+          subject: 'Jon Snow',
+          predicate: 'title',
+          object: 'King in the North',
+          status: 'confirmed',
+        }
+      );
+
+      const result = await asUser.query(api.entities.getWithDetails, { id: entityId });
+
+      expect(result).not.toBeNull();
+      expect(result?.entity.name).toBe('Jon Snow');
+      expect(result?.facts).toHaveLength(2);
+      expect(result?.appearances).toHaveLength(2);
+      expect(result?.appearances.map((a) => a.title)).toContain('Chapter 1');
+      expect(result?.appearances.map((a) => a.title)).toContain('Chapter 2');
+    });
+
+    it('excludes rejected facts', async () => {
+      const projectId = await setupProject(t, userId);
+      const documentId = await setupDocument(t, projectId);
+      const entityId = await setupEntity(t, projectId, { name: 'Test', status: 'confirmed' });
+
+      const ids = { projectId, entityId, documentId };
+      await setupFact(t, ids, { predicate: 'is', object: 'good', status: 'confirmed' });
+      await setupFact(t, ids, { predicate: 'was', object: 'bad', status: 'rejected' });
+      await setupFact(t, ids, { predicate: 'will_be', object: 'great', status: 'pending' });
+
+      const result = await asUser.query(api.entities.getWithDetails, { id: entityId });
+
+      expect(result?.facts).toHaveLength(2);
+      expect(result?.facts.map((f) => f.status)).not.toContain('rejected');
+    });
+
+    it('returns unique appearances from multiple facts in same document', async () => {
+      const projectId = await setupProject(t, userId);
+      const documentId = await setupDocument(t, projectId, { title: 'Single Doc' });
+      const entityId = await setupEntity(t, projectId, { name: 'Test', status: 'confirmed' });
+
+      const ids = { projectId, entityId, documentId };
+      await setupFact(t, ids, { predicate: 'is', object: 'a', status: 'confirmed' });
+      await setupFact(t, ids, { predicate: 'has', object: 'b', status: 'confirmed' });
+      await setupFact(t, ids, { predicate: 'does', object: 'c', status: 'confirmed' });
+
+      const result = await asUser.query(api.entities.getWithDetails, { id: entityId });
+
+      expect(result?.facts).toHaveLength(3);
+      expect(result?.appearances).toHaveLength(1);
+      expect(result?.appearances[0].title).toBe('Single Doc');
+    });
+
+    it('returns null when entity not found', async () => {
+      const { entityId } = await setupProjectWithEntities(t, userId);
+      await t.run(async (ctx) => ctx.db.delete(entityId));
+
+      const result = await asUser.query(api.entities.getWithDetails, { id: entityId });
+      expect(result).toBeNull();
+    });
+
+    it('returns null when not project owner', async () => {
+      const otherUserId = await setupOtherUser(t);
+      const otherProjectId = await setupProject(t, otherUserId);
+      const entityId = await setupEntity(t, otherProjectId, { status: 'confirmed' });
+
+      const result = await asUser.query(api.entities.getWithDetails, { id: entityId });
+      expect(result).toBeNull();
+    });
+
+    it('returns related entities based on fact object matching', async () => {
+      const projectId = await setupProject(t, userId);
+      const documentId = await setupDocument(t, projectId);
+
+      const jonId = await setupEntity(t, projectId, { name: 'Jon Snow', status: 'confirmed' });
+      const daenerysId = await setupEntity(t, projectId, { name: 'Daenerys', status: 'confirmed' });
+      await setupEntity(t, projectId, { name: 'Arya Stark', status: 'confirmed' });
+
+      await setupFact(
+        t,
+        { projectId, entityId: jonId, documentId },
+        { subject: 'Jon Snow', predicate: 'met', object: 'Daenerys', status: 'confirmed' }
+      );
+
+      const result = await asUser.query(api.entities.getWithDetails, { id: jonId });
+
+      expect(result?.relatedEntities).toBeDefined();
+      expect(result?.relatedEntities).toHaveLength(1);
+      expect(result?.relatedEntities[0]._id).toBe(daenerysId);
+    });
+  });
 });
