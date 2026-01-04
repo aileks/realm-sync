@@ -1,11 +1,11 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useQuery, useMutation } from 'convex/react';
-import { useConvexAuth } from 'convex/react';
-import { useState, useEffect } from 'react';
-import { Plus, FolderOpen } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
-import { Button } from '@/components/ui/button';
+import {createFileRoute, useNavigate} from '@tanstack/react-router';
+import {useQuery, useMutation} from 'convex/react';
+import {useConvexAuth} from 'convex/react';
+import {useState, useEffect} from 'react';
+import {Plus, FolderOpen} from 'lucide-react';
+import {api} from '../../convex/_generated/api';
+import type {Id} from '../../convex/_generated/dataModel';
+import {Button} from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,10 +16,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { ProjectCard } from '@/components/ProjectCard';
-import { ProjectForm } from '@/components/ProjectForm';
-import { EmptyState } from '@/components/EmptyState';
-import { LoadingState } from '@/components/LoadingState';
+import {ProjectCard} from '@/components/ProjectCard';
+import {ProjectForm} from '@/components/ProjectForm';
+import {EmptyState} from '@/components/EmptyState';
+import {LoadingState} from '@/components/LoadingState';
 
 export const Route = createFileRoute('/projects')({
   component: ProjectsPage,
@@ -27,7 +27,7 @@ export const Route = createFileRoute('/projects')({
 
 function ProjectsPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+  const {isAuthenticated, isLoading: authLoading} = useConvexAuth();
   const projects = useQuery(api.projects.list);
   const deleteProject = useMutation(api.projects.remove);
 
@@ -41,7 +41,7 @@ function ProjectsPage() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      void navigate({ to: '/auth' });
+      void navigate({to: '/auth'});
     }
   }, [authLoading, isAuthenticated, navigate]);
 
@@ -51,7 +51,7 @@ function ProjectsPage() {
 
   async function handleDelete() {
     if (!deletingProject) return;
-    await deleteProject({ id: deletingProject._id });
+    await deleteProject({id: deletingProject._id});
     setDeletingProject(null);
   }
 
@@ -64,7 +64,7 @@ function ProjectsPage() {
             Manage your world-building projects and track canon
           </p>
         </div>
-        <Button onClick={() => navigate({ to: '/projects/new' })}>
+        <Button onClick={() => navigate({to: '/projects/new'})}>
           <Plus className="mr-2 size-4" />
           New Project
         </Button>
@@ -76,7 +76,7 @@ function ProjectsPage() {
           title="No projects yet"
           description="Create your first project to start tracking your world's canon."
           action={
-            <Button onClick={() => navigate({ to: '/projects/new' })}>
+            <Button onClick={() => navigate({to: '/projects/new'})}>
               <Plus className="mr-2 size-4" />
               Create Project
             </Button>
@@ -89,7 +89,7 @@ function ProjectsPage() {
               project={project}
               onEdit={(p: (typeof projects)[number]) => setEditingProject(p)}
               onDelete={(p: (typeof projects)[number]) =>
-                setDeletingProject({ _id: p._id, name: p.name })
+                setDeletingProject({_id: p._id, name: p.name})
               }
             />
           ))}

@@ -1,11 +1,11 @@
-import { v } from 'convex/values';
-import type { MutationCtx, QueryCtx } from './_generated/server';
-import { mutation, query } from './_generated/server';
-import type { Doc, Id } from './_generated/dataModel';
-import { getAuthUserId, requireAuth } from './lib/auth';
-import { ok, err, authError, notFoundError } from './lib/errors';
-import type { AppError, Result } from './lib/errors';
-import { unwrapOrThrow } from './lib/result';
+import {v} from 'convex/values';
+import type {MutationCtx, QueryCtx} from './_generated/server';
+import {mutation, query} from './_generated/server';
+import type {Doc, Id} from './_generated/dataModel';
+import {getAuthUserId, requireAuth} from './lib/auth';
+import {ok, err, authError, notFoundError} from './lib/errors';
+import type {AppError, Result} from './lib/errors';
+import {unwrapOrThrow} from './lib/result';
 
 const entityTypeValidator = v.union(
   v.literal('character'),
@@ -67,10 +67,7 @@ export const create = mutation({
     firstMentionedIn: v.optional(v.id('documents')),
     status: v.optional(entityStatusValidator),
   },
-  handler: async (
-    ctx,
-    { projectId, name, type, description, aliases, firstMentionedIn, status }
-  ) => {
+  handler: async (ctx, {projectId, name, type, description, aliases, firstMentionedIn, status}) => {
     const userId = await requireAuth(ctx);
     const project = unwrapOrThrow(await verifyProjectAccess(ctx, projectId, userId));
 
@@ -95,7 +92,7 @@ export const create = mutation({
     };
     await ctx.db.patch(projectId, {
       updatedAt: now,
-      stats: { ...stats, entityCount: stats.entityCount + 1 },
+      stats: {...stats, entityCount: stats.entityCount + 1},
     });
 
     return entityId;
@@ -111,17 +108,17 @@ export const update = mutation({
     aliases: v.optional(v.array(v.string())),
     status: v.optional(entityStatusValidator),
   },
-  handler: async (ctx, { id, name, type, description, aliases, status }) => {
+  handler: async (ctx, {id, name, type, description, aliases, status}) => {
     const userId = await requireAuth(ctx);
     unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
 
     await ctx.db.patch(id, {
       updatedAt: Date.now(),
-      ...(name !== undefined && { name }),
-      ...(type !== undefined && { type }),
-      ...(description !== undefined && { description }),
-      ...(aliases !== undefined && { aliases }),
-      ...(status !== undefined && { status }),
+      ...(name !== undefined && {name}),
+      ...(type !== undefined && {type}),
+      ...(description !== undefined && {description}),
+      ...(aliases !== undefined && {aliases}),
+      ...(status !== undefined && {status}),
     });
 
     return id;
@@ -133,7 +130,7 @@ export const merge = mutation({
     sourceId: v.id('entities'),
     targetId: v.id('entities'),
   },
-  handler: async (ctx, { sourceId, targetId }) => {
+  handler: async (ctx, {sourceId, targetId}) => {
     const userId = await requireAuth(ctx);
 
     const source = unwrapOrThrow(await verifyEntityAccess(ctx, sourceId, userId));
@@ -156,7 +153,7 @@ export const merge = mutation({
       .collect();
 
     for (const fact of factsToUpdate) {
-      await ctx.db.patch(fact._id, { entityId: targetId });
+      await ctx.db.patch(fact._id, {entityId: targetId});
     }
 
     await ctx.db.delete(sourceId);
@@ -171,7 +168,7 @@ export const merge = mutation({
       };
       await ctx.db.patch(source.projectId, {
         updatedAt: Date.now(),
-        stats: { ...stats, entityCount: Math.max(0, stats.entityCount - 1) },
+        stats: {...stats, entityCount: Math.max(0, stats.entityCount - 1)},
       });
     }
 
@@ -185,7 +182,7 @@ export const listByProject = query({
     type: v.optional(entityTypeValidator),
     status: v.optional(entityStatusValidator),
   },
-  handler: async (ctx, { projectId, type, status }) => {
+  handler: async (ctx, {projectId, type, status}) => {
     const isOwner = await verifyProjectOwnership(ctx, projectId);
     if (!isOwner) return [];
 
@@ -227,7 +224,7 @@ export const listByProjectWithStats = query({
     status: v.optional(entityStatusValidator),
     sortBy: v.optional(sortByValidator),
   },
-  handler: async (ctx, { projectId, type, status, sortBy = 'name' }) => {
+  handler: async (ctx, {projectId, type, status, sortBy = 'name'}) => {
     const isOwner = await verifyProjectOwnership(ctx, projectId);
     if (!isOwner) return [];
 
@@ -286,8 +283,8 @@ export const listByProjectWithStats = query({
 });
 
 export const getWithFacts = query({
-  args: { id: v.id('entities') },
-  handler: async (ctx, { id }) => {
+  args: {id: v.id('entities')},
+  handler: async (ctx, {id}) => {
     const entity = await ctx.db.get(id);
     if (!entity) return null;
 
@@ -299,13 +296,13 @@ export const getWithFacts = query({
       .withIndex('by_entity', (q) => q.eq('entityId', id))
       .collect();
 
-    return { entity, facts };
+    return {entity, facts};
   },
 });
 
 export const remove = mutation({
-  args: { id: v.id('entities') },
-  handler: async (ctx, { id }) => {
+  args: {id: v.id('entities')},
+  handler: async (ctx, {id}) => {
     const userId = await requireAuth(ctx);
     const entity = unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
 
@@ -344,8 +341,8 @@ export const remove = mutation({
 });
 
 export const get = query({
-  args: { id: v.id('entities') },
-  handler: async (ctx, { id }) => {
+  args: {id: v.id('entities')},
+  handler: async (ctx, {id}) => {
     const entity = await ctx.db.get(id);
     if (!entity) return null;
 
@@ -361,7 +358,7 @@ export const findByName = query({
     projectId: v.id('projects'),
     name: v.string(),
   },
-  handler: async (ctx, { projectId, name }) => {
+  handler: async (ctx, {projectId, name}) => {
     const isOwner = await verifyProjectOwnership(ctx, projectId);
     if (!isOwner) return null;
 
@@ -373,8 +370,8 @@ export const findByName = query({
 });
 
 export const confirm = mutation({
-  args: { id: v.id('entities') },
-  handler: async (ctx, { id }) => {
+  args: {id: v.id('entities')},
+  handler: async (ctx, {id}) => {
     const userId = await requireAuth(ctx);
     unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
 
@@ -388,8 +385,8 @@ export const confirm = mutation({
 });
 
 export const reject = mutation({
-  args: { id: v.id('entities') },
-  handler: async (ctx, { id }) => {
+  args: {id: v.id('entities')},
+  handler: async (ctx, {id}) => {
     const userId = await requireAuth(ctx);
     const entity = unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
 
@@ -428,8 +425,8 @@ export const reject = mutation({
 });
 
 export const listPending = query({
-  args: { projectId: v.id('projects') },
-  handler: async (ctx, { projectId }) => {
+  args: {projectId: v.id('projects')},
+  handler: async (ctx, {projectId}) => {
     const isOwner = await verifyProjectOwnership(ctx, projectId);
     if (!isOwner) return [];
 
@@ -446,7 +443,7 @@ export const findSimilar = query({
     name: v.string(),
     excludeId: v.optional(v.id('entities')),
   },
-  handler: async (ctx, { projectId, name, excludeId }) => {
+  handler: async (ctx, {projectId, name, excludeId}) => {
     const isOwner = await verifyProjectOwnership(ctx, projectId);
     if (!isOwner) return [];
 
@@ -483,7 +480,7 @@ export const search = query({
     query: v.string(),
     limit: v.optional(v.number()),
   },
-  handler: async (ctx, { projectId, query, limit = 20 }) => {
+  handler: async (ctx, {projectId, query, limit = 20}) => {
     const isOwner = await verifyProjectOwnership(ctx, projectId);
     if (!isOwner) return [];
 
@@ -518,8 +515,8 @@ export const search = query({
 });
 
 export const getWithDetails = query({
-  args: { id: v.id('entities') },
-  handler: async (ctx, { id }) => {
+  args: {id: v.id('entities')},
+  handler: async (ctx, {id}) => {
     const entity = await ctx.db.get(id);
     if (!entity) return null;
 
@@ -589,7 +586,7 @@ export const listEvents = query({
   args: {
     projectId: v.id('projects'),
   },
-  handler: async (ctx, { projectId }) => {
+  handler: async (ctx, {projectId}) => {
     const isOwner = await verifyProjectOwnership(ctx, projectId);
     if (!isOwner) return [];
 
@@ -606,7 +603,7 @@ export const listEvents = query({
           ...event,
           document:
             document ?
-              { _id: document._id, title: document.title, orderIndex: document.orderIndex }
+              {_id: document._id, title: document.title, orderIndex: document.orderIndex}
             : null,
         };
       })
@@ -626,9 +623,9 @@ export const getTimeline = query({
     entityFilter: v.optional(v.id('entities')),
     includeAppearances: v.optional(v.boolean()),
   },
-  handler: async (ctx, { projectId, entityFilter, includeAppearances = false }) => {
+  handler: async (ctx, {projectId, entityFilter, includeAppearances = false}) => {
     const isOwner = await verifyProjectOwnership(ctx, projectId);
-    if (!isOwner) return { events: [], appearances: [], entities: [] };
+    if (!isOwner) return {events: [], appearances: [], entities: []};
 
     const allEntities = await ctx.db
       .query('entities')
@@ -662,13 +659,13 @@ export const getTimeline = query({
 
         const involvedEntities = allEntities
           .filter((e) => involvedEntityIds.has(e._id))
-          .map((e) => ({ _id: e._id, name: e.name, type: e.type }));
+          .map((e) => ({_id: e._id, name: e.name, type: e.type}));
 
         return {
           ...event,
           document:
             document ?
-              { _id: document._id, title: document.title, orderIndex: document.orderIndex }
+              {_id: document._id, title: document.title, orderIndex: document.orderIndex}
             : null,
           involvedEntities,
         };
@@ -692,7 +689,7 @@ export const getTimeline = query({
       _id: Id<'entities'>;
       name: string;
       type: string;
-      document: { _id: Id<'documents'>; title: string; orderIndex: number } | null;
+      document: {_id: Id<'documents'>; title: string; orderIndex: number} | null;
     }> = [];
 
     if (includeAppearances) {
@@ -707,7 +704,7 @@ export const getTimeline = query({
               _id: entity._id,
               name: entity.name,
               type: entity.type,
-              document: doc ? { _id: doc._id, title: doc.title, orderIndex: doc.orderIndex } : null,
+              document: doc ? {_id: doc._id, title: doc.title, orderIndex: doc.orderIndex} : null,
             };
           })
         );
@@ -719,7 +716,7 @@ export const getTimeline = query({
               _id: entity._id,
               name: entity.name,
               type: entity.type,
-              document: doc ? { _id: doc._id, title: doc.title, orderIndex: doc.orderIndex } : null,
+              document: doc ? {_id: doc._id, title: doc.title, orderIndex: doc.orderIndex} : null,
             };
           })
         );
@@ -734,7 +731,7 @@ export const getTimeline = query({
 
     const filterableEntities = allEntities
       .filter((e) => e.type !== 'event')
-      .map((e) => ({ _id: e._id, name: e.name, type: e.type }))
+      .map((e) => ({_id: e._id, name: e.name, type: e.type}))
       .toSorted((a, b) => a.name.localeCompare(b.name));
 
     return {

@@ -1,6 +1,6 @@
-import { convexTest } from 'convex-test';
-import { describe, it, expect } from 'vitest';
-import { api } from '../_generated/api';
+import {convexTest} from 'convex-test';
+import {describe, it, expect} from 'vitest';
+import {api} from '../_generated/api';
 import schema from '../schema';
 
 const getModules = () => import.meta.glob('../**/*.ts');
@@ -14,15 +14,15 @@ async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
     });
   });
 
-  const asUser = t.withIdentity({ subject: userId });
-  return { userId, asUser };
+  const asUser = t.withIdentity({subject: userId});
+  return {userId, asUser};
 }
 
 describe('projects', () => {
   describe('list query', () => {
     it('returns empty array when user has no projects', async () => {
       const t = convexTest(schema, getModules());
-      const { asUser } = await setupAuthenticatedUser(t);
+      const {asUser} = await setupAuthenticatedUser(t);
 
       const projects = await asUser.query(api.projects.list, {});
       expect(projects).toEqual([]);
@@ -36,7 +36,7 @@ describe('projects', () => {
 
     it('returns only user projects, not other users', async () => {
       const t = convexTest(schema, getModules());
-      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const {userId, asUser} = await setupAuthenticatedUser(t);
 
       await t.run(async (ctx) => {
         await ctx.db.insert('projects', {
@@ -68,7 +68,7 @@ describe('projects', () => {
   describe('get query', () => {
     it('returns project when user is owner', async () => {
       const t = convexTest(schema, getModules());
-      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const {userId, asUser} = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
         return await ctx.db.insert('projects', {
@@ -80,7 +80,7 @@ describe('projects', () => {
         });
       });
 
-      const project = await asUser.query(api.projects.get, { id: projectId });
+      const project = await asUser.query(api.projects.get, {id: projectId});
       expect(project).not.toBeNull();
       expect(project?.name).toBe('Test Project');
       expect(project?.description).toBe('A test');
@@ -88,7 +88,7 @@ describe('projects', () => {
 
     it('returns null when user is not owner', async () => {
       const t = convexTest(schema, getModules());
-      const { asUser } = await setupAuthenticatedUser(t);
+      const {asUser} = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
         const otherUserId = await ctx.db.insert('users', {
@@ -104,13 +104,13 @@ describe('projects', () => {
         });
       });
 
-      const project = await asUser.query(api.projects.get, { id: projectId });
+      const project = await asUser.query(api.projects.get, {id: projectId});
       expect(project).toBeNull();
     });
 
     it('returns null for non-existent project', async () => {
       const t = convexTest(schema, getModules());
-      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const {userId, asUser} = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
         const id = await ctx.db.insert('projects', {
@@ -123,7 +123,7 @@ describe('projects', () => {
         return id;
       });
 
-      const project = await asUser.query(api.projects.get, { id: projectId });
+      const project = await asUser.query(api.projects.get, {id: projectId});
       expect(project).toBeNull();
     });
   });
@@ -131,14 +131,14 @@ describe('projects', () => {
   describe('create mutation', () => {
     it('creates project with initialized stats', async () => {
       const t = convexTest(schema, getModules());
-      const { asUser } = await setupAuthenticatedUser(t);
+      const {asUser} = await setupAuthenticatedUser(t);
 
       const projectId = await asUser.mutation(api.projects.create, {
         name: 'New Project',
         description: 'My description',
       });
 
-      const project = await asUser.query(api.projects.get, { id: projectId });
+      const project = await asUser.query(api.projects.get, {id: projectId});
       expect(project).not.toBeNull();
       expect(project?.name).toBe('New Project');
       expect(project?.description).toBe('My description');
@@ -153,20 +153,20 @@ describe('projects', () => {
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, getModules());
 
-      await expect(t.mutation(api.projects.create, { name: 'Test' })).rejects.toThrow(
+      await expect(t.mutation(api.projects.create, {name: 'Test'})).rejects.toThrow(
         /unauthorized/i
       );
     });
 
     it('creates project without description', async () => {
       const t = convexTest(schema, getModules());
-      const { asUser } = await setupAuthenticatedUser(t);
+      const {asUser} = await setupAuthenticatedUser(t);
 
       const projectId = await asUser.mutation(api.projects.create, {
         name: 'No Description',
       });
 
-      const project = await asUser.query(api.projects.get, { id: projectId });
+      const project = await asUser.query(api.projects.get, {id: projectId});
       expect(project?.name).toBe('No Description');
       expect(project?.description).toBeUndefined();
     });
@@ -175,7 +175,7 @@ describe('projects', () => {
   describe('update mutation', () => {
     it('updates project name', async () => {
       const t = convexTest(schema, getModules());
-      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const {userId, asUser} = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
         return await ctx.db.insert('projects', {
@@ -191,13 +191,13 @@ describe('projects', () => {
         name: 'Updated',
       });
 
-      const project = await asUser.query(api.projects.get, { id: projectId });
+      const project = await asUser.query(api.projects.get, {id: projectId});
       expect(project?.name).toBe('Updated');
     });
 
     it('throws when not owner', async () => {
       const t = convexTest(schema, getModules());
-      const { asUser } = await setupAuthenticatedUser(t);
+      const {asUser} = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
         const otherUserId = await ctx.db.insert('users', {
@@ -214,13 +214,13 @@ describe('projects', () => {
       });
 
       await expect(
-        asUser.mutation(api.projects.update, { id: projectId, name: 'Hacked' })
+        asUser.mutation(api.projects.update, {id: projectId, name: 'Hacked'})
       ).rejects.toThrow(/unauthorized/i);
     });
 
     it('throws when project not found', async () => {
       const t = convexTest(schema, getModules());
-      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const {userId, asUser} = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
         const id = await ctx.db.insert('projects', {
@@ -234,7 +234,7 @@ describe('projects', () => {
       });
 
       await expect(
-        asUser.mutation(api.projects.update, { id: projectId, name: 'Ghost' })
+        asUser.mutation(api.projects.update, {id: projectId, name: 'Ghost'})
       ).rejects.toThrow(/not found/i);
     });
   });
@@ -242,7 +242,7 @@ describe('projects', () => {
   describe('remove mutation', () => {
     it('deletes project', async () => {
       const t = convexTest(schema, getModules());
-      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const {userId, asUser} = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
         return await ctx.db.insert('projects', {
@@ -253,17 +253,17 @@ describe('projects', () => {
         });
       });
 
-      await asUser.mutation(api.projects.remove, { id: projectId });
+      await asUser.mutation(api.projects.remove, {id: projectId});
 
-      const project = await asUser.query(api.projects.get, { id: projectId });
+      const project = await asUser.query(api.projects.get, {id: projectId});
       expect(project).toBeNull();
     });
 
     it('cascades delete to documents', async () => {
       const t = convexTest(schema, getModules());
-      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const {userId, asUser} = await setupAuthenticatedUser(t);
 
-      const { projectId, documentId } = await t.run(async (ctx) => {
+      const {projectId, documentId} = await t.run(async (ctx) => {
         const pId = await ctx.db.insert('projects', {
           userId,
           name: 'With Docs',
@@ -282,18 +282,18 @@ describe('projects', () => {
           processingStatus: 'pending',
         });
 
-        return { projectId: pId, documentId: dId };
+        return {projectId: pId, documentId: dId};
       });
 
-      await asUser.mutation(api.projects.remove, { id: projectId });
+      await asUser.mutation(api.projects.remove, {id: projectId});
 
-      const doc = await asUser.query(api.documents.get, { id: documentId });
+      const doc = await asUser.query(api.documents.get, {id: documentId});
       expect(doc).toBeNull();
     });
 
     it('throws when not owner', async () => {
       const t = convexTest(schema, getModules());
-      const { asUser } = await setupAuthenticatedUser(t);
+      const {asUser} = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
         const otherUserId = await ctx.db.insert('users', {
@@ -309,7 +309,7 @@ describe('projects', () => {
         });
       });
 
-      await expect(asUser.mutation(api.projects.remove, { id: projectId })).rejects.toThrow(
+      await expect(asUser.mutation(api.projects.remove, {id: projectId})).rejects.toThrow(
         /unauthorized/i
       );
     });
@@ -318,7 +318,7 @@ describe('projects', () => {
   describe('updateStats mutation', () => {
     it('updates stats partially', async () => {
       const t = convexTest(schema, getModules());
-      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const {userId, asUser} = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
         return await ctx.db.insert('projects', {
@@ -337,10 +337,10 @@ describe('projects', () => {
 
       await asUser.mutation(api.projects.updateStats, {
         id: projectId,
-        stats: { documentCount: 6 },
+        stats: {documentCount: 6},
       });
 
-      const project = await asUser.query(api.projects.get, { id: projectId });
+      const project = await asUser.query(api.projects.get, {id: projectId});
       expect(project?.stats).toEqual({
         documentCount: 6,
         entityCount: 10,

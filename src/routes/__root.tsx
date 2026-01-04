@@ -1,9 +1,9 @@
-import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router';
+import {HeadContent, Scripts, createRootRoute, Outlet} from '@tanstack/react-router';
 // import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 // import { TanStackDevtools } from '@tanstack/react-devtools';
 
-import { AppLayout } from '../components/AppLayout';
-import { Toaster } from '../components/ui/sonner';
+import {AppLayout} from '../components/AppLayout';
+import {Toaster} from '../components/ui/sonner';
 import ConvexProvider from '../integrations/convex/provider';
 
 import appCss from '../styles.css?url';
@@ -34,7 +34,7 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
 });
 
-function RootDocument({ children }: { children: React.ReactNode }) {
+function RootDocument({children}: {children: React.ReactNode}) {
   return (
     <html lang="en">
       <head>

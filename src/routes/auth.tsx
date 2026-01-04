@@ -1,16 +1,16 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useForm } from '@tanstack/react-form';
-import { useAuthActions } from '@convex-dev/auth/react';
-import { useConvexAuth } from 'convex/react';
-import { useState, useEffect } from 'react';
-import { Loader2, BookOpen } from 'lucide-react';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
+import {createFileRoute, useNavigate} from '@tanstack/react-router';
+import {useForm} from '@tanstack/react-form';
+import {useAuthActions} from '@convex-dev/auth/react';
+import {useConvexAuth} from 'convex/react';
+import {useState, useEffect} from 'react';
+import {Loader2, BookOpen} from 'lucide-react';
+import {z} from 'zod';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
+import {Separator} from '@/components/ui/separator';
+import {cn} from '@/lib/utils';
 
 type AuthErrorType = 'account_not_found' | 'invalid_credentials' | 'unknown';
 
@@ -59,8 +59,8 @@ const signUpSchema = signInSchema
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
-  const { signIn } = useAuthActions();
+  const {isAuthenticated, isLoading: authLoading} = useConvexAuth();
+  const {signIn} = useAuthActions();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [isLoading, setIsLoading] = useState(false);
@@ -73,7 +73,7 @@ function AuthPage() {
       password: '',
       confirmPassword: '',
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: async ({value}) => {
       setError(null);
       setIsLoading(true);
 
@@ -106,7 +106,7 @@ function AuthPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      void navigate({ to: '/projects' });
+      void navigate({to: '/projects'});
     }
   }, [isAuthenticated, navigate]);
 
@@ -285,7 +285,7 @@ function AuthPage() {
   );
 }
 
-function GoogleIcon({ className }: { className?: string }) {
+function GoogleIcon({className}: {className?: string}) {
   return (
     <svg className={className} viewBox="0 0 24 24">
       <path

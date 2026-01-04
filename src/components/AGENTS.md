@@ -27,13 +27,13 @@ components/
 
 ## WHERE TO LOOK
 
-| Task             | Location         | Notes                                               |
-| ---------------- | ---------------- | --------------------------------------------------- |
-| App shell layout | `AppLayout.tsx`  | Wraps all pages with sidebar                        |
-| Navigation       | `AppSidebar.tsx` | Project list + navigation links                     |
-| Display cards    | `*Card.tsx`      | Document, Entity, Fact, Project, ReviewEntity cards |
-| Forms            | `*Form.tsx`      | DocumentForm, ProjectForm                           |
-| UI primitives    | `ui/`            | Button, Card, Input, etc.                           |
+| Task | Location | Notes |
+| --- | --- | --- |
+| App shell layout | `AppLayout.tsx` | Wraps all pages with sidebar |
+| Navigation | `AppSidebar.tsx` | Project list + navigation links |
+| Display cards | `*Card.tsx` | Document, Entity, Fact, Project, ReviewEntity cards |
+| Forms | `*Form.tsx` | DocumentForm, ProjectForm |
+| UI primitives | `ui/` | Button, Card, Input, etc. |
 
 ## CONVENTIONS
 

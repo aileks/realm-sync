@@ -1,5 +1,5 @@
-import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import {Loader2} from 'lucide-react';
+import {cn} from '@/lib/utils';
 
 type LoadingStateProps = {
   message?: string;
@@ -7,7 +7,7 @@ type LoadingStateProps = {
   size?: 'sm' | 'md' | 'lg';
 };
 
-export function LoadingState({ message, className, size = 'md' }: LoadingStateProps) {
+export function LoadingState({message, className, size = 'md'}: LoadingStateProps) {
   const iconSize = {
     sm: 'size-4',
     md: 'size-6',

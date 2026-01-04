@@ -9,11 +9,11 @@ import {
   Pencil,
   HelpCircle,
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription, CardAction } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import type { Doc, Id } from '../../convex/_generated/dataModel';
+import {Card, CardHeader, CardTitle, CardDescription, CardAction} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
+import {Button} from '@/components/ui/button';
+import {cn} from '@/lib/utils';
+import type {Doc, Id} from '../../convex/_generated/dataModel';
 
 type Entity = Doc<'entities'>;
 type EntityType = Entity['type'];
@@ -33,7 +33,7 @@ const defaultConfig = {
   colorClass: 'bg-muted text-muted-foreground ring-muted',
 };
 
-const entityTypeConfig: Record<EntityType, { icon: typeof User; colorClass: string }> = {
+const entityTypeConfig: Record<EntityType, {icon: typeof User; colorClass: string}> = {
   character: {
     icon: User,
     colorClass: 'bg-entity-character/15 text-entity-character ring-entity-character/20',
@@ -42,7 +42,7 @@ const entityTypeConfig: Record<EntityType, { icon: typeof User; colorClass: stri
     icon: MapPin,
     colorClass: 'bg-entity-location/15 text-entity-location ring-entity-location/20',
   },
-  item: { icon: Package, colorClass: 'bg-entity-item/15 text-entity-item ring-entity-item/20' },
+  item: {icon: Package, colorClass: 'bg-entity-item/15 text-entity-item ring-entity-item/20'},
   concept: {
     icon: Lightbulb,
     colorClass: 'bg-entity-concept/15 text-entity-concept ring-entity-concept/20',

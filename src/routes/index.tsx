@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useConvexAuth } from 'convex/react';
-import { useEffect } from 'react';
-import { BookOpen, Sparkles, Shield, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { LoadingState } from '@/components/LoadingState';
+import {createFileRoute, useNavigate} from '@tanstack/react-router';
+import {useConvexAuth} from 'convex/react';
+import {useEffect} from 'react';
+import {BookOpen, Sparkles, Shield, Zap} from 'lucide-react';
+import {Button} from '@/components/ui/button';
+import {LoadingState} from '@/components/LoadingState';
 
 export const Route = createFileRoute('/')({
   component: LandingPage,
@@ -11,11 +11,11 @@ export const Route = createFileRoute('/')({
 
 function LandingPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const {isAuthenticated, isLoading} = useConvexAuth();
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      void navigate({ to: '/projects' });
+      void navigate({to: '/projects'});
     }
   }, [isLoading, isAuthenticated, navigate]);
 
@@ -39,10 +39,10 @@ function LandingPage() {
           </p>
 
           <div className="mt-8 flex justify-center gap-4">
-            <Button size="lg" onClick={() => navigate({ to: '/auth' })}>
+            <Button size="lg" onClick={() => navigate({to: '/auth'})}>
               Get Started
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate({ to: '/auth' })}>
+            <Button size="lg" variant="outline" onClick={() => navigate({to: '/auth'})}>
               Sign In
             </Button>
           </div>
@@ -77,12 +77,12 @@ function LandingPage() {
 }
 
 type FeatureCardProps = {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{className?: string}>;
   title: string;
   description: string;
 };
 
-function FeatureCard({ icon: Icon, title, description }: FeatureCardProps) {
+function FeatureCard({icon: Icon, title, description}: FeatureCardProps) {
   return (
     <div className="bg-card ring-foreground/10 rounded-2xl p-6 text-center ring-1">
       <div className="bg-primary/10 mx-auto mb-4 flex size-12 items-center justify-center rounded-full">

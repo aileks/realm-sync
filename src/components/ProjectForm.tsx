@@ -1,14 +1,14 @@
-import type { FormEvent } from 'react';
-import { useState } from 'react';
-import { useMutation } from 'convex/react';
-import { Loader2 } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import type { Doc, Id } from '../../convex/_generated/dataModel';
-import { formatError } from '@/lib/utils';
+import type {FormEvent} from 'react';
+import {useState} from 'react';
+import {useMutation} from 'convex/react';
+import {Loader2} from 'lucide-react';
+import {api} from '../../convex/_generated/api';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Textarea} from '@/components/ui/textarea';
+import {Label} from '@/components/ui/label';
+import type {Doc, Id} from '../../convex/_generated/dataModel';
+import {formatError} from '@/lib/utils';
 
 type Project = Doc<'projects'>;
 
@@ -18,7 +18,7 @@ type ProjectFormProps = {
   onCancel?: () => void;
 };
 
-export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) {
+export function ProjectForm({project, onSuccess, onCancel}: ProjectFormProps) {
   const [name, setName] = useState(project?.name ?? '');
   const [description, setDescription] = useState(project?.description ?? '');
   const [isLoading, setIsLoading] = useState(false);

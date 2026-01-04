@@ -1,4 +1,4 @@
-import { internalMutation } from './_generated/server';
+import {internalMutation} from './_generated/server';
 
 export const cleanupExpiredRefreshTokens = internalMutation({
   handler: async (ctx) => {
@@ -12,6 +12,6 @@ export const cleanupExpiredRefreshTokens = internalMutation({
       await ctx.db.delete(token._id);
     }
 
-    return { deleted: expiredTokens.length };
+    return {deleted: expiredTokens.length};
   },
 });

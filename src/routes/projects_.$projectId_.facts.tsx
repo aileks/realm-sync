@@ -1,14 +1,14 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useQuery, useMutation } from 'convex/react';
-import { useState } from 'react';
-import { Lightbulb, Search, ArrowLeft, Filter } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { FactCard } from '@/components/FactCard';
-import { EmptyState } from '@/components/EmptyState';
-import { LoadingState } from '@/components/LoadingState';
+import {createFileRoute, useNavigate} from '@tanstack/react-router';
+import {useQuery, useMutation} from 'convex/react';
+import {useState} from 'react';
+import {Lightbulb, Search, ArrowLeft, Filter} from 'lucide-react';
+import {api} from '../../convex/_generated/api';
+import type {Id} from '../../convex/_generated/dataModel';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {FactCard} from '@/components/FactCard';
+import {EmptyState} from '@/components/EmptyState';
+import {LoadingState} from '@/components/LoadingState';
 import {
   Select,
   SelectContent,
@@ -23,9 +23,9 @@ export const Route = createFileRoute('/projects_/$projectId_/facts')({
 
 function FactsPage() {
   const navigate = useNavigate();
-  const { projectId } = Route.useParams();
-  const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
-  const facts = useQuery(api.facts.listByProject, { projectId: projectId as Id<'projects'> });
+  const {projectId} = Route.useParams();
+  const project = useQuery(api.projects.get, {id: projectId as Id<'projects'>});
+  const facts = useQuery(api.facts.listByProject, {projectId: projectId as Id<'projects'>});
 
   const confirmFact = useMutation(api.facts.confirm);
   const rejectFact = useMutation(api.facts.reject);
@@ -41,7 +41,7 @@ function FactsPage() {
     return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-muted-foreground">Project not found.</p>
-        <Button variant="ghost" className="mt-4" onClick={() => navigate({ to: '/projects' })}>
+        <Button variant="ghost" className="mt-4" onClick={() => navigate({to: '/projects'})}>
           Back to Projects
         </Button>
       </div>
@@ -65,7 +65,7 @@ function FactsPage() {
           variant="ghost"
           size="sm"
           className="mb-2 -ml-2"
-          onClick={() => navigate({ to: '/projects/$projectId', params: { projectId } })}
+          onClick={() => navigate({to: '/projects/$projectId', params: {projectId}})}
         >
           <ArrowLeft className="mr-1 size-4" />
           {project.name}
@@ -129,8 +129,8 @@ function FactsPage() {
             <FactCard
               key={fact._id}
               fact={fact}
-              onConfirm={(id) => confirmFact({ id })}
-              onReject={(id) => rejectFact({ id })}
+              onConfirm={(id) => confirmFact({id})}
+              onReject={(id) => rejectFact({id})}
             />
           ))}
         </div>

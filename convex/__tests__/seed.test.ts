@@ -1,6 +1,6 @@
-import { convexTest } from 'convex-test';
-import { describe, it, expect } from 'vitest';
-import { internal } from '../_generated/api';
+import {convexTest} from 'convex-test';
+import {describe, it, expect} from 'vitest';
+import {internal} from '../_generated/api';
 import schema from '../schema';
 
 const getModules = () => import.meta.glob('../**/*.ts');
@@ -14,15 +14,15 @@ async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
     });
   });
 
-  return { userId };
+  return {userId};
 }
 
 describe('seed.seedDemoData internal mutation', () => {
   it('creates project with correct stats', async () => {
     const t = convexTest(schema, getModules());
-    const { userId } = await setupAuthenticatedUser(t);
+    const {userId} = await setupAuthenticatedUser(t);
 
-    const result = await t.mutation(internal.seed.seedDemoData, { userId });
+    const result = await t.mutation(internal.seed.seedDemoData, {userId});
     const firstProject = result.projects[0];
 
     const project = await t.run(async (ctx) => {
@@ -42,9 +42,9 @@ describe('seed.seedDemoData internal mutation', () => {
 
   it('creates two documents with correct content', async () => {
     const t = convexTest(schema, getModules());
-    const { userId } = await setupAuthenticatedUser(t);
+    const {userId} = await setupAuthenticatedUser(t);
 
-    const result = await t.mutation(internal.seed.seedDemoData, { userId });
+    const result = await t.mutation(internal.seed.seedDemoData, {userId});
     const firstProject = result.projects[0];
 
     const docs = await t.run(async (ctx) => {
@@ -72,9 +72,9 @@ describe('seed.seedDemoData internal mutation', () => {
 
   it('creates entities with correct types and firstMentionedIn', async () => {
     const t = convexTest(schema, getModules());
-    const { userId } = await setupAuthenticatedUser(t);
+    const {userId} = await setupAuthenticatedUser(t);
 
-    const result = await t.mutation(internal.seed.seedDemoData, { userId });
+    const result = await t.mutation(internal.seed.seedDemoData, {userId});
     const firstProject = result.projects[0];
 
     const entities = await t.run(async (ctx) => {
@@ -120,9 +120,9 @@ describe('seed.seedDemoData internal mutation', () => {
 
   it('creates facts with correct evidencePositions', async () => {
     const t = convexTest(schema, getModules());
-    const { userId } = await setupAuthenticatedUser(t);
+    const {userId} = await setupAuthenticatedUser(t);
 
-    const result = await t.mutation(internal.seed.seedDemoData, { userId });
+    const result = await t.mutation(internal.seed.seedDemoData, {userId});
     const firstProject = result.projects[0];
 
     const facts = await t.run(async (ctx) => {
@@ -138,7 +138,7 @@ describe('seed.seedDemoData internal mutation', () => {
       (f) => f.subject === 'King Aldric' && f.predicate === 'has_age'
     );
     expect(aldricAgeFact).toBeDefined();
-    expect(aldricAgeFact?.evidencePosition).toEqual({ start: 456, end: 505 });
+    expect(aldricAgeFact?.evidencePosition).toEqual({start: 456, end: 505});
     expect(aldricAgeFact?.status).toBe('confirmed');
 
     const pactFact = facts.find((f) => f.subject.includes('Pact of Frost'));
@@ -148,9 +148,9 @@ describe('seed.seedDemoData internal mutation', () => {
 
   it('returns all 3 projects with their documentIds', async () => {
     const t = convexTest(schema, getModules());
-    const { userId } = await setupAuthenticatedUser(t);
+    const {userId} = await setupAuthenticatedUser(t);
 
-    const result = await t.mutation(internal.seed.seedDemoData, { userId });
+    const result = await t.mutation(internal.seed.seedDemoData, {userId});
 
     expect(result.projects).toHaveLength(3);
     expect(result.projects[0].projectId).toBeDefined();
@@ -165,12 +165,12 @@ describe('seed.seedDemoData internal mutation', () => {
 describe('seed.clearSeedData internal mutation', () => {
   it('deletes all seed data for a project', async () => {
     const t = convexTest(schema, getModules());
-    const { userId } = await setupAuthenticatedUser(t);
+    const {userId} = await setupAuthenticatedUser(t);
 
-    const seedResult = await t.mutation(internal.seed.seedDemoData, { userId });
+    const seedResult = await t.mutation(internal.seed.seedDemoData, {userId});
     const projectId = seedResult.projects[0].projectId;
 
-    await t.mutation(internal.seed.clearSeedData, { projectId });
+    await t.mutation(internal.seed.clearSeedData, {projectId});
 
     const project = await t.run(async (ctx) => {
       return await ctx.db.get(projectId);
@@ -202,7 +202,7 @@ describe('seed.clearSeedData internal mutation', () => {
 
   it('handles non-existent project gracefully', async () => {
     const t = convexTest(schema, getModules());
-    const { userId } = await setupAuthenticatedUser(t);
+    const {userId} = await setupAuthenticatedUser(t);
 
     const fakeProjectId = await t.run(async (ctx) => {
       return await ctx.db.insert('projects', {
@@ -213,7 +213,7 @@ describe('seed.clearSeedData internal mutation', () => {
       });
     });
 
-    await t.mutation(internal.seed.clearSeedData, { projectId: fakeProjectId });
+    await t.mutation(internal.seed.clearSeedData, {projectId: fakeProjectId});
 
     const project = await t.run(async (ctx) => {
       return await ctx.db.get(fakeProjectId);

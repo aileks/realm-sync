@@ -1,6 +1,12 @@
 ---
 summary: Implementation details for the Canon Browser UI, entity details, and search.
-read_when: [UI development, navigation design, search implementation, timeline visualization]
+read_when:
+  [
+    UI development,
+    navigation design,
+    search implementation,
+    timeline visualization,
+  ]
 ---
 
 # Phase 3: Canon Browser - Realm Sync
@@ -15,15 +21,15 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 
 ## Implementation Progress
 
-| Sub-Phase                       | Status      | PR  | Notes                           |
-| ------------------------------- | ----------- | --- | ------------------------------- |
-| 3.1 Canon Browser Shell         | ✅ Complete | #16 | Merged 2026-01-04               |
-| 3.2 Entity Detail Page          | ✅ Complete | #18 | Merged 2026-01-04               |
-| 3.3 Full-Text Search            | ✅ Complete | -   | Search index + debounced input  |
+| Sub-Phase | Status | PR | Notes |
+| --- | --- | --- | --- |
+| 3.1 Canon Browser Shell | ✅ Complete | #16 | Merged 2026-01-04 |
+| 3.2 Entity Detail Page | ✅ Complete | #18 | Merged 2026-01-04 |
+| 3.3 Full-Text Search | ✅ Complete | - | Search index + debounced input |
 | 3.4 Entity Editing & Management | ✅ Complete | #18 | Inline + dedicated page editing |
-| 3.5 Timeline View               | ✅ Complete | -   | Events by document order        |
-| 3.6 Relationship Visualization  | 🔲 Pending  | -   | Backend functions missing       |
-| 3.7 Polish & Integration        | 🔲 Pending  | -   | -                               |
+| 3.5 Timeline View | ✅ Complete | - | Events by document order |
+| 3.6 Relationship Visualization | 🔲 Pending | - | Backend functions missing |
+| 3.7 Polish & Integration | 🔲 Pending | - | - |
 
 ### What's Implemented (from PR #16)
 
@@ -359,8 +365,8 @@ export const listByProject = query({
  * Get full entity details including facts and relationships
  */
 export const getWithDetails = query({
-  args: { entityId: v.id('entities') },
-  handler: async (ctx, { entityId }) => {
+  args: {entityId: v.id('entities')},
+  handler: async (ctx, {entityId}) => {
     const entity = await ctx.db.get(entityId);
     if (!entity) return null;
 
@@ -370,7 +376,7 @@ export const getWithDetails = query({
       .collect();
 
     // Fetch relationships and evidence...
-    return { ...entity, facts };
+    return {...entity, facts};
   },
 });
 

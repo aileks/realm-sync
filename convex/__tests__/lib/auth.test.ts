@@ -1,5 +1,5 @@
-import { convexTest } from 'convex-test';
-import { describe, it, expect } from 'vitest';
+import {convexTest} from 'convex-test';
+import {describe, it, expect} from 'vitest';
 import schema from '../../schema';
 
 const getModules = () => import.meta.glob('../../**/*.ts');
@@ -10,7 +10,7 @@ describe('auth helpers', () => {
       const t = convexTest(schema, getModules());
 
       const user = await t.run(async (ctx) => {
-        const { getCurrentUser } = await import('../../lib/auth');
+        const {getCurrentUser} = await import('../../lib/auth');
         return await getCurrentUser(ctx);
       });
 
@@ -28,10 +28,10 @@ describe('auth helpers', () => {
         });
       });
 
-      const asUser = t.withIdentity({ subject: userId });
+      const asUser = t.withIdentity({subject: userId});
 
       const user = await asUser.run(async (ctx) => {
-        const { getCurrentUser } = await import('../../lib/auth');
+        const {getCurrentUser} = await import('../../lib/auth');
         return await getCurrentUser(ctx);
       });
 
@@ -46,7 +46,7 @@ describe('auth helpers', () => {
 
       await expect(
         t.run(async (ctx) => {
-          const { requireAuth } = await import('../../lib/auth');
+          const {requireAuth} = await import('../../lib/auth');
           return await requireAuth(ctx);
         })
       ).rejects.toThrow(/unauthorized/i);
@@ -63,10 +63,10 @@ describe('auth helpers', () => {
         });
       });
 
-      const asUser = t.withIdentity({ subject: userId });
+      const asUser = t.withIdentity({subject: userId});
 
       const returnedId = await asUser.run(async (ctx) => {
-        const { requireAuth } = await import('../../lib/auth');
+        const {requireAuth} = await import('../../lib/auth');
         return await requireAuth(ctx);
       });
 
@@ -80,7 +80,7 @@ describe('auth helpers', () => {
 
       await expect(
         t.run(async (ctx) => {
-          const { requireAuthUser } = await import('../../lib/auth');
+          const {requireAuthUser} = await import('../../lib/auth');
           return await requireAuthUser(ctx);
         })
       ).rejects.toThrow(/unauthorized/i);
@@ -97,10 +97,10 @@ describe('auth helpers', () => {
         });
       });
 
-      const asUser = t.withIdentity({ subject: userId });
+      const asUser = t.withIdentity({subject: userId});
 
       const user = await asUser.run(async (ctx) => {
-        const { requireAuthUser } = await import('../../lib/auth');
+        const {requireAuthUser} = await import('../../lib/auth');
         return await requireAuthUser(ctx);
       });
 

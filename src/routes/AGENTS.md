@@ -71,8 +71,8 @@ projects.new.tsx    → /projects/new
 ## ROUTE COMPONENT STRUCTURE
 
 ```typescript
-import { createFileRoute } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query-ssr';
+import {createFileRoute} from '@tanstack/react-router';
+import {useQuery} from '@tanstack/react-query-ssr';
 
 // Simple route
 export const Route = createFileRoute('/projects_.$projectId')({
@@ -80,25 +80,25 @@ export const Route = createFileRoute('/projects_.$projectId')({
 });
 
 function ProjectDetail() {
-  const { projectId } = Route.useParams();
+  const {projectId} = Route.useParams();
   // ...
 }
 
 // With data loading
 export const Route = createFileRoute('/projects_.$projectId')({
-  loader: ({ params }) => fetchProject(params.projectId),
+  loader: ({params}) => fetchProject(params.projectId),
   component: ProjectDetail,
 });
 ```
 
 ## ANTI-PATTERNS
 
-| Forbidden                      | Why                                             |
-| ------------------------------ | ----------------------------------------------- |
-| Edit `routeTree.gen.ts`        | Auto-generated, overwritten on route change     |
-| Folder nesting for routes      | Use underscore escape pattern instead           |
+| Forbidden | Why |
+| --- | --- |
+| Edit `routeTree.gen.ts` | Auto-generated, overwritten on route change |
+| Folder nesting for routes | Use underscore escape pattern instead |
 | Default export of Route object | Use `export const Route = createFileRoute(...)` |
-| Direct routing to functions    | Use TanStack Router's navigate()                |
+| Direct routing to functions | Use TanStack Router's navigate() |
 
 ## NOTES
 

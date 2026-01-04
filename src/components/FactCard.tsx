@@ -1,9 +1,9 @@
-import { Check, X, Quote, ArrowRight } from 'lucide-react';
-import { Card, CardHeader, CardAction } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import type { Doc, Id } from '../../convex/_generated/dataModel';
+import {Check, X, Quote, ArrowRight} from 'lucide-react';
+import {Card, CardHeader, CardAction} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
+import {Button} from '@/components/ui/button';
+import {cn} from '@/lib/utils';
+import type {Doc, Id} from '../../convex/_generated/dataModel';
 
 type Fact = Doc<'facts'>;
 
@@ -11,7 +11,7 @@ type FactCardProps = {
   fact: Fact;
   onConfirm: (id: Id<'facts'>) => void;
   onReject: (id: Id<'facts'>) => void;
-  onHighlight?: (position: { start: number; end: number } | undefined) => void;
+  onHighlight?: (position: {start: number; end: number} | undefined) => void;
 };
 
 function getConfidenceColor(confidence: number): string {
@@ -22,7 +22,7 @@ function getConfidenceColor(confidence: number): string {
   return 'bg-red-500/15 text-red-600 dark:text-red-400 ring-red-500/20';
 }
 
-export function FactCard({ fact, onConfirm, onReject, onHighlight }: FactCardProps) {
+export function FactCard({fact, onConfirm, onReject, onHighlight}: FactCardProps) {
   const confidencePercent = Math.round(fact.confidence * 100);
 
   return (

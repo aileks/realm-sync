@@ -1,6 +1,6 @@
-import { action, httpAction, mutation, query } from './_generated/server';
-import { components } from './_generated/api';
-import { v } from 'convex/values';
+import {action, httpAction, mutation, query} from './_generated/server';
+import {components} from './_generated/api';
+import {v} from 'convex/values';
 import {
   PersistentTextStreaming,
   type StreamId,
@@ -39,7 +39,7 @@ export const sendMessage = action({
       })
     ),
   },
-  handler: async (_ctx, { messages }) => {
+  handler: async (_ctx, {messages}) => {
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       throw new Error('OPENROUTER_API_KEY not configured');
@@ -50,7 +50,7 @@ export const sendMessage = action({
       throw new Error('MODEL not configured');
     }
 
-    const apiMessages = [{ role: 'system', content: VELLUM_CHAT_PROMPT }, ...messages];
+    const apiMessages = [{role: 'system', content: VELLUM_CHAT_PROMPT}, ...messages];
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -93,15 +93,15 @@ export const createStreamingChat = mutation({
       })
     ),
   },
-  handler: async (ctx, { messages }) => {
+  handler: async (ctx, {messages}) => {
     const streamId = await streaming.createStream(ctx);
-    return { streamId, messages };
+    return {streamId, messages};
   },
 });
 
 export const getStreamBody = query({
-  args: { streamId: StreamIdValidator },
-  handler: async (ctx, { streamId }) => {
+  args: {streamId: StreamIdValidator},
+  handler: async (ctx, {streamId}) => {
     return await streaming.getStreamBody(ctx, streamId as StreamId);
   },
 });
@@ -109,20 +109,20 @@ export const getStreamBody = query({
 export const streamChat = httpAction(async (ctx, request) => {
   const body = (await request.json()) as {
     streamId: string;
-    messages: Array<{ role: string; content: string }>;
+    messages: Array<{role: string; content: string}>;
   };
 
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    return new Response('OPENROUTER_API_KEY not configured', { status: 500 });
+    return new Response('OPENROUTER_API_KEY not configured', {status: 500});
   }
 
   const model = process.env.MODEL;
   if (!model) {
-    return new Response('MODEL not configured', { status: 500 });
+    return new Response('MODEL not configured', {status: 500});
   }
 
-  const apiMessages = [{ role: 'system', content: VELLUM_CHAT_PROMPT }, ...body.messages];
+  const apiMessages = [{role: 'system', content: VELLUM_CHAT_PROMPT}, ...body.messages];
 
   const generateChat = async (
     _ctx: unknown,
@@ -159,10 +159,10 @@ export const streamChat = httpAction(async (ctx, request) => {
     let sseBuffer = '';
 
     while (true) {
-      const { done, value } = await reader.read();
+      const {done, value} = await reader.read();
       if (done) break;
 
-      sseBuffer += decoder.decode(value, { stream: true });
+      sseBuffer += decoder.decode(value, {stream: true});
       const lines = sseBuffer.split('\n');
       sseBuffer = lines.pop() ?? '';
 

@@ -78,22 +78,22 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 
 ## ANTI-PATTERNS
 
-| Pattern                          | Why Forbidden                               |
-| -------------------------------- | ------------------------------------------- |
-| Edit `routeTree.gen.ts`          | Auto-generated; overwritten on route change |
-| Edit `convex/_generated/`        | Auto-generated                              |
-| `createServerFn` without Sentry  | Must wrap with `Sentry.startSpan`           |
-| Custom UI when Shadcn provides   | Use 17 existing primitives                  |
-| Direct class strings             | Use `cn()` for Tailwind conflict resolution |
-| `as any`, `@ts-ignore`           | Error-level lint rule (Oxlint)              |
-| `@ts-expect-error`               | Prefer proper types over silencing errors   |
-| Empty catch blocks               | Oxlint blocks these                         |
-| Silent failures                  | Throw explicit errors                       |
-| npm/yarn                         | pnpm only (frozen lockfile in CI)           |
-| index.html or main.tsx           | TanStack Start handles entry                |
-| Indices on `_id`/`_creationTime` | Convex auto-handles                         |
-| `getAuthUserId` in mutations     | Use `requireAuth` instead                   |
-| Validation in handler (not args) | Use `v` validators in Convex args           |
+| Pattern | Why Forbidden |
+| --- | --- |
+| Edit `routeTree.gen.ts` | Auto-generated; overwritten on route change |
+| Edit `convex/_generated/` | Auto-generated |
+| `createServerFn` without Sentry | Must wrap with `Sentry.startSpan` |
+| Custom UI when Shadcn provides | Use 17 existing primitives |
+| Direct class strings | Use `cn()` for Tailwind conflict resolution |
+| `as any`, `@ts-ignore` | Error-level lint rule (Oxlint) |
+| `@ts-expect-error` | Prefer proper types over silencing errors |
+| Empty catch blocks | Oxlint blocks these |
+| Silent failures | Throw explicit errors |
+| npm/yarn | pnpm only (frozen lockfile in CI) |
+| index.html or main.tsx | TanStack Start handles entry |
+| Indices on `_id`/`_creationTime` | Convex auto-handles |
+| `getAuthUserId` in mutations | Use `requireAuth` instead |
+| Validation in handler (not args) | Use `v` validators in Convex args |
 
 ## COMMANDS
 

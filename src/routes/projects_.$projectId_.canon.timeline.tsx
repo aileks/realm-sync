@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { useQuery } from 'convex/react';
-import { useState } from 'react';
+import {createFileRoute, Link} from '@tanstack/react-router';
+import {useQuery} from 'convex/react';
+import {useState} from 'react';
 import {
   Calendar,
   FileText,
@@ -13,11 +13,11 @@ import {
   Sparkles,
   ExternalLink,
 } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {api} from '../../convex/_generated/api';
+import type {Id} from '../../convex/_generated/dataModel';
+import {Card, CardHeader, CardTitle, CardDescription, CardContent} from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
+import {Button} from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -32,9 +32,9 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { EmptyState } from '@/components/EmptyState';
-import { LoadingState } from '@/components/LoadingState';
-import { cn } from '@/lib/utils';
+import {EmptyState} from '@/components/EmptyState';
+import {LoadingState} from '@/components/LoadingState';
+import {cn} from '@/lib/utils';
 
 export const Route = createFileRoute('/projects_/$projectId_/canon/timeline')({
   component: CanonTimeline,
@@ -71,12 +71,12 @@ type SelectedEntity = {
   name: string;
   type: string;
   description?: string;
-  document?: { _id: Id<'documents'>; title: string } | null;
-  involvedEntities?: Array<{ _id: Id<'entities'>; name: string; type: string }>;
+  document?: {_id: Id<'documents'>; title: string} | null;
+  involvedEntities?: Array<{_id: Id<'entities'>; name: string; type: string}>;
 };
 
 function CanonTimeline() {
-  const { projectId } = Route.useParams();
+  const {projectId} = Route.useParams();
   const [entityFilter, setEntityFilter] = useState<string>('all');
   const [showAppearances, setShowAppearances] = useState(true);
   const [selectedEntity, setSelectedEntity] = useState<SelectedEntity | null>(null);
@@ -92,8 +92,8 @@ function CanonTimeline() {
   }
 
   const timelineItems = [
-    ...timeline.events.map((e) => ({ ...e, itemType: 'event' as const })),
-    ...timeline.appearances.map((a) => ({ ...a, itemType: 'appearance' as const })),
+    ...timeline.events.map((e) => ({...e, itemType: 'event' as const})),
+    ...timeline.appearances.map((a) => ({...a, itemType: 'appearance' as const})),
   ].toSorted((a, b) => {
     const orderA = a.document?.orderIndex ?? Infinity;
     const orderB = b.document?.orderIndex ?? Infinity;
@@ -174,7 +174,7 @@ function CanonTimeline() {
               : <TimelineAppearanceCard
                   key={item._id}
                   appearance={item}
-                  onSelect={() => setSelectedEntity({ ...item, description: undefined })}
+                  onSelect={() => setSelectedEntity({...item, description: undefined})}
                 />
             )}
           </div>
@@ -258,8 +258,8 @@ function CanonTimeline() {
                     render={
                       <Link
                         to="/entities/$entityId"
-                        params={{ entityId: selectedEntity._id }}
-                        search={{ project: projectId }}
+                        params={{entityId: selectedEntity._id}}
+                        search={{project: projectId}}
                       />
                     }
                   >
@@ -282,13 +282,13 @@ type TimelineEventCardProps = {
     name: string;
     type: EntityType;
     description?: string;
-    document: { _id: Id<'documents'>; title: string; orderIndex: number } | null;
-    involvedEntities: Array<{ _id: Id<'entities'>; name: string; type: string }>;
+    document: {_id: Id<'documents'>; title: string; orderIndex: number} | null;
+    involvedEntities: Array<{_id: Id<'entities'>; name: string; type: string}>;
   };
   onSelect: () => void;
 };
 
-function TimelineEventCard({ event, onSelect }: TimelineEventCardProps) {
+function TimelineEventCard({event, onSelect}: TimelineEventCardProps) {
   const Icon = entityIcons.event;
 
   return (
@@ -371,12 +371,12 @@ type TimelineAppearanceCardProps = {
     _id: Id<'entities'>;
     name: string;
     type: string;
-    document: { _id: Id<'documents'>; title: string; orderIndex: number } | null;
+    document: {_id: Id<'documents'>; title: string; orderIndex: number} | null;
   };
   onSelect: () => void;
 };
 
-function TimelineAppearanceCard({ appearance, onSelect }: TimelineAppearanceCardProps) {
+function TimelineAppearanceCard({appearance, onSelect}: TimelineAppearanceCardProps) {
   const entityType = appearance.type as EntityType;
   const Icon = entityIcons[entityType] ?? User;
 

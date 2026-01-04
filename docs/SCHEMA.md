@@ -1,6 +1,12 @@
 ---
 summary: Complete Convex database schema reference for Realm Sync.
-read_when: [database design, schema updates, query optimization, adding tables or indexes]
+read_when:
+  [
+    database design,
+    schema updates,
+    query optimization,
+    adding tables or indexes,
+  ]
 ---
 
 # Realm Sync Database Schema
@@ -38,15 +44,15 @@ erDiagram
 
 Extended from Convex Auth. Stores user accounts and global preferences.
 
-| Field                   | Type                          | Description                         |
-| :---------------------- | :---------------------------- | :---------------------------------- |
-| `name`                  | `v.optional(v.string())`      | User's display name.                |
-| `email`                 | `v.optional(v.string())`      | User's email address.               |
-| `emailVerificationTime` | `v.optional(v.float64())`     | Verification timestamp.             |
-| `image`                 | `v.optional(v.string())`      | URL to user's avatar.               |
-| `isAnonymous`           | `v.optional(v.boolean())`     | Guest user flag.                    |
-| `createdAt`             | `v.number()`                  | Account creation timestamp.         |
-| `settings`              | `v.optional(v.object({...}))` | Theme and notification preferences. |
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| `name` | `v.optional(v.string())` | User's display name. |
+| `email` | `v.optional(v.string())` | User's email address. |
+| `emailVerificationTime` | `v.optional(v.float64())` | Verification timestamp. |
+| `image` | `v.optional(v.string())` | URL to user's avatar. |
+| `isAnonymous` | `v.optional(v.boolean())` | Guest user flag. |
+| `createdAt` | `v.number()` | Account creation timestamp. |
+| `settings` | `v.optional(v.object({...}))` | Theme and notification preferences. |
 
 **Indexes:**
 
@@ -134,16 +140,16 @@ Canon objects (characters, locations, items, etc.) tracked across documents.
 
 Free-form writing space for ideas, drafts, and collaborative brainstorming.
 
-| Field         | Type                  | Description                           |
-| :------------ | :-------------------- | :------------------------------------ |
-| `projectId`   | `v.id("projects")`    | Parent project reference.             |
-| `title`       | `v.string()`          | Note title.                           |
-| `content`     | `v.string()`          | Note content (rich text or markdown). |
-| `contentType` | `v.union(...)`        | `"text"`, `"markdown"`.               |
-| `tags`        | `v.array(v.string())` | Optional tags for organization.       |
-| `pinned`      | `v.boolean()`         | Whether note is pinned to top.        |
-| `createdAt`   | `v.number()`          | Creation timestamp.                   |
-| `updatedAt`   | `v.number()`          | Last edit timestamp.                  |
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| `projectId` | `v.id("projects")` | Parent project reference. |
+| `title` | `v.string()` | Note title. |
+| `content` | `v.string()` | Note content (rich text or markdown). |
+| `contentType` | `v.union(...)` | `"text"`, `"markdown"`. |
+| `tags` | `v.array(v.string())` | Optional tags for organization. |
+| `pinned` | `v.boolean()` | Whether note is pinned to top. |
+| `createdAt` | `v.number()` | Creation timestamp. |
+| `updatedAt` | `v.number()` | Last edit timestamp. |
 
 **Indexes:**
 
@@ -214,15 +220,15 @@ Continuity contradictions or ambiguities detected by Vellum.
 
 Cache for LLM responses to optimize costs and performance.
 
-| Field           | Type                     | Description                                    |
-| :-------------- | :----------------------- | :--------------------------------------------- |
-| `inputHash`     | `v.string()`             | SHA-256 hash of input text and prompt version. |
-| `promptVersion` | `v.string()`             | Version identifier for the extraction prompt.  |
-| `modelId`       | `v.string()`             | Identifier for the LLM used.                   |
-| `response`      | `v.string()`             | Stringified JSON of the LLM response.          |
-| `tokenCount`    | `v.optional(v.number())` | Estimated tokens used.                         |
-| `createdAt`     | `v.number()`             | Cache entry timestamp.                         |
-| `expiresAt`     | `v.number()`             | TTL expiration timestamp.                      |
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| `inputHash` | `v.string()` | SHA-256 hash of input text and prompt version. |
+| `promptVersion` | `v.string()` | Version identifier for the extraction prompt. |
+| `modelId` | `v.string()` | Identifier for the LLM used. |
+| `response` | `v.string()` | Stringified JSON of the LLM response. |
+| `tokenCount` | `v.optional(v.number())` | Estimated tokens used. |
+| `createdAt` | `v.number()` | Cache entry timestamp. |
+| `expiresAt` | `v.number()` | TTL expiration timestamp. |
 
 **Indexes:**
 
@@ -241,7 +247,7 @@ Cache for LLM responses to optimize costs and performance.
 Convex automatically generates types based on the schema. Developers can use these types as follows:
 
 ```typescript
-import { Doc, Id } from './_generated/dataModel';
+import {Doc, Id} from './_generated/dataModel';
 
 // Table Document Types
 export type User = Doc<'users'>;
@@ -305,6 +311,8 @@ const results = await ctx.db
 ```typescript
 const cached = await ctx.db
   .query('llmCache')
-  .withIndex('by_hash', (q) => q.eq('inputHash', hash).eq('promptVersion', version))
+  .withIndex('by_hash', (q) =>
+    q.eq('inputHash', hash).eq('promptVersion', version)
+  )
   .first();
 ```

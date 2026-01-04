@@ -38,13 +38,13 @@ convex/
 
 ## WHERE TO LOOK
 
-| Task            | Location                 | Notes                                        |
-| --------------- | ------------------------ | -------------------------------------------- |
-| Define tables   | `schema.ts`              | Use `v` validators strictly                  |
+| Task | Location | Notes |
+| --- | --- | --- |
+| Define tables | `schema.ts` | Use `v` validators strictly |
 | Write functions | `*.ts` (not \_generated) | Named exports: `export const x = query(...)` |
-| Types           | `_generated/server.d.ts` | Auto-regenerated on schema change            |
-| Auth helpers    | `lib/auth.ts`            | 4 functions for different auth patterns      |
-| Tests           | `projects.test.ts`       | convex-test patterns                         |
+| Types | `_generated/server.d.ts` | Auto-regenerated on schema change |
+| Auth helpers | `lib/auth.ts` | 4 functions for different auth patterns |
+| Tests | `projects.test.ts` | convex-test patterns |
 
 ## CURRENT SCHEMA
 

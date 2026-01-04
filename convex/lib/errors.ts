@@ -1,4 +1,4 @@
-import { Result, ResultAsync, ok, err } from 'neverthrow';
+import {Result, ResultAsync, ok, err} from 'neverthrow';
 
 type AppError = AuthError | NotFoundError | ValidationError | ConfigurationError | ApiError;
 
@@ -75,5 +75,5 @@ export {
   configError,
   apiError,
 };
-export type { AppError, AuthError, NotFoundError, ValidationError, ConfigurationError, ApiError };
-export type { Ok, Err } from 'neverthrow';
+export type {AppError, AuthError, NotFoundError, ValidationError, ConfigurationError, ApiError};
+export type {Ok, Err} from 'neverthrow';

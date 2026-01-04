@@ -78,18 +78,18 @@ export { Button, buttonVariants };
 
 `field.tsx` exports 10 composable sub-components:
 
-| Component          | Purpose                                                   |
-| ------------------ | --------------------------------------------------------- |
-| `Field`            | Wrapper with orientation (vertical/horizontal/responsive) |
-| `FieldLabel`       | Label with checkbox/radio support                         |
-| `FieldTitle`       | Non-label title text                                      |
-| `FieldDescription` | Help text below input                                     |
-| `FieldError`       | Error message display (accepts `errors` array)            |
-| `FieldGroup`       | Group multiple fields                                     |
-| `FieldSet`         | Native fieldset wrapper                                   |
-| `FieldLegend`      | Fieldset legend                                           |
-| `FieldContent`     | Content area for complex fields                           |
-| `FieldSeparator`   | Divider with optional text                                |
+| Component | Purpose |
+| --- | --- |
+| `Field` | Wrapper with orientation (vertical/horizontal/responsive) |
+| `FieldLabel` | Label with checkbox/radio support |
+| `FieldTitle` | Non-label title text |
+| `FieldDescription` | Help text below input |
+| `FieldError` | Error message display (accepts `errors` array) |
+| `FieldGroup` | Group multiple fields |
+| `FieldSet` | Native fieldset wrapper |
+| `FieldLegend` | Fieldset legend |
+| `FieldContent` | Content area for complex fields |
+| `FieldSeparator` | Divider with optional text |
 
 ## DATA-SLOT SELECTORS
 

@@ -1,7 +1,7 @@
-import { useQuery } from 'convex/react';
-import { api } from '../../convex/_generated/api';
-import type { Doc, Id } from '../../convex/_generated/dataModel';
-import { EntityCard } from './EntityCard';
+import {useQuery} from 'convex/react';
+import {api} from '../../convex/_generated/api';
+import type {Doc, Id} from '../../convex/_generated/dataModel';
+import {EntityCard} from './EntityCard';
 
 type ReviewEntityCardProps = {
   projectId: Id<'projects'>;
@@ -20,7 +20,7 @@ export function ReviewEntityCard({
 }: ReviewEntityCardProps) {
   const similarEntities = useQuery(
     api.entities.findSimilar,
-    entity.status === 'pending' ? { projectId, name: entity.name, excludeId: entity._id } : 'skip'
+    entity.status === 'pending' ? {projectId, name: entity.name, excludeId: entity._id} : 'skip'
   );
 
   return (

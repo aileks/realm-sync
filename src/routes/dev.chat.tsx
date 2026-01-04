@@ -1,23 +1,23 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useState, useRef, useEffect } from 'react';
-import { useMutation } from 'convex/react';
-import { useStream } from '@convex-dev/persistent-text-streaming/react';
-import type { StreamId } from '@convex-dev/persistent-text-streaming';
-import { marked } from 'marked';
-import { api } from '../../convex/_generated/api';
+import {createFileRoute} from '@tanstack/react-router';
+import {useState, useRef, useEffect} from 'react';
+import {useMutation} from 'convex/react';
+import {useStream} from '@convex-dev/persistent-text-streaming/react';
+import type {StreamId} from '@convex-dev/persistent-text-streaming';
+import {marked} from 'marked';
+import {api} from '../../convex/_generated/api';
 
-function MarkdownContent({ children }: { children: string }) {
-  const html = marked.parse(children, { async: false });
-  return <span dangerouslySetInnerHTML={{ __html: html }} />;
+function MarkdownContent({children}: {children: string}) {
+  const html = marked.parse(children, {async: false});
+  return <span dangerouslySetInnerHTML={{__html: html}} />;
 }
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { Send, User, Loader2 } from 'lucide-react';
-import { env } from '@/env';
+import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input';
+import {Card} from '@/components/ui/card';
+import {cn} from '@/lib/utils';
+import {Send, User, Loader2} from 'lucide-react';
+import {env} from '@/env';
 
-function MothIcon({ className }: { className?: string }) {
+function MothIcon({className}: {className?: string}) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -48,31 +48,26 @@ type Message = {
   streamId?: string;
 };
 
-function StreamingMessage({ streamId }: { streamId: string }) {
+function StreamingMessage({streamId}: {streamId: string}) {
   const convexSiteUrl = env.VITE_CONVEX_URL.replace('.convex.cloud', '.convex.site');
   const streamUrl = new URL(`${convexSiteUrl}/chat-stream`);
 
-  const { text, status } = useStream(
-    api.chat.getStreamBody,
-    streamUrl,
-    false,
-    streamId as StreamId
-  );
+  const {text, status} = useStream(api.chat.getStreamBody, streamUrl, false, streamId as StreamId);
 
   if (status === 'pending' || (!text && status === 'streaming')) {
     return (
       <div className="flex gap-1.5">
         <div
           className="bg-muted-foreground/60 h-2 w-2 animate-bounce rounded-full"
-          style={{ animationDelay: '0ms' }}
+          style={{animationDelay: '0ms'}}
         />
         <div
           className="bg-muted-foreground/60 h-2 w-2 animate-bounce rounded-full"
-          style={{ animationDelay: '150ms' }}
+          style={{animationDelay: '150ms'}}
         />
         <div
           className="bg-muted-foreground/60 h-2 w-2 animate-bounce rounded-full"
-          style={{ animationDelay: '300ms' }}
+          style={{animationDelay: '300ms'}}
         />
       </div>
     );
@@ -107,7 +102,7 @@ function DevChat() {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
 
-    const userMessage: Message = { role: 'user', content: inputValue.trim() };
+    const userMessage: Message = {role: 'user', content: inputValue.trim()};
     const newMessages: Message[] = [...messages, userMessage];
 
     setMessages(newMessages);
@@ -115,19 +110,19 @@ function DevChat() {
     setIsLoading(true);
 
     try {
-      const cleanMessages = newMessages.map(({ role, content }) => ({ role, content }));
+      const cleanMessages = newMessages.map(({role, content}) => ({role, content}));
 
-      const { streamId, messages: chatMessages } = await createStreamingChat({
+      const {streamId, messages: chatMessages} = await createStreamingChat({
         messages: cleanMessages,
       });
 
       setCurrentStreamId(streamId);
-      setMessages([...newMessages, { role: 'assistant', content: '', streamId }]);
+      setMessages([...newMessages, {role: 'assistant', content: '', streamId}]);
 
       const response = await fetch(`${convexSiteUrl}/chat-stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ streamId, messages: chatMessages }),
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({streamId, messages: chatMessages}),
       });
 
       if (!response.ok) {
@@ -137,7 +132,7 @@ function DevChat() {
       const reader = response.body?.getReader();
       if (reader) {
         while (true) {
-          const { done } = await reader.read();
+          const {done} = await reader.read();
           if (done) break;
         }
       }
@@ -147,7 +142,7 @@ function DevChat() {
       console.error('Failed to send message:', error);
       setMessages([
         ...newMessages,
-        { role: 'assistant', content: 'Error: Failed to get response from Vellum.' },
+        {role: 'assistant', content: 'Error: Failed to get response from Vellum.'},
       ]);
       setCurrentStreamId(null);
     } finally {
@@ -218,15 +213,15 @@ function DevChat() {
                 <div className="flex gap-1.5">
                   <div
                     className="bg-muted-foreground/60 h-2 w-2 animate-bounce rounded-full"
-                    style={{ animationDelay: '0ms' }}
+                    style={{animationDelay: '0ms'}}
                   />
                   <div
                     className="bg-muted-foreground/60 h-2 w-2 animate-bounce rounded-full"
-                    style={{ animationDelay: '150ms' }}
+                    style={{animationDelay: '150ms'}}
                   />
                   <div
                     className="bg-muted-foreground/60 h-2 w-2 animate-bounce rounded-full"
-                    style={{ animationDelay: '300ms' }}
+                    style={{animationDelay: '300ms'}}
                   />
                 </div>
               </div>

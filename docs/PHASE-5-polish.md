@@ -1,6 +1,13 @@
 ---
 summary: Focus on UI/UX refinement, Vellum mascot integration, onboarding, and post-MVP features.
-read_when: [Vellum mascot, animations, keyboard shortcuts, export functionality, onboarding flow]
+read_when:
+  [
+    Vellum mascot,
+    animations,
+    keyboard shortcuts,
+    export functionality,
+    onboarding flow,
+  ]
 ---
 
 # Phase 5: Polish & Post-MVP - Realm Sync
@@ -57,16 +64,20 @@ All system feedback is delivered in Vellum's voice.
 
 ```typescript
 const Vellum_MESSAGES = {
-  welcome: "Welcome to your archive. I'm Vellum, and I'll help you keep track of your world.",
+  welcome:
+    "Welcome to your archive. I'm Vellum, and I'll help you keep track of your world.",
   firstDocument: 'Your first entry! Shall I begin cataloging?',
   extractionComplete: "I've catalogued {count} new entries from {document}.",
   alertFound: 'I noticed something that needs your attention in {document}.',
   noAlerts: 'All clear. Your canon is consistent.',
   emptyProject: 'This world awaits its first story. Add a document to begin.',
-  emptyCanon: 'Your archive is empty. Extract canon from your documents to populate it.',
-  searchNoResults: "I couldn't find anything matching '{query}'. Perhaps try different terms?",
+  emptyCanon:
+    'Your archive is empty. Extract canon from your documents to populate it.',
+  searchNoResults:
+    "I couldn't find anything matching '{query}'. Perhaps try different terms?",
   mergeSuccess: "I've combined these entries. Their knowledge is now unified.",
-  deleteConfirm: 'This will remove {name} and all associated facts. Are you certain?',
+  deleteConfirm:
+    'This will remove {name} and all associated facts. Are you certain?',
 };
 ```
 

@@ -37,11 +37,11 @@ All colors use OKLCH format. Source of truth: `src/styles.css`
 
 ### Three Themes
 
-| Theme        | Vibe                        | Background          | Accent       |
-| ------------ | --------------------------- | ------------------- | ------------ |
-| **Fireside** | Dark cozy library (default) | Warm charcoal slate | Amber/gold   |
-| **Twilight** | Deep navy night reading     | Navy blue           | Gold         |
-| **Daylight** | Sunlit reading room         | Warm parchment      | Forest green |
+| Theme | Vibe | Background | Accent |
+| --- | --- | --- | --- |
+| **Fireside** | Dark cozy library (default) | Warm charcoal slate | Amber/gold |
+| **Twilight** | Deep navy night reading | Navy blue | Gold |
+| **Daylight** | Sunlit reading room | Warm parchment | Forest green |
 
 **Theme switching:**
 
@@ -115,7 +115,7 @@ Use Lucide React exclusively. Key mappings:
 Use Sonner (`src/components/ui/sonner.tsx`) for all user feedback:
 
 ```tsx
-import { toast } from 'sonner';
+import {toast} from 'sonner';
 
 // Success
 toast.success('Extraction complete', {

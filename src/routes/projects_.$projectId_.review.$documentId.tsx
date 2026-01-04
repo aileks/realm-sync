@@ -1,16 +1,16 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useQuery, useMutation } from 'convex/react';
-import { useState, useMemo } from 'react';
-import { ArrowLeft, FileText, Users, List, CheckCircle2 } from 'lucide-react';
-import { marked } from 'marked';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ReviewEntityCard } from '@/components/ReviewEntityCard';
-import { FactCard } from '@/components/FactCard';
-import { LoadingState } from '@/components/LoadingState';
+import {createFileRoute, useNavigate} from '@tanstack/react-router';
+import {useQuery, useMutation} from 'convex/react';
+import {useState, useMemo} from 'react';
+import {ArrowLeft, FileText, Users, List, CheckCircle2} from 'lucide-react';
+import {marked} from 'marked';
+import {api} from '../../convex/_generated/api';
+import type {Id} from '../../convex/_generated/dataModel';
+import {Button} from '@/components/ui/button';
+import {Badge} from '@/components/ui/badge';
+import {Separator} from '@/components/ui/separator';
+import {ReviewEntityCard} from '@/components/ReviewEntityCard';
+import {FactCard} from '@/components/FactCard';
+import {LoadingState} from '@/components/LoadingState';
 
 export const Route = createFileRoute('/projects_/$projectId_/review/$documentId')({
   component: ReviewDocumentPage,
@@ -18,14 +18,14 @@ export const Route = createFileRoute('/projects_/$projectId_/review/$documentId'
 
 function ReviewDocumentPage() {
   const navigate = useNavigate();
-  const { projectId, documentId } = Route.useParams();
+  const {projectId, documentId} = Route.useParams();
 
-  const document = useQuery(api.documents.get, { id: documentId as Id<'documents'> });
+  const document = useQuery(api.documents.get, {id: documentId as Id<'documents'>});
   const pendingEntities = useQuery(api.entities.listByProject, {
     projectId: projectId as Id<'projects'>,
     status: 'pending',
   });
-  const facts = useQuery(api.facts.listByDocument, { documentId: documentId as Id<'documents'> });
+  const facts = useQuery(api.facts.listByDocument, {documentId: documentId as Id<'documents'>});
 
   const confirmEntity = useMutation(api.entities.confirm);
   const rejectEntity = useMutation(api.entities.reject);
@@ -33,7 +33,7 @@ function ReviewDocumentPage() {
   const confirmFact = useMutation(api.facts.confirm);
   const rejectFact = useMutation(api.facts.reject);
 
-  const [highlightedRange, setHighlightedRange] = useState<{ start: number; end: number } | null>(
+  const [highlightedRange, setHighlightedRange] = useState<{start: number; end: number} | null>(
     null
   );
 
@@ -57,7 +57,7 @@ function ReviewDocumentPage() {
         <p className="text-muted-foreground mb-4">Document not found.</p>
         <Button
           variant="outline"
-          onClick={() => navigate({ to: '/projects/$projectId/review', params: { projectId } })}
+          onClick={() => navigate({to: '/projects/$projectId/review', params: {projectId}})}
         >
           Back to Review Queue
         </Button>
@@ -66,32 +66,32 @@ function ReviewDocumentPage() {
   }
 
   async function handleConfirmEntity(id: Id<'entities'>) {
-    await confirmEntity({ id });
+    await confirmEntity({id});
   }
 
   async function handleRejectEntity(id: Id<'entities'>) {
-    await rejectEntity({ id });
+    await rejectEntity({id});
   }
 
   async function handleMergeEntity(sourceId: Id<'entities'>, targetId: Id<'entities'>) {
-    await mergeEntities({ sourceId, targetId });
+    await mergeEntities({sourceId, targetId});
   }
 
   async function handleConfirmFact(id: Id<'facts'>) {
-    await confirmFact({ id });
+    await confirmFact({id});
   }
 
   async function handleRejectFact(id: Id<'facts'>) {
-    await rejectFact({ id });
+    await rejectFact({id});
   }
 
-  function handleHighlight(position: { start: number; end: number } | undefined) {
+  function handleHighlight(position: {start: number; end: number} | undefined) {
     setHighlightedRange(position ?? null);
   }
 
   function renderMarkdown(content: string) {
-    const html = marked.parse(content, { async: false });
-    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+    const html = marked.parse(content, {async: false});
+    return <div dangerouslySetInnerHTML={{__html: html}} />;
   }
 
   function renderHighlightedContent(content: string) {
@@ -99,7 +99,7 @@ function ReviewDocumentPage() {
       return renderMarkdown(content);
     }
 
-    const { start, end } = highlightedRange;
+    const {start, end} = highlightedRange;
     const before = content.slice(0, start);
     const highlighted = content.slice(start, end);
     const after = content.slice(end);
@@ -124,7 +124,7 @@ function ReviewDocumentPage() {
           variant="ghost"
           size="sm"
           className="text-muted-foreground hover:text-foreground mb-2 -ml-2"
-          onClick={() => navigate({ to: '/projects/$projectId/review', params: { projectId } })}
+          onClick={() => navigate({to: '/projects/$projectId/review', params: {projectId}})}
         >
           <ArrowLeft className="mr-1 size-4" />
           Review Queue
@@ -228,9 +228,7 @@ function ReviewDocumentPage() {
               </p>
               <Button
                 variant="default"
-                onClick={() =>
-                  navigate({ to: '/projects/$projectId/review', params: { projectId } })
-                }
+                onClick={() => navigate({to: '/projects/$projectId/review', params: {projectId}})}
               >
                 Return to Queue
               </Button>

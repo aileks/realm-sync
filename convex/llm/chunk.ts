@@ -1,5 +1,5 @@
-import { query } from '../_generated/server';
-import { v } from 'convex/values';
+import {query} from '../_generated/server';
+import {v} from 'convex/values';
 
 export const MAX_CHUNK_CHARS = 12000;
 export const OVERLAP_CHARS = 800;
@@ -18,7 +18,7 @@ export function chunkDocument(
   overlapChars: number = OVERLAP_CHARS
 ): Chunk[] {
   if (content.length <= maxChars) {
-    return [{ text: content, startOffset: 0, endOffset: content.length, index: 0 }];
+    return [{text: content, startOffset: 0, endOffset: content.length, index: 0}];
   }
 
   const chunks: Chunk[] = [];
@@ -104,7 +104,7 @@ export function mapEvidenceToDocument(
   evidence: string,
   chunk: Chunk,
   documentContent: string
-): { start: number; end: number } | null {
+): {start: number; end: number} | null {
   if (typeof evidence !== 'string' || !evidence) return null;
 
   const evidenceInChunk = chunk.text.indexOf(evidence);
@@ -116,10 +116,10 @@ export function mapEvidenceToDocument(
   const absoluteStart = chunk.startOffset + evidenceInChunk;
   const absoluteEnd = absoluteStart + evidence.length;
 
-  return { start: absoluteStart, end: absoluteEnd };
+  return {start: absoluteStart, end: absoluteEnd};
 }
 
-function findFuzzyMatch(content: string, evidence: string): { start: number; end: number } | null {
+function findFuzzyMatch(content: string, evidence: string): {start: number; end: number} | null {
   const normalized = evidence.replace(/\s+/g, ' ').trim();
   const words = normalized.split(' ').filter((w) => w.length > 3);
 
@@ -130,7 +130,7 @@ function findFuzzyMatch(content: string, evidence: string): { start: number; end
   const match = content.match(regex);
 
   if (match?.index !== undefined) {
-    return { start: match.index, end: match.index + match[0].length };
+    return {start: match.index, end: match.index + match[0].length};
   }
 
   return null;
@@ -142,7 +142,7 @@ export const getChunks = query({
     maxChars: v.optional(v.number()),
     overlapChars: v.optional(v.number()),
   },
-  handler: async (_ctx, { content, maxChars, overlapChars }) => {
+  handler: async (_ctx, {content, maxChars, overlapChars}) => {
     return chunkDocument(content, maxChars ?? MAX_CHUNK_CHARS, overlapChars ?? OVERLAP_CHARS);
   },
 });

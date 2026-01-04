@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { convexTest } from 'convex-test';
-import { internal } from '../../_generated/api';
+import {describe, expect, it} from 'vitest';
+import {convexTest} from 'convex-test';
+import {internal} from '../../_generated/api';
 import schema from '../../schema';
 
 const getModules = () => import.meta.glob('../../**/*.ts');
@@ -31,7 +31,7 @@ describe('checkCache', () => {
         await ctx.db.insert('llmCache', {
           inputHash: hash,
           promptVersion: 'v1',
-          response: JSON.stringify({ test: 'data' }),
+          response: JSON.stringify({test: 'data'}),
           modelId: 'test-model',
           createdAt: Date.now(),
           expiresAt: Date.now() + 604800000,
@@ -56,7 +56,7 @@ describe('checkCache', () => {
         await ctx.db.insert('llmCache', {
           inputHash: hash,
           promptVersion: 'v1',
-          response: JSON.stringify({ test: 'expired' }),
+          response: JSON.stringify({test: 'expired'}),
           modelId: 'test-model',
           createdAt: Date.now() - 604800000,
           expiresAt: Date.now() - 1000,
@@ -80,7 +80,7 @@ describe('checkCache', () => {
       });
 
       const testResponse = {
-        entities: [{ name: 'Test Entity', type: 'character' }],
+        entities: [{name: 'Test Entity', type: 'character'}],
         facts: [],
         relationships: [],
       };
@@ -114,7 +114,7 @@ describe('saveToCache', () => {
     });
 
     const testResponse = {
-      entities: [{ name: 'Test Entity', type: 'character' }],
+      entities: [{name: 'Test Entity', type: 'character'}],
       facts: [],
       relationships: [],
     };
@@ -153,7 +153,7 @@ describe('invalidateCache', () => {
       await ctx.db.insert('llmCache', {
         inputHash: hash,
         promptVersion: 'v1',
-        response: JSON.stringify({ test: 'data' }),
+        response: JSON.stringify({test: 'data'}),
         modelId: 'test-model',
         createdAt: Date.now(),
         expiresAt: Date.now() - 1000,
@@ -161,14 +161,14 @@ describe('invalidateCache', () => {
       await ctx.db.insert('llmCache', {
         inputHash: hash,
         promptVersion: 'v1',
-        response: JSON.stringify({ test: 'expired' }),
+        response: JSON.stringify({test: 'expired'}),
         modelId: 'test-model',
         createdAt: Date.now(),
         expiresAt: Date.now() + 1000,
       });
     });
 
-    await t.mutation(internal.llm.cache.invalidateCache, { promptVersion: 'v1' });
+    await t.mutation(internal.llm.cache.invalidateCache, {promptVersion: 'v1'});
 
     const remaining = await t.run(async (ctx) => {
       return await ctx.db
@@ -190,7 +190,7 @@ describe('invalidateCache', () => {
       await ctx.db.insert('llmCache', {
         inputHash: hash,
         promptVersion: 'v1',
-        response: JSON.stringify({ test: 'delete_me' }),
+        response: JSON.stringify({test: 'delete_me'}),
         modelId: 'test-model',
         createdAt: Date.now(),
         expiresAt: Date.now() + 1000,

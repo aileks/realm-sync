@@ -1,5 +1,5 @@
-import { User, MapPin, Package, Lightbulb, Calendar, Layers } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import {User, MapPin, Package, Lightbulb, Calendar, Layers} from 'lucide-react';
+import {cn} from '@/lib/utils';
 
 type EntityType = 'character' | 'location' | 'item' | 'concept' | 'event';
 
@@ -54,7 +54,7 @@ const filterOptions: Array<{
   },
 ];
 
-export function EntityTypeFilter({ value, onChange, counts }: EntityTypeFilterProps) {
+export function EntityTypeFilter({value, onChange, counts}: EntityTypeFilterProps) {
   return (
     <div className="bg-muted/50 flex flex-wrap gap-1 rounded-lg p-1">
       {filterOptions.map((option) => {

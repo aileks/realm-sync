@@ -1,6 +1,6 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useQuery, useMutation } from 'convex/react';
-import { useState } from 'react';
+import {createFileRoute, Link, useNavigate} from '@tanstack/react-router';
+import {useQuery, useMutation} from 'convex/react';
+import {useState} from 'react';
 import {
   ArrowLeft,
   User,
@@ -18,14 +18,14 @@ import {
   Loader2,
   HelpCircle,
 } from 'lucide-react';
-import { toast } from 'sonner';
-import { api } from '../../convex/_generated/api';
-import type { Id, Doc } from '../../convex/_generated/dataModel';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import {toast} from 'sonner';
+import {api} from '../../convex/_generated/api';
+import type {Id, Doc} from '../../convex/_generated/dataModel';
+import {Button} from '@/components/ui/button';
+import {Badge} from '@/components/ui/badge';
+import {Card, CardHeader, CardTitle, CardContent} from '@/components/ui/card';
+import {Input} from '@/components/ui/input';
+import {Textarea} from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -33,9 +33,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { LoadingState } from '@/components/LoadingState';
-import { EmptyState } from '@/components/EmptyState';
-import { cn } from '@/lib/utils';
+import {LoadingState} from '@/components/LoadingState';
+import {EmptyState} from '@/components/EmptyState';
+import {cn} from '@/lib/utils';
 
 export const Route = createFileRoute('/entities/$entityId')({
   component: EntityDetailPage,
@@ -46,7 +46,7 @@ export const Route = createFileRoute('/entities/$entityId')({
 
 type EntityType = 'character' | 'location' | 'item' | 'concept' | 'event';
 
-const typeConfig: Record<EntityType, { icon: typeof User; colorClass: string; label: string }> = {
+const typeConfig: Record<EntityType, {icon: typeof User; colorClass: string; label: string}> = {
   character: {
     icon: User,
     label: 'Character',
@@ -82,7 +82,7 @@ const defaultConfig = {
 
 function EntityDetailPage() {
   const navigate = useNavigate();
-  const { entityId } = Route.useParams();
+  const {entityId} = Route.useParams();
   const [isEditing, setIsEditing] = useState(false);
 
   const data = useQuery(api.entities.getWithDetails, {
@@ -100,7 +100,7 @@ function EntityDetailPage() {
           title="Entity not found"
           description="This entity may have been deleted or you don't have access to it."
           action={
-            <Button variant="outline" onClick={() => navigate({ to: '/projects' })}>
+            <Button variant="outline" onClick={() => navigate({to: '/projects'})}>
               Back to Projects
             </Button>
           }
@@ -109,7 +109,7 @@ function EntityDetailPage() {
     );
   }
 
-  const { entity, facts, appearances, relatedEntities } = data;
+  const {entity, facts, appearances, relatedEntities} = data;
   const projectId = entity.projectId;
   const config = typeConfig[entity.type] ?? defaultConfig;
 
@@ -119,7 +119,7 @@ function EntityDetailPage() {
         variant="ghost"
         size="sm"
         className="-ml-2"
-        onClick={() => navigate({ to: '/projects/$projectId/canon', params: { projectId } })}
+        onClick={() => navigate({to: '/projects/$projectId/canon', params: {projectId}})}
       >
         <ArrowLeft className="mr-1 size-4" />
         Back to Canon
@@ -162,7 +162,7 @@ type EntityHeaderProps = {
   onEdit: () => void;
 };
 
-function EntityHeader({ entity, config, onEdit }: EntityHeaderProps) {
+function EntityHeader({entity, config, onEdit}: EntityHeaderProps) {
   const Icon = config.icon;
 
   return (
@@ -211,7 +211,7 @@ type AttributeListProps = {
   entityName: string;
 };
 
-function AttributeList({ facts, entityId, projectId, entityName }: AttributeListProps) {
+function AttributeList({facts, entityId, projectId, entityName}: AttributeListProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const createFact = useMutation(api.facts.create);
   const [isAdding, setIsAdding] = useState(false);
@@ -219,7 +219,7 @@ function AttributeList({ facts, entityId, projectId, entityName }: AttributeList
   const [object, setObject] = useState('');
   const [documentId, setDocumentId] = useState<Id<'documents'> | ''>('');
 
-  const documents = useQuery(api.documents.list, { projectId });
+  const documents = useQuery(api.documents.list, {projectId});
 
   const confirmedFacts = facts.filter((f) => f.status === 'confirmed');
   const pendingFacts = facts.filter((f) => f.status === 'pending');
@@ -416,7 +416,7 @@ type EvidencePanelProps = {
   facts: Doc<'facts'>[];
 };
 
-function EvidencePanel({ facts }: EvidencePanelProps) {
+function EvidencePanel({facts}: EvidencePanelProps) {
   const [expandedFactId, setExpandedFactId] = useState<Id<'facts'> | null>(null);
 
   const factsWithEvidence = facts.filter((f) => f.evidenceSnippet);
@@ -469,11 +469,11 @@ function EvidencePanel({ facts }: EvidencePanelProps) {
 }
 
 type AppearanceTimelineProps = {
-  appearances: { _id: Id<'documents'>; title: string; orderIndex: number }[];
+  appearances: {_id: Id<'documents'>; title: string; orderIndex: number}[];
   projectId: Id<'projects'>;
 };
 
-function AppearanceTimeline({ appearances, projectId }: AppearanceTimelineProps) {
+function AppearanceTimeline({appearances, projectId}: AppearanceTimelineProps) {
   if (appearances.length === 0) {
     return (
       <Card>
@@ -506,7 +506,7 @@ function AppearanceTimeline({ appearances, projectId }: AppearanceTimelineProps)
               <div className="bg-primary border-background absolute left-0 size-4 rounded-full border-2" />
               <Link
                 to="/projects/$projectId/documents/$documentId"
-                params={{ projectId, documentId: doc._id }}
+                params={{projectId, documentId: doc._id}}
                 className="hover:text-primary text-sm transition-colors"
               >
                 {doc.title}
@@ -529,7 +529,7 @@ type RelatedEntitiesCardProps = {
   projectId: Id<'projects'>;
 };
 
-function RelatedEntitiesCard({ entities, projectId }: RelatedEntitiesCardProps) {
+function RelatedEntitiesCard({entities, projectId}: RelatedEntitiesCardProps) {
   if (entities.length === 0) {
     return (
       <Card>
@@ -564,8 +564,8 @@ function RelatedEntitiesCard({ entities, projectId }: RelatedEntitiesCardProps) 
             <Link
               key={entity._id}
               to="/entities/$entityId"
-              params={{ entityId: entity._id }}
-              search={{ project: projectId }}
+              params={{entityId: entity._id}}
+              search={{project: projectId}}
               className="hover:bg-muted/50 flex items-center gap-3 rounded-md p-2 transition-colors"
             >
               <div
@@ -594,7 +594,7 @@ type EntityEditFormProps = {
   onSave: () => void;
 };
 
-function EntityEditForm({ entity, onCancel, onSave }: EntityEditFormProps) {
+function EntityEditForm({entity, onCancel, onSave}: EntityEditFormProps) {
   const updateEntity = useMutation(api.entities.update);
   const [isSaving, setIsSaving] = useState(false);
 

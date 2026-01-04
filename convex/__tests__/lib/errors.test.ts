@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { authError, notFoundError, validationError, configError, apiError } from '../../lib/errors';
+import {describe, it, expect} from 'vitest';
+import {authError, notFoundError, validationError, configError, apiError} from '../../lib/errors';
 
 describe('error constructors', () => {
   describe('authError', () => {
@@ -63,8 +63,8 @@ describe('error constructors', () => {
     });
 
     it('includes optional details', () => {
-      const error = apiError(400, 'Bad request', { field: 'name' });
-      expect(error.details).toEqual({ field: 'name' });
+      const error = apiError(400, 'Bad request', {field: 'name'});
+      expect(error.details).toEqual({field: 'name'});
     });
   });
 });
