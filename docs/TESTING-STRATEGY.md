@@ -5,7 +5,7 @@ read_when: [testing, integration, unit, end-to-end, regression]
 
 # Testing Strategy
 
-**Status:** Ready for Implementation **Coverage Target:** 80% (Unit + Integration) **E2E/Visual:** Deferred until MVP **Current Test Count:** 94 passing
+**Status:** Ready for Implementation **Coverage Target:** 80% (Unit + Integration) **E2E/Visual:** Deferred until MVP **Current Test Count:** 118 passing
 
 **_FOLLOW TDD! TEST BEHAVIOR, NOT IMPLEMENTATION!_**
 
@@ -368,20 +368,18 @@ describe('FormExample', () => {
 
 ## 4. Coverage Targets
 
-| Module                                 | Target  | Type                   |
-| -------------------------------------- | ------- | ---------------------- |
-| `convex/todos.ts`                      | 100%    | Unit (convex-test)     |
-| `convex/entities.ts`                   | 100%    | Unit (convex-test)     |
-| `convex/facts.ts`                      | 100%    | Unit (convex-test)     |
-| `convex/llm/extract.ts`                | 90%     | Unit (convex-test)     |
-| `src/lib/utils.ts`                     | 100%    | Unit                   |
-| `src/env.ts`                           | 100%    | Unit                   |
-| `src/components/ui/alert-dialog.tsx`   | 90%     | Integration            |
-| `src/components/ui/combobox.tsx`       | 85%     | Integration            |
-| `src/components/ui/dropdown-menu.tsx`  | 85%     | Integration            |
-| `src/components/Header.tsx`            | 90%     | Integration            |
-| `src/components/component-example.tsx` | 80%     | Integration            |
-| **Overall**                            | **80%** | **Unit + Integration** |
+| Module                  | Target  | Type                   | Tests   |
+| ----------------------- | ------- | ---------------------- | ------- |
+| `convex/projects.ts`    | 100%    | Unit (convex-test)     | 16      |
+| `convex/documents.ts`   | 100%    | Unit (convex-test)     | 5       |
+| `convex/entities.ts`    | 100%    | Unit (convex-test)     | 26      |
+| `convex/facts.ts`       | 100%    | Unit (convex-test)     | 19      |
+| `convex/seed.ts`        | 100%    | Unit (convex-test)     | 7       |
+| `convex/llm/extract.ts` | 90%     | Unit (convex-test)     | 11      |
+| `convex/llm/cache.ts`   | 100%    | Unit (convex-test)     | 7       |
+| `convex/llm/chunk.ts`   | 100%    | Unit                   | 20      |
+| `src/lib/utils.ts`      | 100%    | Unit                   | 7       |
+| **Overall**             | **80%** | **Unit + Integration** | **118** |
 
 ---
 
