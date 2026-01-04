@@ -2,13 +2,13 @@ import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 import type { Id } from './_generated/dataModel';
 
-export const seedProject = internalMutation({
+export const seedDemoData = internalMutation({
   args: {
     userId: v.id('users'),
   },
   handler: async (ctx, { userId }) => {
     const now = Date.now();
-    const results: { projectId: Id<'projects'>; documentIds: Id<'documents'>[] }[] = [];
+    const projects: { projectId: Id<'projects'>; documentIds: Id<'documents'>[] }[] = [];
 
     // ========== PROJECT 1: Fantasy Novel ==========
     const fantasyProjectId = await ctx.db.insert('projects', {
@@ -267,7 +267,7 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
       createdAt: now,
     });
 
-    results.push({ projectId: fantasyProjectId, documentIds: [fantasyDoc1, fantasyDoc2] });
+    projects.push({ projectId: fantasyProjectId, documentIds: [fantasyDoc1, fantasyDoc2] });
 
     // ========== PROJECT 2: D&D Campaign ==========
     const dndProjectId = await ctx.db.insert('projects', {
@@ -500,7 +500,7 @@ The session ended with the party retreating to the tunnels, planning their next 
       createdAt: now,
     });
 
-    results.push({ projectId: dndProjectId, documentIds: [dndDoc1, dndDoc2] });
+    projects.push({ projectId: dndProjectId, documentIds: [dndDoc1, dndDoc2] });
 
     // ========== PROJECT 3: Fanfiction ==========
     const fanficProjectId = await ctx.db.insert('projects', {
@@ -705,9 +705,9 @@ She thought of Snape's endless corrections, his impossible standards, his rare m
       createdAt: now,
     });
 
-    results.push({ projectId: fanficProjectId, documentIds: [fanficDoc1, fanficDoc2] });
+    projects.push({ projectId: fanficProjectId, documentIds: [fanficDoc1, fanficDoc2] });
 
-    return results[0];
+    return { projects };
   },
 });
 
