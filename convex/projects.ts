@@ -155,8 +155,7 @@ export const updateStats = mutation({
   handler: async (ctx, { id, stats }) => {
     const project = await ctx.db.get(id);
     if (!project) {
-      unwrapOrThrow(err(notFoundError('project', id)));
-      return;
+      throw new Error('Project not found');
     }
 
     const currentStats = project.stats ?? {

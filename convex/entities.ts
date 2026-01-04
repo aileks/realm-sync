@@ -140,13 +140,7 @@ export const merge = mutation({
     const target = unwrapOrThrow(await verifyEntityAccess(ctx, targetId, userId));
 
     if (source.projectId !== target.projectId) {
-      unwrapOrThrow(
-        err({
-          type: 'VALIDATION',
-          field: 'targetId',
-          reason: 'Cannot merge entities from different projects',
-        })
-      );
+      throw new Error('Cannot merge entities from different projects');
     }
 
     const mergedAliases = [...new Set([...target.aliases, source.name, ...source.aliases])];
