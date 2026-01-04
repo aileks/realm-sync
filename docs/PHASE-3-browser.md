@@ -17,7 +17,7 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 
 | Sub-Phase                       | Status       | PR  |
 | ------------------------------- | ------------ | --- |
-| 3.1 Canon Browser Shell         | 🔄 In Review | -   |
+| 3.1 Canon Browser Shell         | 🔄 In Review | #16 |
 | 3.2 Entity Detail Page          | 🔲 Pending   | -   |
 | 3.3 Full-Text Search            | 🔲 Pending   | -   |
 | 3.4 Entity Editing & Management | 🔲 Pending   | -   |
