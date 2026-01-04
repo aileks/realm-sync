@@ -294,7 +294,7 @@ function EntityDetailSheet({ entity, onClose }: EntityDetailSheetProps) {
 
   return (
     <Sheet open={!!entity} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="overflow-y-auto sm:max-w-lg">
+      <SheetContent className="overflow-y-auto p-6 sm:max-w-lg">
         <SheetHeader className="pr-12">
           <div className="flex items-center gap-3">
             <SheetTitle className="min-w-0 truncate font-serif text-2xl">{entity.name}</SheetTitle>
@@ -444,10 +444,9 @@ function EntityDetailSheet({ entity, onClose }: EntityDetailSheetProps) {
                 </p>
               </div>
 
-              <div className="text-muted-foreground border-t pt-4 text-xs">
-                <p>Created: {new Date(entity.createdAt).toLocaleDateString()}</p>
-                <p>Updated: {new Date(entity.updatedAt).toLocaleDateString()}</p>
-              </div>
+              <p className="text-muted-foreground text-xs">
+                Last edited {new Date(entity.updatedAt).toLocaleString()}
+              </p>
             </>
           }
         </div>
