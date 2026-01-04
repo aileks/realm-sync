@@ -105,6 +105,8 @@ export function mapEvidenceToDocument(
   chunk: Chunk,
   documentContent: string
 ): { start: number; end: number } | null {
+  if (typeof evidence !== 'string' || !evidence) return null;
+
   const evidenceInChunk = chunk.text.indexOf(evidence);
   if (evidenceInChunk === -1) {
     const fuzzyMatch = findFuzzyMatch(documentContent, evidence);
