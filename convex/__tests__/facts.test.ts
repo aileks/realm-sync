@@ -4,7 +4,7 @@ import { api } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
 
-const modules = import.meta.glob('../**/*.ts');
+const getModules = () => import.meta.glob('../**/*.ts');
 
 async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
   const userId = await t.run(async (ctx) => {
@@ -58,7 +58,7 @@ async function setupProjectWithEntityAndDoc(t: ReturnType<typeof convexTest>, us
 describe('facts', () => {
   describe('create mutation', () => {
     it('creates fact with pending status by default', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -83,7 +83,7 @@ describe('facts', () => {
     });
 
     it('creates fact with confirmed status when specified', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -104,7 +104,7 @@ describe('facts', () => {
     });
 
     it('increments project factCount stat', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -124,7 +124,7 @@ describe('facts', () => {
     });
 
     it('works on projects without pre-existing stats', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const { projectId, documentId, entityId } = await t.run(async (ctx) => {
@@ -172,7 +172,7 @@ describe('facts', () => {
     });
 
     it('stores temporal bound when provided', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -193,7 +193,7 @@ describe('facts', () => {
     });
 
     it('throws when not authenticated', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -212,7 +212,7 @@ describe('facts', () => {
     });
 
     it('throws when not project owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const { projectId, documentId, entityId } = await t.run(async (ctx) => {
@@ -266,7 +266,7 @@ describe('facts', () => {
 
   describe('confirm mutation', () => {
     it('changes status from pending to confirmed', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -292,7 +292,7 @@ describe('facts', () => {
     });
 
     it('throws when fact not found', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -321,7 +321,7 @@ describe('facts', () => {
 
   describe('reject mutation', () => {
     it('changes status from pending to rejected', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -347,7 +347,7 @@ describe('facts', () => {
     });
 
     it('decrements project factCount when rejecting fact', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const { projectId, factId } = await t.run(async (ctx) => {
@@ -401,7 +401,7 @@ describe('facts', () => {
 
   describe('listByEntity query', () => {
     it('returns all facts for entity', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -437,7 +437,7 @@ describe('facts', () => {
     });
 
     it('filters by status when provided', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -477,7 +477,7 @@ describe('facts', () => {
     });
 
     it('returns empty array when not project owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const entityId = await t.run(async (ctx) => {
@@ -510,7 +510,7 @@ describe('facts', () => {
 
   describe('listPending query', () => {
     it('returns all pending facts for project', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -559,7 +559,7 @@ describe('facts', () => {
     });
 
     it('returns empty array when not project owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -583,7 +583,7 @@ describe('facts', () => {
 
   describe('listByDocument query', () => {
     it('returns all facts extracted from document', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
@@ -621,7 +621,7 @@ describe('facts', () => {
 
   describe('remove mutation', () => {
     it('does NOT decrement factCount when removing rejected fact', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const { projectId, rejectedFactId } = await t.run(async (ctx) => {
@@ -685,7 +685,7 @@ describe('facts', () => {
     });
 
     it('deletes fact and decrements project stat', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const { projectId, factId } = await t.run(async (ctx) => {

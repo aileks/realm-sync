@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as __tests___entities_helpers from "../__tests__/entities/helpers.js";
 import type * as auth from "../auth.js";
 import type * as chat from "../chat.js";
 import type * as documents from "../documents.js";
@@ -33,6 +34,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "__tests__/entities/helpers": typeof __tests___entities_helpers;
   auth: typeof auth;
   chat: typeof chat;
   documents: typeof documents;

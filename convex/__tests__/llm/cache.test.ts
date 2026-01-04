@@ -3,12 +3,12 @@ import { convexTest } from 'convex-test';
 import { internal } from '../../_generated/api';
 import schema from '../../schema';
 
-const modules = import.meta.glob('../../**/*.ts');
+const getModules = () => import.meta.glob('../../**/*.ts');
 
 describe('checkCache', () => {
   describe('cache miss', () => {
     it('returns null for new content', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const hash = await t.query(internal.llm.utils.computeHash, {
         content: 'Test content',
       });
@@ -22,7 +22,7 @@ describe('checkCache', () => {
     });
 
     it('returns null for different prompt version', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const hash = await t.query(internal.llm.utils.computeHash, {
         content: 'Test content',
       });
@@ -47,7 +47,7 @@ describe('checkCache', () => {
     });
 
     it('returns null for expired cache entry', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const hash = await t.query(internal.llm.utils.computeHash, {
         content: 'Expired content',
       });
@@ -74,7 +74,7 @@ describe('checkCache', () => {
 
   describe('cache hit', () => {
     it('returns stored response for existing hash', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const hash = await t.query(internal.llm.utils.computeHash, {
         content: 'Test content',
       });
@@ -108,7 +108,7 @@ describe('checkCache', () => {
 
 describe('saveToCache', () => {
   it('stores response with correct hash and expiresAt', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const hash = await t.query(internal.llm.utils.computeHash, {
       content: 'Test content',
     });
@@ -144,7 +144,7 @@ describe('saveToCache', () => {
 
 describe('invalidateCache', () => {
   it('removes all entries for prompt version', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const hash = await t.query(internal.llm.utils.computeHash, {
       content: 'Test content',
     });
@@ -181,7 +181,7 @@ describe('invalidateCache', () => {
   });
 
   it('removes specific entry by hash', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const hash = await t.query(internal.llm.utils.computeHash, {
       content: 'Test content',
     });

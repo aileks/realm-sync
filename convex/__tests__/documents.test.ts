@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import schema from '../schema';
 
-const modules = import.meta.glob('../**/*.ts');
+const getModules = () => import.meta.glob('../**/*.ts');
 
 async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
   const userId = await t.run(async (ctx) => {
@@ -58,7 +58,7 @@ async function setupProjectWithDocs(t: ReturnType<typeof convexTest>, userId: st
 describe('documents', () => {
   describe('list query', () => {
     it('returns documents for project owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId } = await setupProjectWithDocs(t, userId);
 
@@ -67,7 +67,7 @@ describe('documents', () => {
     });
 
     it('returns empty for non-owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -91,7 +91,7 @@ describe('documents', () => {
 
   describe('get query', () => {
     it('returns document for owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { doc1Id } = await setupProjectWithDocs(t, userId);
 
@@ -100,7 +100,7 @@ describe('documents', () => {
     });
 
     it('returns null for non-owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const docId = await t.run(async (ctx) => {
@@ -134,7 +134,7 @@ describe('documents', () => {
 
   describe('reorder mutation', () => {
     it('reorders documents', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { projectId, doc1Id, doc2Id } = await setupProjectWithDocs(t, userId);
 
@@ -151,7 +151,7 @@ describe('documents', () => {
     });
 
     it('throws for non-owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const { projectId, docId } = await t.run(async (ctx) => {
@@ -187,7 +187,7 @@ describe('documents', () => {
 
   describe('updateProcessingStatus mutation', () => {
     it('updates status', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { doc1Id } = await setupProjectWithDocs(t, userId);
 
@@ -202,7 +202,7 @@ describe('documents', () => {
     });
 
     it('throws for non-owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const docId = await t.run(async (ctx) => {
@@ -237,7 +237,7 @@ describe('documents', () => {
 
   describe('listNeedingReview query', () => {
     it('returns documents with pending entities', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -282,7 +282,7 @@ describe('documents', () => {
     });
 
     it('returns documents with pending facts', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -338,7 +338,7 @@ describe('documents', () => {
     });
 
     it('excludes documents without pending items', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -369,7 +369,7 @@ describe('documents', () => {
     });
 
     it('excludes non-completed documents', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -411,7 +411,7 @@ describe('documents', () => {
     });
 
     it('returns empty array when not project owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
