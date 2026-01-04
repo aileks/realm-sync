@@ -171,9 +171,17 @@ function normalizeExtractionResult(raw: unknown): ExtractionResult {
   const relationships: ExtractionResult['relationships'] = [];
 
   // Normalize entities: handle object-keyed format {name: {type, ...}} → [{name, type, ...}]
+  // Strip extra fields (LLMs sometimes add confidence/evidence to entities despite schema)
   if (result.entities) {
     if (Array.isArray(result.entities)) {
-      entities.push(...(result.entities as ExtractionResult['entities']));
+      for (const e of result.entities as Array<Record<string, unknown>>) {
+        entities.push({
+          name: e.name as string,
+          type: (e.type as ExtractionResult['entities'][0]['type']) ?? 'concept',
+          description: e.description as string | undefined,
+          aliases: e.aliases as string[] | undefined,
+        });
+      }
     } else if (typeof result.entities === 'object') {
       for (const [name, data] of Object.entries(result.entities as Record<string, unknown>)) {
         const entityData = data as Record<string, unknown>;
