@@ -4,7 +4,7 @@ read_when: starting any work on this codebase
 
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-01-03 **Last Updated:** See git history
+**Generated:** 2026-01-04 **Commit:** dc638f0 **Branch:** main
 
 Be extremely concise. Sacrifice grammar for concision.
 
@@ -59,6 +59,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | `cn` | `src/lib/utils.ts` | Tailwind class merging (clsx + twMerge) |
 | `toId` | `src/lib/utils.ts` | Type-safe Convex ID conversion |
 | `ReviewEntityCard` | `src/components/ReviewEntityCard.tsx` | EntityCard wrapper with merge suggestions |
+| `EntityTypeFilter` | `src/components/EntityTypeFilter.tsx` | Filter dropdown for entity types |
 
 ## CONVENTIONS
 
@@ -101,7 +102,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 pnpm dev              # Dev server (port 3000, Sentry injected)
 pnpm run build        # Production build
 pnpm run start        # Production server
-pnpm test             # Vitest (151 tests)
+pnpm test             # Vitest (173 tests)
 pnpm run lint         # Oxlint with --fix, --type-aware
 pnpm run typecheck    # tsc --noEmit
 pnpm run format       # Prettier (with Tailwind plugin)
@@ -124,7 +125,7 @@ pnpm docs:list        # List docs with front-matter check
 | Core routing  | Working | TanStack Start file-based + SSR               |
 | Backend       | Working | Convex schema, auth, CRUD                     |
 | UI components | Ready   | 17 Shadcn/Base UI primitives                  |
-| Testing       | Working | Vitest + convex-test, 151 passing             |
+| Testing       | Working | Vitest + convex-test, 173 passing             |
 | CI/CD         | Working | 4 parallel jobs: lint, typecheck, test, build |
 | Auth          | Working | Google OAuth + Password                       |
 | Themes        | Ready   | 3 OKLCH themes in styles.css                  |

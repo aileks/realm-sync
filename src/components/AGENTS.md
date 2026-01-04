@@ -16,6 +16,7 @@ components/
 ├── DocumentForm.tsx      # Document creation/editing form
 ├── EmptyState.tsx        # Empty state placeholder component
 ├── EntityCard.tsx       # Entity display card (with type color)
+├── EntityTypeFilter.tsx  # Filter dropdown for entity types
 ├── FactCard.tsx         # Fact display card
 ├── LoadingState.tsx      # Loading spinner/skeleton
 ├── ProjectCard.tsx       # Project display card
@@ -32,6 +33,7 @@ components/
 | App shell layout | `AppLayout.tsx` | Wraps all pages with sidebar |
 | Navigation | `AppSidebar.tsx` | Project list + navigation links |
 | Display cards | `*Card.tsx` | Document, Entity, Fact, Project, ReviewEntity cards |
+| Filters | `*Filter.tsx` | EntityTypeFilter for entity filtering |
 | Forms | `*Form.tsx` | DocumentForm, ProjectForm |
 | UI primitives | `ui/` | Button, Card, Input, etc. |
 

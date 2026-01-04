@@ -13,18 +13,23 @@ routes/
 ├── __root.tsx              # Root route + HTML shell + providers
 ├── auth.tsx               # Auth pages (login/signup)
 ├── dev.chat.tsx           # Dev chat route
+├── entities.$entityId.tsx  # Entity detail page
 ├── index.tsx              # Home page
 ├── projects.tsx           # Projects list
 ├── projects_.new.tsx       # New project form
 ├── projects_.$projectId.tsx # Project detail
 ├── projects_.$projectId_.alerts.tsx       # Alerts page
+├── projects_.$projectId_.canon.tsx        # Canon parent layout
+├── projects_.$projectId_.canon.index.tsx  # Canon index
+├── projects_.$projectId_.canon.search.tsx # Canon search
+├── projects_.$projectId_.canon.timeline.tsx # Canon timeline
 ├── projects_.$projectId_.documents.tsx      # Documents list
 ├── projects_.$projectId_.documents.index.tsx # Documents index
 ├── projects_.$projectId_.documents.$documentId.tsx # Document detail
 ├── projects_.$projectId_.documents.new.tsx # New document
 ├── projects_.$projectId_.entities.tsx      # Entities list
 ├── projects_.$projectId_.facts.tsx         # Facts list
-├── projects_.$projectId_.review.tsx         # Review list
+├── projects_.$projectId_.review.tsx         # Review parent layout
 ├── projects_.$projectId_.review.index.tsx   # Review index
 └── projects_.$projectId_.review.$documentId.tsx # Review detail
 ```
@@ -36,6 +41,7 @@ routes/
 | Add page route | `src/routes/` | Create `.tsx` file (e.g., `about.tsx` → `/about`) |
 | Add nested route | `src/routes/` | Underscore-escape: `projects_.$projectId.tsx` → `/projects/:projectId` |
 | Add index route | `*.index.tsx` | `projects_.$projectId_.documents.index.tsx` → `/projects/:id/documents/` |
+| Add layout route | `*.tsx` (parent) | `projects_.$projectId_.canon.tsx` → wraps canon/\* routes with shared layout |
 | Modify HTML shell | `__root.tsx` | Root layout, meta tags, provider chain |
 | Route params | `useParams()` | TanStack Router hook from `@tanstack/react-router` |
 
