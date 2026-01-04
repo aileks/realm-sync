@@ -171,8 +171,8 @@ function CanonBrowserIndex() {
         />
       : <div
           className={cn(
-            'gap-4',
-            viewMode === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3' : 'flex flex-col'
+            'grid gap-4',
+            viewMode === 'grid' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'
           )}
         >
           {entities.map((entity: EntityWithStats) => (
