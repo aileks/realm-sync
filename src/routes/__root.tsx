@@ -1,6 +1,6 @@
 import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
-import { TanStackDevtools } from '@tanstack/react-devtools';
+// import { TanStackDevtools } from '@tanstack/react-devtools';
 
 import { AppLayout } from '../components/AppLayout';
 import ConvexProvider from '../integrations/convex/provider';
@@ -53,7 +53,7 @@ function RootLayout() {
       <AppLayout>
         <Outlet />
       </AppLayout>
-      <TanStackDevtools
+      {/* <TanStackDevtools
         config={{
           position: 'bottom-right',
         }}
@@ -63,7 +63,7 @@ function RootLayout() {
             render: <TanStackRouterDevtoolsPanel />,
           },
         ]}
-      />
+      /> */}
     </ConvexProvider>
   );
 }

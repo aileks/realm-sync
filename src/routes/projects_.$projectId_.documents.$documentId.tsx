@@ -3,6 +3,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Save, Loader2, CheckCircle, Clock, Sparkles } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
+import { type FunctionReference } from 'convex/server';
 import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +11,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/LoadingState';
 import { cn } from '@/lib/utils';
-
-import { type FunctionReference } from 'convex/server';
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -26,22 +25,19 @@ function DocumentEditorPage() {
   const { projectId, documentId } = Route.useParams();
   const document = useQuery(api.documents.get, { id: documentId as Id<'documents'> });
   const updateDocument = useMutation(api.documents.update);
-
-  // Safely check for LLM API which might not be generated yet
-  const llmApi = (
-    api as unknown as {
-      llm?: {
-        chunkAndExtract: FunctionReference<
-          'mutation',
-          'public',
-          { documentId: Id<'documents'> },
-          null
-        >;
-      };
-    }
-  ).llm;
   const chunkAndExtract = useMutation(
-    llmApi?.chunkAndExtract ? llmApi.chunkAndExtract : api.documents.updateProcessingStatus
+    (
+      api as unknown as {
+        'llm/extract': {
+          chunkAndExtract: FunctionReference<
+            'mutation',
+            'public',
+            { documentId: Id<'documents'> },
+            { entitiesCreated: number; factsCreated: number }
+          >;
+        };
+      }
+    )['llm/extract'].chunkAndExtract
   );
 
   const [title, setTitle] = useState('');
@@ -109,14 +105,7 @@ function DocumentEditorPage() {
     if (!document) return;
     setIsExtracting(true);
     try {
-      if (llmApi?.chunkAndExtract) {
-        const mutationFn = chunkAndExtract as unknown as (args: {
-          documentId: Id<'documents'>;
-        }) => Promise<void>;
-        await mutationFn({ documentId: document._id });
-      } else {
-        console.warn('llm.chunkAndExtract not found on api object');
-      }
+      await chunkAndExtract({ documentId: document._id });
     } catch (error) {
       console.error('Extraction failed:', error);
     } finally {

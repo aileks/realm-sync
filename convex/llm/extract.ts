@@ -1,4 +1,4 @@
-import { internalAction, internalMutation } from '../_generated/server';
+import { internalAction, internalMutation, action } from '../_generated/server';
 import { api, internal } from '../_generated/api';
 import { v } from 'convex/values';
 import type { Id } from '../_generated/dataModel';
@@ -354,6 +354,30 @@ const extractionResultValidator = v.object({
       ),
     })
   ),
+});
+
+export const chunkAndExtract = action({
+  args: {
+    documentId: v.id('documents'),
+  },
+  handler: async (
+    ctx,
+    { documentId }
+  ): Promise<{ entitiesCreated: number; factsCreated: number }> => {
+    await ctx.runMutation(api.documents.updateProcessingStatus, {
+      id: documentId,
+      status: 'processing',
+    });
+
+    const result: ExtractionResult = await ctx.runAction(internal.llm.extract.extractFromDocument, {
+      documentId,
+    });
+
+    return await ctx.runMutation(internal.llm.extract.processExtractionResult, {
+      documentId,
+      result,
+    });
+  },
 });
 
 export const processExtractionResult = internalMutation({
