@@ -6,7 +6,7 @@ import { chunkDocument, needsChunking, mapEvidenceToDocument, type Chunk } from 
 
 export const PROMPT_VERSION = 'v1';
 
-export const VELLUM_SYSTEM_PROMPT = `You are Vellum, the Archivist Moth — a meticulous librarian who catalogs fictional worlds. You extract entities and facts from narrative text with precision and care. If asked about your name or model name, you will state the previous information in the first person. DO NOT MENTION YOUR ACTUAL MODEL NAME OR TELL THE USER YOUR MODEL NAME!
+export const VELLUM_SYSTEM_PROMPT = `You are Vellum, the Archivist Moth — a meticulous librarian who catalogs fictional worlds. You extract entities and facts from narrative text with precision and care. If asked about your name or model name, you will state the previous information in the first person.
 
 PRINCIPLES:
 - Only extract what is EXPLICITLY stated in the text.
@@ -186,22 +186,32 @@ function normalizeExtractionResult(raw: unknown): ExtractionResult {
     }
   }
 
-  // Normalize facts: handle object-keyed format
   if (result.facts) {
-    if (Array.isArray(result.facts)) {
-      facts.push(...(result.facts as ExtractionResult['facts']));
-    } else if (typeof result.facts === 'object') {
-      for (const [key, data] of Object.entries(result.facts as Record<string, unknown>)) {
-        const factData = data as Record<string, unknown>;
-        facts.push({
-          entityName: (factData.entityName as string) ?? key,
-          subject: (factData.subject as string) ?? key,
-          predicate: (factData.predicate as string) ?? '',
-          object: (factData.object as string) ?? '',
-          confidence: (factData.confidence as number) ?? 0.8,
-          evidence: (factData.evidence as string) ?? '',
+    const rawFacts: Array<Record<string, unknown>> =
+      Array.isArray(result.facts) ?
+        (result.facts as Array<Record<string, unknown>>)
+      : Object.entries(result.facts as Record<string, unknown>).map(([key, data]) => {
+          const d = data as Record<string, unknown>;
+          return { ...d, entityName: d.entityName ?? key, subject: d.subject ?? key };
         });
-      }
+
+    for (const f of rawFacts) {
+      const tb = f.temporalBound as Record<string, unknown> | undefined;
+      const validTb =
+        tb?.type && tb?.value ?
+          { type: tb.type as 'point' | 'range' | 'relative', value: tb.value as string }
+        : undefined;
+
+      facts.push({
+        entityName: (f.entityName as string) ?? '',
+        subject: (f.subject as string) ?? '',
+        predicate: (f.predicate as string) ?? '',
+        object: (f.object as string) ?? '',
+        confidence: (f.confidence as number) ?? 0.8,
+        evidence: (f.evidence as string) ?? '',
+        temporalBound: validTb,
+        evidencePosition: f.evidencePosition as { start: number; end: number } | undefined,
+      });
     }
   }
 
@@ -288,13 +298,13 @@ export const extractFromDocument = internalAction({
       content: doc.content,
     });
 
-    const cached: ExtractionResult | null = await ctx.runQuery(internal.llm.cache.checkCache, {
+    const cached = await ctx.runQuery(internal.llm.cache.checkCache, {
       inputHash: contentHash,
       promptVersion: PROMPT_VERSION,
     });
 
     if (cached) {
-      return cached;
+      return normalizeExtractionResult(cached);
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -325,7 +335,7 @@ export const extractFromDocument = internalAction({
 
         let chunkResult: ExtractionResult;
         if (cachedChunk) {
-          chunkResult = cachedChunk;
+          chunkResult = normalizeExtractionResult(cachedChunk);
         } else {
           chunkResult = await callLLM(chunk.text, apiKey, model);
 
