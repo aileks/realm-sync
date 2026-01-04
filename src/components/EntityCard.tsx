@@ -66,47 +66,52 @@ export function EntityCard({
   return (
     <Card className="group hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1">
       <CardHeader className="flex flex-col gap-4 p-4">
-        <div className="flex items-start gap-4">
-          <div
-            className={cn(
-              'flex size-10 shrink-0 items-center justify-center rounded-lg shadow-sm ring-1',
-              config.colorClass
-            )}
-          >
-            <Icon className="size-5" />
-          </div>
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-center gap-2">
-              <CardTitle className="truncate font-serif text-base leading-none font-medium">
-                {entity.name}
-              </CardTitle>
-              <Badge
-                variant="outline"
-                className={cn('h-5 px-1.5 py-0 text-xs font-normal capitalize', config.colorClass)}
-              >
-                {entity.type}
-              </Badge>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div
+              className={cn(
+                'flex size-10 shrink-0 items-center justify-center rounded-lg shadow-sm ring-1',
+                config.colorClass
+              )}
+            >
+              <Icon className="size-5" />
             </div>
-            {entity.description && (
-              <CardDescription className="line-clamp-2 text-xs leading-relaxed">
-                {entity.description}
-              </CardDescription>
-            )}
-            {entity.aliases.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {entity.aliases.map((alias) => (
-                  <Badge
-                    key={alias}
-                    variant="secondary"
-                    className="text-muted-foreground h-5 px-1.5 text-xs font-normal"
-                  >
-                    {alias}
-                  </Badge>
-                ))}
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <CardTitle className="truncate font-serif text-base leading-none font-medium">
+                  {entity.name}
+                </CardTitle>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'h-5 px-1.5 py-0 text-xs font-normal capitalize',
+                    config.colorClass
+                  )}
+                >
+                  {entity.type}
+                </Badge>
               </div>
-            )}
+              {entity.description && (
+                <CardDescription className="line-clamp-2 text-xs leading-relaxed">
+                  {entity.description}
+                </CardDescription>
+              )}
+              {entity.aliases.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {entity.aliases.map((alias) => (
+                    <Badge
+                      key={alias}
+                      variant="secondary"
+                      className="text-muted-foreground h-5 px-1.5 text-xs font-normal"
+                    >
+                      {alias}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <CardAction className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <CardAction className="flex shrink-0 gap-1">
             <Button
               size="sm"
               variant="ghost"
