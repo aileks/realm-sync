@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery } from 'convex/react';
 import { useState } from 'react';
 import { LayoutGrid, List, ArrowUpDown } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
@@ -10,12 +10,20 @@ import { EntityTypeFilter } from '@/components/EntityTypeFilter';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/projects_/$projectId_/canon/')({
@@ -33,6 +41,7 @@ function CanonBrowserIndex() {
   const [typeFilter, setTypeFilter] = useState<EntityType | 'all'>('all');
   const [sortBy, setSortBy] = useState<SortBy>('name');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [selectedEntity, setSelectedEntity] = useState<EntityWithStats | null>(null);
 
   const sortLabels: Record<SortBy, string> = {
     name: 'Name A-Z',
@@ -40,30 +49,26 @@ function CanonBrowserIndex() {
     factCount: 'Most Facts',
   };
 
-  const entities = useQuery(api.entities.listByProjectWithStats, {
+  const allEntities = useQuery(api.entities.listByProjectWithStats, {
     projectId: projectId as Id<'projects'>,
-    type: typeFilter === 'all' ? undefined : typeFilter,
     status: 'confirmed',
     sortBy,
   });
 
-  const confirmEntity = useMutation(api.entities.confirm);
-  const rejectEntity = useMutation(api.entities.reject);
-
-  const typeCounts = useQuery(api.entities.listByProject, {
-    projectId: projectId as Id<'projects'>,
-    status: 'confirmed',
-  });
+  const entities =
+    allEntities && typeFilter !== 'all' ?
+      allEntities.filter((e) => e.type === typeFilter)
+    : allEntities;
 
   const counts =
-    typeCounts ?
+    allEntities ?
       {
-        all: typeCounts.length,
-        character: typeCounts.filter((e) => e.type === 'character').length,
-        location: typeCounts.filter((e) => e.type === 'location').length,
-        item: typeCounts.filter((e) => e.type === 'item').length,
-        concept: typeCounts.filter((e) => e.type === 'concept').length,
-        event: typeCounts.filter((e) => e.type === 'event').length,
+        all: allEntities.length,
+        character: allEntities.filter((e) => e.type === 'character').length,
+        location: allEntities.filter((e) => e.type === 'location').length,
+        item: allEntities.filter((e) => e.type === 'item').length,
+        concept: allEntities.filter((e) => e.type === 'concept').length,
+        event: allEntities.filter((e) => e.type === 'event').length,
       }
     : undefined;
 
@@ -141,12 +146,13 @@ function CanonBrowserIndex() {
               entity={entity}
               factCount={entity.factCount}
               viewMode={viewMode}
-              onConfirm={(id) => confirmEntity({ id })}
-              onReject={(id) => rejectEntity({ id })}
+              onClick={() => setSelectedEntity(entity)}
             />
           ))}
         </div>
       }
+
+      <EntityDetailSheet entity={selectedEntity} onClose={() => setSelectedEntity(null)} />
 
       {entities.length > 0 && (
         <p className="text-muted-foreground text-center text-sm">
@@ -176,17 +182,10 @@ type EntityCardWithStatsProps = {
   entity: EntityWithStats;
   factCount: number;
   viewMode: ViewMode;
-  onConfirm: (id: Id<'entities'>) => void;
-  onReject: (id: Id<'entities'>) => void;
+  onClick: () => void;
 };
 
-function EntityCardWithStats({
-  entity,
-  factCount,
-  viewMode,
-  onConfirm,
-  onReject,
-}: EntityCardWithStatsProps) {
+function EntityCardWithStats({ entity, factCount, viewMode, onClick }: EntityCardWithStatsProps) {
   const entityForCard = {
     ...entity,
     description:
@@ -197,13 +196,72 @@ function EntityCardWithStats({
   };
 
   return (
-    <div className={cn(viewMode === 'list' && 'max-w-none')}>
-      <EntityCard
-        entity={entityForCard}
-        onConfirm={onConfirm}
-        onReject={onReject}
-        className={viewMode === 'grid' ? 'h-full' : undefined}
-      />
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn('w-full text-left', viewMode === 'list' && 'max-w-none')}
+    >
+      <EntityCard entity={entityForCard} className={viewMode === 'grid' ? 'h-full' : undefined} />
+    </button>
+  );
+}
+
+type EntityDetailSheetProps = {
+  entity: EntityWithStats | null;
+  onClose: () => void;
+};
+
+function EntityDetailSheet({ entity, onClose }: EntityDetailSheetProps) {
+  if (!entity) return null;
+
+  const typeColors: Record<EntityType, string> = {
+    character: 'bg-entity-character/15 text-entity-character',
+    location: 'bg-entity-location/15 text-entity-location',
+    item: 'bg-entity-item/15 text-entity-item',
+    concept: 'bg-entity-concept/15 text-entity-concept',
+    event: 'bg-entity-event/15 text-entity-event',
+  };
+
+  return (
+    <Sheet open={!!entity} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent className="overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <div className="flex items-center gap-3">
+            <SheetTitle className="font-serif text-2xl">{entity.name}</SheetTitle>
+            <Badge className={cn('capitalize', typeColors[entity.type])}>{entity.type}</Badge>
+          </div>
+          {entity.description && (
+            <SheetDescription className="text-base">{entity.description}</SheetDescription>
+          )}
+        </SheetHeader>
+
+        <div className="mt-6 space-y-6">
+          {entity.aliases.length > 0 && (
+            <div>
+              <h3 className="text-muted-foreground mb-2 text-sm font-medium">Also known as</h3>
+              <div className="flex flex-wrap gap-2">
+                {entity.aliases.map((alias) => (
+                  <Badge key={alias} variant="secondary">
+                    {alias}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <h3 className="text-muted-foreground mb-2 text-sm font-medium">Facts</h3>
+            <p className="text-foreground">
+              {entity.factCount} fact{entity.factCount !== 1 ? 's' : ''} recorded
+            </p>
+          </div>
+
+          <div className="text-muted-foreground border-t pt-4 text-xs">
+            <p>Created: {new Date(entity.createdAt).toLocaleDateString()}</p>
+            <p>Updated: {new Date(entity.updatedAt).toLocaleDateString()}</p>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

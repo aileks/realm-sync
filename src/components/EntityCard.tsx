@@ -20,8 +20,8 @@ type EntityType = Entity['type'];
 
 type EntityCardProps = {
   entity: Entity;
-  onConfirm: (id: Id<'entities'>) => void;
-  onReject: (id: Id<'entities'>) => void;
+  onConfirm?: (id: Id<'entities'>) => void;
+  onReject?: (id: Id<'entities'>) => void;
   onEdit?: (entity: Entity) => void;
   similarEntities?: Entity[];
   onMerge?: (sourceId: Id<'entities'>, targetId: Id<'entities'>) => void;
@@ -118,34 +118,40 @@ export function EntityCard({
               )}
             </div>
           </div>
-          <CardAction className="flex shrink-0 gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-muted-foreground size-8 p-0 hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400"
-              onClick={() => onConfirm(entity._id)}
-            >
-              <Check className="size-4" />
-            </Button>
-            {onEdit && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-muted-foreground hover:bg-primary/10 hover:text-primary size-8 p-0"
-                onClick={() => onEdit(entity)}
-              >
-                <Pencil className="size-4" />
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-8 p-0"
-              onClick={() => onReject(entity._id)}
-            >
-              <X className="size-4" />
-            </Button>
-          </CardAction>
+          {(onConfirm || onEdit || onReject) && (
+            <CardAction className="flex shrink-0 gap-1">
+              {onConfirm && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground size-8 p-0 hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400"
+                  onClick={() => onConfirm(entity._id)}
+                >
+                  <Check className="size-4" />
+                </Button>
+              )}
+              {onEdit && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground hover:bg-primary/10 hover:text-primary size-8 p-0"
+                  onClick={() => onEdit(entity)}
+                >
+                  <Pencil className="size-4" />
+                </Button>
+              )}
+              {onReject && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-8 p-0"
+                  onClick={() => onReject(entity._id)}
+                >
+                  <X className="size-4" />
+                </Button>
+              )}
+            </CardAction>
+          )}
         </div>
 
         {similarEntities && similarEntities.length > 0 && onMerge && (
