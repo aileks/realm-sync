@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Save, Loader2, CheckCircle, Clock, Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
 import { type FunctionReference } from 'convex/server';
 import type { Id } from '../../convex/_generated/dataModel';
@@ -104,10 +105,19 @@ function DocumentEditorPage() {
   async function handleExtract() {
     if (!document) return;
     setIsExtracting(true);
+    toast.info('Extraction started', {
+      description: "You'll be notified when it finishes.",
+    });
     try {
-      await chunkAndExtract({ documentId: document._id });
+      const result = await chunkAndExtract({ documentId: document._id });
+      toast.success('Extraction complete', {
+        description: `Found ${result.entitiesCreated} entities and ${result.factsCreated} facts.`,
+      });
     } catch (error) {
       console.error('Extraction failed:', error);
+      toast.error('Extraction failed', {
+        description: error instanceof Error ? error.message : 'An unexpected error occurred.',
+      });
     } finally {
       setIsExtracting(false);
     }
