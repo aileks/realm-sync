@@ -151,7 +151,68 @@ async function callLLM(content: string, apiKey: string, model: string): Promise<
     throw new Error('Invalid response from OpenRouter API');
   }
 
-  return JSON.parse(data.choices[0].message.content);
+  let llmResponse = data.choices[0].message.content.trim();
+
+  // Strip markdown code blocks: ```json\n{...}\n``` → {...}
+  if (llmResponse.startsWith('```')) {
+    llmResponse = llmResponse.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+  }
+
+  const parsed = JSON.parse(llmResponse);
+  return normalizeExtractionResult(parsed);
+}
+
+function normalizeExtractionResult(raw: unknown): ExtractionResult {
+  const result = raw as Record<string, unknown>;
+
+  const entities: ExtractionResult['entities'] = [];
+  const facts: ExtractionResult['facts'] = [];
+  const relationships: ExtractionResult['relationships'] = [];
+
+  // Normalize entities: handle object-keyed format {name: {type, ...}} → [{name, type, ...}]
+  if (result.entities) {
+    if (Array.isArray(result.entities)) {
+      entities.push(...(result.entities as ExtractionResult['entities']));
+    } else if (typeof result.entities === 'object') {
+      for (const [name, data] of Object.entries(result.entities as Record<string, unknown>)) {
+        const entityData = data as Record<string, unknown>;
+        entities.push({
+          name,
+          type: (entityData.type as ExtractionResult['entities'][0]['type']) ?? 'concept',
+          description: entityData.description as string | undefined,
+          aliases: entityData.aliases as string[] | undefined,
+        });
+      }
+    }
+  }
+
+  // Normalize facts: handle object-keyed format
+  if (result.facts) {
+    if (Array.isArray(result.facts)) {
+      facts.push(...(result.facts as ExtractionResult['facts']));
+    } else if (typeof result.facts === 'object') {
+      for (const [key, data] of Object.entries(result.facts as Record<string, unknown>)) {
+        const factData = data as Record<string, unknown>;
+        facts.push({
+          entityName: (factData.entityName as string) ?? key,
+          subject: (factData.subject as string) ?? key,
+          predicate: (factData.predicate as string) ?? '',
+          object: (factData.object as string) ?? '',
+          confidence: (factData.confidence as number) ?? 0.8,
+          evidence: (factData.evidence as string) ?? '',
+        });
+      }
+    }
+  }
+
+  // Normalize relationships
+  if (result.relationships) {
+    if (Array.isArray(result.relationships)) {
+      relationships.push(...(result.relationships as ExtractionResult['relationships']));
+    }
+  }
+
+  return { entities, facts, relationships };
 }
 
 function mergeExtractionResults(results: ExtractionResult[]): ExtractionResult {
@@ -160,7 +221,7 @@ function mergeExtractionResults(results: ExtractionResult[]): ExtractionResult {
   const relationships: ExtractionResult['relationships'] = [];
 
   for (const result of results) {
-    for (const entity of result.entities) {
+    for (const entity of result.entities ?? []) {
       const existing = entityMap.get(entity.name.toLowerCase());
       if (existing) {
         const mergedAliases = [
@@ -176,8 +237,8 @@ function mergeExtractionResults(results: ExtractionResult[]): ExtractionResult {
       }
     }
 
-    facts.push(...result.facts);
-    relationships.push(...result.relationships);
+    facts.push(...(result.facts ?? []));
+    relationships.push(...(result.relationships ?? []));
   }
 
   return {
@@ -192,7 +253,7 @@ function adjustEvidencePositions(
   chunk: Chunk,
   documentContent: string
 ): ExtractionResult {
-  const adjustedFacts = result.facts.map((fact) => {
+  const adjustedFacts = (result.facts ?? []).map((fact) => {
     const position = mapEvidenceToDocument(fact.evidence, chunk, documentContent);
     return {
       ...fact,
@@ -200,7 +261,7 @@ function adjustEvidencePositions(
     };
   });
 
-  const adjustedRelationships = result.relationships.map((rel) => {
+  const adjustedRelationships = (result.relationships ?? []).map((rel) => {
     const position = mapEvidenceToDocument(rel.evidence, chunk, documentContent);
     return {
       ...rel,
@@ -209,7 +270,7 @@ function adjustEvidencePositions(
   });
 
   return {
-    ...result,
+    entities: result.entities ?? [],
     facts: adjustedFacts,
     relationships: adjustedRelationships,
   };
@@ -369,14 +430,23 @@ export const chunkAndExtract = action({
       status: 'processing',
     });
 
-    const result: ExtractionResult = await ctx.runAction(internal.llm.extract.extractFromDocument, {
-      documentId,
-    });
+    try {
+      const result: ExtractionResult = await ctx.runAction(
+        internal.llm.extract.extractFromDocument,
+        { documentId }
+      );
 
-    return await ctx.runMutation(internal.llm.extract.processExtractionResult, {
-      documentId,
-      result,
-    });
+      return await ctx.runMutation(internal.llm.extract.processExtractionResult, {
+        documentId,
+        result,
+      });
+    } catch (error) {
+      await ctx.runMutation(api.documents.updateProcessingStatus, {
+        id: documentId,
+        status: 'failed',
+      });
+      throw error;
+    }
   },
 });
 

@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsNewRouteImport } from './routes/projects_.new'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects_.$projectId'
+import { Route as DevChatRouteImport } from './routes/dev.chat'
 import { Route as ProjectsProjectIdReviewRouteImport } from './routes/projects_.$projectId_.review'
 import { Route as ProjectsProjectIdFactsRouteImport } from './routes/projects_.$projectId_.facts'
 import { Route as ProjectsProjectIdEntitiesRouteImport } from './routes/projects_.$projectId_.entities'
@@ -48,6 +49,11 @@ const ProjectsNewRoute = ProjectsNewRouteImport.update({
 const ProjectsProjectIdRoute = ProjectsProjectIdRouteImport.update({
   id: '/projects_/$projectId',
   path: '/projects/$projectId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevChatRoute = DevChatRouteImport.update({
+  id: '/dev/chat',
+  path: '/dev/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsProjectIdReviewRoute = ProjectsProjectIdReviewRouteImport.update({
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/projects': typeof ProjectsRoute
+  '/dev/chat': typeof DevChatRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/projects': typeof ProjectsRoute
+  '/dev/chat': typeof DevChatRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
   '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/projects': typeof ProjectsRoute
+  '/dev/chat': typeof DevChatRoute
   '/projects_/$projectId': typeof ProjectsProjectIdRoute
   '/projects_/new': typeof ProjectsNewRoute
   '/projects_/$projectId_/alerts': typeof ProjectsProjectIdAlertsRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/projects'
+    | '/dev/chat'
     | '/projects/$projectId'
     | '/projects/new'
     | '/projects/$projectId/alerts'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/projects'
+    | '/dev/chat'
     | '/projects/$projectId'
     | '/projects/new'
     | '/projects/$projectId/alerts'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/projects'
+    | '/dev/chat'
     | '/projects_/$projectId'
     | '/projects_/new'
     | '/projects_/$projectId_/alerts'
@@ -214,6 +226,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   ProjectsRoute: typeof ProjectsRoute
+  DevChatRoute: typeof DevChatRoute
   ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
   ProjectsProjectIdAlertsRoute: typeof ProjectsProjectIdAlertsRoute
@@ -258,6 +271,13 @@ declare module '@tanstack/react-router' {
       path: '/projects/$projectId'
       fullPath: '/projects/$projectId'
       preLoaderRoute: typeof ProjectsProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/chat': {
+      id: '/dev/chat'
+      path: '/dev/chat'
+      fullPath: '/dev/chat'
+      preLoaderRoute: typeof DevChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects_/$projectId_/review': {
@@ -373,6 +393,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   ProjectsRoute: ProjectsRoute,
+  DevChatRoute: DevChatRoute,
   ProjectsProjectIdRoute: ProjectsProjectIdRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   ProjectsProjectIdAlertsRoute: ProjectsProjectIdAlertsRoute,

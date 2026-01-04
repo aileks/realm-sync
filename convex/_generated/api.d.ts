@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as chat from "../chat.js";
 import type * as documents from "../documents.js";
 import type * as entities from "../entities.js";
 import type * as facts from "../facts.js";
@@ -31,6 +32,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  chat: typeof chat;
   documents: typeof documents;
   entities: typeof entities;
   facts: typeof facts;
