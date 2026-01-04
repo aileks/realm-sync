@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useNavigate } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
-import { ArrowLeft, Search, BookOpen, Clock } from 'lucide-react';
+import { ArrowLeft, Search, BookOpen, Clock, GitFork } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,10 @@ function CanonLayout() {
             <NavLink to="/projects/$projectId/canon/timeline" params={{ projectId }}>
               <Clock className="size-4" />
               Timeline
+            </NavLink>
+            <NavLink to="/projects/$projectId/canon/connections" params={{ projectId }}>
+              <GitFork className="size-4" />
+              Connections
             </NavLink>
             <NavLink to="/projects/$projectId/canon/search" params={{ projectId }}>
               <Search className="size-4" />

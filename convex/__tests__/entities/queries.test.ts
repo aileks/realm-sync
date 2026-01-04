@@ -674,4 +674,151 @@ describe('entities queries', () => {
       expect(events[0].name).toBe('Confirmed Event');
     });
   });
+
+  describe('getRelationshipGraph', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+    let projectId: Id<'projects'>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+      projectId = await setupProject(t, userId);
+    });
+
+    it('returns empty graph for project with no relationships', async () => {
+      await setupEntity(t, projectId, { name: 'Standalone Character', status: 'confirmed' });
+
+      const graph = await asUser.query(api.entities.getRelationshipGraph, { projectId });
+
+      expect(graph.nodes).toHaveLength(0);
+      expect(graph.edges).toHaveLength(0);
+    });
+
+    it('returns nodes and edges when entities are connected via facts', async () => {
+      const doc = await setupDocument(t, projectId, { title: 'Chapter 1' });
+      const aragorn = await setupEntity(t, projectId, {
+        name: 'Aragorn',
+        status: 'confirmed',
+      });
+      const gandalf = await setupEntity(t, projectId, {
+        name: 'Gandalf',
+        status: 'confirmed',
+      });
+
+      await setupFact(
+        t,
+        { projectId, documentId: doc, entityId: aragorn },
+        { subject: 'Aragorn', predicate: 'allied_with', object: 'Gandalf the Grey' }
+      );
+
+      const graph = await asUser.query(api.entities.getRelationshipGraph, { projectId });
+
+      expect(graph.nodes).toHaveLength(2);
+      expect(graph.edges).toHaveLength(1);
+      expect(graph.edges[0].source).toBe(aragorn);
+      expect(graph.edges[0].target).toBe(gandalf);
+      expect(graph.edges[0].label).toBe('allied_with');
+    });
+
+    it('filters graph by entity when entityFilter provided', async () => {
+      const doc = await setupDocument(t, projectId, { title: 'Chapter 1' });
+      const aragorn = await setupEntity(t, projectId, {
+        name: 'Aragorn',
+        status: 'confirmed',
+      });
+      const gandalf = await setupEntity(t, projectId, {
+        name: 'Gandalf',
+        status: 'confirmed',
+      });
+      const frodo = await setupEntity(t, projectId, {
+        name: 'Frodo Baggins',
+        status: 'confirmed',
+      });
+
+      await setupFact(
+        t,
+        { projectId, documentId: doc, entityId: aragorn },
+        { subject: 'Aragorn', predicate: 'allied_with', object: 'Gandalf the wizard' }
+      );
+      await setupFact(
+        t,
+        { projectId, documentId: doc, entityId: gandalf },
+        { subject: 'Gandalf', predicate: 'mentors', object: 'Frodo Baggins on his journey' }
+      );
+
+      const graph = await asUser.query(api.entities.getRelationshipGraph, {
+        projectId,
+        entityFilter: aragorn,
+      });
+
+      expect(graph.nodes).toHaveLength(2);
+      expect(graph.edges).toHaveLength(1);
+      const nodeIds = graph.nodes.map((n) => n.id);
+      expect(nodeIds).toContain(aragorn);
+      expect(nodeIds).toContain(gandalf);
+      expect(nodeIds).not.toContain(frodo);
+    });
+
+    it('excludes pending entities from graph', async () => {
+      const doc = await setupDocument(t, projectId, { title: 'Chapter 1' });
+      const confirmed = await setupEntity(t, projectId, {
+        name: 'Confirmed Character',
+        status: 'confirmed',
+      });
+      await setupEntity(t, projectId, {
+        name: 'Pending Character',
+        status: 'pending',
+      });
+
+      await setupFact(
+        t,
+        { projectId, documentId: doc, entityId: confirmed },
+        { subject: 'Confirmed Character', predicate: 'knows', object: 'Pending Character well' }
+      );
+
+      const graph = await asUser.query(api.entities.getRelationshipGraph, { projectId });
+
+      expect(graph.nodes).toHaveLength(0);
+      expect(graph.edges).toHaveLength(0);
+    });
+
+    it('returns empty graph for non-owner', async () => {
+      const otherUserId = await setupOtherUser(t);
+      const otherProjectId = await setupProject(t, otherUserId);
+
+      const graph = await asUser.query(api.entities.getRelationshipGraph, {
+        projectId: otherProjectId,
+      });
+
+      expect(graph.nodes).toEqual([]);
+      expect(graph.edges).toEqual([]);
+    });
+
+    it('uses word boundary matching to avoid false positives', async () => {
+      const doc = await setupDocument(t, projectId, { title: 'Chapter 1' });
+      const dan = await setupEntity(t, projectId, {
+        name: 'Dan',
+        status: 'confirmed',
+      });
+      await setupEntity(t, projectId, {
+        name: 'Dancer',
+        status: 'confirmed',
+      });
+
+      await setupFact(
+        t,
+        { projectId, documentId: doc, entityId: dan },
+        { subject: 'Dan', predicate: 'enjoys', object: 'dancing in the moonlight' }
+      );
+
+      const graph = await asUser.query(api.entities.getRelationshipGraph, { projectId });
+
+      expect(graph.nodes).toHaveLength(0);
+      expect(graph.edges).toHaveLength(0);
+    });
+  });
 });

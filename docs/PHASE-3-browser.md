@@ -28,7 +28,7 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 | 3.3 Full-Text Search | ✅ Complete | - | Search index + debounced input |
 | 3.4 Entity Editing & Management | ✅ Complete | #18 | Inline + dedicated page editing |
 | 3.5 Timeline View | ✅ Complete | - | Events by document order |
-| 3.6 Relationship Visualization | 🔲 Pending | - | Backend functions missing |
+| 3.6 Relationship Visualization | ✅ Complete | - | D3 force-directed graph |
 | 3.7 Polish & Integration | 🔲 Pending | - | - |
 
 ### What's Implemented (from PR #16)
@@ -52,7 +52,7 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 - ~~`entities.getWithDetails`~~ ✅ Implemented in PR #18
 - ~~`entities.search`~~ ✅ Full-text search using search index
 - ~~`entities.getRelationships`~~ ✅ Implemented via `getWithDetails.relatedEntities`
-- `entities.getRelationshipGraph` - Nodes and edges for visualization
+- ~~`entities.getRelationshipGraph`~~ ✅ Nodes and edges for D3 graph
 
 **Routes needed:**
 

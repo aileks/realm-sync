@@ -749,3 +749,96 @@ export const getTimeline = query({
     };
   },
 });
+
+export const getRelationshipGraph = query({
+  args: {
+    projectId: v.id('projects'),
+    entityFilter: v.optional(v.id('entities')),
+  },
+  handler: async (ctx, { projectId, entityFilter }) => {
+    const isOwner = await verifyProjectOwnership(ctx, projectId);
+    if (!isOwner) return { nodes: [], edges: [] };
+
+    const allEntities = await ctx.db
+      .query('entities')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .filter((q) => q.eq(q.field('status'), 'confirmed'))
+      .collect();
+
+    const allFacts = await ctx.db
+      .query('facts')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .filter((q) => q.neq(q.field('status'), 'rejected'))
+      .collect();
+
+    type Edge = {
+      source: Id<'entities'>;
+      target: Id<'entities'>;
+      label: string;
+      factId: Id<'facts'>;
+    };
+
+    const edges: Edge[] = [];
+    const connectedEntityIds = new Set<Id<'entities'>>();
+
+    for (const fact of allFacts) {
+      const sourceEntity = allEntities.find((e) => e._id === fact.entityId);
+      if (!sourceEntity) continue;
+
+      const objectLower = fact.object.toLowerCase().trim();
+
+      for (const targetEntity of allEntities) {
+        if (targetEntity._id === fact.entityId) continue;
+
+        const nameLower = targetEntity.name.toLowerCase().trim();
+        const aliasesLower = targetEntity.aliases.map((a) => a.toLowerCase().trim());
+
+        const nameRegex = new RegExp(`\\b${nameLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+        const nameIsSingleWord = !nameLower.includes(' ');
+        const nameMinLength = nameIsSingleWord ? 5 : 3;
+        const matchesName = nameLower.length >= nameMinLength && nameRegex.test(objectLower);
+
+        const matchesAlias = aliasesLower.some((a) => {
+          const aliasIsSingleWord = !a.includes(' ');
+          const aliasMinLength = aliasIsSingleWord ? 5 : 3;
+          if (a.length < aliasMinLength) return false;
+          const aliasRegex = new RegExp(`\\b${a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+          return aliasRegex.test(objectLower);
+        });
+
+        if (matchesName || matchesAlias) {
+          edges.push({
+            source: fact.entityId,
+            target: targetEntity._id,
+            label: fact.predicate,
+            factId: fact._id,
+          });
+          connectedEntityIds.add(fact.entityId);
+          connectedEntityIds.add(targetEntity._id);
+        }
+      }
+    }
+
+    let filteredEdges = edges;
+    let relevantEntityIds = connectedEntityIds;
+
+    if (entityFilter) {
+      filteredEdges = edges.filter((e) => e.source === entityFilter || e.target === entityFilter);
+      relevantEntityIds = new Set<Id<'entities'>>();
+      for (const edge of filteredEdges) {
+        relevantEntityIds.add(edge.source);
+        relevantEntityIds.add(edge.target);
+      }
+    }
+
+    const nodes = allEntities
+      .filter((e) => relevantEntityIds.has(e._id))
+      .map((e) => ({
+        id: e._id,
+        name: e.name,
+        type: e.type,
+      }));
+
+    return { nodes, edges: filteredEdges };
+  },
+});

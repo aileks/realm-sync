@@ -28,6 +28,8 @@ convex/
 ├── facts.ts         # Fact CRUD + confirm/reject
 ├── chat.ts          # Vellum streaming chat (sendMessage, streamChat httpAction)
 ├── http.ts          # HTTP router for auth + chat endpoints
+├── cleanup.ts       # Scheduled cleanup jobs
+├── crons.ts         # Cron job definitions
 ├── projects.ts      # Project CRUD operations
 ├── schema.ts        # Table definitions (defineSchema, defineTable)
 ├── seed.ts          # Demo data seeding (seedDemoData, clearSeedData)
@@ -159,5 +161,5 @@ npx convex deploy        # Deploy to production
 - Schema changes may prompt migration
 - Real-time via Convex query hooks (useQuery)
 - Functions auto-reload during `npx convex dev`
-- All 173 tests passing (projects, documents, entities, facts, seed, llm/cache, llm/chunk, llm/extract, lib/auth, lib/errors, lib/result, utils)
+- All 173 tests passing across 13 test files (projects, documents, entities/mutations, entities/queries, facts, seed, llm/cache, llm/chunk, llm/extract, lib/auth, lib/errors, lib/result, utils)
 - Cascade deletes: manually delete related documents before project
