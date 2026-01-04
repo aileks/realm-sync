@@ -15,11 +15,11 @@ import { RelationshipGraph } from '@/components/RelationshipGraph';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 
-export const Route = createFileRoute('/projects_/$projectId_/canon/graph')({
-  component: CanonGraph,
+export const Route = createFileRoute('/projects_/$projectId_/canon/connections')({
+  component: CanonConnections,
 });
 
-function CanonGraph() {
+function CanonConnections() {
   const navigate = useNavigate();
   const { projectId } = Route.useParams();
   const [entityFilter, setEntityFilter] = useState<string>('all');

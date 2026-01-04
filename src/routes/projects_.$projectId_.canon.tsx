@@ -54,9 +54,9 @@ function CanonLayout() {
               <Clock className="size-4" />
               Timeline
             </NavLink>
-            <NavLink to="/projects/$projectId/canon/graph" params={{ projectId }}>
+            <NavLink to="/projects/$projectId/canon/connections" params={{ projectId }}>
               <GitFork className="size-4" />
-              Graph
+              Connections
             </NavLink>
             <NavLink to="/projects/$projectId/canon/search" params={{ projectId }}>
               <Search className="size-4" />
