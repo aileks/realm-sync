@@ -216,11 +216,7 @@ function EntityCardWithStats({ entity, factCount, viewMode, onClick }: EntityCar
   };
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn('w-full cursor-pointer text-left', viewMode === 'list' && 'max-w-none')}
-    >
+    <button type="button" onClick={onClick} className="block w-full cursor-pointer text-left">
       <EntityCard entity={entityForCard} className={viewMode === 'grid' ? 'h-full' : undefined} />
     </button>
   );
