@@ -65,51 +65,53 @@ export function EntityCard({
 
   return (
     <Card className="group hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1">
-      <CardHeader className="p-4">
-        <div className="flex items-start gap-4">
-          <div
-            className={cn(
-              'flex size-10 shrink-0 items-center justify-center rounded-lg shadow-sm ring-1',
-              config.colorClass
-            )}
-          >
-            <Icon className="size-5" />
-          </div>
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-center gap-2">
-              <CardTitle className="truncate font-serif text-base leading-none font-medium">
-                {entity.name}
-              </CardTitle>
-              <Badge
-                variant="outline"
-                className={cn(
-                  'h-5 px-1.5 py-0 text-[10px] font-normal capitalize',
-                  config.colorClass
-                )}
-              >
-                {entity.type}
-              </Badge>
+      <CardHeader className="flex flex-col gap-4 p-4">
+        <div className="flex w-full items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div
+              className={cn(
+                'flex size-10 shrink-0 items-center justify-center rounded-lg shadow-sm ring-1',
+                config.colorClass
+              )}
+            >
+              <Icon className="size-5" />
             </div>
-            {entity.description && (
-              <CardDescription className="line-clamp-2 text-xs leading-relaxed">
-                {entity.description}
-              </CardDescription>
-            )}
-            {entity.aliases.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {entity.aliases.map((alias) => (
-                  <Badge
-                    key={alias}
-                    variant="secondary"
-                    className="text-muted-foreground h-5 px-1.5 text-[10px] font-normal"
-                  >
-                    {alias}
-                  </Badge>
-                ))}
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <CardTitle className="truncate font-serif text-base leading-none font-medium">
+                  {entity.name}
+                </CardTitle>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'h-5 px-1.5 py-0 text-xs font-normal capitalize',
+                    config.colorClass
+                  )}
+                >
+                  {entity.type}
+                </Badge>
               </div>
-            )}
+              {entity.description && (
+                <CardDescription className="line-clamp-2 text-xs leading-relaxed">
+                  {entity.description}
+                </CardDescription>
+              )}
+              {entity.aliases.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {entity.aliases.map((alias) => (
+                    <Badge
+                      key={alias}
+                      variant="secondary"
+                      className="text-muted-foreground h-5 px-1.5 text-xs font-normal"
+                    >
+                      {alias}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <CardAction className="flex shrink-0 gap-1 opacity-80 transition-opacity group-hover:opacity-100">
+          <CardAction className="flex shrink-0 gap-1">
             <Button
               size="sm"
               variant="ghost"
@@ -140,10 +142,9 @@ export function EntityCard({
         </div>
 
         {similarEntities && similarEntities.length > 0 && onMerge && (
-          <div className="mt-3 rounded-md border border-amber-500/20 bg-amber-500/5 p-3">
+          <div className="w-full rounded-r-md border-y border-r border-l-4 border-amber-500/20 border-l-amber-500 bg-amber-500/10 p-3 dark:bg-amber-500/5">
             <div className="mb-2 flex items-center gap-2">
-              <div className="size-1.5 rounded-full bg-amber-500" />
-              <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+              <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
                 Potential duplicates
               </p>
             </div>
@@ -153,7 +154,7 @@ export function EntityCard({
                   key={similar._id}
                   size="sm"
                   variant="outline"
-                  className="bg-background/50 h-6 border-amber-500/20 text-[10px] hover:bg-amber-500/10 hover:text-amber-600"
+                  className="bg-background/50 h-8 border-amber-500/30 text-xs text-amber-800 hover:border-amber-500/50 hover:bg-amber-500/20 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-200"
                   onClick={() => onMerge(entity._id, similar._id)}
                 >
                   Merge with "{similar.name}"

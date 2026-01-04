@@ -2,12 +2,13 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useState, useMemo } from 'react';
 import { ArrowLeft, FileText, Users, List, CheckCircle2 } from 'lucide-react';
+import { marked } from 'marked';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { EntityCard } from '@/components/EntityCard';
+import { ReviewEntityCard } from '@/components/ReviewEntityCard';
 import { FactCard } from '@/components/FactCard';
 import { LoadingState } from '@/components/LoadingState';
 
@@ -88,9 +89,14 @@ function ReviewDocumentPage() {
     setHighlightedRange(position ?? null);
   }
 
+  function renderMarkdown(content: string) {
+    const html = marked.parse(content, { async: false });
+    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  }
+
   function renderHighlightedContent(content: string) {
     if (!highlightedRange) {
-      return <span className="whitespace-pre-wrap">{content}</span>;
+      return renderMarkdown(content);
     }
 
     const { start, end } = highlightedRange;
@@ -100,11 +106,11 @@ function ReviewDocumentPage() {
 
     return (
       <>
-        <span className="whitespace-pre-wrap">{before}</span>
-        <mark className="text-foreground rounded-sm bg-amber-400/40 px-0.5 shadow-sm ring-1 ring-amber-500/50 dark:bg-amber-500/40">
+        {renderMarkdown(before)}
+        <mark className="text-foreground inline rounded-sm bg-amber-400/40 px-0.5 shadow-sm ring-1 ring-amber-500/50 dark:bg-amber-500/40">
           {highlighted}
         </mark>
-        <span className="whitespace-pre-wrap">{after}</span>
+        {renderMarkdown(after)}
       </>
     );
   }
@@ -171,8 +177,9 @@ function ReviewDocumentPage() {
               </h2>
               <div className="space-y-3">
                 {documentEntities.map((entity) => (
-                  <EntityCard
+                  <ReviewEntityCard
                     key={entity._id}
+                    projectId={projectId as Id<'projects'>}
                     entity={entity}
                     onConfirm={handleConfirmEntity}
                     onReject={handleRejectEntity}
