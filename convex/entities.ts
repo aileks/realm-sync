@@ -619,3 +619,128 @@ export const listEvents = query({
     });
   },
 });
+
+export const getTimeline = query({
+  args: {
+    projectId: v.id('projects'),
+    entityFilter: v.optional(v.id('entities')),
+    includeAppearances: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { projectId, entityFilter, includeAppearances = false }) => {
+    const isOwner = await verifyProjectOwnership(ctx, projectId);
+    if (!isOwner) return { events: [], appearances: [], entities: [] };
+
+    const allEntities = await ctx.db
+      .query('entities')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .filter((q) => q.eq(q.field('status'), 'confirmed'))
+      .collect();
+
+    const events = allEntities.filter((e) => e.type === 'event');
+
+    const eventsWithDetails = await Promise.all(
+      events.map(async (event) => {
+        const document = event.firstMentionedIn ? await ctx.db.get(event.firstMentionedIn) : null;
+
+        const facts = await ctx.db
+          .query('facts')
+          .withIndex('by_entity', (q) => q.eq('entityId', event._id))
+          .filter((q) => q.neq(q.field('status'), 'rejected'))
+          .collect();
+
+        const involvedEntityIds = new Set<Id<'entities'>>();
+        for (const fact of facts) {
+          const objectLower = fact.object.toLowerCase().trim();
+          for (const entity of allEntities) {
+            if (entity._id === event._id || entity.type === 'event') continue;
+            const nameLower = entity.name.toLowerCase().trim();
+            if (objectLower.includes(nameLower) || nameLower.includes(objectLower)) {
+              involvedEntityIds.add(entity._id);
+            }
+          }
+        }
+
+        const involvedEntities = allEntities
+          .filter((e) => involvedEntityIds.has(e._id))
+          .map((e) => ({ _id: e._id, name: e.name, type: e.type }));
+
+        return {
+          ...event,
+          document:
+            document ?
+              { _id: document._id, title: document.title, orderIndex: document.orderIndex }
+            : null,
+          involvedEntities,
+        };
+      })
+    );
+
+    let filteredEvents = eventsWithDetails;
+    if (entityFilter) {
+      filteredEvents = eventsWithDetails.filter(
+        (e) => e._id === entityFilter || e.involvedEntities.some((ie) => ie._id === entityFilter)
+      );
+    }
+
+    const sortedEvents = filteredEvents.toSorted((a, b) => {
+      const orderA = a.document?.orderIndex ?? Infinity;
+      const orderB = b.document?.orderIndex ?? Infinity;
+      return orderA - orderB;
+    });
+
+    let appearances: Array<{
+      _id: Id<'entities'>;
+      name: string;
+      type: string;
+      document: { _id: Id<'documents'>; title: string; orderIndex: number } | null;
+    }> = [];
+
+    if (includeAppearances) {
+      const nonEvents = allEntities.filter((e) => e.type !== 'event' && e.firstMentionedIn);
+
+      if (entityFilter) {
+        const filtered = nonEvents.filter((e) => e._id === entityFilter);
+        appearances = await Promise.all(
+          filtered.map(async (entity) => {
+            const doc = entity.firstMentionedIn ? await ctx.db.get(entity.firstMentionedIn) : null;
+            return {
+              _id: entity._id,
+              name: entity.name,
+              type: entity.type,
+              document: doc ? { _id: doc._id, title: doc.title, orderIndex: doc.orderIndex } : null,
+            };
+          })
+        );
+      } else {
+        appearances = await Promise.all(
+          nonEvents.map(async (entity) => {
+            const doc = entity.firstMentionedIn ? await ctx.db.get(entity.firstMentionedIn) : null;
+            return {
+              _id: entity._id,
+              name: entity.name,
+              type: entity.type,
+              document: doc ? { _id: doc._id, title: doc.title, orderIndex: doc.orderIndex } : null,
+            };
+          })
+        );
+      }
+
+      appearances = appearances.toSorted((a, b) => {
+        const orderA = a.document?.orderIndex ?? Infinity;
+        const orderB = b.document?.orderIndex ?? Infinity;
+        return orderA - orderB;
+      });
+    }
+
+    const filterableEntities = allEntities
+      .filter((e) => e.type !== 'event')
+      .map((e) => ({ _id: e._id, name: e.name, type: e.type }))
+      .toSorted((a, b) => a.name.localeCompare(b.name));
+
+    return {
+      events: sortedEvents,
+      appearances,
+      entities: filterableEntities,
+    };
+  },
+});
