@@ -20,7 +20,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 ├── src/
 │   ├── routes/       # File-based routes (auto-generates routeTree.gen.ts)
 │   ├── components/   # App + UI components
-│   │   └── ui/       # 15 Shadcn/Base UI primitives (CVA + data-slot)
+│   │   └── ui/       # 17 Shadcn/Base UI primitives (CVA + data-slot)
 │   ├── integrations/ # Convex provider bridge
 │   ├── lib/          # Utilities (cn, toId)
 │   ├── test/         # Test setup
@@ -82,7 +82,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | Edit `routeTree.gen.ts`          | Auto-generated; overwritten on route change |
 | Edit `convex/_generated/`        | Auto-generated                              |
 | `createServerFn` without Sentry  | Must wrap with `Sentry.startSpan`           |
-| Custom UI when Shadcn provides   | Use 15 existing primitives                  |
+| Custom UI when Shadcn provides   | Use 17 existing primitives                  |
 | Direct class strings             | Use `cn()` for Tailwind conflict resolution |
 | `as any`, `@ts-ignore`           | Error-level lint rule (Oxlint)              |
 | `@ts-expect-error`               | Prefer proper types over silencing errors   |
@@ -100,7 +100,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 pnpm dev              # Dev server (port 3000, Sentry injected)
 pnpm run build        # Production build
 pnpm run start        # Production server
-pnpm test             # Vitest (94 tests)
+pnpm test             # Vitest (151 tests)
 pnpm run lint         # Oxlint with --fix, --type-aware
 pnpm run typecheck    # tsc --noEmit
 pnpm run format       # Prettier (with Tailwind plugin)
@@ -122,8 +122,8 @@ pnpm docs:list        # List docs with front-matter check
 | ------------- | ------- | --------------------------------------------- |
 | Core routing  | Working | TanStack Start file-based + SSR               |
 | Backend       | Working | Convex schema, auth, CRUD                     |
-| UI components | Ready   | 15 Shadcn/Base UI primitives                  |
-| Testing       | Working | Vitest + convex-test, 94 passing              |
+| UI components | Ready   | 17 Shadcn/Base UI primitives                  |
+| Testing       | Working | Vitest + convex-test, 151 passing             |
 | CI/CD         | Working | 4 parallel jobs: lint, typecheck, test, build |
 | Auth          | Working | Google OAuth + Password                       |
 | Themes        | Ready   | 3 OKLCH themes in styles.css                  |
@@ -139,7 +139,7 @@ pnpm docs:list        # List docs with front-matter check
 | Auth       | @convex-dev/auth          | 0.0.90  |
 | SSR        | Nitro                     | latest  |
 | Monitoring | Sentry                    | 10.22.0 |
-| Testing    | Vitest + convex-test      | 3.0.5   |
+| Testing    | Vitest + convex-test      | 3.2.4   |
 | Linting    | Oxlint                    | 1.36.0  |
 
 ## NOTES

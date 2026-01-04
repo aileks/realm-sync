@@ -10,14 +10,14 @@
 | **LLM Provider**   | OpenRouter       | latest   | `tngtech/deepseek-r1t2-chimera:free`   |
 | **Error Handling** | NeverThrow       | latest   | Type-safe Result pattern               |
 | **Styling**        | Tailwind CSS     | ^4.0.6   | CSS-first, OKLCH colors                |
-| **UI Components**  | Shadcn / Base UI | latest   | 13 primitives                          |
+| **UI Components**  | Shadcn / Base UI | latest   | 17 primitives                          |
 | **Monitoring**     | Sentry           | ^10.22.0 | Error tracking + instrumentation       |
 | **Fonts**          | Fontsource       | latest   | DM Sans, Aleo Variable, iA Writer Mono |
 | **State**          | TanStack Query   | ^1.0.0   | React Query for data fetching          |
 | **Form State**     | TanStack Form    | ^1.0.0   | Form management                        |
 | **Router**         | TanStack Router  | ^1.132.0 | File-based routing                     |
 | **Validation**     | Zod              | ^4.1.11  | Runtime validation                     |
-| **Testing**        | Vitest           | ^3.0.5   | Unit + integration tests               |
+| **Testing**        | Vitest           | ^3.2.4   | Unit + integration tests               |
 
 ---
 

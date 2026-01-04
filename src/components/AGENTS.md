@@ -19,7 +19,7 @@ components/
 ├── FactCard.tsx         # Fact display card
 ├── LoadingState.tsx      # Loading spinner/skeleton
 ├── ProjectCard.tsx       # Project display card
-└── ui/                  # UI primitives (15 Shadcn/Base components)
+└── ui/                  # UI primitives (17 Shadcn/Base components)
     └── AGENTS.md        # See ui/AGENTS.md for UI component patterns
 ```
 
@@ -36,7 +36,7 @@ components/
 ## CONVENTIONS
 
 - **App components**: Named exports (not default)
-- **UI primitives**: Use from `@/components/ui/*` (15 available)
+- **UI primitives**: Use from `@/components/ui/*` (17 available)
 - **Styling**: Tailwind classes with `cn()` utility for merging
 - **Data fetching**: Convex `useQuery`/`useMutation` hooks
 - **Loading**: `LoadingState` component or conditional rendering
@@ -107,7 +107,7 @@ Use these colors in `EntityCard` and entity-related components.
 | Forbidden                | Why                                  |
 | ------------------------ | ------------------------------------ |
 | Default exports          | Named exports only                   |
-| Create new UI primitives | Use 15 existing in `ui/`             |
+| Create new UI primitives | Use 17 existing in `ui/`             |
 | Skip loading states      | Always show LoadingState or skeleton |
 | Skip empty states        | Always show EmptyState when no data  |
 | Direct class strings     | Use `cn()` for Tailwind merging      |
