@@ -3,7 +3,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { useState } from 'react';
 import { FileText, Users, Lightbulb, AlertTriangle, Plus, Settings, ArrowLeft } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
-import { toId } from '@/lib/utils';
+import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,8 +28,8 @@ export const Route = createFileRoute('/projects_/$projectId')({
 function ProjectDashboard() {
   const navigate = useNavigate();
   const { projectId } = Route.useParams();
-  const project = useQuery(api.projects.get, { id: toId<'projects'>(projectId) });
-  const documents = useQuery(api.documents.list, { projectId: toId<'projects'>(projectId) });
+  const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
+  const documents = useQuery(api.documents.list, { projectId: projectId as Id<'projects'> });
   const deleteProject = useMutation(api.projects.remove);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -59,7 +59,7 @@ function ProjectDashboard() {
   };
 
   async function handleDelete() {
-    await deleteProject({ id: toId<'projects'>(projectId) });
+    await deleteProject({ id: projectId as Id<'projects'> });
     void navigate({ to: '/projects' });
   }
 
@@ -112,13 +112,21 @@ function ProjectDashboard() {
           label="Entities"
           value={stats.entityCount}
           variant="entity-character"
+          onClick={() => navigate({ to: '/projects/$projectId/entities', params: { projectId } })}
         />
-        <StatCard icon={Lightbulb} label="Facts" value={stats.factCount} variant="entity-concept" />
+        <StatCard
+          icon={Lightbulb}
+          label="Facts"
+          value={stats.factCount}
+          variant="entity-concept"
+          onClick={() => navigate({ to: '/projects/$projectId/facts', params: { projectId } })}
+        />
         <StatCard
           icon={AlertTriangle}
           label="Alerts"
           value={stats.alertCount}
           variant={stats.alertCount > 0 ? 'destructive' : undefined}
+          onClick={() => navigate({ to: '/projects/$projectId/alerts', params: { projectId } })}
         />
       </div>
 
@@ -150,6 +158,12 @@ function ProjectDashboard() {
               key={doc._id}
               size="sm"
               className="hover:bg-muted/50 cursor-pointer transition-colors"
+              onClick={() =>
+                navigate({
+                  to: '/projects/$projectId/documents/$documentId',
+                  params: { projectId, documentId: doc._id },
+                })
+              }
             >
               <CardHeader className="py-3">
                 <CardTitle className="text-base font-medium">{doc.title}</CardTitle>

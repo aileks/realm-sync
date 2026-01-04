@@ -40,8 +40,8 @@
 
   --radius: 0.625rem;
 
-  --sidebar: var(--card);
-  --sidebar-foreground: var(--card-foreground);
+  --sidebar: var(--muted);
+  --sidebar-foreground: var(--muted-foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
   --sidebar-accent: var(--accent);

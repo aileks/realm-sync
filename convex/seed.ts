@@ -1,7 +1,7 @@
-import { mutation } from './_generated/server';
+import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 
-export const seedProject = mutation({
+export const seedProject = internalMutation({
   args: {
     userId: v.id('users'),
   },
@@ -15,7 +15,7 @@ export const seedProject = mutation({
         'A fantasy epic set in a frozen kingdom where winter has lasted for generations.',
       createdAt: now,
       updatedAt: now,
-      stats: { documentCount: 2, entityCount: 5, factCount: 8, alertCount: 0 },
+      stats: { documentCount: 2, entityCount: 7, factCount: 8, alertCount: 0 },
     });
 
     const doc1Id = await ctx.db.insert('documents', {
@@ -273,7 +273,7 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
   },
 });
 
-export const clearSeedData = mutation({
+export const clearSeedData = internalMutation({
   args: {
     projectId: v.id('projects'),
   },

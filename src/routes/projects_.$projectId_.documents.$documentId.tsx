@@ -1,14 +1,17 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Save, Loader2, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, CheckCircle, Clock, Sparkles } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/LoadingState';
-import { cn, toId } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+
+import { type FunctionReference } from 'convex/server';
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -21,12 +24,30 @@ export const Route = createFileRoute('/projects_/$projectId_/documents/$document
 function DocumentEditorPage() {
   const navigate = useNavigate();
   const { projectId, documentId } = Route.useParams();
-  const document = useQuery(api.documents.get, { id: toId<'documents'>(documentId) });
+  const document = useQuery(api.documents.get, { id: documentId as Id<'documents'> });
   const updateDocument = useMutation(api.documents.update);
+
+  // Safely check for LLM API which might not be generated yet
+  const llmApi = (
+    api as unknown as {
+      llm?: {
+        chunkAndExtract: FunctionReference<
+          'mutation',
+          'public',
+          { documentId: Id<'documents'> },
+          null
+        >;
+      };
+    }
+  ).llm;
+  const chunkAndExtract = useMutation(
+    llmApi?.chunkAndExtract ? llmApi.chunkAndExtract : api.documents.updateProcessingStatus
+  );
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
@@ -84,6 +105,25 @@ function DocumentEditorPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [save]);
 
+  async function handleExtract() {
+    if (!document) return;
+    setIsExtracting(true);
+    try {
+      if (llmApi?.chunkAndExtract) {
+        const mutationFn = chunkAndExtract as unknown as (args: {
+          documentId: Id<'documents'>;
+        }) => Promise<void>;
+        await mutationFn({ documentId: document._id });
+      } else {
+        console.warn('llm.chunkAndExtract not found on api object');
+      }
+    } catch (error) {
+      console.error('Extraction failed:', error);
+    } finally {
+      setIsExtracting(false);
+    }
+  }
+
   if (document === undefined) {
     return <LoadingState message="Loading document..." />;
   }
@@ -127,6 +167,17 @@ function DocumentEditorPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={handleExtract}
+            disabled={isExtracting || hasChanges || document.processingStatus === 'processing'}
+            title={hasChanges ? 'Save changes before extracting' : 'Extract entities and facts'}
+          >
+            {isExtracting ?
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            : <Sparkles className="mr-2 size-4 text-purple-500" />}
+            Extract
+          </Button>
           {isSaving ?
             <span className="text-muted-foreground flex items-center gap-1 text-sm">
               <Loader2 className="size-4 animate-spin" />

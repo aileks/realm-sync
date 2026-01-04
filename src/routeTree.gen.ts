@@ -15,7 +15,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsNewRouteImport } from './routes/projects_.new'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects_.$projectId'
 import { Route as ProjectsProjectIdReviewRouteImport } from './routes/projects_.$projectId_.review'
+import { Route as ProjectsProjectIdFactsRouteImport } from './routes/projects_.$projectId_.facts'
+import { Route as ProjectsProjectIdEntitiesRouteImport } from './routes/projects_.$projectId_.entities'
 import { Route as ProjectsProjectIdDocumentsRouteImport } from './routes/projects_.$projectId_.documents'
+import { Route as ProjectsProjectIdAlertsRouteImport } from './routes/projects_.$projectId_.alerts'
+import { Route as ProjectsProjectIdReviewIndexRouteImport } from './routes/projects_.$projectId_.review.index'
+import { Route as ProjectsProjectIdDocumentsIndexRouteImport } from './routes/projects_.$projectId_.documents.index'
 import { Route as ProjectsProjectIdReviewDocumentIdRouteImport } from './routes/projects_.$projectId_.review.$documentId'
 import { Route as ProjectsProjectIdDocumentsNewRouteImport } from './routes/projects_.$projectId_.documents.new'
 import { Route as ProjectsProjectIdDocumentsDocumentIdRouteImport } from './routes/projects_.$projectId_.documents.$documentId'
@@ -50,11 +55,39 @@ const ProjectsProjectIdReviewRoute = ProjectsProjectIdReviewRouteImport.update({
   path: '/projects/$projectId/review',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsProjectIdFactsRoute = ProjectsProjectIdFactsRouteImport.update({
+  id: '/projects_/$projectId_/facts',
+  path: '/projects/$projectId/facts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsProjectIdEntitiesRoute =
+  ProjectsProjectIdEntitiesRouteImport.update({
+    id: '/projects_/$projectId_/entities',
+    path: '/projects/$projectId/entities',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ProjectsProjectIdDocumentsRoute =
   ProjectsProjectIdDocumentsRouteImport.update({
     id: '/projects_/$projectId_/documents',
     path: '/projects/$projectId/documents',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const ProjectsProjectIdAlertsRoute = ProjectsProjectIdAlertsRouteImport.update({
+  id: '/projects_/$projectId_/alerts',
+  path: '/projects/$projectId/alerts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsProjectIdReviewIndexRoute =
+  ProjectsProjectIdReviewIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ProjectsProjectIdReviewRoute,
+  } as any)
+const ProjectsProjectIdDocumentsIndexRoute =
+  ProjectsProjectIdDocumentsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ProjectsProjectIdDocumentsRoute,
   } as any)
 const ProjectsProjectIdReviewDocumentIdRoute =
   ProjectsProjectIdReviewDocumentIdRouteImport.update({
@@ -81,11 +114,16 @@ export interface FileRoutesByFullPath {
   '/projects': typeof ProjectsRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRoute
   '/projects/$projectId/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
+  '/projects/$projectId/entities': typeof ProjectsProjectIdEntitiesRoute
+  '/projects/$projectId/facts': typeof ProjectsProjectIdFactsRoute
   '/projects/$projectId/review': typeof ProjectsProjectIdReviewRouteWithChildren
   '/projects/$projectId/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects/$projectId/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
   '/projects/$projectId/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
+  '/projects/$projectId/documents/': typeof ProjectsProjectIdDocumentsIndexRoute
+  '/projects/$projectId/review/': typeof ProjectsProjectIdReviewIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -93,11 +131,14 @@ export interface FileRoutesByTo {
   '/projects': typeof ProjectsRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
-  '/projects/$projectId/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
-  '/projects/$projectId/review': typeof ProjectsProjectIdReviewRouteWithChildren
+  '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRoute
+  '/projects/$projectId/entities': typeof ProjectsProjectIdEntitiesRoute
+  '/projects/$projectId/facts': typeof ProjectsProjectIdFactsRoute
   '/projects/$projectId/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects/$projectId/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
   '/projects/$projectId/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
+  '/projects/$projectId/documents': typeof ProjectsProjectIdDocumentsIndexRoute
+  '/projects/$projectId/review': typeof ProjectsProjectIdReviewIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -106,11 +147,16 @@ export interface FileRoutesById {
   '/projects': typeof ProjectsRoute
   '/projects_/$projectId': typeof ProjectsProjectIdRoute
   '/projects_/new': typeof ProjectsNewRoute
+  '/projects_/$projectId_/alerts': typeof ProjectsProjectIdAlertsRoute
   '/projects_/$projectId_/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
+  '/projects_/$projectId_/entities': typeof ProjectsProjectIdEntitiesRoute
+  '/projects_/$projectId_/facts': typeof ProjectsProjectIdFactsRoute
   '/projects_/$projectId_/review': typeof ProjectsProjectIdReviewRouteWithChildren
   '/projects_/$projectId_/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects_/$projectId_/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
   '/projects_/$projectId_/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
+  '/projects_/$projectId_/documents/': typeof ProjectsProjectIdDocumentsIndexRoute
+  '/projects_/$projectId_/review/': typeof ProjectsProjectIdReviewIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,11 +166,16 @@ export interface FileRouteTypes {
     | '/projects'
     | '/projects/$projectId'
     | '/projects/new'
+    | '/projects/$projectId/alerts'
     | '/projects/$projectId/documents'
+    | '/projects/$projectId/entities'
+    | '/projects/$projectId/facts'
     | '/projects/$projectId/review'
     | '/projects/$projectId/documents/$documentId'
     | '/projects/$projectId/documents/new'
     | '/projects/$projectId/review/$documentId'
+    | '/projects/$projectId/documents/'
+    | '/projects/$projectId/review/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -132,11 +183,14 @@ export interface FileRouteTypes {
     | '/projects'
     | '/projects/$projectId'
     | '/projects/new'
-    | '/projects/$projectId/documents'
-    | '/projects/$projectId/review'
+    | '/projects/$projectId/alerts'
+    | '/projects/$projectId/entities'
+    | '/projects/$projectId/facts'
     | '/projects/$projectId/documents/$documentId'
     | '/projects/$projectId/documents/new'
     | '/projects/$projectId/review/$documentId'
+    | '/projects/$projectId/documents'
+    | '/projects/$projectId/review'
   id:
     | '__root__'
     | '/'
@@ -144,11 +198,16 @@ export interface FileRouteTypes {
     | '/projects'
     | '/projects_/$projectId'
     | '/projects_/new'
+    | '/projects_/$projectId_/alerts'
     | '/projects_/$projectId_/documents'
+    | '/projects_/$projectId_/entities'
+    | '/projects_/$projectId_/facts'
     | '/projects_/$projectId_/review'
     | '/projects_/$projectId_/documents/$documentId'
     | '/projects_/$projectId_/documents/new'
     | '/projects_/$projectId_/review/$documentId'
+    | '/projects_/$projectId_/documents/'
+    | '/projects_/$projectId_/review/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -157,7 +216,10 @@ export interface RootRouteChildren {
   ProjectsRoute: typeof ProjectsRoute
   ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
+  ProjectsProjectIdAlertsRoute: typeof ProjectsProjectIdAlertsRoute
   ProjectsProjectIdDocumentsRoute: typeof ProjectsProjectIdDocumentsRouteWithChildren
+  ProjectsProjectIdEntitiesRoute: typeof ProjectsProjectIdEntitiesRoute
+  ProjectsProjectIdFactsRoute: typeof ProjectsProjectIdFactsRoute
   ProjectsProjectIdReviewRoute: typeof ProjectsProjectIdReviewRouteWithChildren
 }
 
@@ -205,12 +267,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects_/$projectId_/facts': {
+      id: '/projects_/$projectId_/facts'
+      path: '/projects/$projectId/facts'
+      fullPath: '/projects/$projectId/facts'
+      preLoaderRoute: typeof ProjectsProjectIdFactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects_/$projectId_/entities': {
+      id: '/projects_/$projectId_/entities'
+      path: '/projects/$projectId/entities'
+      fullPath: '/projects/$projectId/entities'
+      preLoaderRoute: typeof ProjectsProjectIdEntitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects_/$projectId_/documents': {
       id: '/projects_/$projectId_/documents'
       path: '/projects/$projectId/documents'
       fullPath: '/projects/$projectId/documents'
       preLoaderRoute: typeof ProjectsProjectIdDocumentsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/projects_/$projectId_/alerts': {
+      id: '/projects_/$projectId_/alerts'
+      path: '/projects/$projectId/alerts'
+      fullPath: '/projects/$projectId/alerts'
+      preLoaderRoute: typeof ProjectsProjectIdAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects_/$projectId_/review/': {
+      id: '/projects_/$projectId_/review/'
+      path: '/'
+      fullPath: '/projects/$projectId/review/'
+      preLoaderRoute: typeof ProjectsProjectIdReviewIndexRouteImport
+      parentRoute: typeof ProjectsProjectIdReviewRoute
+    }
+    '/projects_/$projectId_/documents/': {
+      id: '/projects_/$projectId_/documents/'
+      path: '/'
+      fullPath: '/projects/$projectId/documents/'
+      preLoaderRoute: typeof ProjectsProjectIdDocumentsIndexRouteImport
+      parentRoute: typeof ProjectsProjectIdDocumentsRoute
     }
     '/projects_/$projectId_/review/$documentId': {
       id: '/projects_/$projectId_/review/$documentId'
@@ -239,6 +336,7 @@ declare module '@tanstack/react-router' {
 interface ProjectsProjectIdDocumentsRouteChildren {
   ProjectsProjectIdDocumentsDocumentIdRoute: typeof ProjectsProjectIdDocumentsDocumentIdRoute
   ProjectsProjectIdDocumentsNewRoute: typeof ProjectsProjectIdDocumentsNewRoute
+  ProjectsProjectIdDocumentsIndexRoute: typeof ProjectsProjectIdDocumentsIndexRoute
 }
 
 const ProjectsProjectIdDocumentsRouteChildren: ProjectsProjectIdDocumentsRouteChildren =
@@ -246,6 +344,7 @@ const ProjectsProjectIdDocumentsRouteChildren: ProjectsProjectIdDocumentsRouteCh
     ProjectsProjectIdDocumentsDocumentIdRoute:
       ProjectsProjectIdDocumentsDocumentIdRoute,
     ProjectsProjectIdDocumentsNewRoute: ProjectsProjectIdDocumentsNewRoute,
+    ProjectsProjectIdDocumentsIndexRoute: ProjectsProjectIdDocumentsIndexRoute,
   }
 
 const ProjectsProjectIdDocumentsRouteWithChildren =
@@ -255,12 +354,14 @@ const ProjectsProjectIdDocumentsRouteWithChildren =
 
 interface ProjectsProjectIdReviewRouteChildren {
   ProjectsProjectIdReviewDocumentIdRoute: typeof ProjectsProjectIdReviewDocumentIdRoute
+  ProjectsProjectIdReviewIndexRoute: typeof ProjectsProjectIdReviewIndexRoute
 }
 
 const ProjectsProjectIdReviewRouteChildren: ProjectsProjectIdReviewRouteChildren =
   {
     ProjectsProjectIdReviewDocumentIdRoute:
       ProjectsProjectIdReviewDocumentIdRoute,
+    ProjectsProjectIdReviewIndexRoute: ProjectsProjectIdReviewIndexRoute,
   }
 
 const ProjectsProjectIdReviewRouteWithChildren =
@@ -274,7 +375,10 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectsRoute: ProjectsRoute,
   ProjectsProjectIdRoute: ProjectsProjectIdRoute,
   ProjectsNewRoute: ProjectsNewRoute,
+  ProjectsProjectIdAlertsRoute: ProjectsProjectIdAlertsRoute,
   ProjectsProjectIdDocumentsRoute: ProjectsProjectIdDocumentsRouteWithChildren,
+  ProjectsProjectIdEntitiesRoute: ProjectsProjectIdEntitiesRoute,
+  ProjectsProjectIdFactsRoute: ProjectsProjectIdFactsRoute,
   ProjectsProjectIdReviewRoute: ProjectsProjectIdReviewRouteWithChildren,
 }
 export const routeTree = rootRouteImport

@@ -43,65 +43,74 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   };
 
   return (
-    <Card className="group hover:ring-primary/20 transition-all duration-200 hover:ring-2">
-      <CardHeader>
-        <Link
-          to="/projects/$projectId"
-          params={{ projectId: project._id }}
-          className="hover:text-primary transition-colors"
-        >
-          <CardTitle className="font-serif text-lg">{project.name}</CardTitle>
-        </Link>
-        {project.description && (
-          <CardDescription className="line-clamp-2">{project.description}</CardDescription>
-        )}
-        <CardAction>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="hover:bg-muted rounded-lg p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-              <MoreVertical className="size-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit?.(project)}>
-                <Pencil className="mr-2 size-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onDelete?.(project)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash2 className="mr-2 size-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2">
-          <StatBadge icon={FileText} count={stats.documentCount} label="docs" />
-          <StatBadge
-            icon={Users}
-            count={stats.entityCount}
-            label="entities"
-            variant="entity-character"
-          />
-          <StatBadge
-            icon={Lightbulb}
-            count={stats.factCount}
-            label="facts"
-            variant="entity-concept"
-          />
-          {stats.alertCount > 0 && (
-            <StatBadge
-              icon={AlertTriangle}
-              count={stats.alertCount}
-              label="alerts"
-              variant="destructive"
-            />
+    <Link to="/projects/$projectId" params={{ projectId: project._id }} className="block">
+      <Card className="group hover:ring-primary/20 transition-all duration-200 hover:ring-2">
+        <CardHeader>
+          <CardTitle className="group-hover:text-primary font-serif text-lg transition-colors">
+            {project.name}
+          </CardTitle>
+          {project.description && (
+            <CardDescription className="line-clamp-2">{project.description}</CardDescription>
           )}
-        </div>
-      </CardContent>
-    </Card>
+          <CardAction>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className="hover:bg-muted rounded-lg p-1.5 opacity-0 transition-opacity group-hover:opacity-100"
+                onClick={(e) => e.preventDefault()}
+              >
+                <MoreVertical className="size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onEdit?.(project);
+                  }}
+                >
+                  <Pencil className="mr-2 size-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onDelete?.(project);
+                  }}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 size-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            <StatBadge icon={FileText} count={stats.documentCount} label="docs" />
+            <StatBadge
+              icon={Users}
+              count={stats.entityCount}
+              label="entities"
+              variant="entity-character"
+            />
+            <StatBadge
+              icon={Lightbulb}
+              count={stats.factCount}
+              label="facts"
+              variant="entity-concept"
+            />
+            {stats.alertCount > 0 && (
+              <StatBadge
+                icon={AlertTriangle}
+                count={stats.alertCount}
+                label="alerts"
+                variant="destructive"
+              />
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
