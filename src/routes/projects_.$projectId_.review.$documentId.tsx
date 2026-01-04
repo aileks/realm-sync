@@ -7,7 +7,7 @@ import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { EntityCard } from '@/components/EntityCard';
+import { ReviewEntityCard } from '@/components/ReviewEntityCard';
 import { FactCard } from '@/components/FactCard';
 import { LoadingState } from '@/components/LoadingState';
 
@@ -171,8 +171,9 @@ function ReviewDocumentPage() {
               </h2>
               <div className="space-y-3">
                 {documentEntities.map((entity) => (
-                  <EntityCard
+                  <ReviewEntityCard
                     key={entity._id}
+                    projectId={projectId as Id<'projects'>}
                     entity={entity}
                     onConfirm={handleConfirmEntity}
                     onReject={handleRejectEntity}
