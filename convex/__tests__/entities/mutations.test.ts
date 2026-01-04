@@ -1,23 +1,35 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { api } from '../../_generated/api';
-import { createTestContext, setupAuthenticatedUser, setupProjectWithEntities } from './helpers';
+import type { Id } from '../../_generated/dataModel';
+import {
+  type TestContext,
+  createTestContext,
+  setupAuthenticatedUser,
+  setupProject,
+  setupDocument,
+  setupEntity,
+  setupFact,
+  setupProjectWithEntities,
+  setupOtherUser,
+  defaultStats,
+} from './helpers';
 
 describe('entities mutations', () => {
   describe('create', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+    let projectId: Id<'projects'>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+      projectId = await setupProject(t, userId);
+    });
+
     it('creates entity with pending status by default', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const projectId = await t.run(async (ctx) => {
-        return await ctx.db.insert('projects', {
-          userId,
-          name: 'Test Project',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          stats: { documentCount: 0, entityCount: 0, factCount: 0, alertCount: 0 },
-        });
-      });
-
       const entityId = await asUser.mutation(api.entities.create, {
         projectId,
         name: 'Arya Stark',
@@ -35,19 +47,6 @@ describe('entities mutations', () => {
     });
 
     it('creates entity with confirmed status when specified', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const projectId = await t.run(async (ctx) => {
-        return await ctx.db.insert('projects', {
-          userId,
-          name: 'Test Project',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          stats: { documentCount: 0, entityCount: 0, factCount: 0, alertCount: 0 },
-        });
-      });
-
       const entityId = await asUser.mutation(api.entities.create, {
         projectId,
         name: 'Winterfell',
@@ -60,19 +59,6 @@ describe('entities mutations', () => {
     });
 
     it('increments project entityCount stat', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const projectId = await t.run(async (ctx) => {
-        return await ctx.db.insert('projects', {
-          userId,
-          name: 'Test Project',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          stats: { documentCount: 0, entityCount: 0, factCount: 0, alertCount: 0 },
-        });
-      });
-
       await asUser.mutation(api.entities.create, {
         projectId,
         name: 'Test Entity',
@@ -84,45 +70,19 @@ describe('entities mutations', () => {
     });
 
     it('works on projects without pre-existing stats', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const projectId = await t.run(async (ctx) => {
-        return await ctx.db.insert('projects', {
-          userId,
-          name: 'No Stats Project',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-      });
+      const noStatsProjectId = await setupProject(t, userId, { withStats: false });
 
       await asUser.mutation(api.entities.create, {
-        projectId,
+        projectId: noStatsProjectId,
         name: 'Test Entity',
         type: 'character',
       });
 
-      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      const project = await t.run(async (ctx) => ctx.db.get(noStatsProjectId));
       expect(project?.stats?.entityCount).toBe(1);
     });
 
     it('throws when not authenticated', async () => {
-      const t = createTestContext();
-
-      const projectId = await t.run(async (ctx) => {
-        const userId = await ctx.db.insert('users', {
-          name: 'Owner',
-          email: 'owner@test.com',
-          createdAt: Date.now(),
-        });
-        return await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-      });
-
       await expect(
         t.mutation(api.entities.create, {
           projectId,
@@ -133,26 +93,12 @@ describe('entities mutations', () => {
     });
 
     it('throws when not project owner', async () => {
-      const t = createTestContext();
-      const { asUser } = await setupAuthenticatedUser(t);
-
-      const projectId = await t.run(async (ctx) => {
-        const otherUserId = await ctx.db.insert('users', {
-          name: 'Other',
-          email: 'other@test.com',
-          createdAt: Date.now(),
-        });
-        return await ctx.db.insert('projects', {
-          userId: otherUserId,
-          name: 'Other Project',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-      });
+      const otherUserId = await setupOtherUser(t);
+      const otherProjectId = await setupProject(t, otherUserId);
 
       await expect(
         asUser.mutation(api.entities.create, {
-          projectId,
+          projectId: otherProjectId,
           name: 'Test',
           type: 'character',
         })
@@ -161,9 +107,18 @@ describe('entities mutations', () => {
   });
 
   describe('update', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+    });
+
     it('updates entity fields', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
       const { entityId } = await setupProjectWithEntities(t, userId);
 
       await asUser.mutation(api.entities.update, {
@@ -178,26 +133,8 @@ describe('entities mutations', () => {
     });
 
     it('confirms pending entity', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const entityId = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-        return await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Pending Entity',
-          type: 'character',
-          aliases: [],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-      });
+      const projectId = await setupProject(t, userId);
+      const entityId = await setupEntity(t, projectId, { status: 'pending' });
 
       await asUser.mutation(api.entities.update, {
         id: entityId,
@@ -209,86 +146,55 @@ describe('entities mutations', () => {
     });
 
     it('throws when entity not found', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
       const { entityId } = await setupProjectWithEntities(t, userId);
-
       await t.run(async (ctx) => ctx.db.delete(entityId));
 
       await expect(
-        asUser.mutation(api.entities.update, {
-          id: entityId,
-          name: 'Ghost',
-        })
+        asUser.mutation(api.entities.update, { id: entityId, name: 'Ghost' })
       ).rejects.toThrow(/not found/i);
     });
   });
 
   describe('merge', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+    });
+
     it('merges two entities, combining aliases', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const projectId = await setupProject(t, userId, {
+        stats: { ...defaultStats(), entityCount: 2, factCount: 1 },
+      });
+      const documentId = await setupDocument(t, projectId);
 
-      const { projectId, sourceId, targetId, factId } = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          stats: { documentCount: 0, entityCount: 2, factCount: 1, alertCount: 0 },
-        });
-
-        const docId = await ctx.db.insert('documents', {
-          projectId: pId,
-          title: 'Doc',
-          contentType: 'text',
-          orderIndex: 0,
-          wordCount: 0,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          processingStatus: 'completed',
-        });
-
-        const sId = await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Lord Snow',
-          type: 'character',
-          aliases: ['Bastard of Winterfell'],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        const tId = await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Jon Snow',
-          type: 'character',
-          aliases: ['The White Wolf'],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        const fId = await ctx.db.insert('facts', {
-          projectId: pId,
-          entityId: sId,
-          documentId: docId,
+      const sourceId = await setupEntity(t, projectId, {
+        name: 'Lord Snow',
+        aliases: ['Bastard of Winterfell'],
+        status: 'pending',
+      });
+      const targetId = await setupEntity(t, projectId, {
+        name: 'Jon Snow',
+        aliases: ['The White Wolf'],
+        status: 'confirmed',
+      });
+      const factId = await setupFact(
+        t,
+        { projectId, entityId: sourceId, documentId },
+        {
           subject: 'Lord Snow',
           predicate: 'is',
           object: 'a bastard',
-          confidence: 1.0,
-          evidenceSnippet: 'Lord Snow is a bastard',
           status: 'confirmed',
-          createdAt: Date.now(),
-        });
+        }
+      );
 
-        return { projectId: pId, sourceId: sId, targetId: tId, factId: fId };
-      });
-
-      await asUser.mutation(api.entities.merge, {
-        sourceId,
-        targetId,
-      });
+      await asUser.mutation(api.entities.merge, { sourceId, targetId });
 
       const source = await t.run(async (ctx) => ctx.db.get(sourceId));
       expect(source).toBeNull();
@@ -306,45 +212,11 @@ describe('entities mutations', () => {
     });
 
     it('throws when merging entities from different projects', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const project1Id = await setupProject(t, userId);
+      const project2Id = await setupProject(t, userId);
 
-      const { sourceId, targetId } = await t.run(async (ctx) => {
-        const p1 = await ctx.db.insert('projects', {
-          userId,
-          name: 'Project 1',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-        const p2 = await ctx.db.insert('projects', {
-          userId,
-          name: 'Project 2',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        const sId = await ctx.db.insert('entities', {
-          projectId: p1,
-          name: 'Entity 1',
-          type: 'character',
-          aliases: [],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        const tId = await ctx.db.insert('entities', {
-          projectId: p2,
-          name: 'Entity 2',
-          type: 'character',
-          aliases: [],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        return { sourceId: sId, targetId: tId };
-      });
+      const sourceId = await setupEntity(t, project1Id);
+      const targetId = await setupEntity(t, project2Id, { status: 'confirmed' });
 
       await expect(asUser.mutation(api.entities.merge, { sourceId, targetId })).rejects.toThrow(
         /different projects/i
@@ -353,27 +225,20 @@ describe('entities mutations', () => {
   });
 
   describe('confirm', () => {
-    it('confirms a pending entity', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
 
-      const entityId = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-        return await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Pending Entity',
-          type: 'character',
-          aliases: [],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-      });
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+    });
+
+    it('confirms a pending entity', async () => {
+      const projectId = await setupProject(t, userId);
+      const entityId = await setupEntity(t, projectId, { status: 'pending' });
 
       await asUser.mutation(api.entities.confirm, { id: entityId });
 
@@ -382,10 +247,7 @@ describe('entities mutations', () => {
     });
 
     it('throws when entity not found', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
       const { entityId } = await setupProjectWithEntities(t, userId);
-
       await t.run(async (ctx) => ctx.db.delete(entityId));
 
       await expect(asUser.mutation(api.entities.confirm, { id: entityId })).rejects.toThrow(
@@ -395,55 +257,24 @@ describe('entities mutations', () => {
   });
 
   describe('reject', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+    });
+
     it('rejects entity and cascades to delete facts', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const { projectId, entityId, factId } = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          stats: { documentCount: 0, entityCount: 1, factCount: 1, alertCount: 0 },
-        });
-
-        const docId = await ctx.db.insert('documents', {
-          projectId: pId,
-          title: 'Doc',
-          contentType: 'text',
-          orderIndex: 0,
-          wordCount: 0,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          processingStatus: 'completed',
-        });
-
-        const eId = await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'To Reject',
-          type: 'character',
-          aliases: [],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        const fId = await ctx.db.insert('facts', {
-          projectId: pId,
-          entityId: eId,
-          documentId: docId,
-          subject: 'To Reject',
-          predicate: 'has',
-          object: 'fact',
-          confidence: 1.0,
-          evidenceSnippet: 'text',
-          status: 'pending',
-          createdAt: Date.now(),
-        });
-
-        return { projectId: pId, entityId: eId, factId: fId };
+      const projectId = await setupProject(t, userId, {
+        stats: { ...defaultStats(), entityCount: 1, factCount: 1 },
       });
+      const documentId = await setupDocument(t, projectId);
+      const entityId = await setupEntity(t, projectId, { name: 'To Reject' });
+      const factId = await setupFact(t, { projectId, entityId, documentId });
 
       await asUser.mutation(api.entities.reject, { id: entityId });
 
@@ -460,81 +291,28 @@ describe('entities mutations', () => {
   });
 
   describe('remove', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+    });
+
     it('only decrements factCount for non-rejected facts when cascading', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const { projectId, entityId } = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          stats: { documentCount: 0, entityCount: 1, factCount: 3, alertCount: 0 },
-        });
-
-        const docId = await ctx.db.insert('documents', {
-          projectId: pId,
-          title: 'Doc',
-          contentType: 'text',
-          orderIndex: 0,
-          wordCount: 0,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          processingStatus: 'completed',
-        });
-
-        const eId = await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Mixed Facts Entity',
-          type: 'character',
-          aliases: [],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('facts', {
-          projectId: pId,
-          entityId: eId,
-          documentId: docId,
-          subject: 'Confirmed Fact',
-          predicate: 'is',
-          object: 'counted',
-          confidence: 1.0,
-          evidenceSnippet: 'text',
-          status: 'confirmed',
-          createdAt: Date.now(),
-        });
-
-        await ctx.db.insert('facts', {
-          projectId: pId,
-          entityId: eId,
-          documentId: docId,
-          subject: 'Pending Fact',
-          predicate: 'is',
-          object: 'also counted',
-          confidence: 1.0,
-          evidenceSnippet: 'text',
-          status: 'pending',
-          createdAt: Date.now(),
-        });
-
-        await ctx.db.insert('facts', {
-          projectId: pId,
-          entityId: eId,
-          documentId: docId,
-          subject: 'Rejected Fact',
-          predicate: 'is',
-          object: 'NOT counted',
-          confidence: 1.0,
-          evidenceSnippet: 'text',
-          status: 'rejected',
-          createdAt: Date.now(),
-        });
-
-        return { projectId: pId, entityId: eId };
+      const projectId = await setupProject(t, userId, {
+        stats: { ...defaultStats(), entityCount: 1, factCount: 3 },
       });
+      const documentId = await setupDocument(t, projectId);
+      const entityId = await setupEntity(t, projectId, { status: 'confirmed' });
+
+      const ids = { projectId, entityId, documentId };
+      await setupFact(t, ids, { subject: 'Confirmed', status: 'confirmed' });
+      await setupFact(t, ids, { subject: 'Pending', status: 'pending' });
+      await setupFact(t, ids, { subject: 'Rejected', status: 'rejected' });
 
       await asUser.mutation(api.entities.remove, { id: entityId });
 
@@ -544,54 +322,12 @@ describe('entities mutations', () => {
     });
 
     it('deletes entity and cascades to facts', async () => {
-      const t = createTestContext();
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const { projectId, entityId, factId } = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          stats: { documentCount: 0, entityCount: 1, factCount: 1, alertCount: 0 },
-        });
-
-        const docId = await ctx.db.insert('documents', {
-          projectId: pId,
-          title: 'Doc',
-          contentType: 'text',
-          orderIndex: 0,
-          wordCount: 0,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          processingStatus: 'completed',
-        });
-
-        const eId = await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'To Delete',
-          type: 'character',
-          aliases: [],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        const fId = await ctx.db.insert('facts', {
-          projectId: pId,
-          entityId: eId,
-          documentId: docId,
-          subject: 'To Delete',
-          predicate: 'exists',
-          object: 'temporarily',
-          confidence: 1.0,
-          evidenceSnippet: 'text',
-          status: 'pending',
-          createdAt: Date.now(),
-        });
-
-        return { projectId: pId, entityId: eId, factId: fId };
+      const projectId = await setupProject(t, userId, {
+        stats: { ...defaultStats(), entityCount: 1, factCount: 1 },
       });
+      const documentId = await setupDocument(t, projectId);
+      const entityId = await setupEntity(t, projectId);
+      const factId = await setupFact(t, { projectId, entityId, documentId });
 
       await asUser.mutation(api.entities.remove, { id: entityId });
 

@@ -4,11 +4,20 @@ import schema from '../../schema';
 
 export const modules = import.meta.glob('../../**/*.ts');
 
+export type TestContext = ReturnType<typeof convexTest>;
+
+export const defaultStats = () => ({
+  documentCount: 0,
+  entityCount: 0,
+  factCount: 0,
+  alertCount: 0,
+});
+
 export function createTestContext() {
   return convexTest(schema, modules);
 }
 
-export async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
+export async function setupAuthenticatedUser(t: TestContext) {
   const userId = await t.run(async (ctx) => {
     return await ctx.db.insert('users', {
       name: 'Test User',
@@ -21,43 +30,160 @@ export async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
   return { userId, asUser };
 }
 
-export async function setupProjectWithEntities(
-  t: ReturnType<typeof convexTest>,
-  userId: Id<'users'>
-) {
+export async function setupOtherUser(t: TestContext) {
   return await t.run(async (ctx) => {
-    const projectId = await ctx.db.insert('projects', {
+    return await ctx.db.insert('users', {
+      name: 'Other User',
+      email: 'other@test.com',
+      createdAt: Date.now(),
+    });
+  });
+}
+
+type ProjectOverrides = {
+  name?: string;
+  withStats?: boolean;
+  stats?: { documentCount: number; entityCount: number; factCount: number; alertCount: number };
+};
+
+export async function setupProject(
+  t: TestContext,
+  userId: Id<'users'>,
+  overrides: ProjectOverrides = {}
+) {
+  const { name = 'Test Project', withStats = true, stats } = overrides;
+
+  return await t.run(async (ctx) => {
+    return await ctx.db.insert('projects', {
       userId,
-      name: 'Test Project',
+      name,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      stats: { documentCount: 0, entityCount: 0, factCount: 0, alertCount: 0 },
+      ...(withStats && { stats: stats ?? defaultStats() }),
     });
+  });
+}
 
-    const documentId = await ctx.db.insert('documents', {
+type DocumentOverrides = {
+  title?: string;
+  content?: string;
+  processingStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+};
+
+export async function setupDocument(
+  t: TestContext,
+  projectId: Id<'projects'>,
+  overrides: DocumentOverrides = {}
+) {
+  const {
+    title = 'Test Document',
+    content = 'Test content',
+    processingStatus = 'completed',
+  } = overrides;
+
+  return await t.run(async (ctx) => {
+    return await ctx.db.insert('documents', {
       projectId,
-      title: 'Test Document',
-      content: 'Test content',
+      title,
+      content,
       contentType: 'text',
       orderIndex: 0,
-      wordCount: 2,
+      wordCount: content.split(' ').length,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      processingStatus: 'pending',
+      processingStatus,
     });
-
-    const entityId = await ctx.db.insert('entities', {
-      projectId,
-      name: 'Jon Snow',
-      type: 'character',
-      description: 'King in the North',
-      aliases: ['Lord Snow', 'The White Wolf'],
-      firstMentionedIn: documentId,
-      status: 'confirmed',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-
-    return { projectId, documentId, entityId };
   });
+}
+
+type EntityOverrides = {
+  name?: string;
+  type?: 'character' | 'location' | 'item' | 'concept' | 'event';
+  description?: string;
+  aliases?: string[];
+  status?: 'pending' | 'confirmed';
+  firstMentionedIn?: Id<'documents'>;
+};
+
+export async function setupEntity(
+  t: TestContext,
+  projectId: Id<'projects'>,
+  overrides: EntityOverrides = {}
+) {
+  const {
+    name = 'Test Entity',
+    type = 'character',
+    description,
+    aliases = [],
+    status = 'pending',
+    firstMentionedIn,
+  } = overrides;
+
+  return await t.run(async (ctx) => {
+    return await ctx.db.insert('entities', {
+      projectId,
+      name,
+      type,
+      ...(description && { description }),
+      aliases,
+      status,
+      ...(firstMentionedIn && { firstMentionedIn }),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  });
+}
+
+type FactOverrides = {
+  subject?: string;
+  predicate?: string;
+  object?: string;
+  confidence?: number;
+  evidenceSnippet?: string;
+  status?: 'pending' | 'confirmed' | 'rejected';
+};
+
+export async function setupFact(
+  t: TestContext,
+  ids: { projectId: Id<'projects'>; entityId: Id<'entities'>; documentId: Id<'documents'> },
+  overrides: FactOverrides = {}
+) {
+  const {
+    subject = 'Subject',
+    predicate = 'is',
+    object = 'Object',
+    confidence = 1.0,
+    evidenceSnippet = 'evidence text',
+    status = 'pending',
+  } = overrides;
+
+  return await t.run(async (ctx) => {
+    return await ctx.db.insert('facts', {
+      projectId: ids.projectId,
+      entityId: ids.entityId,
+      documentId: ids.documentId,
+      subject,
+      predicate,
+      object,
+      confidence,
+      evidenceSnippet,
+      status,
+      createdAt: Date.now(),
+    });
+  });
+}
+
+export async function setupProjectWithEntities(t: TestContext, userId: Id<'users'>) {
+  const projectId = await setupProject(t, userId);
+  const documentId = await setupDocument(t, projectId);
+  const entityId = await setupEntity(t, projectId, {
+    name: 'Jon Snow',
+    type: 'character',
+    description: 'King in the North',
+    aliases: ['Lord Snow', 'The White Wolf'],
+    status: 'confirmed',
+    firstMentionedIn: documentId,
+  });
+
+  return { projectId, documentId, entityId };
 }
