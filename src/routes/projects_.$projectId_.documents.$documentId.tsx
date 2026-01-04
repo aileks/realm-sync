@@ -52,6 +52,23 @@ function DocumentEditorPage() {
 
   const updateProcessingStatus = useMutation(api.documents.updateProcessingStatus);
 
+  // Safely check for LLM API which might not be generated yet
+  const llmApi = (
+    api as unknown as {
+      llm?: {
+        chunkAndExtract: FunctionReference<
+          'mutation',
+          'public',
+          { documentId: Id<'documents'> },
+          null
+        >;
+      };
+    }
+  ).llm;
+  const chunkAndExtract = useMutation(
+    llmApi?.chunkAndExtract ? llmApi.chunkAndExtract : api.documents.updateProcessingStatus
+  );
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);

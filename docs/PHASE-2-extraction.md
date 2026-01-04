@@ -363,6 +363,21 @@ await ctx.runMutation(internal.llm.cache.saveToCache, {
 | `seedProject`   | mutation | Create sample project with entities/facts |
 | `clearSeedData` | mutation | Delete all seed data for a project        |
 
+### Seed Data (`convex/seed.ts`)
+
+- `seedProject`: Creates a sample fantasy project ("The Northern Chronicles") with:
+  - 2 documents with narrative content
+  - 7 entities (characters, locations, concepts, events)
+  - 8 facts with evidence positions
+- `clearSeedData`: Deletes all seed data for a project.
+
+**Note**: To use seed data, run `api.seed.seedProject` mutation via Convex dashboard with a valid `userId`.
+
+**Usage Instructions:**
+
+1. Run `api.seed.seedProject({ userId: "<your-user-id>" })` in the Convex dashboard.
+2. To clean up seed data, run `api.seed.clearSeedData({ projectId })`.
+
 ---
 
 ## 8. Review UI Components
