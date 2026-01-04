@@ -3,8 +3,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useMutation } from 'convex/react';
 import { useStream } from '@convex-dev/persistent-text-streaming/react';
 import type { StreamId } from '@convex-dev/persistent-text-streaming';
-import Markdown from 'react-markdown';
+import { marked } from 'marked';
 import { api } from '../../convex/_generated/api';
+
+function MarkdownContent({ children }: { children: string }) {
+  const html = marked.parse(children, { async: false });
+  return <span dangerouslySetInnerHTML={{ __html: html }} />;
+}
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -75,7 +80,7 @@ function StreamingMessage({ streamId }: { streamId: string }) {
 
   return (
     <>
-      <Markdown>{text || '...'}</Markdown>
+      <MarkdownContent>{text || '...'}</MarkdownContent>
       {status === 'streaming' && <span className="ml-1 inline-block animate-pulse">▋</span>}
     </>
   );
@@ -199,7 +204,7 @@ function DevChat() {
                   msg.content
                 : msg.streamId ?
                   <StreamingMessage streamId={msg.streamId} />
-                : <Markdown>{msg.content}</Markdown>}
+                : <MarkdownContent>{msg.content}</MarkdownContent>}
               </div>
             </div>
           ))}

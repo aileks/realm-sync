@@ -81,11 +81,22 @@ export function DocumentCard({ document, onClick, onEdit, onDelete }: DocumentCa
                   <MoreVertical className="size-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onEdit?.(document)}>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit?.(document);
+                    }}
+                  >
                     <Pencil className="mr-2 size-4" />
                     Edit
                   </DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive" onClick={() => onDelete?.(document)}>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete?.(document);
+                    }}
+                  >
                     <Trash2 className="mr-2 size-4" />
                     Delete
                   </DropdownMenuItem>
