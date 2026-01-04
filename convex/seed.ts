@@ -18,7 +18,7 @@ export const seedDemoData = internalMutation({
         'A fantasy epic set in a frozen kingdom where winter has lasted for generations.',
       createdAt: now,
       updatedAt: now,
-      stats: { documentCount: 2, entityCount: 7, factCount: 8, alertCount: 0 },
+      stats: { documentCount: 2, entityCount: 12, factCount: 8, alertCount: 0 },
     });
 
     const fantasyDoc1 = await ctx.db.insert('documents', {
@@ -150,6 +150,66 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
       description: 'An ancient binding/prison created by desperate ancestors.',
       aliases: ['The Ancient Pact'],
       firstMentionedIn: fantasyDoc2,
+      status: 'confirmed',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entities', {
+      projectId: fantasyProjectId,
+      name: 'The Iron Crown',
+      type: 'item',
+      description: 'Royal crown forged from Sacred Mountain ore, passed through generations.',
+      aliases: ['Crown of Winterhold'],
+      firstMentionedIn: fantasyDoc1,
+      status: 'confirmed',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entities', {
+      projectId: fantasyProjectId,
+      name: 'The Great Library',
+      type: 'location',
+      description: 'Ancient library containing forbidden texts and royal archives.',
+      aliases: [],
+      firstMentionedIn: fantasyDoc2,
+      status: 'confirmed',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entities', {
+      projectId: fantasyProjectId,
+      name: 'The Old Magic',
+      type: 'concept',
+      description: 'Ancient magical tradition that Magister Crow serves.',
+      aliases: [],
+      firstMentionedIn: fantasyDoc2,
+      status: 'confirmed',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entities', {
+      projectId: fantasyProjectId,
+      name: 'The Endless Winter',
+      type: 'event',
+      description: 'A catastrophic winter that has lasted for generations.',
+      aliases: [],
+      firstMentionedIn: fantasyDoc1,
+      status: 'confirmed',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entities', {
+      projectId: fantasyProjectId,
+      name: 'Council of Lords',
+      type: 'event',
+      description: 'Emergency gathering summoned by King Aldric.',
+      aliases: [],
+      firstMentionedIn: fantasyDoc1,
       status: 'pending',
       createdAt: now,
       updatedAt: now,

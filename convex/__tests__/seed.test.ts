@@ -34,7 +34,7 @@ describe('seed.seedDemoData internal mutation', () => {
     expect(project?.name).toBe('The Northern Chronicles');
     expect(project?.stats).toEqual({
       documentCount: 2,
-      entityCount: 7,
+      entityCount: 12,
       factCount: 8,
       alertCount: 0,
     });
@@ -84,7 +84,7 @@ describe('seed.seedDemoData internal mutation', () => {
         .collect();
     });
 
-    expect(entities).toHaveLength(7);
+    expect(entities).toHaveLength(12);
 
     const aldric = entities.find((e) => e.name === 'King Aldric');
     expect(aldric).toBeDefined();
@@ -115,7 +115,7 @@ describe('seed.seedDemoData internal mutation', () => {
     const pact = entities.find((e) => e.name === 'The Pact of Frost');
     expect(pact).toBeDefined();
     expect(pact?.type).toBe('event');
-    expect(pact?.status).toBe('pending');
+    expect(pact?.status).toBe('confirmed');
   });
 
   it('creates facts with correct evidencePositions', async () => {

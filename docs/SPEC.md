@@ -105,6 +105,7 @@ Extended from Convex Auth (custom fields merged automatically).
 ```typescript
 {
   documentCount: number,
+  noteCount: number,
   entityCount: number,
   factCount: number,
   alertCount: number
@@ -232,6 +233,29 @@ Extended from Convex Auth (custom fields merged automatically).
 
 ---
 
+### Table: `notes`
+
+| Field | Type | Description | Validation |
+| --- | --- | --- | --- |
+| `projectId` | id("projects") | Parent project reference | `v.id("projects")` |
+| `title` | string | Note title | `v.string()` |
+| `content` | string | Note content (rich text or markdown) | `v.string()` |
+| `contentType` | union | "text" \| "markdown" | `v.union(v.literal("text"), v.literal("markdown"))` |
+| `tags` | array | Optional tags for organization | `v.array(v.string())` |
+| `pinned` | boolean | Whether note is pinned to top | `v.boolean()` |
+| `createdAt` | number | Creation timestamp | `v.number()` |
+| `updatedAt` | number | Last edit timestamp | `v.number()` |
+
+**Indexes**:
+
+- `by_project`: `["projectId", "pinned", "updatedAt"]` (Ordered list with pinned first)
+
+**Search Indexes**:
+
+- `search_content`: `searchField: content`, `filterFields: [projectId]`
+
+---
+
 ### Table: `llmCache`
 
 | Field | Type | Description | Validation |
@@ -291,6 +315,7 @@ export const create = mutation({
       updatedAt: Date.now(),
       stats: {
         documentCount: 0,
+        noteCount: 0,
         entityCount: 0,
         factCount: 0,
         alertCount: 0,
@@ -429,6 +454,83 @@ export const getFileUrl = action({
   args: { storageId: v.id('_storage') },
   handler: async (ctx, { storageId }) => {
     return await ctx.storage.getUrl(storageId);
+  },
+});
+```
+
+---
+
+#### File: `convex/notes.ts`
+
+```typescript
+export const list = query({
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
+    return await ctx.db
+      .query('notes')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .collect();
+  },
+});
+
+export const get = query({
+  args: { noteId: v.id('notes') },
+  handler: async (ctx, { noteId }) => {
+    return await ctx.db.get(noteId);
+  },
+});
+
+export const create = mutation({
+  args: {
+    projectId: v.id('projects'),
+    title: v.string(),
+    content: v.string(),
+    contentType: v.union(v.literal('text'), v.literal('markdown')),
+    tags: v.optional(v.array(v.string())),
+    pinned: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.insert('notes', {
+      ...args,
+      pinned: args.pinned ?? false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const update = mutation({
+  args: {
+    noteId: v.id('notes'),
+    title: v.optional(v.string()),
+    content: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+    pinned: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { noteId, ...updates }) => {
+    return await ctx.db.patch(noteId, {
+      ...updates,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const remove = mutation({
+  args: { noteId: v.id('notes') },
+  handler: async (ctx, { noteId }) => {
+    return await ctx.db.delete(noteId);
+  },
+});
+
+export const togglePin = mutation({
+  args: { noteId: v.id('notes') },
+  handler: async (ctx, { noteId }) => {
+    const note = await ctx.db.get(noteId);
+    if (!note) throw new Error('Note not found');
+    return await ctx.db.patch(noteId, {
+      pinned: !note.pinned,
+      updatedAt: Date.now(),
+    });
   },
 });
 ```
@@ -710,6 +812,7 @@ realm-sync/
 │   ├── auth.ts                # Convex Auth configuration
 │   ├── projects.ts             # Project CRUD functions
 │   ├── documents.ts            # Document CRUD functions
+│   ├── notes.ts               # Notes CRUD functions
 │   ├── entities.ts             # Entity management functions
 │   ├── facts.ts               # Fact management functions
 │   ├── alerts.ts              # Alert management functions
@@ -743,6 +846,10 @@ realm-sync/
 │   │           │   ├── index.tsx
 │   │           │   ├── new.tsx
 │   │           │   └── $documentId.tsx
+│   │           ├── notes/
+│   │           │   ├── index.tsx
+│   │           │   ├── new.tsx
+│   │           │   └── $noteId.tsx
 │   │           ├── canon/
 │   │           │   ├── index.tsx
 │   │           │   ├── search.tsx
@@ -1034,9 +1141,10 @@ pnpm docs:list             # List all docs
 ### Missing (Implement by Phase)
 
 - ❌ Auth implementation (Convex Auth)
-- ❌ Real schema tables (users, projects, documents, entities, facts, alerts, llmCache)
-- ❌ Project/Document CRUD functions
+- ❌ Real schema tables (users, projects, documents, notes, entities, facts, alerts, llmCache)
+- ❌ Project/Document/Note CRUD functions
 - ❌ LLM integration (OpenRouter, extraction prompts)
+- ❌ Notes feature (collaborative writing space)
 - ❌ Canon Browser routes and components
 - ❌ Continuity checking system
 - ❌ Vellum mascot integration
