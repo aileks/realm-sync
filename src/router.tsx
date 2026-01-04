@@ -1,7 +1,7 @@
-import {createRouter} from '@tanstack/react-router';
+import { createRouter } from '@tanstack/react-router';
 import * as Sentry from '@sentry/tanstackstart-react';
-import {routeTree} from './routeTree.gen';
-import {env} from './env';
+import { routeTree } from './routeTree.gen';
+import { env } from './env';
 
 export const getRouter = () => {
   const router = createRouter({

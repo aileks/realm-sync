@@ -1,6 +1,6 @@
-import {createFileRoute, useNavigate} from '@tanstack/react-router';
-import {useQuery, useMutation, useAction} from 'convex/react';
-import {useState, useEffect, useCallback} from 'react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useQuery, useMutation, useAction } from 'convex/react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   ArrowLeft,
   Save,
@@ -11,16 +11,16 @@ import {
   AlertCircle,
   RotateCcw,
 } from 'lucide-react';
-import {toast} from 'sonner';
-import {api} from '../../convex/_generated/api';
-import {type FunctionReference} from 'convex/server';
-import type {Id} from '../../convex/_generated/dataModel';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {Textarea} from '@/components/ui/textarea';
-import {Badge} from '@/components/ui/badge';
-import {LoadingState} from '@/components/LoadingState';
-import {cn} from '@/lib/utils';
+import { toast } from 'sonner';
+import { api } from '../../convex/_generated/api';
+import { type FunctionReference } from 'convex/server';
+import type { Id } from '../../convex/_generated/dataModel';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { LoadingState } from '@/components/LoadingState';
+import { cn } from '@/lib/utils';
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -32,8 +32,8 @@ export const Route = createFileRoute('/projects_/$projectId_/documents/$document
 
 function DocumentEditorPage() {
   const navigate = useNavigate();
-  const {projectId, documentId} = Route.useParams();
-  const document = useQuery(api.documents.get, {id: documentId as Id<'documents'>});
+  const { projectId, documentId } = Route.useParams();
+  const document = useQuery(api.documents.get, { id: documentId as Id<'documents'> });
   const updateDocument = useMutation(api.documents.update);
   const chunkAndExtract = useAction(
     (
@@ -42,8 +42,8 @@ function DocumentEditorPage() {
           chunkAndExtract: FunctionReference<
             'action',
             'public',
-            {documentId: Id<'documents'>},
-            {entitiesCreated: number; factsCreated: number}
+            { documentId: Id<'documents'> },
+            { entitiesCreated: number; factsCreated: number }
           >;
         };
       }
@@ -123,7 +123,7 @@ function DocumentEditorPage() {
       description: "You'll be notified when it finishes.",
     });
     try {
-      const result = await chunkAndExtract({documentId: document._id});
+      const result = await chunkAndExtract({ documentId: document._id });
       toast.success('Extraction complete', {
         description: `Found ${result.entitiesCreated} entities and ${result.factsCreated} facts.`,
       });
@@ -139,8 +139,8 @@ function DocumentEditorPage() {
 
   async function handleReset() {
     if (!document) return;
-    await updateProcessingStatus({id: document._id, status: 'pending'});
-    toast.info('Status reset', {description: 'You can now retry extraction.'});
+    await updateProcessingStatus({ id: document._id, status: 'pending' });
+    toast.info('Status reset', { description: 'You can now retry extraction.' });
   }
 
   if (document === undefined) {
@@ -154,7 +154,7 @@ function DocumentEditorPage() {
         <Button
           variant="ghost"
           className="mt-4"
-          onClick={() => navigate({to: '/projects/$projectId/documents', params: {projectId}})}
+          onClick={() => navigate({ to: '/projects/$projectId/documents', params: { projectId } })}
         >
           Back to Documents
         </Button>
@@ -171,7 +171,9 @@ function DocumentEditorPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate({to: '/projects/$projectId/documents', params: {projectId}})}
+            onClick={() =>
+              navigate({ to: '/projects/$projectId/documents', params: { projectId } })
+            }
           >
             <ArrowLeft className="mr-1 size-4" />
             Documents

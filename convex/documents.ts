@@ -1,10 +1,10 @@
-import {v} from 'convex/values';
-import type {Doc, Id} from './_generated/dataModel';
-import type {MutationCtx} from './_generated/server';
-import {mutation, query} from './_generated/server';
-import {getAuthUserId, requireAuth} from './lib/auth';
-import {ok, err, notFoundError, authError, type Result, type AppError} from './lib/errors';
-import {unwrapOrThrow} from './lib/result';
+import { v } from 'convex/values';
+import type { Doc, Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
+import { mutation, query } from './_generated/server';
+import { getAuthUserId, requireAuth } from './lib/auth';
+import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
+import { unwrapOrThrow } from './lib/result';
 
 const contentTypeValidator = v.union(v.literal('text'), v.literal('markdown'), v.literal('file'));
 
@@ -51,8 +51,8 @@ async function verifyDocumentAccess(
 }
 
 export const list = query({
-  args: {projectId: v.id('projects')},
-  handler: async (ctx, {projectId}) => {
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 
@@ -67,8 +67,8 @@ export const list = query({
 });
 
 export const get = query({
-  args: {id: v.id('documents')},
-  handler: async (ctx, {id}) => {
+  args: { id: v.id('documents') },
+  handler: async (ctx, { id }) => {
     const doc = await ctx.db.get(id);
     if (!doc) return null;
 
@@ -90,7 +90,7 @@ export const create = mutation({
     storageId: v.optional(v.id('_storage')),
     contentType: contentTypeValidator,
   },
-  handler: async (ctx, {projectId, title, content, storageId, contentType}) => {
+  handler: async (ctx, { projectId, title, content, storageId, contentType }) => {
     const userId = await requireAuth(ctx);
     unwrapOrThrow(await verifyProjectOwnership(ctx, projectId, userId));
 
@@ -127,7 +127,7 @@ export const create = mutation({
       };
       await ctx.db.patch(projectId, {
         updatedAt: now,
-        stats: {...stats, documentCount: stats.documentCount + 1},
+        stats: { ...stats, documentCount: stats.documentCount + 1 },
       });
     }
 
@@ -143,20 +143,20 @@ export const update = mutation({
     storageId: v.optional(v.id('_storage')),
     contentType: v.optional(contentTypeValidator),
   },
-  handler: async (ctx, {id, title, content, storageId, contentType}) => {
+  handler: async (ctx, { id, title, content, storageId, contentType }) => {
     const userId = await requireAuth(ctx);
     unwrapOrThrow(await verifyDocumentAccess(ctx, id, userId));
 
     await ctx.db.patch(id, {
       updatedAt: Date.now(),
-      ...(title !== undefined && {title}),
+      ...(title !== undefined && { title }),
       ...(content !== undefined && {
         content,
         wordCount: countWords(content),
         processingStatus: 'pending' as const,
       }),
-      ...(storageId !== undefined && {storageId}),
-      ...(contentType !== undefined && {contentType}),
+      ...(storageId !== undefined && { storageId }),
+      ...(contentType !== undefined && { contentType }),
     });
 
     return id;
@@ -164,8 +164,8 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: {id: v.id('documents')},
-  handler: async (ctx, {id}) => {
+  args: { id: v.id('documents') },
+  handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
     const doc = unwrapOrThrow(await verifyDocumentAccess(ctx, id, userId));
 
@@ -183,7 +183,7 @@ export const remove = mutation({
       };
       await ctx.db.patch(doc.projectId, {
         updatedAt: Date.now(),
-        stats: {...stats, documentCount: Math.max(0, stats.documentCount - 1)},
+        stats: { ...stats, documentCount: Math.max(0, stats.documentCount - 1) },
       });
     }
 
@@ -197,15 +197,15 @@ export const reorder = mutation({
     projectId: v.id('projects'),
     documentIds: v.array(v.id('documents')),
   },
-  handler: async (ctx, {projectId, documentIds}) => {
+  handler: async (ctx, { projectId, documentIds }) => {
     const userId = await requireAuth(ctx);
     unwrapOrThrow(await verifyProjectOwnership(ctx, projectId, userId));
 
     for (let i = 0; i < documentIds.length; i++) {
-      await ctx.db.patch(documentIds[i], {orderIndex: i});
+      await ctx.db.patch(documentIds[i], { orderIndex: i });
     }
 
-    await ctx.db.patch(projectId, {updatedAt: Date.now()});
+    await ctx.db.patch(projectId, { updatedAt: Date.now() });
   },
 });
 
@@ -214,14 +214,14 @@ export const updateProcessingStatus = mutation({
     id: v.id('documents'),
     status: processingStatusValidator,
   },
-  handler: async (ctx, {id, status}) => {
+  handler: async (ctx, { id, status }) => {
     const userId = await requireAuth(ctx);
     unwrapOrThrow(await verifyDocumentAccess(ctx, id, userId));
 
     await ctx.db.patch(id, {
       processingStatus: status,
       updatedAt: Date.now(),
-      ...(status === 'completed' && {processedAt: Date.now()}),
+      ...(status === 'completed' && { processedAt: Date.now() }),
     });
   },
 });
@@ -231,7 +231,7 @@ export const search = query({
     projectId: v.id('projects'),
     query: v.string(),
   },
-  handler: async (ctx, {projectId, query: searchQuery}) => {
+  handler: async (ctx, { projectId, query: searchQuery }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 
@@ -248,8 +248,8 @@ export const search = query({
 });
 
 export const listNeedingReview = query({
-  args: {projectId: v.id('projects')},
-  handler: async (ctx, {projectId}) => {
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 

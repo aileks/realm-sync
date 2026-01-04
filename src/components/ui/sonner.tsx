@@ -1,4 +1,4 @@
-import {Toaster as Sonner, type ToasterProps} from 'sonner';
+import { Toaster as Sonner, type ToasterProps } from 'sonner';
 import {
   CircleCheckIcon,
   InfoIcon,
@@ -7,7 +7,7 @@ import {
   Loader2Icon,
 } from 'lucide-react';
 
-function Toaster({...props}: ToasterProps) {
+function Toaster({ ...props }: ToasterProps) {
   return (
     <Sonner
       className="toaster group"
@@ -36,4 +36,4 @@ function Toaster({...props}: ToasterProps) {
   );
 }
 
-export {Toaster};
+export { Toaster };

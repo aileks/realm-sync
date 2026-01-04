@@ -1,14 +1,14 @@
-import type {FormEvent} from 'react';
-import {useState, useRef} from 'react';
-import {useMutation} from 'convex/react';
-import {Loader2, Upload, FileText, Type} from 'lucide-react';
-import {api} from '../../convex/_generated/api';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {Textarea} from '@/components/ui/textarea';
-import {Label} from '@/components/ui/label';
-import {cn, formatError} from '@/lib/utils';
-import type {Doc, Id} from '../../convex/_generated/dataModel';
+import type { FormEvent } from 'react';
+import { useState, useRef } from 'react';
+import { useMutation } from 'convex/react';
+import { Loader2, Upload, FileText, Type } from 'lucide-react';
+import { api } from '../../convex/_generated/api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { cn, formatError } from '@/lib/utils';
+import type { Doc, Id } from '../../convex/_generated/dataModel';
 
 type Document = Doc<'documents'>;
 type ContentType = 'text' | 'markdown' | 'file';
@@ -20,7 +20,7 @@ type DocumentFormProps = {
   onCancel?: () => void;
 };
 
-export function DocumentForm({projectId, document, onSuccess, onCancel}: DocumentFormProps) {
+export function DocumentForm({ projectId, document, onSuccess, onCancel }: DocumentFormProps) {
   const [title, setTitle] = useState(document?.title ?? '');
   const [content, setContent] = useState(document?.content ?? '');
   const [contentType, setContentType] = useState<ContentType>(document?.contentType ?? 'text');
@@ -49,10 +49,10 @@ export function DocumentForm({projectId, document, onSuccess, onCancel}: Documen
         const uploadUrl = await generateUploadUrl();
         const result = await fetch(uploadUrl, {
           method: 'POST',
-          headers: {'Content-Type': selectedFile.type},
+          headers: { 'Content-Type': selectedFile.type },
           body: selectedFile,
         });
-        const {storageId: uploadedId} = await result.json();
+        const { storageId: uploadedId } = await result.json();
         storageId = uploadedId;
 
         if (
@@ -103,11 +103,11 @@ export function DocumentForm({projectId, document, onSuccess, onCancel}: Documen
   const tabs: {
     id: ContentType;
     label: string;
-    icon: React.ComponentType<{className?: string}>;
+    icon: React.ComponentType<{ className?: string }>;
   }[] = [
-    {id: 'text', label: 'Paste Text', icon: Type},
-    {id: 'markdown', label: 'Markdown', icon: FileText},
-    {id: 'file', label: 'Upload File', icon: Upload},
+    { id: 'text', label: 'Paste Text', icon: Type },
+    { id: 'markdown', label: 'Markdown', icon: FileText },
+    { id: 'file', label: 'Upload File', icon: Upload },
   ];
 
   return (

@@ -1,13 +1,13 @@
-import {createFileRoute, useNavigate} from '@tanstack/react-router';
-import {useQuery} from 'convex/react';
-import {Sparkles, FileText, ArrowLeft, CheckCircle2} from 'lucide-react';
-import {api} from '../../convex/_generated/api';
-import type {Id} from '../../convex/_generated/dataModel';
-import {Button} from '@/components/ui/button';
-import {Card, CardHeader, CardTitle, CardDescription} from '@/components/ui/card';
-import {Badge} from '@/components/ui/badge';
-import {EmptyState} from '@/components/EmptyState';
-import {LoadingState} from '@/components/LoadingState';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useQuery } from 'convex/react';
+import { Sparkles, FileText, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/EmptyState';
+import { LoadingState } from '@/components/LoadingState';
 
 export const Route = createFileRoute('/projects_/$projectId_/review/')({
   component: ReviewQueuePage,
@@ -15,8 +15,8 @@ export const Route = createFileRoute('/projects_/$projectId_/review/')({
 
 function ReviewQueuePage() {
   const navigate = useNavigate();
-  const {projectId} = Route.useParams();
-  const project = useQuery(api.projects.get, {id: projectId as Id<'projects'>});
+  const { projectId } = Route.useParams();
+  const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
   const docsNeedingReview = useQuery(api.documents.listNeedingReview, {
     projectId: projectId as Id<'projects'>,
   });
@@ -29,7 +29,7 @@ function ReviewQueuePage() {
     return (
       <div className="container mx-auto flex h-[50vh] flex-col items-center justify-center p-6 text-center">
         <p className="text-muted-foreground mb-4">Project not found.</p>
-        <Button variant="outline" onClick={() => navigate({to: '/projects'})}>
+        <Button variant="outline" onClick={() => navigate({ to: '/projects' })}>
           Back to Projects
         </Button>
       </div>
@@ -43,7 +43,7 @@ function ReviewQueuePage() {
           variant="ghost"
           size="sm"
           className="text-muted-foreground hover:text-foreground mb-4 -ml-2"
-          onClick={() => navigate({to: '/projects/$projectId', params: {projectId}})}
+          onClick={() => navigate({ to: '/projects/$projectId', params: { projectId } })}
         >
           <ArrowLeft className="mr-1 size-4" />
           {project.name}
@@ -74,7 +74,7 @@ function ReviewQueuePage() {
                 variant="default"
                 className="mt-4"
                 onClick={() =>
-                  navigate({to: '/projects/$projectId/documents', params: {projectId}})
+                  navigate({ to: '/projects/$projectId/documents', params: { projectId } })
                 }
               >
                 <FileText className="mr-2 size-4" />
@@ -91,7 +91,7 @@ function ReviewQueuePage() {
               onClick={() =>
                 navigate({
                   to: '/projects/$projectId/review/$documentId',
-                  params: {projectId, documentId: doc._id},
+                  params: { projectId, documentId: doc._id },
                 })
               }
             >

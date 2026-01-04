@@ -1,10 +1,10 @@
-import {internalAction, internalMutation, action} from '../_generated/server';
-import {api, internal} from '../_generated/api';
-import {v} from 'convex/values';
-import type {Id} from '../_generated/dataModel';
-import {chunkDocument, needsChunking, mapEvidenceToDocument, type Chunk} from './chunk';
-import {err, apiError} from '../lib/errors';
-import {unwrapOrThrow, safeJsonParse} from '../lib/result';
+import { internalAction, internalMutation, action } from '../_generated/server';
+import { api, internal } from '../_generated/api';
+import { v } from 'convex/values';
+import type { Id } from '../_generated/dataModel';
+import { chunkDocument, needsChunking, mapEvidenceToDocument, type Chunk } from './chunk';
+import { err, apiError } from '../lib/errors';
+import { unwrapOrThrow, safeJsonParse } from '../lib/result';
 
 export const PROMPT_VERSION = 'v1';
 
@@ -30,10 +30,10 @@ export const EXTRACTION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          name: {type: 'string'},
-          type: {enum: ['character', 'location', 'item', 'concept', 'event']},
-          description: {type: 'string'},
-          aliases: {type: 'array', items: {type: 'string'}},
+          name: { type: 'string' },
+          type: { enum: ['character', 'location', 'item', 'concept', 'event'] },
+          description: { type: 'string' },
+          aliases: { type: 'array', items: { type: 'string' } },
         },
         required: ['name', 'type'],
         additionalProperties: false,
@@ -44,17 +44,17 @@ export const EXTRACTION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          entityName: {type: 'string'},
-          subject: {type: 'string'},
-          predicate: {type: 'string'},
-          object: {type: 'string'},
-          confidence: {type: 'number', minimum: 0, maximum: 1},
-          evidence: {type: 'string'},
+          entityName: { type: 'string' },
+          subject: { type: 'string' },
+          predicate: { type: 'string' },
+          object: { type: 'string' },
+          confidence: { type: 'number', minimum: 0, maximum: 1 },
+          evidence: { type: 'string' },
           temporalBound: {
             type: 'object',
             properties: {
-              type: {enum: ['point', 'range', 'relative']},
-              value: {type: 'string'},
+              type: { enum: ['point', 'range', 'relative'] },
+              value: { type: 'string' },
             },
           },
         },
@@ -67,10 +67,10 @@ export const EXTRACTION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          sourceEntity: {type: 'string'},
-          targetEntity: {type: 'string'},
-          relationshipType: {type: 'string'},
-          evidence: {type: 'string'},
+          sourceEntity: { type: 'string' },
+          targetEntity: { type: 'string' },
+          relationshipType: { type: 'string' },
+          evidence: { type: 'string' },
         },
         required: ['sourceEntity', 'targetEntity', 'relationshipType', 'evidence'],
         additionalProperties: false,
@@ -128,8 +128,8 @@ async function callLLM(content: string, apiKey: string, model: string): Promise<
     body: JSON.stringify({
       model,
       messages: [
-        {role: 'system', content: VELLUM_SYSTEM_PROMPT},
-        {role: 'user', content},
+        { role: 'system', content: VELLUM_SYSTEM_PROMPT },
+        { role: 'user', content },
       ],
       response_format: {
         type: 'json_schema',
@@ -202,14 +202,14 @@ function normalizeExtractionResult(raw: unknown): ExtractionResult {
         (result.facts as Array<Record<string, unknown>>)
       : Object.entries(result.facts as Record<string, unknown>).map(([key, data]) => {
           const d = data as Record<string, unknown>;
-          return {...d, entityName: d.entityName ?? key, subject: d.subject ?? key};
+          return { ...d, entityName: d.entityName ?? key, subject: d.subject ?? key };
         });
 
     for (const f of rawFacts) {
       const tb = f.temporalBound as Record<string, unknown> | undefined;
       const validTb =
         tb?.type && tb?.value ?
-          {type: tb.type as 'point' | 'range' | 'relative', value: tb.value as string}
+          { type: tb.type as 'point' | 'range' | 'relative', value: tb.value as string }
         : undefined;
 
       const rawEvidence = f.evidence;
@@ -224,7 +224,7 @@ function normalizeExtractionResult(raw: unknown): ExtractionResult {
         confidence: (f.confidence as number) ?? 0.8,
         evidence,
         temporalBound: validTb,
-        evidencePosition: f.evidencePosition as {start: number; end: number} | undefined,
+        evidencePosition: f.evidencePosition as { start: number; end: number } | undefined,
       });
     }
   }
@@ -240,13 +240,13 @@ function normalizeExtractionResult(raw: unknown): ExtractionResult {
           targetEntity: (r.targetEntity as string) ?? '',
           relationshipType: (r.relationshipType as string) ?? '',
           evidence,
-          evidencePosition: r.evidencePosition as {start: number; end: number} | undefined,
+          evidencePosition: r.evidencePosition as { start: number; end: number } | undefined,
         });
       }
     }
   }
 
-  return {entities, facts, relationships};
+  return { entities, facts, relationships };
 }
 
 function mergeExtractionResults(results: ExtractionResult[]): ExtractionResult {
@@ -311,9 +311,9 @@ function adjustEvidencePositions(
 }
 
 export const extractFromDocument = internalAction({
-  args: {documentId: v.id('documents')},
-  handler: async (ctx, {documentId}): Promise<ExtractionResult> => {
-    const doc = await ctx.runQuery(api.documents.get, {id: documentId});
+  args: { documentId: v.id('documents') },
+  handler: async (ctx, { documentId }): Promise<ExtractionResult> => {
+    const doc = await ctx.runQuery(api.documents.get, { id: documentId });
     if (!doc || !doc.content) {
       throw new Error('Document not found or empty');
     }
@@ -354,7 +354,7 @@ export const extractFromDocument = internalAction({
 
         const cachedChunk: ExtractionResult | null = await ctx.runQuery(
           internal.llm.cache.checkCache,
-          {inputHash: chunkHash, promptVersion: PROMPT_VERSION}
+          { inputHash: chunkHash, promptVersion: PROMPT_VERSION }
         );
 
         let chunkResult: ExtractionResult;
@@ -455,7 +455,10 @@ export const chunkAndExtract = action({
   args: {
     documentId: v.id('documents'),
   },
-  handler: async (ctx, {documentId}): Promise<{entitiesCreated: number; factsCreated: number}> => {
+  handler: async (
+    ctx,
+    { documentId }
+  ): Promise<{ entitiesCreated: number; factsCreated: number }> => {
     await ctx.runMutation(api.documents.updateProcessingStatus, {
       id: documentId,
       status: 'processing',
@@ -464,7 +467,7 @@ export const chunkAndExtract = action({
     try {
       const result: ExtractionResult = await ctx.runAction(
         internal.llm.extract.extractFromDocument,
-        {documentId}
+        { documentId }
       );
 
       return await ctx.runMutation(internal.llm.extract.processExtractionResult, {
@@ -486,7 +489,7 @@ export const processExtractionResult = internalMutation({
     documentId: v.id('documents'),
     result: extractionResultValidator,
   },
-  handler: async (ctx, {documentId, result}) => {
+  handler: async (ctx, { documentId, result }) => {
     const doc = await ctx.db.get(documentId);
     if (!doc) {
       throw new Error('Document not found');
@@ -589,6 +592,6 @@ export const processExtractionResult = internalMutation({
       });
     }
 
-    return {entitiesCreated: newEntityCount, factsCreated: newFactCount};
+    return { entitiesCreated: newEntityCount, factsCreated: newFactCount };
   },
 });

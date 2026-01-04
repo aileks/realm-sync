@@ -1,5 +1,5 @@
-import {convexTest} from 'convex-test';
-import type {Id} from '../../_generated/dataModel';
+import { convexTest } from 'convex-test';
+import type { Id } from '../../_generated/dataModel';
 import schema from '../../schema';
 
 const getModules = () => import.meta.glob('../../**/*.ts');
@@ -26,8 +26,8 @@ export async function setupAuthenticatedUser(t: TestContext) {
     });
   });
 
-  const asUser = t.withIdentity({subject: userId});
-  return {userId, asUser};
+  const asUser = t.withIdentity({ subject: userId });
+  return { userId, asUser };
 }
 
 export async function setupOtherUser(t: TestContext) {
@@ -43,7 +43,7 @@ export async function setupOtherUser(t: TestContext) {
 type ProjectOverrides = {
   name?: string;
   withStats?: boolean;
-  stats?: {documentCount: number; entityCount: number; factCount: number; alertCount: number};
+  stats?: { documentCount: number; entityCount: number; factCount: number; alertCount: number };
 };
 
 export async function setupProject(
@@ -51,7 +51,7 @@ export async function setupProject(
   userId: Id<'users'>,
   overrides: ProjectOverrides = {}
 ) {
-  const {name = 'Test Project', withStats = true, stats} = overrides;
+  const { name = 'Test Project', withStats = true, stats } = overrides;
 
   return await t.run(async (ctx) => {
     return await ctx.db.insert('projects', {
@@ -59,7 +59,7 @@ export async function setupProject(
       name,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      ...(withStats && {stats: stats ?? defaultStats()}),
+      ...(withStats && { stats: stats ?? defaultStats() }),
     });
   });
 }
@@ -124,10 +124,10 @@ export async function setupEntity(
       projectId,
       name,
       type,
-      ...(description && {description}),
+      ...(description && { description }),
       aliases,
       status,
-      ...(firstMentionedIn && {firstMentionedIn}),
+      ...(firstMentionedIn && { firstMentionedIn }),
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -145,7 +145,7 @@ type FactOverrides = {
 
 export async function setupFact(
   t: TestContext,
-  ids: {projectId: Id<'projects'>; entityId: Id<'entities'>; documentId: Id<'documents'>},
+  ids: { projectId: Id<'projects'>; entityId: Id<'entities'>; documentId: Id<'documents'> },
   overrides: FactOverrides = {}
 ) {
   const {
@@ -185,5 +185,5 @@ export async function setupProjectWithEntities(t: TestContext, userId: Id<'users
     firstMentionedIn: documentId,
   });
 
-  return {projectId, documentId, entityId};
+  return { projectId, documentId, entityId };
 }

@@ -1,5 +1,5 @@
-import {describe, it, expect} from 'vitest';
-import {cn} from '@/lib/utils';
+import { describe, it, expect } from 'vitest';
+import { cn } from '@/lib/utils';
 
 describe('cn', () => {
   it('merges tailwind classes correctly', () => {
@@ -7,8 +7,8 @@ describe('cn', () => {
   });
 
   it('handles clsx-compatible inputs', () => {
-    expect(cn('text-red-500', {'bg-blue-500': true})).toContain('text-red-500');
-    expect(cn('text-red-500', {'bg-blue-500': true})).toContain('bg-blue-500');
+    expect(cn('text-red-500', { 'bg-blue-500': true })).toContain('text-red-500');
+    expect(cn('text-red-500', { 'bg-blue-500': true })).toContain('bg-blue-500');
   });
 
   it('resolves conflicts (later classes win)', () => {

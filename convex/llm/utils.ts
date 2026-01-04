@@ -1,11 +1,11 @@
-import {internalQuery} from '../_generated/server';
-import {v} from 'convex/values';
+import { internalQuery } from '../_generated/server';
+import { v } from 'convex/values';
 
 export const computeHash = internalQuery({
   args: {
     content: v.string(),
   },
-  handler: async (_ctx, {content}) => {
+  handler: async (_ctx, { content }) => {
     const encoder = new TextEncoder();
     const data = encoder.encode(content);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);

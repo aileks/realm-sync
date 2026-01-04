@@ -115,7 +115,7 @@ Use Lucide React exclusively. Key mappings:
 Use Sonner (`src/components/ui/sonner.tsx`) for all user feedback:
 
 ```tsx
-import {toast} from 'sonner';
+import { toast } from 'sonner';
 
 // Success
 toast.success('Extraction complete', {

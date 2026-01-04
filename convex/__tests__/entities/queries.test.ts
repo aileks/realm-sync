@@ -1,6 +1,6 @@
-import {describe, it, expect, beforeEach} from 'vitest';
-import {api} from '../../_generated/api';
-import type {Doc, Id} from '../../_generated/dataModel';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { api } from '../../_generated/api';
+import type { Doc, Id } from '../../_generated/dataModel';
 import {
   type TestContext,
   createTestContext,
@@ -13,7 +13,7 @@ import {
   setupOtherUser,
 } from './helpers';
 
-type EntityWithStats = Doc<'entities'> & {factCount: number};
+type EntityWithStats = Doc<'entities'> & { factCount: number };
 
 describe('entities queries', () => {
   describe('listByProject', () => {
@@ -31,16 +31,16 @@ describe('entities queries', () => {
     });
 
     it('returns all entities for project', async () => {
-      await setupEntity(t, projectId, {name: 'Character 1', status: 'confirmed'});
-      await setupEntity(t, projectId, {name: 'Location 1', type: 'location', status: 'pending'});
+      await setupEntity(t, projectId, { name: 'Character 1', status: 'confirmed' });
+      await setupEntity(t, projectId, { name: 'Location 1', type: 'location', status: 'pending' });
 
-      const entities = await asUser.query(api.entities.listByProject, {projectId});
+      const entities = await asUser.query(api.entities.listByProject, { projectId });
       expect(entities).toHaveLength(2);
     });
 
     it('filters by type when provided', async () => {
-      await setupEntity(t, projectId, {name: 'Character 1', status: 'confirmed'});
-      await setupEntity(t, projectId, {name: 'Location 1', type: 'location', status: 'pending'});
+      await setupEntity(t, projectId, { name: 'Character 1', status: 'confirmed' });
+      await setupEntity(t, projectId, { name: 'Location 1', type: 'location', status: 'pending' });
 
       const entities = await asUser.query(api.entities.listByProject, {
         projectId,
@@ -51,8 +51,8 @@ describe('entities queries', () => {
     });
 
     it('filters by status when provided', async () => {
-      await setupEntity(t, projectId, {name: 'Confirmed Entity', status: 'confirmed'});
-      await setupEntity(t, projectId, {name: 'Pending Entity', status: 'pending'});
+      await setupEntity(t, projectId, { name: 'Confirmed Entity', status: 'confirmed' });
+      await setupEntity(t, projectId, { name: 'Pending Entity', status: 'pending' });
 
       const entities = await asUser.query(api.entities.listByProject, {
         projectId,
@@ -90,14 +90,14 @@ describe('entities queries', () => {
     });
 
     it('returns entities with fact counts', async () => {
-      const entity1 = await setupEntity(t, projectId, {name: 'Entity A', status: 'confirmed'});
-      const entity2 = await setupEntity(t, projectId, {name: 'Entity B', status: 'confirmed'});
+      const entity1 = await setupEntity(t, projectId, { name: 'Entity A', status: 'confirmed' });
+      const entity2 = await setupEntity(t, projectId, { name: 'Entity B', status: 'confirmed' });
 
-      await setupFact(t, {projectId, entityId: entity1, documentId}, {status: 'confirmed'});
-      await setupFact(t, {projectId, entityId: entity1, documentId}, {status: 'confirmed'});
-      await setupFact(t, {projectId, entityId: entity2, documentId}, {status: 'confirmed'});
+      await setupFact(t, { projectId, entityId: entity1, documentId }, { status: 'confirmed' });
+      await setupFact(t, { projectId, entityId: entity1, documentId }, { status: 'confirmed' });
+      await setupFact(t, { projectId, entityId: entity2, documentId }, { status: 'confirmed' });
 
-      const entities = await asUser.query(api.entities.listByProjectWithStats, {projectId});
+      const entities = await asUser.query(api.entities.listByProjectWithStats, { projectId });
 
       expect(entities).toHaveLength(2);
       const entityA = entities.find((e: EntityWithStats) => e.name === 'Entity A');
@@ -111,31 +111,31 @@ describe('entities queries', () => {
         name: 'Test Entity',
         status: 'confirmed',
       });
-      const ids = {projectId, entityId, documentId};
+      const ids = { projectId, entityId, documentId };
 
-      await setupFact(t, ids, {status: 'confirmed'});
-      await setupFact(t, ids, {status: 'rejected'});
-      await setupFact(t, ids, {status: 'pending'});
+      await setupFact(t, ids, { status: 'confirmed' });
+      await setupFact(t, ids, { status: 'rejected' });
+      await setupFact(t, ids, { status: 'pending' });
 
-      const entities = await asUser.query(api.entities.listByProjectWithStats, {projectId});
+      const entities = await asUser.query(api.entities.listByProjectWithStats, { projectId });
 
       expect(entities[0].factCount).toBe(2);
     });
 
     it('sorts by name ascending by default', async () => {
-      await setupEntity(t, projectId, {name: 'Zebra', status: 'confirmed'});
-      await setupEntity(t, projectId, {name: 'Apple', status: 'confirmed'});
-      await setupEntity(t, projectId, {name: 'Mango', status: 'confirmed'});
+      await setupEntity(t, projectId, { name: 'Zebra', status: 'confirmed' });
+      await setupEntity(t, projectId, { name: 'Apple', status: 'confirmed' });
+      await setupEntity(t, projectId, { name: 'Mango', status: 'confirmed' });
 
-      const entities = await asUser.query(api.entities.listByProjectWithStats, {projectId});
+      const entities = await asUser.query(api.entities.listByProjectWithStats, { projectId });
 
       expect(entities.map((e: EntityWithStats) => e.name)).toEqual(['Apple', 'Mango', 'Zebra']);
     });
 
     it('sorts by recent when specified', async () => {
-      await setupEntity(t, projectId, {name: 'Old', status: 'confirmed'});
+      await setupEntity(t, projectId, { name: 'Old', status: 'confirmed' });
       await new Promise((resolve) => setTimeout(resolve, 10));
-      await setupEntity(t, projectId, {name: 'New', status: 'confirmed'});
+      await setupEntity(t, projectId, { name: 'New', status: 'confirmed' });
 
       const entities = await asUser.query(api.entities.listByProjectWithStats, {
         projectId,
@@ -147,13 +147,13 @@ describe('entities queries', () => {
     });
 
     it('sorts by fact count when specified', async () => {
-      const entity1 = await setupEntity(t, projectId, {name: 'Few Facts', status: 'confirmed'});
-      const entity2 = await setupEntity(t, projectId, {name: 'Many Facts', status: 'confirmed'});
+      const entity1 = await setupEntity(t, projectId, { name: 'Few Facts', status: 'confirmed' });
+      const entity2 = await setupEntity(t, projectId, { name: 'Many Facts', status: 'confirmed' });
 
-      await setupFact(t, {projectId, entityId: entity1, documentId}, {status: 'confirmed'});
-      await setupFact(t, {projectId, entityId: entity2, documentId}, {status: 'confirmed'});
-      await setupFact(t, {projectId, entityId: entity2, documentId}, {status: 'confirmed'});
-      await setupFact(t, {projectId, entityId: entity2, documentId}, {status: 'confirmed'});
+      await setupFact(t, { projectId, entityId: entity1, documentId }, { status: 'confirmed' });
+      await setupFact(t, { projectId, entityId: entity2, documentId }, { status: 'confirmed' });
+      await setupFact(t, { projectId, entityId: entity2, documentId }, { status: 'confirmed' });
+      await setupFact(t, { projectId, entityId: entity2, documentId }, { status: 'confirmed' });
 
       const entities = await asUser.query(api.entities.listByProjectWithStats, {
         projectId,
@@ -177,7 +177,7 @@ describe('entities queries', () => {
         type: 'character',
         status: 'confirmed',
       });
-      await setupEntity(t, projectId, {name: 'Loc Pending', type: 'location', status: 'pending'});
+      await setupEntity(t, projectId, { name: 'Loc Pending', type: 'location', status: 'pending' });
 
       const entities = await asUser.query(api.entities.listByProjectWithStats, {
         projectId,
@@ -210,7 +210,7 @@ describe('entities queries', () => {
         status: 'confirmed',
       });
 
-      const ids = {projectId, entityId, documentId};
+      const ids = { projectId, entityId, documentId };
       await setupFact(t, ids, {
         subject: 'Jon Snow',
         predicate: 'is',
@@ -225,26 +225,26 @@ describe('entities queries', () => {
         status: 'pending',
       });
 
-      const result = await asUser.query(api.entities.getWithFacts, {id: entityId});
+      const result = await asUser.query(api.entities.getWithFacts, { id: entityId });
       expect(result).not.toBeNull();
       expect(result?.entity.name).toBe('Jon Snow');
       expect(result?.facts).toHaveLength(2);
     });
 
     it('returns null when entity not found', async () => {
-      const {entityId} = await setupProjectWithEntities(t, userId);
+      const { entityId } = await setupProjectWithEntities(t, userId);
       await t.run(async (ctx) => ctx.db.delete(entityId));
 
-      const result = await asUser.query(api.entities.getWithFacts, {id: entityId});
+      const result = await asUser.query(api.entities.getWithFacts, { id: entityId });
       expect(result).toBeNull();
     });
 
     it('returns null when not project owner', async () => {
       const otherUserId = await setupOtherUser(t);
       const otherProjectId = await setupProject(t, otherUserId);
-      const entityId = await setupEntity(t, otherProjectId, {status: 'confirmed'});
+      const entityId = await setupEntity(t, otherProjectId, { status: 'confirmed' });
 
-      const result = await asUser.query(api.entities.getWithFacts, {id: entityId});
+      const result = await asUser.query(api.entities.getWithFacts, { id: entityId });
       expect(result).toBeNull();
     });
   });
@@ -264,11 +264,11 @@ describe('entities queries', () => {
     });
 
     it('returns only pending entities for project', async () => {
-      await setupEntity(t, projectId, {name: 'Pending 1', status: 'pending'});
-      await setupEntity(t, projectId, {name: 'Pending 2', type: 'location', status: 'pending'});
-      await setupEntity(t, projectId, {name: 'Confirmed', type: 'item', status: 'confirmed'});
+      await setupEntity(t, projectId, { name: 'Pending 1', status: 'pending' });
+      await setupEntity(t, projectId, { name: 'Pending 2', type: 'location', status: 'pending' });
+      await setupEntity(t, projectId, { name: 'Confirmed', type: 'item', status: 'confirmed' });
 
-      const pending = await asUser.query(api.entities.listPending, {projectId});
+      const pending = await asUser.query(api.entities.listPending, { projectId });
       expect(pending).toHaveLength(2);
       expect(pending.every((e) => e.status === 'pending')).toBe(true);
     });
@@ -289,13 +289,13 @@ describe('entities queries', () => {
     });
 
     it('finds entities with overlapping names', async () => {
-      const entityId = await setupEntity(t, projectId, {name: 'Jon', status: 'pending'});
+      const entityId = await setupEntity(t, projectId, { name: 'Jon', status: 'pending' });
       await setupEntity(t, projectId, {
         name: 'Jon Snow',
         aliases: ['Lord Snow'],
         status: 'confirmed',
       });
-      await setupEntity(t, projectId, {name: 'Daenerys', status: 'confirmed'});
+      await setupEntity(t, projectId, { name: 'Daenerys', status: 'confirmed' });
 
       const similar = await asUser.query(api.entities.findSimilar, {
         projectId,
@@ -442,8 +442,8 @@ describe('entities queries', () => {
 
     it('returns entity with facts and appearances', async () => {
       const projectId = await setupProject(t, userId);
-      const doc1 = await setupDocument(t, projectId, {title: 'Chapter 1'});
-      const doc2 = await setupDocument(t, projectId, {title: 'Chapter 2'});
+      const doc1 = await setupDocument(t, projectId, { title: 'Chapter 1' });
+      const doc2 = await setupDocument(t, projectId, { title: 'Chapter 2' });
       const entityId = await setupEntity(t, projectId, {
         name: 'Jon Snow',
         description: 'King in the North',
@@ -453,12 +453,12 @@ describe('entities queries', () => {
 
       await setupFact(
         t,
-        {projectId, entityId, documentId: doc1},
-        {subject: 'Jon Snow', predicate: 'eye_color', object: 'grey', status: 'confirmed'}
+        { projectId, entityId, documentId: doc1 },
+        { subject: 'Jon Snow', predicate: 'eye_color', object: 'grey', status: 'confirmed' }
       );
       await setupFact(
         t,
-        {projectId, entityId, documentId: doc2},
+        { projectId, entityId, documentId: doc2 },
         {
           subject: 'Jon Snow',
           predicate: 'title',
@@ -467,7 +467,7 @@ describe('entities queries', () => {
         }
       );
 
-      const result = await asUser.query(api.entities.getWithDetails, {id: entityId});
+      const result = await asUser.query(api.entities.getWithDetails, { id: entityId });
 
       expect(result).not.toBeNull();
       expect(result?.entity.name).toBe('Jon Snow');
@@ -480,14 +480,14 @@ describe('entities queries', () => {
     it('excludes rejected facts', async () => {
       const projectId = await setupProject(t, userId);
       const documentId = await setupDocument(t, projectId);
-      const entityId = await setupEntity(t, projectId, {name: 'Test', status: 'confirmed'});
+      const entityId = await setupEntity(t, projectId, { name: 'Test', status: 'confirmed' });
 
-      const ids = {projectId, entityId, documentId};
-      await setupFact(t, ids, {predicate: 'is', object: 'good', status: 'confirmed'});
-      await setupFact(t, ids, {predicate: 'was', object: 'bad', status: 'rejected'});
-      await setupFact(t, ids, {predicate: 'will_be', object: 'great', status: 'pending'});
+      const ids = { projectId, entityId, documentId };
+      await setupFact(t, ids, { predicate: 'is', object: 'good', status: 'confirmed' });
+      await setupFact(t, ids, { predicate: 'was', object: 'bad', status: 'rejected' });
+      await setupFact(t, ids, { predicate: 'will_be', object: 'great', status: 'pending' });
 
-      const result = await asUser.query(api.entities.getWithDetails, {id: entityId});
+      const result = await asUser.query(api.entities.getWithDetails, { id: entityId });
 
       expect(result?.facts).toHaveLength(2);
       expect(result?.facts.map((f) => f.status)).not.toContain('rejected');
@@ -495,15 +495,15 @@ describe('entities queries', () => {
 
     it('returns unique appearances from multiple facts in same document', async () => {
       const projectId = await setupProject(t, userId);
-      const documentId = await setupDocument(t, projectId, {title: 'Single Doc'});
-      const entityId = await setupEntity(t, projectId, {name: 'Test', status: 'confirmed'});
+      const documentId = await setupDocument(t, projectId, { title: 'Single Doc' });
+      const entityId = await setupEntity(t, projectId, { name: 'Test', status: 'confirmed' });
 
-      const ids = {projectId, entityId, documentId};
-      await setupFact(t, ids, {predicate: 'is', object: 'a', status: 'confirmed'});
-      await setupFact(t, ids, {predicate: 'has', object: 'b', status: 'confirmed'});
-      await setupFact(t, ids, {predicate: 'does', object: 'c', status: 'confirmed'});
+      const ids = { projectId, entityId, documentId };
+      await setupFact(t, ids, { predicate: 'is', object: 'a', status: 'confirmed' });
+      await setupFact(t, ids, { predicate: 'has', object: 'b', status: 'confirmed' });
+      await setupFact(t, ids, { predicate: 'does', object: 'c', status: 'confirmed' });
 
-      const result = await asUser.query(api.entities.getWithDetails, {id: entityId});
+      const result = await asUser.query(api.entities.getWithDetails, { id: entityId });
 
       expect(result?.facts).toHaveLength(3);
       expect(result?.appearances).toHaveLength(1);
@@ -511,19 +511,19 @@ describe('entities queries', () => {
     });
 
     it('returns null when entity not found', async () => {
-      const {entityId} = await setupProjectWithEntities(t, userId);
+      const { entityId } = await setupProjectWithEntities(t, userId);
       await t.run(async (ctx) => ctx.db.delete(entityId));
 
-      const result = await asUser.query(api.entities.getWithDetails, {id: entityId});
+      const result = await asUser.query(api.entities.getWithDetails, { id: entityId });
       expect(result).toBeNull();
     });
 
     it('returns null when not project owner', async () => {
       const otherUserId = await setupOtherUser(t);
       const otherProjectId = await setupProject(t, otherUserId);
-      const entityId = await setupEntity(t, otherProjectId, {status: 'confirmed'});
+      const entityId = await setupEntity(t, otherProjectId, { status: 'confirmed' });
 
-      const result = await asUser.query(api.entities.getWithDetails, {id: entityId});
+      const result = await asUser.query(api.entities.getWithDetails, { id: entityId });
       expect(result).toBeNull();
     });
 
@@ -531,17 +531,17 @@ describe('entities queries', () => {
       const projectId = await setupProject(t, userId);
       const documentId = await setupDocument(t, projectId);
 
-      const jonId = await setupEntity(t, projectId, {name: 'Jon Snow', status: 'confirmed'});
-      const daenerysId = await setupEntity(t, projectId, {name: 'Daenerys', status: 'confirmed'});
-      await setupEntity(t, projectId, {name: 'Arya Stark', status: 'confirmed'});
+      const jonId = await setupEntity(t, projectId, { name: 'Jon Snow', status: 'confirmed' });
+      const daenerysId = await setupEntity(t, projectId, { name: 'Daenerys', status: 'confirmed' });
+      await setupEntity(t, projectId, { name: 'Arya Stark', status: 'confirmed' });
 
       await setupFact(
         t,
-        {projectId, entityId: jonId, documentId},
-        {subject: 'Jon Snow', predicate: 'met', object: 'Daenerys', status: 'confirmed'}
+        { projectId, entityId: jonId, documentId },
+        { subject: 'Jon Snow', predicate: 'met', object: 'Daenerys', status: 'confirmed' }
       );
 
-      const result = await asUser.query(api.entities.getWithDetails, {id: jonId});
+      const result = await asUser.query(api.entities.getWithDetails, { id: jonId });
 
       expect(result?.relatedEntities).toBeDefined();
       expect(result?.relatedEntities).toHaveLength(1);
@@ -564,7 +564,7 @@ describe('entities queries', () => {
     });
 
     it('returns only event-type entities', async () => {
-      const doc = await setupDocument(t, projectId, {title: 'Chapter 1'});
+      const doc = await setupDocument(t, projectId, { title: 'Chapter 1' });
       await setupEntity(t, projectId, {
         name: 'The Battle',
         type: 'event',
@@ -579,7 +579,7 @@ describe('entities queries', () => {
         status: 'confirmed',
       });
 
-      const events = await asUser.query(api.entities.listEvents, {projectId});
+      const events = await asUser.query(api.entities.listEvents, { projectId });
 
       expect(events).toHaveLength(1);
       expect(events[0].name).toBe('The Battle');
@@ -587,12 +587,12 @@ describe('entities queries', () => {
     });
 
     it('orders events by document orderIndex', async () => {
-      const doc1 = await setupDocument(t, projectId, {title: 'Chapter 1'});
-      const doc2 = await setupDocument(t, projectId, {title: 'Chapter 2'});
+      const doc1 = await setupDocument(t, projectId, { title: 'Chapter 1' });
+      const doc2 = await setupDocument(t, projectId, { title: 'Chapter 2' });
 
       await t.run(async (ctx) => {
-        await ctx.db.patch(doc1, {orderIndex: 1});
-        await ctx.db.patch(doc2, {orderIndex: 0});
+        await ctx.db.patch(doc1, { orderIndex: 1 });
+        await ctx.db.patch(doc2, { orderIndex: 0 });
       });
 
       await setupEntity(t, projectId, {
@@ -610,7 +610,7 @@ describe('entities queries', () => {
         firstMentionedIn: doc2,
       });
 
-      const events = await asUser.query(api.entities.listEvents, {projectId});
+      const events = await asUser.query(api.entities.listEvents, { projectId });
 
       expect(events).toHaveLength(2);
       expect(events[0].name).toBe('Earlier Event');
@@ -620,7 +620,7 @@ describe('entities queries', () => {
     it('returns empty array when not project owner', async () => {
       const otherUserId = await setupOtherUser(t);
       const otherProjectId = await setupProject(t, otherUserId);
-      const doc = await setupDocument(t, otherProjectId, {title: 'Secret'});
+      const doc = await setupDocument(t, otherProjectId, { title: 'Secret' });
       await setupEntity(t, otherProjectId, {
         name: 'Secret Event',
         type: 'event',
@@ -629,13 +629,13 @@ describe('entities queries', () => {
         firstMentionedIn: doc,
       });
 
-      const events = await asUser.query(api.entities.listEvents, {projectId: otherProjectId});
+      const events = await asUser.query(api.entities.listEvents, { projectId: otherProjectId });
 
       expect(events).toEqual([]);
     });
 
     it('includes document info for each event', async () => {
-      const doc = await setupDocument(t, projectId, {title: 'The Beginning'});
+      const doc = await setupDocument(t, projectId, { title: 'The Beginning' });
       await setupEntity(t, projectId, {
         name: 'Opening Battle',
         type: 'event',
@@ -644,7 +644,7 @@ describe('entities queries', () => {
         firstMentionedIn: doc,
       });
 
-      const events = await asUser.query(api.entities.listEvents, {projectId});
+      const events = await asUser.query(api.entities.listEvents, { projectId });
 
       expect(events).toHaveLength(1);
       expect(events[0].document).toBeDefined();
@@ -652,7 +652,7 @@ describe('entities queries', () => {
     });
 
     it('returns only confirmed events by default', async () => {
-      const doc = await setupDocument(t, projectId, {title: 'Chapter 1'});
+      const doc = await setupDocument(t, projectId, { title: 'Chapter 1' });
       await setupEntity(t, projectId, {
         name: 'Confirmed Event',
         type: 'event',
@@ -668,7 +668,7 @@ describe('entities queries', () => {
         firstMentionedIn: doc,
       });
 
-      const events = await asUser.query(api.entities.listEvents, {projectId});
+      const events = await asUser.query(api.entities.listEvents, { projectId });
 
       expect(events).toHaveLength(1);
       expect(events[0].name).toBe('Confirmed Event');

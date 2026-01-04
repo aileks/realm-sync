@@ -1,5 +1,5 @@
-import {Result} from 'neverthrow';
-import type {AppError, ValidationError} from './errors';
+import { Result } from 'neverthrow';
+import type { AppError, ValidationError } from './errors';
 
 function unwrapOrThrow<T>(result: Result<T, AppError>): T {
   if (result.isErr()) {
@@ -33,4 +33,4 @@ const safeJsonParse = Result.fromThrowable(
   })
 );
 
-export {unwrapOrThrow, safeJsonParse};
+export { unwrapOrThrow, safeJsonParse };

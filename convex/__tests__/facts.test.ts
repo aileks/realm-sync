@@ -1,7 +1,7 @@
-import {convexTest} from 'convex-test';
-import {describe, it, expect} from 'vitest';
-import {api} from '../_generated/api';
-import type {Id} from '../_generated/dataModel';
+import { convexTest } from 'convex-test';
+import { describe, it, expect } from 'vitest';
+import { api } from '../_generated/api';
+import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
 
 const getModules = () => import.meta.glob('../**/*.ts');
@@ -15,8 +15,8 @@ async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
     });
   });
 
-  const asUser = t.withIdentity({subject: userId});
-  return {userId, asUser};
+  const asUser = t.withIdentity({ subject: userId });
+  return { userId, asUser };
 }
 
 async function setupProjectWithEntityAndDoc(t: ReturnType<typeof convexTest>, userId: Id<'users'>) {
@@ -26,7 +26,7 @@ async function setupProjectWithEntityAndDoc(t: ReturnType<typeof convexTest>, us
       name: 'Test Project',
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      stats: {documentCount: 1, entityCount: 1, factCount: 0, alertCount: 0},
+      stats: { documentCount: 1, entityCount: 1, factCount: 0, alertCount: 0 },
     });
 
     const documentId = await ctx.db.insert('documents', {
@@ -51,7 +51,7 @@ async function setupProjectWithEntityAndDoc(t: ReturnType<typeof convexTest>, us
       updatedAt: Date.now(),
     });
 
-    return {projectId, documentId, entityId};
+    return { projectId, documentId, entityId };
   });
 }
 
@@ -59,8 +59,8 @@ describe('facts', () => {
   describe('create mutation', () => {
     it('creates fact with pending status by default', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       const factId = await asUser.mutation(api.facts.create, {
         projectId,
@@ -84,8 +84,8 @@ describe('facts', () => {
 
     it('creates fact with confirmed status when specified', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       const factId = await asUser.mutation(api.facts.create, {
         projectId,
@@ -105,8 +105,8 @@ describe('facts', () => {
 
     it('increments project factCount stat', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       await asUser.mutation(api.facts.create, {
         projectId,
@@ -125,9 +125,9 @@ describe('facts', () => {
 
     it('works on projects without pre-existing stats', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
 
-      const {projectId, documentId, entityId} = await t.run(async (ctx) => {
+      const { projectId, documentId, entityId } = await t.run(async (ctx) => {
         const pId = await ctx.db.insert('projects', {
           userId,
           name: 'No Stats Project',
@@ -153,7 +153,7 @@ describe('facts', () => {
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        return {projectId: pId, documentId: dId, entityId: eId};
+        return { projectId: pId, documentId: dId, entityId: eId };
       });
 
       await asUser.mutation(api.facts.create, {
@@ -173,8 +173,8 @@ describe('facts', () => {
 
     it('stores temporal bound when provided', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       const factId = await asUser.mutation(api.facts.create, {
         projectId,
@@ -185,17 +185,17 @@ describe('facts', () => {
         object: 'Lord Commander',
         confidence: 1.0,
         evidenceSnippet: 'text',
-        temporalBound: {type: 'point', value: 'Season 5'},
+        temporalBound: { type: 'point', value: 'Season 5' },
       });
 
       const fact = await t.run(async (ctx) => ctx.db.get(factId));
-      expect(fact?.temporalBound).toEqual({type: 'point', value: 'Season 5'});
+      expect(fact?.temporalBound).toEqual({ type: 'point', value: 'Season 5' });
     });
 
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, getModules());
-      const {userId} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       await expect(
         t.mutation(api.facts.create, {
@@ -213,9 +213,9 @@ describe('facts', () => {
 
     it('throws when not project owner', async () => {
       const t = convexTest(schema, getModules());
-      const {asUser} = await setupAuthenticatedUser(t);
+      const { asUser } = await setupAuthenticatedUser(t);
 
-      const {projectId, documentId, entityId} = await t.run(async (ctx) => {
+      const { projectId, documentId, entityId } = await t.run(async (ctx) => {
         const otherUserId = await ctx.db.insert('users', {
           name: 'Other',
           email: 'other@test.com',
@@ -246,7 +246,7 @@ describe('facts', () => {
           createdAt: Date.now(),
           updatedAt: Date.now(),
         });
-        return {projectId: pId, documentId: dId, entityId: eId};
+        return { projectId: pId, documentId: dId, entityId: eId };
       });
 
       await expect(
@@ -267,8 +267,8 @@ describe('facts', () => {
   describe('confirm mutation', () => {
     it('changes status from pending to confirmed', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       const factId = await t.run(async (ctx) => {
         return await ctx.db.insert('facts', {
@@ -285,7 +285,7 @@ describe('facts', () => {
         });
       });
 
-      await asUser.mutation(api.facts.confirm, {id: factId});
+      await asUser.mutation(api.facts.confirm, { id: factId });
 
       const fact = await t.run(async (ctx) => ctx.db.get(factId));
       expect(fact?.status).toBe('confirmed');
@@ -293,8 +293,8 @@ describe('facts', () => {
 
     it('throws when fact not found', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       const factId = await t.run(async (ctx) => {
         const id = await ctx.db.insert('facts', {
@@ -313,15 +313,17 @@ describe('facts', () => {
         return id;
       });
 
-      await expect(asUser.mutation(api.facts.confirm, {id: factId})).rejects.toThrow(/not found/i);
+      await expect(asUser.mutation(api.facts.confirm, { id: factId })).rejects.toThrow(
+        /not found/i
+      );
     });
   });
 
   describe('reject mutation', () => {
     it('changes status from pending to rejected', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       const factId = await t.run(async (ctx) => {
         return await ctx.db.insert('facts', {
@@ -338,7 +340,7 @@ describe('facts', () => {
         });
       });
 
-      await asUser.mutation(api.facts.reject, {id: factId});
+      await asUser.mutation(api.facts.reject, { id: factId });
 
       const fact = await t.run(async (ctx) => ctx.db.get(factId));
       expect(fact?.status).toBe('rejected');
@@ -346,15 +348,15 @@ describe('facts', () => {
 
     it('decrements project factCount when rejecting fact', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
 
-      const {projectId, factId} = await t.run(async (ctx) => {
+      const { projectId, factId } = await t.run(async (ctx) => {
         const pId = await ctx.db.insert('projects', {
           userId,
           name: 'Test',
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          stats: {documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0},
+          stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0 },
         });
         const dId = await ctx.db.insert('documents', {
           projectId: pId,
@@ -387,10 +389,10 @@ describe('facts', () => {
           status: 'confirmed',
           createdAt: Date.now(),
         });
-        return {projectId: pId, factId: fId};
+        return { projectId: pId, factId: fId };
       });
 
-      await asUser.mutation(api.facts.reject, {id: factId});
+      await asUser.mutation(api.facts.reject, { id: factId });
 
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       expect(project?.stats?.factCount).toBe(0);
@@ -400,8 +402,8 @@ describe('facts', () => {
   describe('listByEntity query', () => {
     it('returns all facts for entity', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       await t.run(async (ctx) => {
         await ctx.db.insert('facts', {
@@ -430,14 +432,14 @@ describe('facts', () => {
         });
       });
 
-      const facts = await asUser.query(api.facts.listByEntity, {entityId});
+      const facts = await asUser.query(api.facts.listByEntity, { entityId });
       expect(facts).toHaveLength(2);
     });
 
     it('filters by status when provided', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       await t.run(async (ctx) => {
         await ctx.db.insert('facts', {
@@ -476,7 +478,7 @@ describe('facts', () => {
 
     it('returns empty array when not project owner', async () => {
       const t = convexTest(schema, getModules());
-      const {asUser} = await setupAuthenticatedUser(t);
+      const { asUser } = await setupAuthenticatedUser(t);
 
       const entityId = await t.run(async (ctx) => {
         const otherUserId = await ctx.db.insert('users', {
@@ -501,7 +503,7 @@ describe('facts', () => {
         });
       });
 
-      const facts = await asUser.query(api.facts.listByEntity, {entityId});
+      const facts = await asUser.query(api.facts.listByEntity, { entityId });
       expect(facts).toEqual([]);
     });
   });
@@ -509,8 +511,8 @@ describe('facts', () => {
   describe('listPending query', () => {
     it('returns all pending facts for project', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       await t.run(async (ctx) => {
         await ctx.db.insert('facts', {
@@ -551,14 +553,14 @@ describe('facts', () => {
         });
       });
 
-      const facts = await asUser.query(api.facts.listPending, {projectId});
+      const facts = await asUser.query(api.facts.listPending, { projectId });
       expect(facts).toHaveLength(2);
       expect(facts.every((f) => f.status === 'pending')).toBe(true);
     });
 
     it('returns empty array when not project owner', async () => {
       const t = convexTest(schema, getModules());
-      const {asUser} = await setupAuthenticatedUser(t);
+      const { asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
         const otherUserId = await ctx.db.insert('users', {
@@ -574,7 +576,7 @@ describe('facts', () => {
         });
       });
 
-      const facts = await asUser.query(api.facts.listPending, {projectId});
+      const facts = await asUser.query(api.facts.listPending, { projectId });
       expect(facts).toEqual([]);
     });
   });
@@ -582,8 +584,8 @@ describe('facts', () => {
   describe('listByDocument query', () => {
     it('returns all facts extracted from document', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
-      const {projectId, documentId, entityId} = await setupProjectWithEntityAndDoc(t, userId);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
       await t.run(async (ctx) => {
         await ctx.db.insert('facts', {
@@ -612,7 +614,7 @@ describe('facts', () => {
         });
       });
 
-      const facts = await asUser.query(api.facts.listByDocument, {documentId});
+      const facts = await asUser.query(api.facts.listByDocument, { documentId });
       expect(facts).toHaveLength(2);
     });
   });
@@ -620,15 +622,15 @@ describe('facts', () => {
   describe('remove mutation', () => {
     it('does NOT decrement factCount when removing rejected fact', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
 
-      const {projectId, rejectedFactId} = await t.run(async (ctx) => {
+      const { projectId, rejectedFactId } = await t.run(async (ctx) => {
         const pId = await ctx.db.insert('projects', {
           userId,
           name: 'Test',
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          stats: {documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0},
+          stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0 },
         });
         const dId = await ctx.db.insert('documents', {
           projectId: pId,
@@ -673,10 +675,10 @@ describe('facts', () => {
           status: 'rejected',
           createdAt: Date.now(),
         });
-        return {projectId: pId, rejectedFactId: rejId};
+        return { projectId: pId, rejectedFactId: rejId };
       });
 
-      await asUser.mutation(api.facts.remove, {id: rejectedFactId});
+      await asUser.mutation(api.facts.remove, { id: rejectedFactId });
 
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       expect(project?.stats?.factCount).toBe(1);
@@ -684,15 +686,15 @@ describe('facts', () => {
 
     it('deletes fact and decrements project stat', async () => {
       const t = convexTest(schema, getModules());
-      const {userId, asUser} = await setupAuthenticatedUser(t);
+      const { userId, asUser } = await setupAuthenticatedUser(t);
 
-      const {projectId, factId} = await t.run(async (ctx) => {
+      const { projectId, factId } = await t.run(async (ctx) => {
         const pId = await ctx.db.insert('projects', {
           userId,
           name: 'Test',
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          stats: {documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0},
+          stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0 },
         });
         const dId = await ctx.db.insert('documents', {
           projectId: pId,
@@ -725,10 +727,10 @@ describe('facts', () => {
           status: 'confirmed',
           createdAt: Date.now(),
         });
-        return {projectId: pId, factId: fId};
+        return { projectId: pId, factId: fId };
       });
 
-      await asUser.mutation(api.facts.remove, {id: factId});
+      await asUser.mutation(api.facts.remove, { id: factId });
 
       const fact = await t.run(async (ctx) => ctx.db.get(factId));
       expect(fact).toBeNull();

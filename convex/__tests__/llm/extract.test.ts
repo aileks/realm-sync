@@ -1,6 +1,6 @@
-import {convexTest} from 'convex-test';
-import {describe, it, expect} from 'vitest';
-import {internal} from '../../_generated/api';
+import { convexTest } from 'convex-test';
+import { describe, it, expect } from 'vitest';
+import { internal } from '../../_generated/api';
 import schema from '../../schema';
 
 const getModules = () => import.meta.glob('../../**/*.ts');
@@ -18,7 +18,7 @@ async function setupProjectWithDocument(t: ReturnType<typeof convexTest>) {
       name: 'Test Project',
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      stats: {documentCount: 1, entityCount: 0, factCount: 0, alertCount: 0},
+      stats: { documentCount: 1, entityCount: 0, factCount: 0, alertCount: 0 },
     });
 
     const documentId = await ctx.db.insert('documents', {
@@ -33,14 +33,14 @@ async function setupProjectWithDocument(t: ReturnType<typeof convexTest>) {
       processingStatus: 'processing',
     });
 
-    return {userId, projectId, documentId};
+    return { userId, projectId, documentId };
   });
 }
 
 describe('processExtractionResult', () => {
   it('creates entities with pending status from extraction result', async () => {
     const t = convexTest(schema, getModules());
-    const {projectId, documentId} = await setupProjectWithDocument(t);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
       entities: [
@@ -88,10 +88,10 @@ describe('processExtractionResult', () => {
 
   it('creates facts with pending status from extraction result', async () => {
     const t = convexTest(schema, getModules());
-    const {projectId, documentId} = await setupProjectWithDocument(t);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
-      entities: [{name: 'Jon Snow', type: 'character' as const}],
+      entities: [{ name: 'Jon Snow', type: 'character' as const }],
       facts: [
         {
           entityName: 'Jon Snow',
@@ -108,7 +108,7 @@ describe('processExtractionResult', () => {
           object: 'nothing',
           confidence: 0.9,
           evidence: '"He knows nothing"',
-          temporalBound: {type: 'relative' as const, value: 'before becoming King'},
+          temporalBound: { type: 'relative' as const, value: 'before becoming King' },
         },
       ],
       relationships: [],
@@ -135,17 +135,17 @@ describe('processExtractionResult', () => {
 
     const knowsFact = facts.find((f) => f.predicate === 'knows');
     expect(knowsFact).toBeDefined();
-    expect(knowsFact?.temporalBound).toEqual({type: 'relative', value: 'before becoming King'});
+    expect(knowsFact?.temporalBound).toEqual({ type: 'relative', value: 'before becoming King' });
   });
 
   it('stores relationships as facts with relationshipType as predicate', async () => {
     const t = convexTest(schema, getModules());
-    const {projectId, documentId} = await setupProjectWithDocument(t);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
       entities: [
-        {name: 'Jon Snow', type: 'character' as const},
-        {name: 'Daenerys', type: 'character' as const},
+        { name: 'Jon Snow', type: 'character' as const },
+        { name: 'Daenerys', type: 'character' as const },
       ],
       facts: [],
       relationships: [
@@ -179,7 +179,7 @@ describe('processExtractionResult', () => {
 
   it('reuses existing entity when name matches', async () => {
     const t = convexTest(schema, getModules());
-    const {projectId, documentId} = await setupProjectWithDocument(t);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
 
     await t.run(async (ctx) => {
       await ctx.db.insert('entities', {
@@ -235,10 +235,10 @@ describe('processExtractionResult', () => {
 
   it('updates document processingStatus to completed', async () => {
     const t = convexTest(schema, getModules());
-    const {documentId} = await setupProjectWithDocument(t);
+    const { documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
-      entities: [{name: 'Test', type: 'character' as const}],
+      entities: [{ name: 'Test', type: 'character' as const }],
       facts: [],
       relationships: [],
     };
@@ -255,12 +255,12 @@ describe('processExtractionResult', () => {
 
   it('updates project stats with new entity and fact counts', async () => {
     const t = convexTest(schema, getModules());
-    const {projectId, documentId} = await setupProjectWithDocument(t);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
       entities: [
-        {name: 'Entity 1', type: 'character' as const},
-        {name: 'Entity 2', type: 'location' as const},
+        { name: 'Entity 1', type: 'character' as const },
+        { name: 'Entity 2', type: 'location' as const },
       ],
       facts: [
         {
@@ -287,7 +287,7 @@ describe('processExtractionResult', () => {
 
   it('handles empty extraction result gracefully', async () => {
     const t = convexTest(schema, getModules());
-    const {documentId} = await setupProjectWithDocument(t);
+    const { documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
       entities: [],
@@ -306,10 +306,10 @@ describe('processExtractionResult', () => {
 
   it('skips facts for entities that do not exist', async () => {
     const t = convexTest(schema, getModules());
-    const {projectId, documentId} = await setupProjectWithDocument(t);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
-      entities: [{name: 'Jon Snow', type: 'character' as const}],
+      entities: [{ name: 'Jon Snow', type: 'character' as const }],
       facts: [
         {
           entityName: 'Jon Snow',
@@ -349,10 +349,10 @@ describe('processExtractionResult', () => {
 
   it('persists evidencePosition for facts when provided', async () => {
     const t = convexTest(schema, getModules());
-    const {projectId, documentId} = await setupProjectWithDocument(t);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
-      entities: [{name: 'Jon Snow', type: 'character' as const}],
+      entities: [{ name: 'Jon Snow', type: 'character' as const }],
       facts: [
         {
           entityName: 'Jon Snow',
@@ -361,7 +361,7 @@ describe('processExtractionResult', () => {
           object: 'King in the North',
           confidence: 1.0,
           evidence: 'Jon Snow is King in the North',
-          evidencePosition: {start: 0, end: 30},
+          evidencePosition: { start: 0, end: 30 },
         },
       ],
       relationships: [],
@@ -380,17 +380,17 @@ describe('processExtractionResult', () => {
     });
 
     expect(facts).toHaveLength(1);
-    expect(facts[0].evidencePosition).toEqual({start: 0, end: 30});
+    expect(facts[0].evidencePosition).toEqual({ start: 0, end: 30 });
   });
 
   it('persists evidencePosition for relationships when provided', async () => {
     const t = convexTest(schema, getModules());
-    const {projectId, documentId} = await setupProjectWithDocument(t);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
       entities: [
-        {name: 'Jon Snow', type: 'character' as const},
-        {name: 'Daenerys', type: 'character' as const},
+        { name: 'Jon Snow', type: 'character' as const },
+        { name: 'Daenerys', type: 'character' as const },
       ],
       facts: [],
       relationships: [
@@ -399,7 +399,7 @@ describe('processExtractionResult', () => {
           targetEntity: 'Daenerys',
           relationshipType: 'allied_with',
           evidence: 'Jon Snow bent the knee',
-          evidencePosition: {start: 100, end: 122},
+          evidencePosition: { start: 100, end: 122 },
         },
       ],
     };
@@ -417,15 +417,15 @@ describe('processExtractionResult', () => {
     });
 
     expect(facts).toHaveLength(1);
-    expect(facts[0].evidencePosition).toEqual({start: 100, end: 122});
+    expect(facts[0].evidencePosition).toEqual({ start: 100, end: 122 });
   });
 
   it('handles facts without evidencePosition', async () => {
     const t = convexTest(schema, getModules());
-    const {projectId, documentId} = await setupProjectWithDocument(t);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
-      entities: [{name: 'Jon Snow', type: 'character' as const}],
+      entities: [{ name: 'Jon Snow', type: 'character' as const }],
       facts: [
         {
           entityName: 'Jon Snow',
@@ -457,7 +457,7 @@ describe('processExtractionResult', () => {
 
   it('handles entity with missing aliases array', async () => {
     const t = convexTest(schema, getModules());
-    const {projectId, documentId} = await setupProjectWithDocument(t);
+    const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
       entities: [

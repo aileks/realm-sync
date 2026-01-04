@@ -1,11 +1,11 @@
-import {v} from 'convex/values';
-import type {MutationCtx, QueryCtx} from './_generated/server';
-import {mutation, query} from './_generated/server';
-import type {Doc, Id} from './_generated/dataModel';
-import {getAuthUserId, requireAuth} from './lib/auth';
-import {ok, err, authError, notFoundError} from './lib/errors';
-import type {AppError, Result} from './lib/errors';
-import {unwrapOrThrow} from './lib/result';
+import { v } from 'convex/values';
+import type { MutationCtx, QueryCtx } from './_generated/server';
+import { mutation, query } from './_generated/server';
+import type { Doc, Id } from './_generated/dataModel';
+import { getAuthUserId, requireAuth } from './lib/auth';
+import { ok, err, authError, notFoundError } from './lib/errors';
+import type { AppError, Result } from './lib/errors';
+import { unwrapOrThrow } from './lib/result';
 
 const factStatusValidator = v.union(
   v.literal('pending'),
@@ -121,7 +121,7 @@ export const create = mutation({
       };
       await ctx.db.patch(projectId, {
         updatedAt: Date.now(),
-        stats: {...stats, factCount: stats.factCount + 1},
+        stats: { ...stats, factCount: stats.factCount + 1 },
       });
     }
 
@@ -130,14 +130,14 @@ export const create = mutation({
 });
 
 export const confirm = mutation({
-  args: {id: v.id('facts')},
-  handler: async (ctx, {id}) => {
+  args: { id: v.id('facts') },
+  handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
     const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
 
     const wasRejected = fact.status === 'rejected';
 
-    await ctx.db.patch(id, {status: 'confirmed'});
+    await ctx.db.patch(id, { status: 'confirmed' });
 
     if (wasRejected) {
       const project = await ctx.db.get(fact.projectId);
@@ -150,7 +150,7 @@ export const confirm = mutation({
         };
         await ctx.db.patch(fact.projectId, {
           updatedAt: Date.now(),
-          stats: {...stats, factCount: stats.factCount + 1},
+          stats: { ...stats, factCount: stats.factCount + 1 },
         });
       }
     }
@@ -160,14 +160,14 @@ export const confirm = mutation({
 });
 
 export const reject = mutation({
-  args: {id: v.id('facts')},
-  handler: async (ctx, {id}) => {
+  args: { id: v.id('facts') },
+  handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
     const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
 
     const wasAlreadyRejected = fact.status === 'rejected';
 
-    await ctx.db.patch(id, {status: 'rejected'});
+    await ctx.db.patch(id, { status: 'rejected' });
 
     if (!wasAlreadyRejected) {
       const project = await ctx.db.get(fact.projectId);
@@ -180,7 +180,7 @@ export const reject = mutation({
         };
         await ctx.db.patch(fact.projectId, {
           updatedAt: Date.now(),
-          stats: {...stats, factCount: Math.max(0, stats.factCount - 1)},
+          stats: { ...stats, factCount: Math.max(0, stats.factCount - 1) },
         });
       }
     }
@@ -194,7 +194,7 @@ export const listByEntity = query({
     entityId: v.id('entities'),
     status: v.optional(factStatusValidator),
   },
-  handler: async (ctx, {entityId, status}) => {
+  handler: async (ctx, { entityId, status }) => {
     const entity = await ctx.db.get(entityId);
     if (!entity) return [];
 
@@ -216,8 +216,8 @@ export const listByEntity = query({
 });
 
 export const listPending = query({
-  args: {projectId: v.id('projects')},
-  handler: async (ctx, {projectId}) => {
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
     const isOwner = await verifyProjectOwnership(ctx, projectId);
     if (!isOwner) return [];
 
@@ -229,8 +229,8 @@ export const listPending = query({
 });
 
 export const listByDocument = query({
-  args: {documentId: v.id('documents')},
-  handler: async (ctx, {documentId}) => {
+  args: { documentId: v.id('documents') },
+  handler: async (ctx, { documentId }) => {
     const doc = await ctx.db.get(documentId);
     if (!doc) return [];
 
@@ -249,7 +249,7 @@ export const listByProject = query({
     projectId: v.id('projects'),
     status: v.optional(factStatusValidator),
   },
-  handler: async (ctx, {projectId, status}) => {
+  handler: async (ctx, { projectId, status }) => {
     const isOwner = await verifyProjectOwnership(ctx, projectId);
     if (!isOwner) return [];
 
@@ -268,8 +268,8 @@ export const listByProject = query({
 });
 
 export const get = query({
-  args: {id: v.id('facts')},
-  handler: async (ctx, {id}) => {
+  args: { id: v.id('facts') },
+  handler: async (ctx, { id }) => {
     const fact = await ctx.db.get(id);
     if (!fact) return null;
 
@@ -281,8 +281,8 @@ export const get = query({
 });
 
 export const remove = mutation({
-  args: {id: v.id('facts')},
-  handler: async (ctx, {id}) => {
+  args: { id: v.id('facts') },
+  handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
     const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
 
@@ -299,7 +299,7 @@ export const remove = mutation({
         };
         await ctx.db.patch(fact.projectId, {
           updatedAt: Date.now(),
-          stats: {...stats, factCount: Math.max(0, stats.factCount - 1)},
+          stats: { ...stats, factCount: Math.max(0, stats.factCount - 1) },
         });
       }
     }
@@ -321,7 +321,7 @@ export const update = mutation({
   },
   handler: async (
     ctx,
-    {id, subject, predicate, object, confidence, evidenceSnippet, temporalBound, status}
+    { id, subject, predicate, object, confidence, evidenceSnippet, temporalBound, status }
   ) => {
     const userId = await requireAuth(ctx);
     const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
@@ -329,13 +329,13 @@ export const update = mutation({
     const oldStatus = fact.status;
 
     await ctx.db.patch(id, {
-      ...(subject !== undefined && {subject}),
-      ...(predicate !== undefined && {predicate}),
-      ...(object !== undefined && {object}),
-      ...(confidence !== undefined && {confidence}),
-      ...(evidenceSnippet !== undefined && {evidenceSnippet}),
-      ...(temporalBound !== undefined && {temporalBound}),
-      ...(status !== undefined && {status}),
+      ...(subject !== undefined && { subject }),
+      ...(predicate !== undefined && { predicate }),
+      ...(object !== undefined && { object }),
+      ...(confidence !== undefined && { confidence }),
+      ...(evidenceSnippet !== undefined && { evidenceSnippet }),
+      ...(temporalBound !== undefined && { temporalBound }),
+      ...(status !== undefined && { status }),
     });
 
     const newStatus = status ?? oldStatus;
@@ -352,7 +352,7 @@ export const update = mutation({
         };
         await ctx.db.patch(fact.projectId, {
           updatedAt: Date.now(),
-          stats: {...stats, factCount: Math.max(0, stats.factCount + delta)},
+          stats: { ...stats, factCount: Math.max(0, stats.factCount + delta) },
         });
       }
     }

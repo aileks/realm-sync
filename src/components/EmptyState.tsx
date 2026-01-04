@@ -6,7 +6,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
-import {cn} from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 type EmptyStateProps = {
   icon?: React.ReactNode;
@@ -16,7 +16,7 @@ type EmptyStateProps = {
   className?: string;
 };
 
-export function EmptyState({icon, title, description, action, className}: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
     <Empty className={cn('border-0', className)}>
       <EmptyHeader>

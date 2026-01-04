@@ -1,10 +1,10 @@
-import {v} from 'convex/values';
-import type {Doc, Id} from './_generated/dataModel';
-import type {MutationCtx} from './_generated/server';
-import {mutation, query} from './_generated/server';
-import {getAuthUserId, requireAuth} from './lib/auth';
-import {ok, err, notFoundError, authError, type Result, type AppError} from './lib/errors';
-import {unwrapOrThrow} from './lib/result';
+import { v } from 'convex/values';
+import type { Doc, Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
+import { mutation, query } from './_generated/server';
+import { getAuthUserId, requireAuth } from './lib/auth';
+import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
+import { unwrapOrThrow } from './lib/result';
 
 async function verifyProjectAccess(
   ctx: MutationCtx,
@@ -36,8 +36,8 @@ export const list = query({
 });
 
 export const get = query({
-  args: {id: v.id('projects')},
-  handler: async (ctx, {id}) => {
+  args: { id: v.id('projects') },
+  handler: async (ctx, { id }) => {
     const project = await ctx.db.get(id);
     if (!project) return null;
 
@@ -53,7 +53,7 @@ export const create = mutation({
     name: v.string(),
     description: v.optional(v.string()),
   },
-  handler: async (ctx, {name, description}) => {
+  handler: async (ctx, { name, description }) => {
     const userId = await requireAuth(ctx);
     const now = Date.now();
 
@@ -79,11 +79,11 @@ export const update = mutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
   },
-  handler: async (ctx, {id, name, description}) => {
+  handler: async (ctx, { id, name, description }) => {
     const userId = await requireAuth(ctx);
     const project = unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
 
-    const updates: Partial<typeof project> = {updatedAt: Date.now()};
+    const updates: Partial<typeof project> = { updatedAt: Date.now() };
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
 
@@ -93,8 +93,8 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: {id: v.id('projects')},
-  handler: async (ctx, {id}) => {
+  args: { id: v.id('projects') },
+  handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
     unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
 
@@ -152,7 +152,7 @@ export const updateStats = mutation({
       alertCount: v.optional(v.number()),
     }),
   },
-  handler: async (ctx, {id, stats}) => {
+  handler: async (ctx, { id, stats }) => {
     const userId = await requireAuth(ctx);
     const project = unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
 

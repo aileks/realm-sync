@@ -1,6 +1,6 @@
-import {createFileRoute, useNavigate} from '@tanstack/react-router';
-import {useQuery, useMutation} from 'convex/react';
-import {useState} from 'react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useQuery, useMutation } from 'convex/react';
+import { useState } from 'react';
 import {
   FileText,
   Users,
@@ -11,11 +11,11 @@ import {
   ArrowLeft,
   BookOpen,
 } from 'lucide-react';
-import {api} from '../../convex/_generated/api';
-import type {Id} from '../../convex/_generated/dataModel';
-import {Button} from '@/components/ui/button';
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
-import {Badge} from '@/components/ui/badge';
+import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,9 +26,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {ProjectForm} from '@/components/ProjectForm';
-import {LoadingState} from '@/components/LoadingState';
-import {cn} from '@/lib/utils';
+import { ProjectForm } from '@/components/ProjectForm';
+import { LoadingState } from '@/components/LoadingState';
+import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/projects_/$projectId')({
   component: ProjectDashboard,
@@ -36,9 +36,9 @@ export const Route = createFileRoute('/projects_/$projectId')({
 
 function ProjectDashboard() {
   const navigate = useNavigate();
-  const {projectId} = Route.useParams();
-  const project = useQuery(api.projects.get, {id: projectId as Id<'projects'>});
-  const documents = useQuery(api.documents.list, {projectId: projectId as Id<'projects'>});
+  const { projectId } = Route.useParams();
+  const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
+  const documents = useQuery(api.documents.list, { projectId: projectId as Id<'projects'> });
   const deleteProject = useMutation(api.projects.remove);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -52,7 +52,7 @@ function ProjectDashboard() {
     return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-muted-foreground">Project not found or you don&apos;t have access.</p>
-        <Button variant="ghost" className="mt-4" onClick={() => navigate({to: '/projects'})}>
+        <Button variant="ghost" className="mt-4" onClick={() => navigate({ to: '/projects' })}>
           <ArrowLeft className="mr-2 size-4" />
           Back to Projects
         </Button>
@@ -68,8 +68,8 @@ function ProjectDashboard() {
   };
 
   async function handleDelete() {
-    await deleteProject({id: projectId as Id<'projects'>});
-    void navigate({to: '/projects'});
+    await deleteProject({ id: projectId as Id<'projects'> });
+    void navigate({ to: '/projects' });
   }
 
   if (isEditing) {
@@ -93,7 +93,7 @@ function ProjectDashboard() {
             variant="ghost"
             size="sm"
             className="mb-2 -ml-2"
-            onClick={() => navigate({to: '/projects'})}
+            onClick={() => navigate({ to: '/projects' })}
           >
             <ArrowLeft className="mr-1 size-4" />
             Projects
@@ -114,28 +114,28 @@ function ProjectDashboard() {
           icon={FileText}
           label="Documents"
           value={stats.documentCount}
-          onClick={() => navigate({to: '/projects/$projectId/documents', params: {projectId}})}
+          onClick={() => navigate({ to: '/projects/$projectId/documents', params: { projectId } })}
         />
         <StatCard
           icon={Users}
           label="Entities"
           value={stats.entityCount}
           variant="entity-character"
-          onClick={() => navigate({to: '/projects/$projectId/entities', params: {projectId}})}
+          onClick={() => navigate({ to: '/projects/$projectId/entities', params: { projectId } })}
         />
         <StatCard
           icon={Lightbulb}
           label="Facts"
           value={stats.factCount}
           variant="entity-concept"
-          onClick={() => navigate({to: '/projects/$projectId/facts', params: {projectId}})}
+          onClick={() => navigate({ to: '/projects/$projectId/facts', params: { projectId } })}
         />
         <StatCard
           icon={AlertTriangle}
           label="Alerts"
           value={stats.alertCount}
           variant={stats.alertCount > 0 ? 'destructive' : undefined}
-          onClick={() => navigate({to: '/projects/$projectId/alerts', params: {projectId}})}
+          onClick={() => navigate({ to: '/projects/$projectId/alerts', params: { projectId } })}
         />
       </div>
 
@@ -143,7 +143,7 @@ function ProjectDashboard() {
         <Button
           size="lg"
           className="w-full sm:w-auto"
-          onClick={() => navigate({to: '/projects/$projectId/canon', params: {projectId}})}
+          onClick={() => navigate({ to: '/projects/$projectId/canon', params: { projectId } })}
         >
           <BookOpen className="mr-2 size-5" />
           Browse Canon
@@ -153,7 +153,9 @@ function ProjectDashboard() {
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-serif text-xl font-semibold">Recent Documents</h2>
         <Button
-          onClick={() => navigate({to: '/projects/$projectId/documents/new', params: {projectId}})}
+          onClick={() =>
+            navigate({ to: '/projects/$projectId/documents/new', params: { projectId } })
+          }
         >
           <Plus className="mr-2 size-4" />
           Add Document
@@ -179,7 +181,7 @@ function ProjectDashboard() {
               onClick={() =>
                 navigate({
                   to: '/projects/$projectId/documents/$documentId',
-                  params: {projectId, documentId: doc._id},
+                  params: { projectId, documentId: doc._id },
                 })
               }
             >
@@ -196,7 +198,9 @@ function ProjectDashboard() {
             <Button
               variant="ghost"
               className="w-full"
-              onClick={() => navigate({to: '/projects/$projectId/documents', params: {projectId}})}
+              onClick={() =>
+                navigate({ to: '/projects/$projectId/documents', params: { projectId } })
+              }
             >
               View all {documents.length} documents
             </Button>
@@ -232,14 +236,14 @@ function ProjectDashboard() {
 }
 
 type StatCardProps = {
-  icon: React.ComponentType<{className?: string}>;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: number;
   variant?: 'entity-character' | 'entity-concept' | 'destructive';
   onClick?: () => void;
 };
 
-function StatCard({icon: Icon, label, value, variant, onClick}: StatCardProps) {
+function StatCard({ icon: Icon, label, value, variant, onClick }: StatCardProps) {
   return (
     <Card
       className={cn(

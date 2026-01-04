@@ -1,14 +1,14 @@
-import {internalMutation} from './_generated/server';
-import {v} from 'convex/values';
-import type {Id} from './_generated/dataModel';
+import { internalMutation } from './_generated/server';
+import { v } from 'convex/values';
+import type { Id } from './_generated/dataModel';
 
 export const seedDemoData = internalMutation({
   args: {
     userId: v.id('users'),
   },
-  handler: async (ctx, {userId}) => {
+  handler: async (ctx, { userId }) => {
     const now = Date.now();
-    const projects: {projectId: Id<'projects'>; documentIds: Id<'documents'>[]}[] = [];
+    const projects: { projectId: Id<'projects'>; documentIds: Id<'documents'>[] }[] = [];
 
     // ========== PROJECT 1: Fantasy Novel ==========
     const fantasyProjectId = await ctx.db.insert('projects', {
@@ -18,7 +18,7 @@ export const seedDemoData = internalMutation({
         'A fantasy epic set in a frozen kingdom where winter has lasted for generations.',
       createdAt: now,
       updatedAt: now,
-      stats: {documentCount: 2, entityCount: 12, factCount: 8, alertCount: 0},
+      stats: { documentCount: 2, entityCount: 12, factCount: 8, alertCount: 0 },
     });
 
     const fantasyDoc1 = await ctx.db.insert('documents', {
@@ -224,7 +224,7 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
       object: 'sixty winters',
       confidence: 1.0,
       evidenceSnippet: 'At sixty winters, he was still an imposing figure',
-      evidencePosition: {start: 456, end: 505},
+      evidencePosition: { start: 456, end: 505 },
       status: 'confirmed',
       createdAt: now,
     });
@@ -238,7 +238,7 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
       object: 'Winterhold Castle',
       confidence: 1.0,
       evidenceSnippet: 'King Aldric surveyed his domain',
-      evidencePosition: {start: 62, end: 93},
+      evidencePosition: { start: 62, end: 93 },
       status: 'confirmed',
       createdAt: now,
     });
@@ -252,7 +252,7 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
       object: 'King Aldric',
       confidence: 1.0,
       evidenceSnippet: 'find my daughter—tell Princess Sera',
-      evidencePosition: {start: 1147, end: 1183},
+      evidencePosition: { start: 1147, end: 1183 },
       status: 'pending',
       createdAt: now,
     });
@@ -266,7 +266,7 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
       object: 'twenty winters',
       confidence: 1.0,
       evidenceSnippet: "At twenty winters, she had her father's determination",
-      evidencePosition: {start: 86, end: 139},
+      evidencePosition: { start: 86, end: 139 },
       status: 'pending',
       createdAt: now,
     });
@@ -280,7 +280,7 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
       object: 'men',
       confidence: 1.0,
       evidenceSnippet: 'those cursed beings who had once been men',
-      evidencePosition: {start: 888, end: 929},
+      evidencePosition: { start: 888, end: 929 },
       status: 'pending',
       createdAt: now,
     });
@@ -294,7 +294,7 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
       object: 'three thousand',
       confidence: 0.9,
       evidenceSnippet: 'Lady Elara estimates their numbers at three thousand',
-      evidencePosition: {start: 760, end: 812},
+      evidencePosition: { start: 760, end: 812 },
       status: 'pending',
       createdAt: now,
     });
@@ -308,7 +308,7 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
       object: 'blind',
       confidence: 1.0,
       evidenceSnippet: 'His eyes were milky white—blinded in service to the old magic',
-      evidencePosition: {start: 520, end: 581},
+      evidencePosition: { start: 520, end: 581 },
       status: 'pending',
       createdAt: now,
     });
@@ -322,12 +322,12 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
       object: 'a binding/prison, not a bargain',
       confidence: 0.85,
       evidenceSnippet: 'The Pact was not a bargain, child. It was a binding—a prison.',
-      evidencePosition: {start: 960, end: 1021},
+      evidencePosition: { start: 960, end: 1021 },
       status: 'pending',
       createdAt: now,
     });
 
-    projects.push({projectId: fantasyProjectId, documentIds: [fantasyDoc1, fantasyDoc2]});
+    projects.push({ projectId: fantasyProjectId, documentIds: [fantasyDoc1, fantasyDoc2] });
 
     // ========== PROJECT 2: D&D Campaign ==========
     const dndProjectId = await ctx.db.insert('projects', {
@@ -337,7 +337,7 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
         'A D&D 5e campaign set in a cursed kingdom where the dead king still rules from his throne.',
       createdAt: now,
       updatedAt: now,
-      stats: {documentCount: 2, entityCount: 8, factCount: 6, alertCount: 0},
+      stats: { documentCount: 2, entityCount: 8, factCount: 6, alertCount: 0 },
     });
 
     const dndDoc1 = await ctx.db.insert('documents', {
@@ -485,7 +485,7 @@ The session ended with the party retreating to the tunnels, planning their next 
       object: 'House Valdris',
       confidence: 1.0,
       evidenceSnippet: 'she is the last heir',
-      evidencePosition: {start: 340, end: 360},
+      evidencePosition: { start: 340, end: 360 },
       status: 'confirmed',
       createdAt: now,
     });
@@ -499,7 +499,7 @@ The session ended with the party retreating to the tunnels, planning their next 
       object: '500 gold pieces',
       confidence: 1.0,
       evidenceSnippet: 'She offered 500 gold pieces',
-      evidencePosition: {start: 150, end: 177},
+      evidencePosition: { start: 150, end: 177 },
       status: 'confirmed',
       createdAt: now,
     });
@@ -513,7 +513,7 @@ The session ended with the party retreating to the tunnels, planning their next 
       object: 'the Raven Queen',
       confidence: 1.0,
       evidenceSnippet: "Zara the tiefling warlock's patron, the Raven Queen",
-      evidencePosition: {start: 520, end: 571},
+      evidencePosition: { start: 520, end: 571 },
       status: 'confirmed',
       createdAt: now,
     });
@@ -527,7 +527,7 @@ The session ended with the party retreating to the tunnels, planning their next 
       object: 'the crown of black iron',
       confidence: 1.0,
       evidenceSnippet: 'his phylactery was the crown itself',
-      evidencePosition: {start: 680, end: 715},
+      evidencePosition: { start: 680, end: 715 },
       status: 'confirmed',
       createdAt: now,
     });
@@ -541,7 +541,7 @@ The session ended with the party retreating to the tunnels, planning their next 
       object: '47 damage critical sneak attack',
       confidence: 1.0,
       evidenceSnippet: 'Kira landed a critical sneak attack on the Hollow King (47 damage!)',
-      evidencePosition: {start: 580, end: 647},
+      evidencePosition: { start: 580, end: 647 },
       status: 'confirmed',
       createdAt: now,
     });
@@ -555,12 +555,12 @@ The session ended with the party retreating to the tunnels, planning their next 
       object: 'regenerate',
       confidence: 1.0,
       evidenceSnippet: 'but he regenerated',
-      evidencePosition: {start: 648, end: 666},
+      evidencePosition: { start: 648, end: 666 },
       status: 'pending',
       createdAt: now,
     });
 
-    projects.push({projectId: dndProjectId, documentIds: [dndDoc1, dndDoc2]});
+    projects.push({ projectId: dndProjectId, documentIds: [dndDoc1, dndDoc2] });
 
     // ========== PROJECT 3: Fanfiction ==========
     const fanficProjectId = await ctx.db.insert('projects', {
@@ -570,7 +570,7 @@ The session ended with the party retreating to the tunnels, planning their next 
         'A Harry Potter fanfic exploring what if Snape had a secret apprentice during the war.',
       createdAt: now,
       updatedAt: now,
-      stats: {documentCount: 2, entityCount: 6, factCount: 5, alertCount: 0},
+      stats: { documentCount: 2, entityCount: 6, factCount: 5, alertCount: 0 },
     });
 
     const fanficDoc1 = await ctx.db.insert('documents', {
@@ -704,7 +704,7 @@ She thought of Snape's endless corrections, his impossible standards, his rare m
       object: 'Professor Snape',
       confidence: 1.0,
       evidenceSnippet: 'three years of clandestine tutoring',
-      evidencePosition: {start: 340, end: 373},
+      evidencePosition: { start: 340, end: 373 },
       status: 'confirmed',
       createdAt: now,
     });
@@ -718,7 +718,7 @@ She thought of Snape's endless corrections, his impossible standards, his rare m
       object: 'potion-making',
       confidence: 1.0,
       evidenceSnippet: 'compensated with additional moonstone',
-      evidencePosition: {start: 450, end: 486},
+      evidencePosition: { start: 450, end: 486 },
       status: 'confirmed',
       createdAt: now,
     });
@@ -732,7 +732,7 @@ She thought of Snape's endless corrections, his impossible standards, his rare m
       object: "Elara's spy mission",
       confidence: 1.0,
       evidenceSnippet: 'Severus argued against this mission. Vehemently.',
-      evidencePosition: {start: 520, end: 568},
+      evidencePosition: { start: 520, end: 568 },
       status: 'confirmed',
       createdAt: now,
     });
@@ -746,7 +746,7 @@ She thought of Snape's endless corrections, his impossible standards, his rare m
       object: 'Malfoy Manor',
       confidence: 1.0,
       evidenceSnippet: 'We need someone inside Malfoy Manor',
-      evidencePosition: {start: 320, end: 355},
+      evidencePosition: { start: 320, end: 355 },
       status: 'confirmed',
       createdAt: now,
     });
@@ -760,14 +760,14 @@ She thought of Snape's endless corrections, his impossible standards, his rare m
       object: 'spy on Death Eaters',
       confidence: 1.0,
       evidenceSnippet: "I'll do it",
-      evidencePosition: {start: 780, end: 790},
+      evidencePosition: { start: 780, end: 790 },
       status: 'pending',
       createdAt: now,
     });
 
-    projects.push({projectId: fanficProjectId, documentIds: [fanficDoc1, fanficDoc2]});
+    projects.push({ projectId: fanficProjectId, documentIds: [fanficDoc1, fanficDoc2] });
 
-    return {projects};
+    return { projects };
   },
 });
 
@@ -775,7 +775,7 @@ export const clearSeedData = internalMutation({
   args: {
     projectId: v.id('projects'),
   },
-  handler: async (ctx, {projectId}) => {
+  handler: async (ctx, { projectId }) => {
     const project = await ctx.db.get(projectId);
     if (!project) return;
 

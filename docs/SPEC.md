@@ -286,8 +286,8 @@ Extended from Convex Auth (custom fields merged automatically).
 
 ```typescript
 export const list = query({
-  args: {userId: v.id('users')},
-  handler: async (ctx, {userId}) => {
+  args: { userId: v.id('users') },
+  handler: async (ctx, { userId }) => {
     return await ctx.db
       .query('projects')
       .withIndex('by_user', (q) => q.eq('userId', userId))
@@ -296,8 +296,8 @@ export const list = query({
 });
 
 export const get = query({
-  args: {projectId: v.id('projects')},
-  handler: async (ctx, {projectId}) => {
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
     return await ctx.db.get(projectId);
   },
 });
@@ -330,7 +330,7 @@ export const update = mutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
   },
-  handler: async (ctx, {projectId, ...updates}) => {
+  handler: async (ctx, { projectId, ...updates }) => {
     return await ctx.db.patch(projectId, {
       ...updates,
       updatedAt: Date.now(),
@@ -339,8 +339,8 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: {projectId: v.id('projects')},
-  handler: async (ctx, {projectId}) => {
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
     // Cascade delete: documents, entities, facts, alerts
     const documents = await ctx.db
       .query('documents')
@@ -361,8 +361,8 @@ export const remove = mutation({
 
 ```typescript
 export const list = query({
-  args: {projectId: v.id('projects')},
-  handler: async (ctx, {projectId}) => {
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
     return await ctx.db
       .query('documents')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
@@ -372,8 +372,8 @@ export const list = query({
 });
 
 export const get = query({
-  args: {documentId: v.id('documents')},
-  handler: async (ctx, {documentId}) => {
+  args: { documentId: v.id('documents') },
+  handler: async (ctx, { documentId }) => {
     return await ctx.db.get(documentId);
   },
 });
@@ -416,7 +416,7 @@ export const update = mutation({
     title: v.optional(v.string()),
     content: v.optional(v.string()),
   },
-  handler: async (ctx, {documentId, ...updates}) => {
+  handler: async (ctx, { documentId, ...updates }) => {
     const doc = await ctx.db.get(documentId);
     if (!doc) throw new Error('Document not found');
 
@@ -437,9 +437,9 @@ export const reorder = mutation({
     projectId: v.id('projects'),
     documentIds: v.array(v.id('documents')),
   },
-  handler: async (ctx, {projectId, documentIds}) => {
+  handler: async (ctx, { projectId, documentIds }) => {
     for (let i = 0; i < documentIds.length; i++) {
-      await ctx.db.patch(documentIds[i], {orderIndex: i});
+      await ctx.db.patch(documentIds[i], { orderIndex: i });
     }
   },
 });
@@ -456,8 +456,8 @@ export const generateUploadUrl = action({
 });
 
 export const getFileUrl = action({
-  args: {storageId: v.id('_storage')},
-  handler: async (ctx, {storageId}) => {
+  args: { storageId: v.id('_storage') },
+  handler: async (ctx, { storageId }) => {
     return await ctx.storage.getUrl(storageId);
   },
 });
@@ -469,8 +469,8 @@ export const getFileUrl = action({
 
 ```typescript
 export const list = query({
-  args: {projectId: v.id('projects')},
-  handler: async (ctx, {projectId}) => {
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
     return await ctx.db
       .query('notes')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
@@ -479,8 +479,8 @@ export const list = query({
 });
 
 export const get = query({
-  args: {noteId: v.id('notes')},
-  handler: async (ctx, {noteId}) => {
+  args: { noteId: v.id('notes') },
+  handler: async (ctx, { noteId }) => {
     return await ctx.db.get(noteId);
   },
 });
@@ -512,7 +512,7 @@ export const update = mutation({
     tags: v.optional(v.array(v.string())),
     pinned: v.optional(v.boolean()),
   },
-  handler: async (ctx, {noteId, ...updates}) => {
+  handler: async (ctx, { noteId, ...updates }) => {
     return await ctx.db.patch(noteId, {
       ...updates,
       updatedAt: Date.now(),
@@ -521,15 +521,15 @@ export const update = mutation({
 });
 
 export const remove = mutation({
-  args: {noteId: v.id('notes')},
-  handler: async (ctx, {noteId}) => {
+  args: { noteId: v.id('notes') },
+  handler: async (ctx, { noteId }) => {
     return await ctx.db.delete(noteId);
   },
 });
 
 export const togglePin = mutation({
-  args: {noteId: v.id('notes')},
-  handler: async (ctx, {noteId}) => {
+  args: { noteId: v.id('notes') },
+  handler: async (ctx, { noteId }) => {
     const note = await ctx.db.get(noteId);
     if (!note) throw new Error('Note not found');
     return await ctx.db.patch(noteId, {
@@ -548,10 +548,10 @@ export const togglePin = mutation({
 
 ```typescript
 export const extractFromDocument = internalAction({
-  args: {documentId: v.id('documents')},
-  handler: async (ctx, {documentId}) => {
+  args: { documentId: v.id('documents') },
+  handler: async (ctx, { documentId }) => {
     // 1. Get document content
-    const doc = await ctx.runQuery(api.documents.get, {id: documentId});
+    const doc = await ctx.runQuery(api.documents.get, { id: documentId });
     if (!doc || !doc.content) throw new Error('Document not found or empty');
 
     // 2. Check cache
@@ -586,8 +586,8 @@ export const extractFromDocument = internalAction({
         body: JSON.stringify({
           model: 'tngtech/deepseek-r1t2-chimera:free',
           messages: [
-            {role: 'system', content: Vellum_SYSTEM_PROMPT},
-            {role: 'user', content: chunks[0]},
+            { role: 'system', content: Vellum_SYSTEM_PROMPT },
+            { role: 'user', content: chunks[0] },
           ],
           response_format: {
             type: 'json_schema',
@@ -645,10 +645,10 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          name: {type: 'string'},
-          type: {enum: ['character', 'location', 'item', 'concept', 'event']},
-          description: {type: 'string'},
-          aliases: {type: 'array', items: {type: 'string'}},
+          name: { type: 'string' },
+          type: { enum: ['character', 'location', 'item', 'concept', 'event'] },
+          description: { type: 'string' },
+          aliases: { type: 'array', items: { type: 'string' } },
         },
         required: ['name', 'type'],
         additionalProperties: false,
@@ -659,17 +659,17 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          entityName: {type: 'string'},
-          subject: {type: 'string'},
-          predicate: {type: 'string'},
-          object: {type: 'string'},
-          confidence: {type: 'number', minimum: 0, maximum: 1},
-          evidence: {type: 'string'},
+          entityName: { type: 'string' },
+          subject: { type: 'string' },
+          predicate: { type: 'string' },
+          object: { type: 'string' },
+          confidence: { type: 'number', minimum: 0, maximum: 1 },
+          evidence: { type: 'string' },
           temporalBound: {
             type: 'object',
             properties: {
-              type: {enum: ['point', 'range', 'relative']},
-              value: {type: 'string'},
+              type: { enum: ['point', 'range', 'relative'] },
+              value: { type: 'string' },
             },
           },
         },
@@ -689,10 +689,10 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          sourceEntity: {type: 'string'},
-          targetEntity: {type: 'string'},
-          relationshipType: {type: 'string'},
-          evidence: {type: 'string'},
+          sourceEntity: { type: 'string' },
+          targetEntity: { type: 'string' },
+          relationshipType: { type: 'string' },
+          evidence: { type: 'string' },
         },
         required: [
           'sourceEntity',
@@ -717,9 +717,9 @@ const EXTRACTION_SCHEMA = {
 
 ```typescript
 export const runCheck = internalAction({
-  args: {documentId: v.id('documents')},
-  handler: async (ctx, {documentId}) => {
-    const doc = await ctx.runQuery(api.documents.get, {id: documentId});
+  args: { documentId: v.id('documents') },
+  handler: async (ctx, { documentId }) => {
+    const doc = await ctx.runQuery(api.documents.get, { id: documentId });
     if (!doc) throw new Error('Document not found');
 
     // 1. Gather relevant canon
@@ -751,8 +751,8 @@ export const runCheck = internalAction({
         body: JSON.stringify({
           model: 'tngtech/deepseek-r1t2-chimera:free',
           messages: [
-            {role: 'system', content: CHECK_SYSTEM_PROMPT},
-            {role: 'user', content: context},
+            { role: 'system', content: CHECK_SYSTEM_PROMPT },
+            { role: 'user', content: context },
           ],
           response_format: {
             type: 'json_schema',
@@ -790,22 +790,22 @@ const CHECK_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          type: {enum: ['contradiction', 'timeline', 'ambiguity']},
-          severity: {enum: ['error', 'warning']},
-          title: {type: 'string'},
-          description: {type: 'string'},
+          type: { enum: ['contradiction', 'timeline', 'ambiguity'] },
+          severity: { enum: ['error', 'warning'] },
+          title: { type: 'string' },
+          description: { type: 'string' },
           evidence: {
             type: 'array',
             items: {
               type: 'object',
               properties: {
-                source: {enum: ['canon', 'new_document']},
-                quote: {type: 'string'},
+                source: { enum: ['canon', 'new_document'] },
+                quote: { type: 'string' },
               },
             },
           },
-          suggestedFix: {type: 'string'},
-          affectedEntities: {type: 'array', items: {type: 'string'}},
+          suggestedFix: { type: 'string' },
+          affectedEntities: { type: 'array', items: { type: 'string' } },
         },
         required: ['type', 'severity', 'title', 'description', 'evidence'],
         additionalProperties: false,
@@ -814,10 +814,10 @@ const CHECK_SCHEMA = {
     summary: {
       type: 'object',
       properties: {
-        totalIssues: {type: 'number'},
-        errors: {type: 'number'},
-        warnings: {type: 'number'},
-        checkedEntities: {type: 'array', items: {type: 'string'}},
+        totalIssues: { type: 'number' },
+        errors: { type: 'number' },
+        warnings: { type: 'number' },
+        checkedEntities: { type: 'array', items: { type: 'string' } },
       },
     },
   },
@@ -985,7 +985,7 @@ realm-sync/
 ### Vitest Setup (`vitest.config.ts`)
 
 ```typescript
-import {defineConfig} from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
@@ -994,7 +994,7 @@ export default defineConfig({
   test: {
     environment: 'edge-runtime',
     setupFiles: ['./src/__tests__/setup.ts'],
-    server: {deps: {inline: ['convex-test']}},
+    server: { deps: { inline: ['convex-test'] } },
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'convex/**/*.test.ts'],
     coverage: {
       provider: 'v8',
@@ -1017,8 +1017,8 @@ export default defineConfig({
 
 ```typescript
 import '@testing-library/jest-dom';
-import {cleanup} from '@testing-library/react';
-import {afterEach} from 'vitest';
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
 
 afterEach(() => {
   cleanup();
@@ -1028,9 +1028,9 @@ afterEach(() => {
 ### Convex Testing Pattern
 
 ```typescript
-import {convexTest} from 'convex-test';
-import {describe, it, expect, beforeEach} from 'vitest';
-import {api} from './_generated/api';
+import { convexTest } from 'convex-test';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { api } from './_generated/api';
 import schema from './schema';
 
 describe('projects', () => {
@@ -1096,8 +1096,8 @@ VITE_APP_TITLE: string; // "Realm Sync"
 ### Environment Validation (`src/env.ts`)
 
 ```typescript
-import {createEnv} from '@t3-oss/env-core';
-import {z} from 'zod';
+import { createEnv } from '@t3-oss/env-core';
+import { z } from 'zod';
 
 export const env = createEnv({
   server: {

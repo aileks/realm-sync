@@ -71,8 +71,8 @@ projects.new.tsx    → /projects/new
 ## ROUTE COMPONENT STRUCTURE
 
 ```typescript
-import {createFileRoute} from '@tanstack/react-router';
-import {useQuery} from '@tanstack/react-query-ssr';
+import { createFileRoute } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query-ssr';
 
 // Simple route
 export const Route = createFileRoute('/projects_.$projectId')({
@@ -80,13 +80,13 @@ export const Route = createFileRoute('/projects_.$projectId')({
 });
 
 function ProjectDetail() {
-  const {projectId} = Route.useParams();
+  const { projectId } = Route.useParams();
   // ...
 }
 
 // With data loading
 export const Route = createFileRoute('/projects_.$projectId')({
-  loader: ({params}) => fetchProject(params.projectId),
+  loader: ({ params }) => fetchProject(params.projectId),
   component: ProjectDetail,
 });
 ```

@@ -1,12 +1,12 @@
-import {internalQuery, internalMutation} from '../_generated/server';
-import {v} from 'convex/values';
+import { internalQuery, internalMutation } from '../_generated/server';
+import { v } from 'convex/values';
 
 export const checkCache = internalQuery({
   args: {
     inputHash: v.string(),
     promptVersion: v.string(),
   },
-  handler: async (ctx, {inputHash, promptVersion}) => {
+  handler: async (ctx, { inputHash, promptVersion }) => {
     const cache = await ctx.db
       .query('llmCache')
       .withIndex('by_hash', (q) => q.eq('inputHash', inputHash).eq('promptVersion', promptVersion))
@@ -27,7 +27,7 @@ export const saveToCache = internalMutation({
     modelId: v.string(),
     response: v.any(),
   },
-  handler: async (ctx, {inputHash, promptVersion, modelId, response}) => {
+  handler: async (ctx, { inputHash, promptVersion, modelId, response }) => {
     const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
     const createdAt = Date.now();
 
@@ -47,7 +47,7 @@ export const invalidateCache = internalMutation({
     promptVersion: v.string(),
     inputHash: v.optional(v.string()),
   },
-  handler: async (ctx, {promptVersion, inputHash}) => {
+  handler: async (ctx, { promptVersion, inputHash }) => {
     if (inputHash) {
       const caches = await ctx.db
         .query('llmCache')

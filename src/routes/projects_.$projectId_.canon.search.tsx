@@ -1,16 +1,16 @@
-import {createFileRoute, Link, useNavigate} from '@tanstack/react-router';
-import {useQuery} from 'convex/react';
-import {useState, useEffect, useRef} from 'react';
-import {Search, User, MapPin, Package, Lightbulb, Calendar, HelpCircle, X} from 'lucide-react';
-import {api} from '../../convex/_generated/api';
-import type {Doc, Id} from '../../convex/_generated/dataModel';
-import {Input} from '@/components/ui/input';
-import {Button} from '@/components/ui/button';
-import {Badge} from '@/components/ui/badge';
-import {Card, CardHeader, CardTitle, CardDescription} from '@/components/ui/card';
-import {EmptyState} from '@/components/EmptyState';
-import {LoadingState} from '@/components/LoadingState';
-import {cn} from '@/lib/utils';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { useQuery } from 'convex/react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, User, MapPin, Package, Lightbulb, Calendar, HelpCircle, X } from 'lucide-react';
+import { api } from '../../convex/_generated/api';
+import type { Doc, Id } from '../../convex/_generated/dataModel';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { EmptyState } from '@/components/EmptyState';
+import { LoadingState } from '@/components/LoadingState';
+import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/projects_/$projectId_/canon/search')({
   component: CanonSearch,
@@ -22,7 +22,7 @@ export const Route = createFileRoute('/projects_/$projectId_/canon/search')({
 type Entity = Doc<'entities'>;
 type EntityType = Entity['type'];
 
-const entityTypeConfig: Record<EntityType, {icon: typeof User; colorClass: string}> = {
+const entityTypeConfig: Record<EntityType, { icon: typeof User; colorClass: string }> = {
   character: {
     icon: User,
     colorClass: 'bg-entity-character/15 text-entity-character ring-entity-character/20',
@@ -31,7 +31,7 @@ const entityTypeConfig: Record<EntityType, {icon: typeof User; colorClass: strin
     icon: MapPin,
     colorClass: 'bg-entity-location/15 text-entity-location ring-entity-location/20',
   },
-  item: {icon: Package, colorClass: 'bg-entity-item/15 text-entity-item ring-entity-item/20'},
+  item: { icon: Package, colorClass: 'bg-entity-item/15 text-entity-item ring-entity-item/20' },
   concept: {
     icon: Lightbulb,
     colorClass: 'bg-entity-concept/15 text-entity-concept ring-entity-concept/20',
@@ -49,8 +49,8 @@ const defaultConfig = {
 
 function CanonSearch() {
   const navigate = useNavigate();
-  const {projectId} = Route.useParams();
-  const {q: initialQuery} = Route.useSearch();
+  const { projectId } = Route.useParams();
+  const { q: initialQuery } = Route.useSearch();
 
   const [query, setQuery] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
@@ -66,8 +66,8 @@ function CanonSearch() {
       if (query !== initialQuery) {
         void navigate({
           to: '/projects/$projectId/canon/search',
-          params: {projectId},
-          search: {q: query},
+          params: { projectId },
+          search: { q: query },
           replace: true,
         });
       }
@@ -150,15 +150,15 @@ type SearchResultCardProps = {
   projectId: string;
 };
 
-function SearchResultCard({entity, query, projectId}: SearchResultCardProps) {
+function SearchResultCard({ entity, query, projectId }: SearchResultCardProps) {
   const config = entityTypeConfig[entity.type] ?? defaultConfig;
   const Icon = config.icon;
 
   return (
     <Link
       to="/entities/$entityId"
-      params={{entityId: entity._id}}
-      search={{project: projectId}}
+      params={{ entityId: entity._id }}
+      search={{ project: projectId }}
       className="block"
     >
       <Card className="hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1">
@@ -214,7 +214,7 @@ type SearchHighlightProps = {
   query: string;
 };
 
-function SearchHighlight({text, query}: SearchHighlightProps) {
+function SearchHighlight({ text, query }: SearchHighlightProps) {
   if (!query.trim()) return <>{text}</>;
 
   const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');

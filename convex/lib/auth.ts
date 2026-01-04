@@ -1,6 +1,6 @@
-import {getAuthUserId as convexGetAuthUserId} from '@convex-dev/auth/server';
-import type {Id, Doc} from '../_generated/dataModel';
-import type {MutationCtx, QueryCtx} from '../_generated/server';
+import { getAuthUserId as convexGetAuthUserId } from '@convex-dev/auth/server';
+import type { Id, Doc } from '../_generated/dataModel';
+import type { MutationCtx, QueryCtx } from '../_generated/server';
 
 async function getAuthUserId(ctx: QueryCtx | MutationCtx): Promise<Id<'users'> | null> {
   return await convexGetAuthUserId(ctx);
@@ -28,4 +28,4 @@ async function requireAuthUser(ctx: QueryCtx | MutationCtx): Promise<Doc<'users'
   return user;
 }
 
-export {getAuthUserId, getCurrentUser, requireAuth, requireAuthUser};
+export { getAuthUserId, getCurrentUser, requireAuth, requireAuthUser };

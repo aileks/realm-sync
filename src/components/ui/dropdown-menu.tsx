@@ -1,18 +1,18 @@
 import * as React from 'react';
-import {Menu as MenuPrimitive} from '@base-ui/react/menu';
+import { Menu as MenuPrimitive } from '@base-ui/react/menu';
 
-import {cn} from '@/lib/utils';
-import {ChevronRightIcon, CheckIcon} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ChevronRightIcon, CheckIcon } from 'lucide-react';
 
-function DropdownMenu({...props}: MenuPrimitive.Root.Props) {
+function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
 }
 
-function DropdownMenuPortal({...props}: MenuPrimitive.Portal.Props) {
+function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
   return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />;
 }
 
-function DropdownMenuTrigger({...props}: MenuPrimitive.Trigger.Props) {
+function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
   return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />;
 }
 
@@ -47,7 +47,7 @@ function DropdownMenuContent({
   );
 }
 
-function DropdownMenuGroup({...props}: MenuPrimitive.Group.Props) {
+function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
   return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />;
 }
 
@@ -91,7 +91,7 @@ function DropdownMenuItem({
   );
 }
 
-function DropdownMenuSub({...props}: MenuPrimitive.SubmenuRoot.Props) {
+function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
   return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />;
 }
 
@@ -172,11 +172,11 @@ function DropdownMenuCheckboxItem({
   );
 }
 
-function DropdownMenuRadioGroup({...props}: MenuPrimitive.RadioGroup.Props) {
+function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
   return <MenuPrimitive.RadioGroup data-slot="dropdown-menu-radio-group" {...props} />;
 }
 
-function DropdownMenuRadioItem({className, children, ...props}: MenuPrimitive.RadioItem.Props) {
+function DropdownMenuRadioItem({ className, children, ...props }: MenuPrimitive.RadioItem.Props) {
   return (
     <MenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
@@ -199,7 +199,7 @@ function DropdownMenuRadioItem({className, children, ...props}: MenuPrimitive.Ra
   );
 }
 
-function DropdownMenuSeparator({className, ...props}: MenuPrimitive.Separator.Props) {
+function DropdownMenuSeparator({ className, ...props }: MenuPrimitive.Separator.Props) {
   return (
     <MenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
@@ -209,7 +209,7 @@ function DropdownMenuSeparator({className, ...props}: MenuPrimitive.Separator.Pr
   );
 }
 
-function DropdownMenuShortcut({className, ...props}: React.ComponentProps<'span'>) {
+function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<'span'>) {
   return (
     <span
       data-slot="dropdown-menu-shortcut"

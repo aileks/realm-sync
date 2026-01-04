@@ -42,7 +42,7 @@ pnpm add -D convex-test @edge-runtime/vm
 ### vitest.config.ts
 
 ```typescript
-import {defineConfig} from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
@@ -51,7 +51,7 @@ export default defineConfig({
   test: {
     environment: 'edge-runtime',
     setupFiles: ['./src/__tests__/setup.ts'],
-    server: {deps: {inline: ['convex-test']}},
+    server: { deps: { inline: ['convex-test'] } },
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'convex/**/*.test.ts'],
     coverage: {
       provider: 'v8',
@@ -74,8 +74,8 @@ export default defineConfig({
 
 ```typescript
 import '@testing-library/jest-dom';
-import {cleanup} from '@testing-library/react';
-import {afterEach} from 'vitest';
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
 
 afterEach(() => {
   cleanup();
@@ -93,9 +93,9 @@ afterEach(() => {
 Uses `convex-test` for behavior-focused testing of project CRUD and authorization.
 
 ```typescript
-import {convexTest} from 'convex-test';
-import {describe, it, expect, beforeEach} from 'vitest';
-import {api} from './_generated/api';
+import { convexTest } from 'convex-test';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { api } from './_generated/api';
 import schema from './schema';
 
 describe('projects', () => {
@@ -120,8 +120,8 @@ describe('projects', () => {
 **File:** `src/lib/utils.test.ts`
 
 ```typescript
-import {describe, it, expect} from 'vitest';
-import {cn, toId} from './utils';
+import { describe, it, expect } from 'vitest';
+import { cn, toId } from './utils';
 
 describe('cn', () => {
   it('merges tailwind classes correctly', () => {
@@ -142,8 +142,8 @@ describe('toId', () => {
 **File:** `src/env.test.ts`
 
 ```typescript
-import {describe, it, expect, vi} from 'vitest';
-import {env} from './env';
+import { describe, it, expect, vi } from 'vitest';
+import { env } from './env';
 
 describe('env', () => {
   it('has VITE_APP_TITLE defined', () => {
@@ -434,10 +434,10 @@ describe('FormExample', () => {
 it('toggles completed status', async () => {
   const id = await t.run(
     async (ctx) =>
-      await ctx.db.insert('todos', {text: 'Task', completed: false})
+      await ctx.db.insert('todos', { text: 'Task', completed: false })
   );
 
-  await t.mutation(api.todos.toggle, {id});
+  await t.mutation(api.todos.toggle, { id });
 
   const todo = await t.run(async (ctx) => await ctx.db.get(id));
   expect(todo?.completed).toBe(true);
@@ -477,12 +477,12 @@ describe('ComponentExample with Convex', () => {
 ```typescript
 // ✅ GOOD - Case-insensitive match
 await expect(async () => {
-  await t.mutation(api.todos.toggle, {id: fakeId});
+  await t.mutation(api.todos.toggle, { id: fakeId });
 }).rejects.toThrowError(/todo not found/i);
 
 // ❌ BAD - Hard-coded error message
 await expect(async () => {
-  await t.mutation(api.todos.toggle, {id: fakeId});
+  await t.mutation(api.todos.toggle, { id: fakeId });
 }).rejects.toThrowError('Todo not found');
 ```
 

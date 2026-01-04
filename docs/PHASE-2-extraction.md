@@ -50,11 +50,11 @@ The main entry point for extraction, triggered from the frontend via `useAction`
 ```typescript
 // convex/llm/extract.ts
 export const chunkAndExtract = action({
-  args: {documentId: v.id('documents')},
+  args: { documentId: v.id('documents') },
   handler: async (
     ctx,
-    {documentId}
-  ): Promise<{entitiesCreated: number; factsCreated: number}> => {
+    { documentId }
+  ): Promise<{ entitiesCreated: number; factsCreated: number }> => {
     await ctx.runMutation(api.documents.updateProcessingStatus, {
       id: documentId,
       status: 'processing',
@@ -63,7 +63,7 @@ export const chunkAndExtract = action({
     try {
       const result = await ctx.runAction(
         internal.llm.extract.extractFromDocument,
-        {documentId}
+        { documentId }
       );
       return await ctx.runMutation(
         internal.llm.extract.processExtractionResult,
@@ -89,9 +89,9 @@ Orchestrates LLM extraction with caching and chunking.
 
 ```typescript
 export const extractFromDocument = internalAction({
-  args: {documentId: v.id('documents')},
-  handler: async (ctx, {documentId}): Promise<ExtractionResult> => {
-    const doc = await ctx.runQuery(api.documents.get, {id: documentId});
+  args: { documentId: v.id('documents') },
+  handler: async (ctx, { documentId }): Promise<ExtractionResult> => {
+    const doc = await ctx.runQuery(api.documents.get, { id: documentId });
     if (!doc || !doc.content) throw new Error('Document not found or empty');
 
     // Check cache
@@ -152,8 +152,8 @@ async function callLLM(
       body: JSON.stringify({
         model,
         messages: [
-          {role: 'system', content: VELLUM_SYSTEM_PROMPT},
-          {role: 'user', content},
+          { role: 'system', content: VELLUM_SYSTEM_PROMPT },
+          { role: 'user', content },
         ],
         response_format: {
           type: 'json_schema',
@@ -215,10 +215,10 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          name: {type: 'string'},
-          type: {enum: ['character', 'location', 'item', 'concept', 'event']},
-          description: {type: 'string'},
-          aliases: {type: 'array', items: {type: 'string'}},
+          name: { type: 'string' },
+          type: { enum: ['character', 'location', 'item', 'concept', 'event'] },
+          description: { type: 'string' },
+          aliases: { type: 'array', items: { type: 'string' } },
         },
         required: ['name', 'type'],
         additionalProperties: false,
@@ -229,17 +229,17 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          entityName: {type: 'string'},
-          subject: {type: 'string'},
-          predicate: {type: 'string'},
-          object: {type: 'string'},
-          confidence: {type: 'number', minimum: 0, maximum: 1},
-          evidence: {type: 'string'},
+          entityName: { type: 'string' },
+          subject: { type: 'string' },
+          predicate: { type: 'string' },
+          object: { type: 'string' },
+          confidence: { type: 'number', minimum: 0, maximum: 1 },
+          evidence: { type: 'string' },
           temporalBound: {
             type: 'object',
             properties: {
-              type: {enum: ['point', 'range', 'relative']},
-              value: {type: 'string'},
+              type: { enum: ['point', 'range', 'relative'] },
+              value: { type: 'string' },
             },
           },
         },
@@ -259,10 +259,10 @@ const EXTRACTION_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          sourceEntity: {type: 'string'},
-          targetEntity: {type: 'string'},
-          relationshipType: {type: 'string'},
-          evidence: {type: 'string'},
+          sourceEntity: { type: 'string' },
+          targetEntity: { type: 'string' },
+          relationshipType: { type: 'string' },
+          evidence: { type: 'string' },
         },
         required: [
           'sourceEntity',

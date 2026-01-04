@@ -1,14 +1,14 @@
-import {createFileRoute, useNavigate, Link} from '@tanstack/react-router';
-import {useQuery} from 'convex/react';
-import {useState} from 'react';
-import {LayoutGrid, List, ArrowUpDown} from 'lucide-react';
-import {api} from '../../convex/_generated/api';
-import type {Id} from '../../convex/_generated/dataModel';
-import {Button} from '@/components/ui/button';
-import {EntityCard} from '@/components/EntityCard';
-import {EntityTypeFilter} from '@/components/EntityTypeFilter';
-import {EmptyState} from '@/components/EmptyState';
-import {LoadingState} from '@/components/LoadingState';
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
+import { useQuery } from 'convex/react';
+import { useState } from 'react';
+import { LayoutGrid, List, ArrowUpDown } from 'lucide-react';
+import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
+import { Button } from '@/components/ui/button';
+import { EntityCard } from '@/components/EntityCard';
+import { EntityTypeFilter } from '@/components/EntityTypeFilter';
+import { EmptyState } from '@/components/EmptyState';
+import { LoadingState } from '@/components/LoadingState';
 import {
   Select,
   SelectContent,
@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {cn} from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/projects_/$projectId_/canon/')({
   component: CanonBrowserIndex,
@@ -52,7 +52,7 @@ type EntityWithStats = {
 
 function CanonBrowserIndex() {
   const navigate = useNavigate();
-  const {projectId} = Route.useParams();
+  const { projectId } = Route.useParams();
 
   const [typeFilter, setTypeFilter] = useState<EntityType | 'all'>('all');
   const [sortBy, setSortBy] = useState<SortBy>('name');
@@ -141,7 +141,9 @@ function CanonBrowserIndex() {
           action={
             <Button
               variant="outline"
-              onClick={() => navigate({to: '/projects/$projectId/documents', params: {projectId}})}
+              onClick={() =>
+                navigate({ to: '/projects/$projectId/documents', params: { projectId } })
+              }
             >
               View Documents
             </Button>
@@ -179,7 +181,7 @@ type EntityCardLinkProps = {
   projectId: string;
 };
 
-function EntityCardLink({entity, viewMode, projectId}: EntityCardLinkProps) {
+function EntityCardLink({ entity, viewMode, projectId }: EntityCardLinkProps) {
   const entityForCard = {
     ...entity,
     description:
@@ -192,8 +194,8 @@ function EntityCardLink({entity, viewMode, projectId}: EntityCardLinkProps) {
   return (
     <Link
       to="/entities/$entityId"
-      params={{entityId: entity._id}}
-      search={{project: projectId}}
+      params={{ entityId: entity._id }}
+      search={{ project: projectId }}
       className="block"
     >
       <EntityCard entity={entityForCard} className={viewMode === 'grid' ? 'h-full' : undefined} />

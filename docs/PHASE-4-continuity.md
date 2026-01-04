@@ -56,7 +56,7 @@ Before building the full continuity checking system, we implemented a dev chat i
 
 ```typescript
 // Streaming chat with persistent text streaming
-import {PersistentTextStreaming} from '@convex-dev/persistent-text-streaming';
+import { PersistentTextStreaming } from '@convex-dev/persistent-text-streaming';
 
 const streaming = new PersistentTextStreaming(
   components.persistentTextStreaming
@@ -64,23 +64,25 @@ const streaming = new PersistentTextStreaming(
 
 // 1. Create stream (mutation)
 export const createStreamingChat = mutation({
-  args: {messages: v.array(v.object({role: v.string(), content: v.string()}))},
-  handler: async (ctx, {messages}) => {
+  args: {
+    messages: v.array(v.object({ role: v.string(), content: v.string() })),
+  },
+  handler: async (ctx, { messages }) => {
     const streamId = await streaming.createStream(ctx);
-    return {streamId, messages};
+    return { streamId, messages };
   },
 });
 
 // 2. Stream chat (HTTP action)
 export const streamChat = httpAction(async (ctx, request) => {
-  const {streamId, messages} = await request.json();
+  const { streamId, messages } = await request.json();
 
   const generateChat = async (ctx, request, streamId, appendChunk) => {
     // Call OpenRouter with streaming enabled
     const response = await fetch(
       'https://openrouter.ai/api/v1/chat/completions',
       {
-        body: JSON.stringify({model, messages: apiMessages, stream: true}),
+        body: JSON.stringify({ model, messages: apiMessages, stream: true }),
       }
     );
 
@@ -95,8 +97,8 @@ export const streamChat = httpAction(async (ctx, request) => {
 
 // 3. Query stream body (for useStream hook)
 export const getStreamBody = query({
-  args: {streamId: StreamIdValidator},
-  handler: async (ctx, {streamId}) => {
+  args: { streamId: StreamIdValidator },
+  handler: async (ctx, { streamId }) => {
     return await streaming.getStreamBody(ctx, streamId);
   },
 });
@@ -105,10 +107,10 @@ export const getStreamBody = query({
 **Frontend** (`src/routes/dev.chat.tsx`):
 
 ```tsx
-import {useStream} from '@convex-dev/persistent-text-streaming/react';
+import { useStream } from '@convex-dev/persistent-text-streaming/react';
 
-function StreamingMessage({streamId}: {streamId: string}) {
-  const {text, status} = useStream(
+function StreamingMessage({ streamId }: { streamId: string }) {
+  const { text, status } = useStream(
     api.chat.getStreamBody,
     streamUrl,
     false, // driven=false (parent handles HTTP call)
@@ -235,24 +237,24 @@ const CHECK_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          type: {enum: ['contradiction', 'timeline', 'ambiguity']},
-          severity: {enum: ['error', 'warning']},
-          title: {type: 'string'},
-          description: {type: 'string'},
+          type: { enum: ['contradiction', 'timeline', 'ambiguity'] },
+          severity: { enum: ['error', 'warning'] },
+          title: { type: 'string' },
+          description: { type: 'string' },
           evidence: {
             type: 'array',
             items: {
               type: 'object',
               properties: {
-                source: {enum: ['canon', 'new_document']},
-                quote: {type: 'string'},
-                entityName: {type: 'string'},
+                source: { enum: ['canon', 'new_document'] },
+                quote: { type: 'string' },
+                entityName: { type: 'string' },
               },
               required: ['source', 'quote'],
             },
           },
-          suggestedFix: {type: 'string'},
-          affectedEntities: {type: 'array', items: {type: 'string'}},
+          suggestedFix: { type: 'string' },
+          affectedEntities: { type: 'array', items: { type: 'string' } },
         },
         required: ['type', 'severity', 'title', 'description', 'evidence'],
         additionalProperties: false,
@@ -261,10 +263,10 @@ const CHECK_SCHEMA = {
     summary: {
       type: 'object',
       properties: {
-        totalIssues: {type: 'number'},
-        errors: {type: 'number'},
-        warnings: {type: 'number'},
-        checkedEntities: {type: 'array', items: {type: 'string'}},
+        totalIssues: { type: 'number' },
+        errors: { type: 'number' },
+        warnings: { type: 'number' },
+        checkedEntities: { type: 'array', items: { type: 'string' } },
       },
     },
   },

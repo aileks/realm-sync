@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/tanstackstart-react';
-import {readFileSync} from 'node:fs';
+import { readFileSync } from 'node:fs';
 
 function loadEnvFile() {
   try {

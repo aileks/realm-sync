@@ -1,14 +1,14 @@
-import {createFileRoute, useNavigate} from '@tanstack/react-router';
-import {useQuery, useMutation} from 'convex/react';
-import {useState} from 'react';
-import {Users, Search, ArrowLeft, Filter} from 'lucide-react';
-import {api} from '../../convex/_generated/api';
-import type {Id} from '../../convex/_generated/dataModel';
-import {Button} from '@/components/ui/button';
-import {Input} from '@/components/ui/input';
-import {EntityCard} from '@/components/EntityCard';
-import {EmptyState} from '@/components/EmptyState';
-import {LoadingState} from '@/components/LoadingState';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useQuery, useMutation } from 'convex/react';
+import { useState } from 'react';
+import { Users, Search, ArrowLeft, Filter } from 'lucide-react';
+import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { EntityCard } from '@/components/EntityCard';
+import { EmptyState } from '@/components/EmptyState';
+import { LoadingState } from '@/components/LoadingState';
 import {
   Select,
   SelectContent,
@@ -23,9 +23,9 @@ export const Route = createFileRoute('/projects_/$projectId_/entities')({
 
 function EntitiesPage() {
   const navigate = useNavigate();
-  const {projectId} = Route.useParams();
-  const project = useQuery(api.projects.get, {id: projectId as Id<'projects'>});
-  const entities = useQuery(api.entities.listByProject, {projectId: projectId as Id<'projects'>});
+  const { projectId } = Route.useParams();
+  const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
+  const entities = useQuery(api.entities.listByProject, { projectId: projectId as Id<'projects'> });
 
   const confirmEntity = useMutation(api.entities.confirm);
   const rejectEntity = useMutation(api.entities.reject);
@@ -42,7 +42,7 @@ function EntitiesPage() {
     return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-muted-foreground">Project not found.</p>
-        <Button variant="ghost" className="mt-4" onClick={() => navigate({to: '/projects'})}>
+        <Button variant="ghost" className="mt-4" onClick={() => navigate({ to: '/projects' })}>
           Back to Projects
         </Button>
       </div>
@@ -66,7 +66,7 @@ function EntitiesPage() {
           variant="ghost"
           size="sm"
           className="mb-2 -ml-2"
-          onClick={() => navigate({to: '/projects/$projectId', params: {projectId}})}
+          onClick={() => navigate({ to: '/projects/$projectId', params: { projectId } })}
         >
           <ArrowLeft className="mr-1 size-4" />
           {project.name}
@@ -144,8 +144,8 @@ function EntitiesPage() {
             <EntityCard
               key={entity._id}
               entity={entity}
-              onConfirm={entity.status === 'pending' ? (id) => confirmEntity({id}) : undefined}
-              onReject={entity.status === 'pending' ? (id) => rejectEntity({id}) : undefined}
+              onConfirm={entity.status === 'pending' ? (id) => confirmEntity({ id }) : undefined}
+              onReject={entity.status === 'pending' ? (id) => rejectEntity({ id }) : undefined}
             />
           ))}
         </div>

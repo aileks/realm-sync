@@ -7,7 +7,7 @@
   "useTabs": false,
   "printWidth": 100,
   "trailingComma": "es5",
-  "bracketSpacing": false,
+  "bracketSpacing": true,
   "arrowParens": "always",
   "endOfLine": "lf",
   "bracketSameLine": false,

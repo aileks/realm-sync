@@ -1,5 +1,5 @@
-import {query} from './_generated/server';
-import {getCurrentUser} from './lib/auth';
+import { query } from './_generated/server';
+import { getCurrentUser } from './lib/auth';
 
 export const viewer = query({
   args: {},

@@ -247,7 +247,7 @@ Cache for LLM responses to optimize costs and performance.
 Convex automatically generates types based on the schema. Developers can use these types as follows:
 
 ```typescript
-import {Doc, Id} from './_generated/dataModel';
+import { Doc, Id } from './_generated/dataModel';
 
 // Table Document Types
 export type User = Doc<'users'>;

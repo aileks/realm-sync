@@ -10,16 +10,16 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
-import {Card, CardHeader, CardTitle, CardAction} from '@/components/ui/card';
-import {Badge} from '@/components/ui/badge';
+import { Card, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import {cn} from '@/lib/utils';
-import type {Doc} from '../../convex/_generated/dataModel';
+import { cn } from '@/lib/utils';
+import type { Doc } from '../../convex/_generated/dataModel';
 
 type Document = Doc<'documents'>;
 
@@ -37,13 +37,13 @@ const contentTypeIcons = {
 };
 
 const statusConfig = {
-  pending: {icon: Clock, className: 'text-muted-foreground'},
-  processing: {icon: Loader2, className: 'text-primary animate-spin'},
-  completed: {icon: CheckCircle, className: 'text-green-500'},
-  failed: {icon: AlertCircle, className: 'text-destructive'},
+  pending: { icon: Clock, className: 'text-muted-foreground' },
+  processing: { icon: Loader2, className: 'text-primary animate-spin' },
+  completed: { icon: CheckCircle, className: 'text-green-500' },
+  failed: { icon: AlertCircle, className: 'text-destructive' },
 };
 
-export function DocumentCard({document, onClick, onEdit, onDelete}: DocumentCardProps) {
+export function DocumentCard({ document, onClick, onEdit, onDelete }: DocumentCardProps) {
   const ContentTypeIcon = contentTypeIcons[document.contentType];
   const status = statusConfig[document.processingStatus];
   const StatusIcon = status.icon;

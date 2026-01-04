@@ -1,6 +1,6 @@
-import {describe, it, expect, beforeEach} from 'vitest';
-import {api} from '../../_generated/api';
-import type {Id} from '../../_generated/dataModel';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { api } from '../../_generated/api';
+import type { Id } from '../../_generated/dataModel';
 import {
   type TestContext,
   createTestContext,
@@ -70,7 +70,7 @@ describe('entities mutations', () => {
     });
 
     it('works on projects without pre-existing stats', async () => {
-      const noStatsProjectId = await setupProject(t, userId, {withStats: false});
+      const noStatsProjectId = await setupProject(t, userId, { withStats: false });
 
       await asUser.mutation(api.entities.create, {
         projectId: noStatsProjectId,
@@ -119,7 +119,7 @@ describe('entities mutations', () => {
     });
 
     it('updates entity fields', async () => {
-      const {entityId} = await setupProjectWithEntities(t, userId);
+      const { entityId } = await setupProjectWithEntities(t, userId);
 
       await asUser.mutation(api.entities.update, {
         id: entityId,
@@ -134,7 +134,7 @@ describe('entities mutations', () => {
 
     it('confirms pending entity', async () => {
       const projectId = await setupProject(t, userId);
-      const entityId = await setupEntity(t, projectId, {status: 'pending'});
+      const entityId = await setupEntity(t, projectId, { status: 'pending' });
 
       await asUser.mutation(api.entities.update, {
         id: entityId,
@@ -146,11 +146,11 @@ describe('entities mutations', () => {
     });
 
     it('throws when entity not found', async () => {
-      const {entityId} = await setupProjectWithEntities(t, userId);
+      const { entityId } = await setupProjectWithEntities(t, userId);
       await t.run(async (ctx) => ctx.db.delete(entityId));
 
       await expect(
-        asUser.mutation(api.entities.update, {id: entityId, name: 'Ghost'})
+        asUser.mutation(api.entities.update, { id: entityId, name: 'Ghost' })
       ).rejects.toThrow(/not found/i);
     });
   });
@@ -169,7 +169,7 @@ describe('entities mutations', () => {
 
     it('merges two entities, combining aliases', async () => {
       const projectId = await setupProject(t, userId, {
-        stats: {...defaultStats(), entityCount: 2, factCount: 1},
+        stats: { ...defaultStats(), entityCount: 2, factCount: 1 },
       });
       const documentId = await setupDocument(t, projectId);
 
@@ -185,7 +185,7 @@ describe('entities mutations', () => {
       });
       const factId = await setupFact(
         t,
-        {projectId, entityId: sourceId, documentId},
+        { projectId, entityId: sourceId, documentId },
         {
           subject: 'Lord Snow',
           predicate: 'is',
@@ -194,7 +194,7 @@ describe('entities mutations', () => {
         }
       );
 
-      await asUser.mutation(api.entities.merge, {sourceId, targetId});
+      await asUser.mutation(api.entities.merge, { sourceId, targetId });
 
       const source = await t.run(async (ctx) => ctx.db.get(sourceId));
       expect(source).toBeNull();
@@ -216,9 +216,9 @@ describe('entities mutations', () => {
       const project2Id = await setupProject(t, userId);
 
       const sourceId = await setupEntity(t, project1Id);
-      const targetId = await setupEntity(t, project2Id, {status: 'confirmed'});
+      const targetId = await setupEntity(t, project2Id, { status: 'confirmed' });
 
-      await expect(asUser.mutation(api.entities.merge, {sourceId, targetId})).rejects.toThrow(
+      await expect(asUser.mutation(api.entities.merge, { sourceId, targetId })).rejects.toThrow(
         /different projects/i
       );
     });
@@ -238,19 +238,19 @@ describe('entities mutations', () => {
 
     it('confirms a pending entity', async () => {
       const projectId = await setupProject(t, userId);
-      const entityId = await setupEntity(t, projectId, {status: 'pending'});
+      const entityId = await setupEntity(t, projectId, { status: 'pending' });
 
-      await asUser.mutation(api.entities.confirm, {id: entityId});
+      await asUser.mutation(api.entities.confirm, { id: entityId });
 
       const entity = await t.run(async (ctx) => ctx.db.get(entityId));
       expect(entity?.status).toBe('confirmed');
     });
 
     it('throws when entity not found', async () => {
-      const {entityId} = await setupProjectWithEntities(t, userId);
+      const { entityId } = await setupProjectWithEntities(t, userId);
       await t.run(async (ctx) => ctx.db.delete(entityId));
 
-      await expect(asUser.mutation(api.entities.confirm, {id: entityId})).rejects.toThrow(
+      await expect(asUser.mutation(api.entities.confirm, { id: entityId })).rejects.toThrow(
         /not found/i
       );
     });
@@ -270,13 +270,13 @@ describe('entities mutations', () => {
 
     it('rejects entity and cascades to delete facts', async () => {
       const projectId = await setupProject(t, userId, {
-        stats: {...defaultStats(), entityCount: 1, factCount: 1},
+        stats: { ...defaultStats(), entityCount: 1, factCount: 1 },
       });
       const documentId = await setupDocument(t, projectId);
-      const entityId = await setupEntity(t, projectId, {name: 'To Reject'});
-      const factId = await setupFact(t, {projectId, entityId, documentId});
+      const entityId = await setupEntity(t, projectId, { name: 'To Reject' });
+      const factId = await setupFact(t, { projectId, entityId, documentId });
 
-      await asUser.mutation(api.entities.reject, {id: entityId});
+      await asUser.mutation(api.entities.reject, { id: entityId });
 
       const entity = await t.run(async (ctx) => ctx.db.get(entityId));
       expect(entity).toBeNull();
@@ -304,17 +304,17 @@ describe('entities mutations', () => {
 
     it('only decrements factCount for non-rejected facts when cascading', async () => {
       const projectId = await setupProject(t, userId, {
-        stats: {...defaultStats(), entityCount: 1, factCount: 3},
+        stats: { ...defaultStats(), entityCount: 1, factCount: 3 },
       });
       const documentId = await setupDocument(t, projectId);
-      const entityId = await setupEntity(t, projectId, {status: 'confirmed'});
+      const entityId = await setupEntity(t, projectId, { status: 'confirmed' });
 
-      const ids = {projectId, entityId, documentId};
-      await setupFact(t, ids, {subject: 'Confirmed', status: 'confirmed'});
-      await setupFact(t, ids, {subject: 'Pending', status: 'pending'});
-      await setupFact(t, ids, {subject: 'Rejected', status: 'rejected'});
+      const ids = { projectId, entityId, documentId };
+      await setupFact(t, ids, { subject: 'Confirmed', status: 'confirmed' });
+      await setupFact(t, ids, { subject: 'Pending', status: 'pending' });
+      await setupFact(t, ids, { subject: 'Rejected', status: 'rejected' });
 
-      await asUser.mutation(api.entities.remove, {id: entityId});
+      await asUser.mutation(api.entities.remove, { id: entityId });
 
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       expect(project?.stats?.entityCount).toBe(0);
@@ -323,13 +323,13 @@ describe('entities mutations', () => {
 
     it('deletes entity and cascades to facts', async () => {
       const projectId = await setupProject(t, userId, {
-        stats: {...defaultStats(), entityCount: 1, factCount: 1},
+        stats: { ...defaultStats(), entityCount: 1, factCount: 1 },
       });
       const documentId = await setupDocument(t, projectId);
       const entityId = await setupEntity(t, projectId);
-      const factId = await setupFact(t, {projectId, entityId, documentId});
+      const factId = await setupFact(t, { projectId, entityId, documentId });
 
-      await asUser.mutation(api.entities.remove, {id: entityId});
+      await asUser.mutation(api.entities.remove, { id: entityId });
 
       const entity = await t.run(async (ctx) => ctx.db.get(entityId));
       expect(entity).toBeNull();

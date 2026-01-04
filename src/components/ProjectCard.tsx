@@ -1,4 +1,4 @@
-import {Link} from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import {
   FileText,
   Users,
@@ -16,15 +16,15 @@ import {
   CardDescription,
   CardAction,
 } from '@/components/ui/card';
-import {Badge} from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import {cn} from '@/lib/utils';
-import type {Doc} from '../../convex/_generated/dataModel';
+import { cn } from '@/lib/utils';
+import type { Doc } from '../../convex/_generated/dataModel';
 
 type Project = Doc<'projects'>;
 
@@ -34,7 +34,7 @@ type ProjectCardProps = {
   onDelete?: (project: Project) => void;
 };
 
-export function ProjectCard({project, onEdit, onDelete}: ProjectCardProps) {
+export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   const stats = project.stats ?? {
     documentCount: 0,
     entityCount: 0,
@@ -43,7 +43,7 @@ export function ProjectCard({project, onEdit, onDelete}: ProjectCardProps) {
   };
 
   return (
-    <Link to="/projects/$projectId" params={{projectId: project._id}} className="block">
+    <Link to="/projects/$projectId" params={{ projectId: project._id }} className="block">
       <Card className="group hover:ring-primary/20 transition-all duration-200 hover:ring-2">
         <CardHeader>
           <CardTitle className="group-hover:text-primary font-serif text-lg transition-colors">
@@ -115,13 +115,13 @@ export function ProjectCard({project, onEdit, onDelete}: ProjectCardProps) {
 }
 
 type StatBadgeProps = {
-  icon: React.ComponentType<{className?: string}>;
+  icon: React.ComponentType<{ className?: string }>;
   count: number;
   label: string;
   variant?: 'default' | 'destructive' | 'entity-character' | 'entity-concept';
 };
 
-function StatBadge({icon: Icon, count, label, variant = 'default'}: StatBadgeProps) {
+function StatBadge({ icon: Icon, count, label, variant = 'default' }: StatBadgeProps) {
   return (
     <Badge
       variant={variant === 'destructive' ? 'destructive' : 'secondary'}

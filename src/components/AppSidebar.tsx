@@ -1,9 +1,9 @@
-import {useState, useEffect} from 'react';
-import {Link, useRouterState, useParams, useNavigate, useSearch} from '@tanstack/react-router';
-import {useQuery} from 'convex/react';
-import {api} from '../../convex/_generated/api';
-import {useConvexAuth} from 'convex/react';
-import {useAuthActions} from '@convex-dev/auth/react';
+import { useState, useEffect } from 'react';
+import { Link, useRouterState, useParams, useNavigate, useSearch } from '@tanstack/react-router';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { useConvexAuth } from 'convex/react';
+import { useAuthActions } from '@convex-dev/auth/react';
 import {
   FolderOpen,
   BookOpen,
@@ -18,9 +18,9 @@ import {
   User,
   Check,
 } from 'lucide-react';
-import {cn} from '@/lib/utils';
-import {Button, buttonVariants} from '@/components/ui/button';
-import {Tooltip, TooltipTrigger, TooltipContent} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -37,9 +37,9 @@ type AppSidebarProps = {
 };
 
 const THEMES = [
-  {id: 'default', name: 'Fireside', icon: Laptop},
-  {id: 'twilight', name: 'Twilight', icon: Moon},
-  {id: 'daylight', name: 'Daylight', icon: Sun},
+  { id: 'default', name: 'Fireside', icon: Laptop },
+  { id: 'twilight', name: 'Twilight', icon: Moon },
+  { id: 'daylight', name: 'Daylight', icon: Sun },
 ] as const;
 
 type Theme = (typeof THEMES)[number]['id'];
@@ -51,13 +51,13 @@ function getStoredTheme(): Theme {
   return matchedTheme ? matchedTheme.id : 'default';
 }
 
-export function AppSidebar({collapsed, onToggle}: AppSidebarProps) {
-  const {isAuthenticated} = useConvexAuth();
+export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
+  const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.users.viewer);
-  const params = useParams({strict: false});
-  const search = useSearch({strict: false});
+  const params = useParams({ strict: false });
+  const search = useSearch({ strict: false });
   const navigate = useNavigate();
-  const {signOut} = useAuthActions();
+  const { signOut } = useAuthActions();
 
   // projectId from route params OR search params (for entity detail page)
   const projectId = params.projectId ?? search.project;
@@ -86,7 +86,7 @@ export function AppSidebar({collapsed, onToggle}: AppSidebarProps) {
 
   const handleSignOut = async () => {
     await signOut();
-    void navigate({to: '/'});
+    void navigate({ to: '/' });
   };
 
   return (
@@ -153,7 +153,7 @@ export function AppSidebar({collapsed, onToggle}: AppSidebarProps) {
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              buttonVariants({variant: 'ghost', size: 'sm'}),
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
               'w-full cursor-pointer',
               collapsed ? 'justify-center px-0' : 'justify-start'
             )}
@@ -185,7 +185,7 @@ export function AppSidebar({collapsed, onToggle}: AppSidebarProps) {
           <DropdownMenu>
             <DropdownMenuTrigger
               className={cn(
-                buttonVariants({variant: 'ghost', size: 'sm'}),
+                buttonVariants({ variant: 'ghost', size: 'sm' }),
                 'w-full cursor-pointer',
                 collapsed ? 'justify-center px-0' : 'justify-start'
               )}
@@ -218,7 +218,7 @@ export function AppSidebar({collapsed, onToggle}: AppSidebarProps) {
             >
               <DropdownMenuGroup>
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => navigate({to: '/projects'})}>
+                <DropdownMenuItem onClick={() => navigate({ to: '/projects' })}>
                   <FolderOpen className="mr-2 size-4" />
                   Projects
                 </DropdownMenuItem>
@@ -255,12 +255,12 @@ export function AppSidebar({collapsed, onToggle}: AppSidebarProps) {
 
 type NavItemProps = {
   to: '/' | '/projects' | '/auth';
-  icon: React.ComponentType<{className?: string}>;
+  icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
 };
 
-function NavItem({to, icon: Icon, children, collapsed}: NavItemProps) {
+function NavItem({ to, icon: Icon, children, collapsed }: NavItemProps) {
   const routerState = useRouterState();
   const isActive = routerState.location.pathname === to;
 
@@ -293,7 +293,7 @@ function NavItem({to, icon: Icon, children, collapsed}: NavItemProps) {
 type ProjectNavItemProps = {
   projectId: string;
   to: 'review' | 'canon';
-  icon: React.ComponentType<{className?: string}>;
+  icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
 };
@@ -303,7 +303,7 @@ const projectRoutes = {
   canon: '/projects/$projectId/canon',
 } as const;
 
-function ProjectNavItem({projectId, to, icon: Icon, children, collapsed}: ProjectNavItemProps) {
+function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: ProjectNavItemProps) {
   const routerState = useRouterState();
   const fullPath = `/projects/${projectId}/${to}`;
   const isActive = routerState.location.pathname.startsWith(fullPath);
@@ -311,7 +311,7 @@ function ProjectNavItem({projectId, to, icon: Icon, children, collapsed}: Projec
   const content = (
     <Link
       to={projectRoutes[to]}
-      params={{projectId}}
+      params={{ projectId }}
       className={cn(
         'flex items-center gap-3 rounded-lg p-3 transition-colors',
         collapsed && 'justify-center',
@@ -335,11 +335,11 @@ function ProjectNavItem({projectId, to, icon: Icon, children, collapsed}: Projec
   return content;
 }
 
-export function MobileSidebarContent({onClose}: {onClose: () => void}) {
-  const {isAuthenticated} = useConvexAuth();
+export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
+  const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.users.viewer);
   const navigate = useNavigate();
-  const {signOut} = useAuthActions();
+  const { signOut } = useAuthActions();
 
   const [theme, setTheme] = useState<Theme>('default');
   const [mounted, setMounted] = useState(false);
@@ -366,7 +366,7 @@ export function MobileSidebarContent({onClose}: {onClose: () => void}) {
   const handleSignOut = async () => {
     await signOut();
     onClose();
-    void navigate({to: '/'});
+    void navigate({ to: '/' });
   };
 
   return (
@@ -381,7 +381,7 @@ export function MobileSidebarContent({onClose}: {onClose: () => void}) {
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              buttonVariants({variant: 'ghost', size: 'sm'}),
+              buttonVariants({ variant: 'ghost', size: 'sm' }),
               'w-full cursor-pointer justify-start'
             )}
           >
@@ -414,7 +414,7 @@ export function MobileSidebarContent({onClose}: {onClose: () => void}) {
           <DropdownMenu>
             <DropdownMenuTrigger
               className={cn(
-                buttonVariants({variant: 'ghost', size: 'sm'}),
+                buttonVariants({ variant: 'ghost', size: 'sm' }),
                 'w-full cursor-pointer justify-start'
               )}
             >
@@ -444,7 +444,7 @@ export function MobileSidebarContent({onClose}: {onClose: () => void}) {
                 <DropdownMenuItem
                   onClick={() => {
                     onClose();
-                    void navigate({to: '/projects'});
+                    void navigate({ to: '/projects' });
                   }}
                 >
                   <FolderOpen className="mr-2 size-4" />
@@ -466,12 +466,12 @@ export function MobileSidebarContent({onClose}: {onClose: () => void}) {
 
 type MobileNavItemProps = {
   to: '/' | '/projects' | '/auth';
-  icon: React.ComponentType<{className?: string}>;
+  icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   onClick: () => void;
 };
 
-function MobileNavItem({to, icon: Icon, children, onClick}: MobileNavItemProps) {
+function MobileNavItem({ to, icon: Icon, children, onClick }: MobileNavItemProps) {
   const routerState = useRouterState();
   const isActive = routerState.location.pathname === to;
 

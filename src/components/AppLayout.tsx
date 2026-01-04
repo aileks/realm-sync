@@ -1,18 +1,18 @@
-import {useState, useEffect} from 'react';
-import {useNavigate, useRouterState} from '@tanstack/react-router';
-import {useConvexAuth} from 'convex/react';
-import {Menu} from 'lucide-react';
-import {AppSidebar, MobileSidebarContent} from './AppSidebar';
-import {Button} from '@/components/ui/button';
-import {Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle} from '@/components/ui/sheet';
-import {cn} from '@/lib/utils';
+import { useState, useEffect } from 'react';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
+import { useConvexAuth } from 'convex/react';
+import { Menu } from 'lucide-react';
+import { AppSidebar, MobileSidebarContent } from './AppSidebar';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
-export function AppLayout({children}: {children: React.ReactNode}) {
+export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const routerState = useRouterState();
-  const {isAuthenticated, isLoading} = useConvexAuth();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -73,7 +73,7 @@ export function AppLayout({children}: {children: React.ReactNode}) {
 
           <div className="flex items-center gap-2">
             {!isLoading && !isAuthenticated && (
-              <Button size="sm" onClick={() => navigate({to: '/auth'})}>
+              <Button size="sm" onClick={() => navigate({ to: '/auth' })}>
                 Sign In
               </Button>
             )}

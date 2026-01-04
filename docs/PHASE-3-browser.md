@@ -365,8 +365,8 @@ export const listByProject = query({
  * Get full entity details including facts and relationships
  */
 export const getWithDetails = query({
-  args: {entityId: v.id('entities')},
-  handler: async (ctx, {entityId}) => {
+  args: { entityId: v.id('entities') },
+  handler: async (ctx, { entityId }) => {
     const entity = await ctx.db.get(entityId);
     if (!entity) return null;
 
@@ -376,7 +376,7 @@ export const getWithDetails = query({
       .collect();
 
     // Fetch relationships and evidence...
-    return {...entity, facts};
+    return { ...entity, facts };
   },
 });
 

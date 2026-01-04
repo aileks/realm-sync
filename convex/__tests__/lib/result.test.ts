@@ -1,7 +1,7 @@
-import {describe, it, expect} from 'vitest';
-import {ok, err} from 'neverthrow';
-import {unwrapOrThrow, safeJsonParse} from '../../lib/result';
-import {authError, notFoundError, validationError, configError, apiError} from '../../lib/errors';
+import { describe, it, expect } from 'vitest';
+import { ok, err } from 'neverthrow';
+import { unwrapOrThrow, safeJsonParse } from '../../lib/result';
+import { authError, notFoundError, validationError, configError, apiError } from '../../lib/errors';
 
 describe('unwrapOrThrow', () => {
   it('returns value for Ok result', () => {
@@ -39,7 +39,7 @@ describe('safeJsonParse', () => {
   it('returns Ok for valid JSON', () => {
     const result = safeJsonParse('{"name": "test"}');
     expect(result.isOk()).toBe(true);
-    expect(result._unsafeUnwrap()).toEqual({name: 'test'});
+    expect(result._unsafeUnwrap()).toEqual({ name: 'test' });
   });
 
   it('returns Err for invalid JSON', () => {
