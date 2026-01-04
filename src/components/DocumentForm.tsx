@@ -13,12 +13,12 @@ import type { Doc, Id } from '../../convex/_generated/dataModel';
 type Document = Doc<'documents'>;
 type ContentType = 'text' | 'markdown' | 'file';
 
-interface DocumentFormProps {
+type DocumentFormProps = {
   projectId: Id<'projects'>;
   document?: Document;
   onSuccess?: (documentId: Id<'documents'>) => void;
   onCancel?: () => void;
-}
+};
 
 export function DocumentForm({ projectId, document, onSuccess, onCancel }: DocumentFormProps) {
   const [title, setTitle] = useState(document?.title ?? '');

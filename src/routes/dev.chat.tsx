@@ -37,11 +37,11 @@ export const Route = createFileRoute('/dev/chat')({
   component: DevChat,
 });
 
-interface Message {
+type Message = {
   role: 'user' | 'assistant' | 'system';
   content: string;
   streamId?: string;
-}
+};
 
 function StreamingMessage({ streamId }: { streamId: string }) {
   const convexSiteUrl = env.VITE_CONVEX_URL.replace('.convex.cloud', '.convex.site');

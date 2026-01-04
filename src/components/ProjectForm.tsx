@@ -11,11 +11,11 @@ import type { Doc, Id } from '../../convex/_generated/dataModel';
 
 type Project = Doc<'projects'>;
 
-interface ProjectFormProps {
+type ProjectFormProps = {
   project?: Project;
   onSuccess?: (projectId: Id<'projects'>) => void;
   onCancel?: () => void;
-}
+};
 
 export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) {
   const [name, setName] = useState(project?.name ?? '');

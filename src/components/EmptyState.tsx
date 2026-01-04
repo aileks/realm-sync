@@ -8,13 +8,13 @@ import {
 } from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 
-interface EmptyStateProps {
+type EmptyStateProps = {
   icon?: React.ReactNode;
   title: string;
   description?: string;
   action?: React.ReactNode;
   className?: string;
-}
+};
 
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (

@@ -51,7 +51,7 @@ components/
 import { Card, CardHeader, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
-interface EntityCardProps {
+type EntityCardProps = {
   entity: Entity
   className?: string
 }
