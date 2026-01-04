@@ -136,7 +136,12 @@ function EntityDetailPage() {
 
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
-              <AttributeList facts={facts} entityId={entity._id} projectId={projectId} />
+              <AttributeList
+                facts={facts}
+                entityId={entity._id}
+                projectId={projectId}
+                entityName={entity.name}
+              />
               <EvidencePanel facts={facts} />
             </div>
 
@@ -203,9 +208,10 @@ type AttributeListProps = {
   facts: Doc<'facts'>[];
   entityId: Id<'entities'>;
   projectId: Id<'projects'>;
+  entityName: string;
 };
 
-function AttributeList({ facts, entityId, projectId }: AttributeListProps) {
+function AttributeList({ facts, entityId, projectId, entityName }: AttributeListProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const createFact = useMutation(api.facts.create);
   const [isAdding, setIsAdding] = useState(false);
@@ -243,8 +249,12 @@ function AttributeList({ facts, entityId, projectId }: AttributeListProps) {
         projectId,
         entityId,
         documentId: documentId,
-        subject: '',
-        predicate: predicate.trim().toLowerCase().replace(/\s+/g, '_'),
+        subject: entityName,
+        predicate: predicate
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '_')
+          .replace(/^_+|_+$/g, ''),
         object: object.trim(),
         confidence: 1.0,
         evidenceSnippet: 'Manually added',

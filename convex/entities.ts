@@ -517,7 +517,14 @@ export const getWithDetails = query({
         const nameLower = otherEntity.name.toLowerCase().trim();
         const aliasesLower = otherEntity.aliases.map((a) => a.toLowerCase().trim());
 
-        if (objectLower.includes(nameLower) || aliasesLower.some((a) => objectLower.includes(a))) {
+        const nameRegex = new RegExp(`\\b${nameLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+        const matchesName = nameLower.length >= 3 && nameRegex.test(objectLower);
+        const matchesAlias = aliasesLower.some((a) => {
+          if (a.length < 3) return false;
+          const aliasRegex = new RegExp(`\\b${a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
+          return aliasRegex.test(objectLower);
+        });
+        if (matchesName || matchesAlias) {
           relatedEntityIds.add(otherEntity._id);
         }
       }
