@@ -518,9 +518,13 @@ export const getWithDetails = query({
         const aliasesLower = otherEntity.aliases.map((a) => a.toLowerCase().trim());
 
         const nameRegex = new RegExp(`\\b${nameLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
-        const matchesName = nameLower.length >= 3 && nameRegex.test(objectLower);
+        const nameIsSingleWord = !nameLower.includes(' ');
+        const nameMinLength = nameIsSingleWord ? 5 : 3;
+        const matchesName = nameLower.length >= nameMinLength && nameRegex.test(objectLower);
         const matchesAlias = aliasesLower.some((a) => {
-          if (a.length < 3) return false;
+          const aliasIsSingleWord = !a.includes(' ');
+          const aliasMinLength = aliasIsSingleWord ? 5 : 3;
+          if (a.length < aliasMinLength) return false;
           const aliasRegex = new RegExp(`\\b${a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
           return aliasRegex.test(objectLower);
         });

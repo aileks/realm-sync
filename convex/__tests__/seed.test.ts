@@ -131,7 +131,7 @@ describe('seed.seedProject internal mutation', () => {
     expect(facts).toHaveLength(8);
 
     const aldricAgeFact = facts.find(
-      (f) => f.subject === 'King Aldric' && f.predicate === 'has age'
+      (f) => f.subject === 'King Aldric' && f.predicate === 'has_age'
     );
     expect(aldricAgeFact).toBeDefined();
     expect(aldricAgeFact?.evidencePosition).toEqual({ start: 456, end: 505 });

@@ -254,6 +254,7 @@ function AttributeList({ facts, entityId, projectId, entityName }: AttributeList
           .trim()
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '_')
+          .replace(/_+/g, '_')
           .replace(/^_+|_+$/g, ''),
         object: object.trim(),
         confidence: 1.0,

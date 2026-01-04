@@ -144,8 +144,8 @@ function EntitiesPage() {
             <EntityCard
               key={entity._id}
               entity={entity}
-              onConfirm={(id) => confirmEntity({ id })}
-              onReject={(id) => rejectEntity({ id })}
+              onConfirm={entity.status === 'pending' ? (id) => confirmEntity({ id }) : undefined}
+              onReject={entity.status === 'pending' ? (id) => rejectEntity({ id }) : undefined}
             />
           ))}
         </div>

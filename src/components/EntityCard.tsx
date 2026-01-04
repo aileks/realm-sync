@@ -97,6 +97,17 @@ export function EntityCard({
                 >
                   {entity.type}
                 </Badge>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'h-5 px-1.5 py-0 text-xs font-normal capitalize',
+                    entity.status === 'confirmed' ?
+                      'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400'
+                    : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                  )}
+                >
+                  {entity.status}
+                </Badge>
               </div>
               {entity.description && (
                 <CardDescription className="line-clamp-2 text-xs leading-relaxed">
