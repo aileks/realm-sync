@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useRouterState, useParams, useNavigate } from '@tanstack/react-router';
+import { Link, useRouterState, useParams, useNavigate, useSearch } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useConvexAuth } from 'convex/react';
@@ -55,8 +55,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.users.viewer);
   const params = useParams({ strict: false });
+  const search = useSearch({ strict: false });
   const navigate = useNavigate();
   const { signOut } = useAuthActions();
+
+  // projectId from route params OR search params (for entity detail page)
+  const projectId = params.projectId ?? search.project;
 
   const [theme, setTheme] = useState<Theme>('default');
   const [mounted, setMounted] = useState(false);
@@ -122,7 +126,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           </NavItem>
         )}
 
-        {isAuthenticated && params.projectId && (
+        {isAuthenticated && projectId && (
           <>
             <div className="my-4 px-2">
               <div className="border-sidebar-border border-t" />
@@ -134,21 +138,11 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               </p>
             )}
 
-            <ProjectNavItem
-              projectId={params.projectId}
-              to="canon"
-              icon={BookOpen}
-              collapsed={collapsed}
-            >
+            <ProjectNavItem projectId={projectId} to="canon" icon={BookOpen} collapsed={collapsed}>
               Canon Browser
             </ProjectNavItem>
 
-            <ProjectNavItem
-              projectId={params.projectId}
-              to="review"
-              icon={Sparkles}
-              collapsed={collapsed}
-            >
+            <ProjectNavItem projectId={projectId} to="review" icon={Sparkles} collapsed={collapsed}>
               Review Extractions
             </ProjectNavItem>
           </>

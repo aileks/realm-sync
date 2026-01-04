@@ -39,6 +39,9 @@ import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/entities/$entityId')({
   component: EntityDetailPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    project: (search.project as string) || undefined,
+  }),
 });
 
 type EntityType = 'character' | 'location' | 'item' | 'concept' | 'event';
@@ -133,18 +136,13 @@ function EntityDetailPage() {
 
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
-              <AttributeList
-                facts={facts}
-                entityId={entity._id}
-                projectId={projectId}
-                appearances={appearances}
-              />
+              <AttributeList facts={facts} entityId={entity._id} projectId={projectId} />
               <EvidencePanel facts={facts} />
             </div>
 
             <div className="space-y-6">
               <AppearanceTimeline appearances={appearances} projectId={projectId} />
-              <RelatedEntitiesCard entities={relatedEntities} currentEntityId={entity._id} />
+              <RelatedEntitiesCard entities={relatedEntities} projectId={projectId} />
             </div>
           </div>
         </>
@@ -205,16 +203,17 @@ type AttributeListProps = {
   facts: Doc<'facts'>[];
   entityId: Id<'entities'>;
   projectId: Id<'projects'>;
-  appearances: { _id: Id<'documents'>; title: string }[];
 };
 
-function AttributeList({ facts, entityId, projectId, appearances }: AttributeListProps) {
+function AttributeList({ facts, entityId, projectId }: AttributeListProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const createFact = useMutation(api.facts.create);
   const [isAdding, setIsAdding] = useState(false);
   const [predicate, setPredicate] = useState('');
   const [object, setObject] = useState('');
   const [documentId, setDocumentId] = useState<Id<'documents'> | ''>('');
+
+  const documents = useQuery(api.documents.list, { projectId });
 
   const confirmedFacts = facts.filter((f) => f.status === 'confirmed');
   const pendingFacts = facts.filter((f) => f.status === 'pending');
@@ -291,33 +290,16 @@ function AttributeList({ facts, entityId, projectId, appearances }: AttributeLis
                 />
               </div>
               <div className="space-y-1">
-                <label htmlFor="document" className="text-xs font-medium">
-                  Source Document
+                <label htmlFor="object" className="text-xs font-medium">
+                  Value
                 </label>
-                <Select
-                  value={documentId || undefined}
-                  onValueChange={(v) => setDocumentId(v as Id<'documents'>)}
-                >
-                  <SelectTrigger id="document" className="h-9">
-                    <SelectValue>
-                      {documentId ?
-                        appearances.find((d) => d._id === documentId)?.title
-                      : <span className="text-muted-foreground">Select a document...</span>}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {appearances.map((doc) => (
-                      <SelectItem key={doc._id} value={doc._id}>
-                        {doc.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {appearances.length === 0 && (
-                  <p className="text-muted-foreground text-xs">
-                    No documents available. Process a document first.
-                  </p>
-                )}
+                <Input
+                  id="object"
+                  value={object}
+                  onChange={(e) => setObject(e.target.value)}
+                  placeholder="e.g. blue, King, Winterfell"
+                  className="h-9"
+                />
               </div>
             </div>
             <div className="space-y-1">
@@ -331,21 +313,21 @@ function AttributeList({ facts, entityId, projectId, appearances }: AttributeLis
                 <SelectTrigger id="document" className="h-9">
                   <SelectValue>
                     {documentId ?
-                      appearances.find((d) => d._id === documentId)?.title
+                      documents?.find((d) => d._id === documentId)?.title
                     : <span className="text-muted-foreground">Select a document...</span>}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
-                  {appearances.map((doc) => (
+                <SelectContent className="w-auto min-w-max">
+                  {documents?.map((doc) => (
                     <SelectItem key={doc._id} value={doc._id}>
                       {doc.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {appearances.length === 0 && (
+              {(!documents || documents.length === 0) && (
                 <p className="text-muted-foreground text-xs">
-                  No documents available. Process a document first.
+                  No documents available. Add a document first.
                 </p>
               )}
             </div>
@@ -529,10 +511,10 @@ function AppearanceTimeline({ appearances, projectId }: AppearanceTimelineProps)
 
 type RelatedEntitiesCardProps = {
   entities: Doc<'entities'>[];
-  currentEntityId: Id<'entities'>;
+  projectId: Id<'projects'>;
 };
 
-function RelatedEntitiesCard({ entities }: RelatedEntitiesCardProps) {
+function RelatedEntitiesCard({ entities, projectId }: RelatedEntitiesCardProps) {
   if (entities.length === 0) {
     return (
       <Card>
@@ -568,6 +550,7 @@ function RelatedEntitiesCard({ entities }: RelatedEntitiesCardProps) {
               key={entity._id}
               to="/entities/$entityId"
               params={{ entityId: entity._id }}
+              search={{ project: projectId }}
               className="hover:bg-muted/50 flex items-center gap-3 rounded-md p-2 transition-colors"
             >
               <div
