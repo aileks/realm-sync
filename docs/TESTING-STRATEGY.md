@@ -5,7 +5,7 @@ read_when: [testing, integration, unit, end-to-end, regression]
 
 # Testing Strategy
 
-**Status:** Ready for Implementation **Coverage Target:** 80% (Unit + Integration) **E2E/Visual:** Deferred until MVP **Current Test Count:** 151 passing
+**Status:** Ready for Implementation **Coverage Target:** 80% (Unit + Integration) **E2E/Visual:** Deferred until MVP **Current Test Count:** 168 passing
 
 **_FOLLOW TDD! TEST BEHAVIOR, NOT IMPLEMENTATION!_**
 
@@ -372,7 +372,7 @@ describe('FormExample', () => {
 | ----------------------- | ------- | ---------------------- | ------- |
 | `convex/projects.ts`    | 100%    | Unit (convex-test)     | 16      |
 | `convex/documents.ts`   | 100%    | Unit (convex-test)     | 13      |
-| `convex/entities.ts`    | 100%    | Unit (convex-test)     | 26      |
+| `convex/entities.ts`    | 100%    | Unit (convex-test)     | 43      |
 | `convex/facts.ts`       | 100%    | Unit (convex-test)     | 19      |
 | `convex/seed.ts`        | 100%    | Unit (convex-test)     | 7       |
 | `convex/llm/extract.ts` | 90%     | Unit (convex-test)     | 12      |
@@ -382,7 +382,7 @@ describe('FormExample', () => {
 | `convex/lib/errors.ts`  | 100%    | Unit                   | 8       |
 | `convex/lib/result.ts`  | 100%    | Unit                   | 10      |
 | `src/lib/utils.ts`      | 100%    | Unit                   | 7       |
-| **Overall**             | **80%** | **Unit + Integration** | **151** |
+| **Overall**             | **80%** | **Unit + Integration** | **168** |
 
 ---
 
@@ -398,7 +398,7 @@ describe('FormExample', () => {
 
 ### Phase 2: Core Logic (Completed)
 
-- [x] Write `convex/entities.test.ts` (26 tests)
+- [x] Write `convex/entities.test.ts` (43 tests: 27 queries + 16 mutations)
 - [x] Write `convex/facts.test.ts` (19 tests)
 - [x] Write `convex/llm/extract.test.ts` (12 tests)
 - [x] Write `convex/lib/auth.test.ts` (6 tests)

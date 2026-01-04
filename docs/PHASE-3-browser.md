@@ -19,7 +19,7 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 | ------------------------------- | ----------- | --- | ------------------------------- |
 | 3.1 Canon Browser Shell         | ✅ Complete | #16 | Merged 2026-01-04               |
 | 3.2 Entity Detail Page          | ✅ Complete | #18 | Merged 2026-01-04               |
-| 3.3 Full-Text Search            | 🔲 Pending  | -   | Nav link ready, route missing   |
+| 3.3 Full-Text Search            | ✅ Complete | -   | Search index + debounced input  |
 | 3.4 Entity Editing & Management | ✅ Complete | #18 | Inline + dedicated page editing |
 | 3.5 Timeline View               | 🔲 Pending  | -   | Nav link ready, route missing   |
 | 3.6 Relationship Visualization  | 🔲 Pending  | -   | Backend functions missing       |
@@ -44,14 +44,14 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 **Backend functions needed:**
 
 - ~~`entities.getWithDetails`~~ ✅ Implemented in PR #18
-- `entities.search` - Full-text search using search index
+- ~~`entities.search`~~ ✅ Full-text search using search index
 - ~~`entities.getRelationships`~~ ✅ Implemented via `getWithDetails.relatedEntities`
 - `entities.getRelationshipGraph` - Nodes and edges for visualization
 
 **Routes needed:**
 
 - ~~`projects_.$projectId_.canon_.entities.$entityId.tsx`~~ ✅ Changed to `/entities/$entityId` (PR #18)
-- `projects_.$projectId_.canon_.search.tsx` - Search results page
+- ~~`projects_.$projectId_.canon.search.tsx`~~ ✅ Search with highlight + debounce
 - `projects_.$projectId_.canon_.timeline.tsx` - Timeline view
 
 ---
