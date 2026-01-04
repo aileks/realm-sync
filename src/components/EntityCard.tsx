@@ -25,6 +25,7 @@ type EntityCardProps = {
   onEdit?: (entity: Entity) => void;
   similarEntities?: Entity[];
   onMerge?: (sourceId: Id<'entities'>, targetId: Id<'entities'>) => void;
+  className?: string;
 };
 
 const defaultConfig = {
@@ -59,12 +60,18 @@ export function EntityCard({
   onEdit,
   similarEntities,
   onMerge,
+  className,
 }: EntityCardProps) {
   const config = entityTypeConfig[entity.type] ?? defaultConfig;
   const Icon = config.icon;
 
   return (
-    <Card className="group hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1">
+    <Card
+      className={cn(
+        'group hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1',
+        className
+      )}
+    >
       <CardHeader className="flex flex-col gap-4 p-4">
         <div className="flex w-full items-start justify-between gap-4">
           <div className="flex items-start gap-4">

@@ -34,6 +34,12 @@ function CanonBrowserIndex() {
   const [sortBy, setSortBy] = useState<SortBy>('name');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
+  const sortLabels: Record<SortBy, string> = {
+    name: 'Name A-Z',
+    recent: 'Recently Updated',
+    factCount: 'Most Facts',
+  };
+
   const entities = useQuery(api.entities.listByProjectWithStats, {
     projectId: projectId as Id<'projects'>,
     type: typeFilter === 'all' ? undefined : typeFilter,
@@ -74,7 +80,7 @@ function CanonBrowserIndex() {
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortBy)}>
             <SelectTrigger className="w-[160px]">
               <ArrowUpDown className="text-muted-foreground mr-2 size-4" />
-              <SelectValue />
+              <SelectValue>{sortLabels[sortBy]}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="name">Name A-Z</SelectItem>
@@ -192,7 +198,12 @@ function EntityCardWithStats({
 
   return (
     <div className={cn(viewMode === 'list' && 'max-w-none')}>
-      <EntityCard entity={entityForCard} onConfirm={onConfirm} onReject={onReject} />
+      <EntityCard
+        entity={entityForCard}
+        onConfirm={onConfirm}
+        onReject={onReject}
+        className={viewMode === 'grid' ? 'h-full' : undefined}
+      />
     </div>
   );
 }
