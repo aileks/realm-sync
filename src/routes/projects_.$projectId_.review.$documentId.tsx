@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useState, useMemo } from 'react';
 import { ArrowLeft, FileText, Users, List, CheckCircle2 } from 'lucide-react';
-import Markdown from 'react-markdown';
+import { marked } from 'marked';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
@@ -89,9 +89,14 @@ function ReviewDocumentPage() {
     setHighlightedRange(position ?? null);
   }
 
+  function renderMarkdown(content: string) {
+    const html = marked.parse(content, { async: false });
+    return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  }
+
   function renderHighlightedContent(content: string) {
     if (!highlightedRange) {
-      return <Markdown>{content}</Markdown>;
+      return renderMarkdown(content);
     }
 
     const { start, end } = highlightedRange;
@@ -101,11 +106,11 @@ function ReviewDocumentPage() {
 
     return (
       <>
-        <Markdown>{before}</Markdown>
+        {renderMarkdown(before)}
         <mark className="text-foreground inline rounded-sm bg-amber-400/40 px-0.5 shadow-sm ring-1 ring-amber-500/50 dark:bg-amber-500/40">
           {highlighted}
         </mark>
-        <Markdown>{after}</Markdown>
+        {renderMarkdown(after)}
       </>
     );
   }
