@@ -1,3 +1,11 @@
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
@@ -10,17 +18,13 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
-    <div className={cn('flex flex-col items-center justify-center py-12 text-center', className)}>
-      {icon && (
-        <div className="bg-muted mb-4 flex size-16 items-center justify-center rounded-full">
-          {icon}
-        </div>
-      )}
-      <h3 className="font-serif text-xl font-medium">{title}</h3>
-      {description && (
-        <p className="text-muted-foreground mt-1 max-w-xs text-base">{description}</p>
-      )}
-      {action && <div className="mt-4">{action}</div>}
-    </div>
+    <Empty className={cn('border-0', className)}>
+      <EmptyHeader>
+        {icon && <EmptyMedia variant="icon">{icon}</EmptyMedia>}
+        <EmptyTitle className="font-serif">{title}</EmptyTitle>
+        {description && <EmptyDescription>{description}</EmptyDescription>}
+      </EmptyHeader>
+      {action && <EmptyContent>{action}</EmptyContent>}
+    </Empty>
   );
 }

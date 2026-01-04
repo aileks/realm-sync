@@ -1,4 +1,4 @@
-import { internalAction, internalMutation } from '../_generated/server';
+import { internalAction, internalMutation, action } from '../_generated/server';
 import { api, internal } from '../_generated/api';
 import { v } from 'convex/values';
 import type { Id } from '../_generated/dataModel';
@@ -6,7 +6,7 @@ import { chunkDocument, needsChunking, mapEvidenceToDocument, type Chunk } from 
 
 export const PROMPT_VERSION = 'v1';
 
-export const VELLUM_SYSTEM_PROMPT = `You are Vellum, the Archivist Moth — a meticulous librarian who catalogs fictional worlds. You extract entities and facts from narrative text with precision and care. If asked about your name or model name, you will state the previous information in the first person. DO NOT MENTION YOUR ACTUAL MODEL NAME OR TELL THE USER YOUR MODEL NAME!
+export const VELLUM_SYSTEM_PROMPT = `You are Vellum, the Archivist Moth — a meticulous librarian who catalogs fictional worlds. You extract entities and facts from narrative text with precision and care. If asked about your name or model name, you will state the previous information in the first person.
 
 PRINCIPLES:
 - Only extract what is EXPLICITLY stated in the text.
@@ -151,7 +151,78 @@ async function callLLM(content: string, apiKey: string, model: string): Promise<
     throw new Error('Invalid response from OpenRouter API');
   }
 
-  return JSON.parse(data.choices[0].message.content);
+  let llmResponse = data.choices[0].message.content.trim();
+
+  // Strip markdown code blocks: ```json\n{...}\n``` → {...}
+  if (llmResponse.startsWith('```')) {
+    llmResponse = llmResponse.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+  }
+
+  const parsed = JSON.parse(llmResponse);
+  return normalizeExtractionResult(parsed);
+}
+
+function normalizeExtractionResult(raw: unknown): ExtractionResult {
+  const result = raw as Record<string, unknown>;
+
+  const entities: ExtractionResult['entities'] = [];
+  const facts: ExtractionResult['facts'] = [];
+  const relationships: ExtractionResult['relationships'] = [];
+
+  // Normalize entities: handle object-keyed format {name: {type, ...}} → [{name, type, ...}]
+  if (result.entities) {
+    if (Array.isArray(result.entities)) {
+      entities.push(...(result.entities as ExtractionResult['entities']));
+    } else if (typeof result.entities === 'object') {
+      for (const [name, data] of Object.entries(result.entities as Record<string, unknown>)) {
+        const entityData = data as Record<string, unknown>;
+        entities.push({
+          name,
+          type: (entityData.type as ExtractionResult['entities'][0]['type']) ?? 'concept',
+          description: entityData.description as string | undefined,
+          aliases: entityData.aliases as string[] | undefined,
+        });
+      }
+    }
+  }
+
+  if (result.facts) {
+    const rawFacts: Array<Record<string, unknown>> =
+      Array.isArray(result.facts) ?
+        (result.facts as Array<Record<string, unknown>>)
+      : Object.entries(result.facts as Record<string, unknown>).map(([key, data]) => {
+          const d = data as Record<string, unknown>;
+          return { ...d, entityName: d.entityName ?? key, subject: d.subject ?? key };
+        });
+
+    for (const f of rawFacts) {
+      const tb = f.temporalBound as Record<string, unknown> | undefined;
+      const validTb =
+        tb?.type && tb?.value ?
+          { type: tb.type as 'point' | 'range' | 'relative', value: tb.value as string }
+        : undefined;
+
+      facts.push({
+        entityName: (f.entityName as string) ?? '',
+        subject: (f.subject as string) ?? '',
+        predicate: (f.predicate as string) ?? '',
+        object: (f.object as string) ?? '',
+        confidence: (f.confidence as number) ?? 0.8,
+        evidence: (f.evidence as string) ?? '',
+        temporalBound: validTb,
+        evidencePosition: f.evidencePosition as { start: number; end: number } | undefined,
+      });
+    }
+  }
+
+  // Normalize relationships
+  if (result.relationships) {
+    if (Array.isArray(result.relationships)) {
+      relationships.push(...(result.relationships as ExtractionResult['relationships']));
+    }
+  }
+
+  return { entities, facts, relationships };
 }
 
 function mergeExtractionResults(results: ExtractionResult[]): ExtractionResult {
@@ -160,7 +231,7 @@ function mergeExtractionResults(results: ExtractionResult[]): ExtractionResult {
   const relationships: ExtractionResult['relationships'] = [];
 
   for (const result of results) {
-    for (const entity of result.entities) {
+    for (const entity of result.entities ?? []) {
       const existing = entityMap.get(entity.name.toLowerCase());
       if (existing) {
         const mergedAliases = [
@@ -176,8 +247,8 @@ function mergeExtractionResults(results: ExtractionResult[]): ExtractionResult {
       }
     }
 
-    facts.push(...result.facts);
-    relationships.push(...result.relationships);
+    facts.push(...(result.facts ?? []));
+    relationships.push(...(result.relationships ?? []));
   }
 
   return {
@@ -192,7 +263,7 @@ function adjustEvidencePositions(
   chunk: Chunk,
   documentContent: string
 ): ExtractionResult {
-  const adjustedFacts = result.facts.map((fact) => {
+  const adjustedFacts = (result.facts ?? []).map((fact) => {
     const position = mapEvidenceToDocument(fact.evidence, chunk, documentContent);
     return {
       ...fact,
@@ -200,7 +271,7 @@ function adjustEvidencePositions(
     };
   });
 
-  const adjustedRelationships = result.relationships.map((rel) => {
+  const adjustedRelationships = (result.relationships ?? []).map((rel) => {
     const position = mapEvidenceToDocument(rel.evidence, chunk, documentContent);
     return {
       ...rel,
@@ -209,7 +280,7 @@ function adjustEvidencePositions(
   });
 
   return {
-    ...result,
+    entities: result.entities ?? [],
     facts: adjustedFacts,
     relationships: adjustedRelationships,
   };
@@ -227,13 +298,13 @@ export const extractFromDocument = internalAction({
       content: doc.content,
     });
 
-    const cached: ExtractionResult | null = await ctx.runQuery(internal.llm.cache.checkCache, {
+    const cached = await ctx.runQuery(internal.llm.cache.checkCache, {
       inputHash: contentHash,
       promptVersion: PROMPT_VERSION,
     });
 
     if (cached) {
-      return cached;
+      return normalizeExtractionResult(cached);
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -264,7 +335,7 @@ export const extractFromDocument = internalAction({
 
         let chunkResult: ExtractionResult;
         if (cachedChunk) {
-          chunkResult = cachedChunk;
+          chunkResult = normalizeExtractionResult(cachedChunk);
         } else {
           chunkResult = await callLLM(chunk.text, apiKey, model);
 
@@ -354,6 +425,39 @@ const extractionResultValidator = v.object({
       ),
     })
   ),
+});
+
+export const chunkAndExtract = action({
+  args: {
+    documentId: v.id('documents'),
+  },
+  handler: async (
+    ctx,
+    { documentId }
+  ): Promise<{ entitiesCreated: number; factsCreated: number }> => {
+    await ctx.runMutation(api.documents.updateProcessingStatus, {
+      id: documentId,
+      status: 'processing',
+    });
+
+    try {
+      const result: ExtractionResult = await ctx.runAction(
+        internal.llm.extract.extractFromDocument,
+        { documentId }
+      );
+
+      return await ctx.runMutation(internal.llm.extract.processExtractionResult, {
+        documentId,
+        result,
+      });
+    } catch (error) {
+      await ctx.runMutation(api.documents.updateProcessingStatus, {
+        id: documentId,
+        status: 'failed',
+      });
+      throw error;
+    }
+  },
 });
 
 export const processExtractionResult = internalMutation({

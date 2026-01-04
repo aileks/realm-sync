@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as chat from "../chat.js";
 import type * as documents from "../documents.js";
 import type * as entities from "../entities.js";
 import type * as facts from "../facts.js";
@@ -31,6 +32,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  chat: typeof chat;
   documents: typeof documents;
   entities: typeof entities;
   facts: typeof facts;
@@ -72,4 +74,40 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  persistentTextStreaming: {
+    lib: {
+      addChunk: FunctionReference<
+        "mutation",
+        "internal",
+        { final: boolean; streamId: string; text: string },
+        any
+      >;
+      createStream: FunctionReference<"mutation", "internal", {}, any>;
+      getStreamStatus: FunctionReference<
+        "query",
+        "internal",
+        { streamId: string },
+        "pending" | "streaming" | "done" | "error" | "timeout"
+      >;
+      getStreamText: FunctionReference<
+        "query",
+        "internal",
+        { streamId: string },
+        {
+          status: "pending" | "streaming" | "done" | "error" | "timeout";
+          text: string;
+        }
+      >;
+      setStreamStatus: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          status: "pending" | "streaming" | "done" | "error" | "timeout";
+          streamId: string;
+        },
+        any
+      >;
+    };
+  };
+};

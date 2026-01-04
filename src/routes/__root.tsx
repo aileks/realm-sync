@@ -1,8 +1,9 @@
 import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router';
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
-import { TanStackDevtools } from '@tanstack/react-devtools';
+// import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
+// import { TanStackDevtools } from '@tanstack/react-devtools';
 
 import { AppLayout } from '../components/AppLayout';
+import { Toaster } from '../components/ui/sonner';
 import ConvexProvider from '../integrations/convex/provider';
 
 import appCss from '../styles.css?url';
@@ -53,7 +54,8 @@ function RootLayout() {
       <AppLayout>
         <Outlet />
       </AppLayout>
-      <TanStackDevtools
+      <Toaster position="bottom-right" />
+      {/* <TanStackDevtools
         config={{
           position: 'bottom-right',
         }}
@@ -63,7 +65,7 @@ function RootLayout() {
             render: <TanStackRouterDevtoolsPanel />,
           },
         ]}
-      />
+      /> */}
     </ConvexProvider>
   );
 }

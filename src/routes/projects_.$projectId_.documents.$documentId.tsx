@@ -1,8 +1,19 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Save, Loader2, CheckCircle, Clock, Sparkles } from 'lucide-react';
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
+  CheckCircle,
+  Clock,
+  Sparkles,
+  AlertCircle,
+  RotateCcw,
+} from 'lucide-react';
+import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
+import { type FunctionReference } from 'convex/server';
 import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,8 +21,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/LoadingState';
 import { cn } from '@/lib/utils';
-
-import { type FunctionReference } from 'convex/server';
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -26,23 +35,22 @@ function DocumentEditorPage() {
   const { projectId, documentId } = Route.useParams();
   const document = useQuery(api.documents.get, { id: documentId as Id<'documents'> });
   const updateDocument = useMutation(api.documents.update);
-
-  // Safely check for LLM API which might not be generated yet
-  const llmApi = (
-    api as unknown as {
-      llm?: {
-        chunkAndExtract: FunctionReference<
-          'mutation',
-          'public',
-          { documentId: Id<'documents'> },
-          null
-        >;
-      };
-    }
-  ).llm;
-  const chunkAndExtract = useMutation(
-    llmApi?.chunkAndExtract ? llmApi.chunkAndExtract : api.documents.updateProcessingStatus
+  const chunkAndExtract = useAction(
+    (
+      api as unknown as {
+        'llm/extract': {
+          chunkAndExtract: FunctionReference<
+            'action',
+            'public',
+            { documentId: Id<'documents'> },
+            { entitiesCreated: number; factsCreated: number }
+          >;
+        };
+      }
+    )['llm/extract'].chunkAndExtract
   );
+
+  const updateProcessingStatus = useMutation(api.documents.updateProcessingStatus);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -50,6 +58,9 @@ function DocumentEditorPage() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  const isStuck =
+    document?.processingStatus === 'processing' && document.updatedAt < Date.now() - 2 * 60 * 1000;
 
   useEffect(() => {
     if (document) {
@@ -108,20 +119,28 @@ function DocumentEditorPage() {
   async function handleExtract() {
     if (!document) return;
     setIsExtracting(true);
+    toast.info('Extraction started', {
+      description: "You'll be notified when it finishes.",
+    });
     try {
-      if (llmApi?.chunkAndExtract) {
-        const mutationFn = chunkAndExtract as unknown as (args: {
-          documentId: Id<'documents'>;
-        }) => Promise<void>;
-        await mutationFn({ documentId: document._id });
-      } else {
-        console.warn('llm.chunkAndExtract not found on api object');
-      }
+      const result = await chunkAndExtract({ documentId: document._id });
+      toast.success('Extraction complete', {
+        description: `Found ${result.entitiesCreated} entities and ${result.factsCreated} facts.`,
+      });
     } catch (error) {
       console.error('Extraction failed:', error);
+      toast.error('Extraction failed', {
+        description: error instanceof Error ? error.message : 'An unexpected error occurred.',
+      });
     } finally {
       setIsExtracting(false);
     }
+  }
+
+  async function handleReset() {
+    if (!document) return;
+    await updateProcessingStatus({ id: document._id, status: 'pending' });
+    toast.info('Status reset', { description: 'You can now retry extraction.' });
   }
 
   if (document === undefined) {
@@ -167,16 +186,37 @@ function DocumentEditorPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {document.processingStatus === 'failed' && (
+            <span className="text-destructive flex items-center gap-1 text-sm">
+              <AlertCircle className="size-4" />
+              Failed
+            </span>
+          )}
+          {isStuck && (
+            <Button variant="ghost" size="sm" onClick={handleReset} title="Reset stuck extraction">
+              <RotateCcw className="mr-1 size-3" />
+              Reset
+            </Button>
+          )}
           <Button
-            variant="outline"
+            variant={document.processingStatus === 'failed' ? 'destructive' : 'outline'}
             onClick={handleExtract}
-            disabled={isExtracting || hasChanges || document.processingStatus === 'processing'}
-            title={hasChanges ? 'Save changes before extracting' : 'Extract entities and facts'}
+            disabled={
+              isExtracting || hasChanges || (document.processingStatus === 'processing' && !isStuck)
+            }
+            title={
+              hasChanges ? 'Save changes before extracting'
+              : document.processingStatus === 'failed' ?
+                'Retry extraction'
+              : 'Extract entities and facts'
+            }
           >
-            {isExtracting ?
+            {isExtracting || (document.processingStatus === 'processing' && !isStuck) ?
               <Loader2 className="mr-2 size-4 animate-spin" />
+            : document.processingStatus === 'failed' ?
+              <RotateCcw className="mr-2 size-4" />
             : <Sparkles className="mr-2 size-4 text-purple-500" />}
-            Extract
+            {document.processingStatus === 'failed' ? 'Retry' : 'Extract'}
           </Button>
           {isSaving ?
             <span className="text-muted-foreground flex items-center gap-1 text-sm">

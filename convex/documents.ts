@@ -215,9 +215,16 @@ export const updateProcessingStatus = mutation({
     status: processingStatusValidator,
   },
   handler: async (ctx, { id, status }) => {
+    await requireAuth(ctx);
+
     const doc = await ctx.db.get(id);
     if (!doc) {
       throw new Error('Document not found');
+    }
+
+    const isOwner = await verifyProjectOwnership(ctx, doc.projectId);
+    if (!isOwner) {
+      throw new Error('Unauthorized');
     }
 
     await ctx.db.patch(id, {

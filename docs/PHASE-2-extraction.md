@@ -22,7 +22,8 @@ Phase 2 focuses on the LLM-powered pipeline that extracts entities, facts, and r
 | 2.3 Entity & Fact CRUD + processExtractionResult | ✅ Complete | #4  |
 | 2.4 Document Chunking                            | ✅ Complete | #5  |
 | 2.5 Extraction Review UI                         | ✅ Complete | #7  |
-| 2.6 Entity Merging UI                            | ⏳ Pending  | -   |
+| 2.6 Error Handling & Recovery                    | ✅ Complete | #9  |
+| 2.7 Entity Merging UI                            | ⏳ Pending  | -   |
 
 ---
 
@@ -35,91 +36,127 @@ Phase 2 focuses on the LLM-powered pipeline that extracts entities, facts, and r
 - ✅ Create LLM response caching system.
 - ✅ Build extraction review UI.
 - ✅ Implement entity merging/aliasing (backend).
+- ✅ Add toast notifications and error recovery.
 - ⏳ Build entity merging UI.
 
 ---
 
 ## 2. OpenRouter Integration
 
-### Convex Action Pattern
+### Public Action: `chunkAndExtract`
 
-Convex actions are used for external API calls like OpenRouter.
+The main entry point for extraction, triggered from the frontend via `useAction`.
 
 ```typescript
 // convex/llm/extract.ts
-import { v } from 'convex/values';
-import { internalAction, internalMutation } from '../_generated/server';
-import { api, internal } from '../_generated/api';
-
-export const extractFromDocument = internalAction({
+export const chunkAndExtract = action({
   args: { documentId: v.id('documents') },
-  handler: async (ctx, { documentId }) => {
-    // 1. Get document content
-    const doc = await ctx.runQuery(api.documents.get, { id: documentId });
-    if (!doc || !doc.content) throw new Error('Document not found or empty');
-
-    // 2. Check cache by hash
-    const contentHash = await computeHash(doc.content);
-    const cached = await ctx.runQuery(internal.llm.cache.checkCache, {
-      hash: contentHash,
-      promptVersion: 'v1',
+  handler: async (
+    ctx,
+    { documentId }
+  ): Promise<{ entitiesCreated: number; factsCreated: number }> => {
+    await ctx.runMutation(api.documents.updateProcessingStatus, {
+      id: documentId,
+      status: 'processing',
     });
 
-    if (cached) {
-      await ctx.runMutation(internal.llm.extract.processExtractionResult, {
+    try {
+      const result = await ctx.runAction(internal.llm.extract.extractFromDocument, { documentId });
+      return await ctx.runMutation(internal.llm.extract.processExtractionResult, {
         documentId,
-        result: cached.response,
+        result,
       });
-      return;
+    } catch (error) {
+      await ctx.runMutation(api.documents.updateProcessingStatus, {
+        id: documentId,
+        status: 'failed',
+      });
+      throw error;
     }
-
-    // 3. Call OpenRouter with structured output
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://realmsync.app',
-        'X-Title': 'Realm Sync',
-      },
-      body: JSON.stringify({
-        model: 'tngtech/deepseek-r1t2-chimera:free',
-        messages: [
-          { role: 'system', content: Vellum_SYSTEM_PROMPT },
-          { role: 'user', content: doc.content },
-        ],
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'canon_extraction',
-            strict: true,
-            schema: EXTRACTION_SCHEMA,
-          },
-        },
-      }),
-    });
-
-    const data = await response.json();
-    const result = JSON.parse(data.choices[0].message.content);
-
-    // 4. Validate response (implicitly handled by strict: true and schema)
-
-    // 5. Cache result
-    await ctx.runMutation(internal.llm.cache.saveToCache, {
-      hash: contentHash,
-      promptVersion: 'v1',
-      modelId: 'tngtech/deepseek-r1t2-chimera:free',
-      response: result,
-    });
-
-    // 6. Schedule mutation to save entities/facts
-    await ctx.runMutation(internal.llm.extract.processExtractionResult, {
-      documentId,
-      result,
-    });
   },
 });
 ```
+
+### Internal Action: `extractFromDocument`
+
+Orchestrates LLM extraction with caching and chunking.
+
+```typescript
+export const extractFromDocument = internalAction({
+  args: { documentId: v.id('documents') },
+  handler: async (ctx, { documentId }): Promise<ExtractionResult> => {
+    const doc = await ctx.runQuery(api.documents.get, { id: documentId });
+    if (!doc || !doc.content) throw new Error('Document not found or empty');
+
+    // Check cache
+    const contentHash = await ctx.runQuery(internal.llm.utils.computeHash, {
+      content: doc.content,
+    });
+    const cached = await ctx.runQuery(internal.llm.cache.checkCache, {
+      inputHash: contentHash,
+      promptVersion: PROMPT_VERSION,
+    });
+    if (cached) return cached;
+
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    const model = process.env.MODEL;
+
+    // Chunk if needed, extract, merge results
+    if (needsChunking(doc.content)) {
+      const chunks = chunkDocument(doc.content);
+      const chunkResults = [];
+      for (const chunk of chunks) {
+        // Per-chunk caching + extraction
+        const chunkResult = await callLLM(chunk.text, apiKey, model);
+        const adjusted = adjustEvidencePositions(chunkResult, chunk, doc.content);
+        chunkResults.push(adjusted);
+      }
+      return mergeExtractionResults(chunkResults);
+    }
+
+    return await callLLM(doc.content, apiKey, model);
+  },
+});
+```
+
+### LLM Response Handling
+
+The `callLLM` function handles markdown-wrapped responses from some models:
+
+````typescript
+async function callLLM(content: string, apiKey: string, model: string): Promise<ExtractionResult> {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://realmsync.app',
+      'X-Title': 'Realm Sync',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: VELLUM_SYSTEM_PROMPT },
+        { role: 'user', content },
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: { name: 'canon_extraction', strict: true, schema: EXTRACTION_SCHEMA },
+      },
+    }),
+  });
+
+  const data = await response.json();
+  let llmResponse = data.choices[0].message.content.trim();
+
+  // Strip markdown code blocks: ```json\n{...}\n``` → {...}
+  if (llmResponse.startsWith('```')) {
+    llmResponse = llmResponse.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+  }
+
+  return JSON.parse(llmResponse);
+}
+````
 
 ---
 
@@ -211,21 +248,52 @@ const EXTRACTION_SCHEMA = {
 
 ## 5. Document Chunking Strategy
 
-For documents exceeding LLM context limits or to improve extraction precision:
+Implemented in `convex/llm/chunk.ts`:
 
-- **Max Chunk Size:** ~3,000 tokens (~12,000 characters).
-- **Overlap:** 200 tokens for context continuity across chunks.
-- **Boundaries:** Preserve paragraph boundaries to avoid splitting mid-sentence.
-- **Mapping:** Track chunk positions (start/end offsets) to map evidence back to the original document.
+| Parameter         | Value  | Description                                     |
+| ----------------- | ------ | ----------------------------------------------- |
+| `MAX_CHUNK_CHARS` | 12,000 | Maximum characters per chunk (~3,000 tokens)    |
+| `OVERLAP_CHARS`   | 800    | Overlap between chunks for context continuity   |
+| `MIN_CHUNK_CHARS` | 1,000  | Minimum chunk size to avoid splitting too small |
+
+**Boundary Detection:**
+
+1. Double newline (paragraph break) - preferred
+2. Single newline
+3. Sentence-ending punctuation (`. ! ?`)
+4. Hard cut at max if no boundary found
+
+**Evidence Position Mapping:**
+
+- `mapEvidenceToDocument()` converts chunk-relative positions to document-absolute positions
+- Fuzzy matching as fallback when exact match fails
 
 ---
 
 ## 6. Caching Implementation
 
-- **Hash:** SHA-256 of `(content + promptVersion)`.
-- **TTL:** 7 days for extraction results (configurable).
-- **Invalidation:** Automatically invalidate on prompt version bump or manual trigger.
-- **Storage:** Results stored in `llmCache` table to reduce API costs and latency.
+Implemented in `convex/llm/cache.ts`:
+
+- **Hash:** SHA-256 of content (computed via `convex/llm/utils.ts`)
+- **Key:** `(inputHash, promptVersion)` - cache invalidates on prompt changes
+- **Granularity:** Both full-document and per-chunk caching
+- **Storage:** Results stored in `llmCache` table
+
+```typescript
+// Check cache
+const cached = await ctx.runQuery(internal.llm.cache.checkCache, {
+  inputHash: contentHash,
+  promptVersion: PROMPT_VERSION,
+});
+
+// Save to cache
+await ctx.runMutation(internal.llm.cache.saveToCache, {
+  inputHash: contentHash,
+  promptVersion: PROMPT_VERSION,
+  modelId: model,
+  response: result,
+});
+```
 
 ---
 
@@ -233,34 +301,67 @@ For documents exceeding LLM context limits or to improve extraction precision:
 
 ### LLM Pipeline (`convex/llm/extract.ts`)
 
-- `extractFromDocument` (internalAction): Main orchestrator for LLM extraction.
-- `processExtractionResult` (internalMutation): Saves LLM output into pending entities/facts.
+| Function                  | Type             | Description                               |
+| ------------------------- | ---------------- | ----------------------------------------- |
+| `chunkAndExtract`         | action (public)  | Entry point for frontend; handles status  |
+| `extractFromDocument`     | internalAction   | Orchestrates chunking, caching, LLM calls |
+| `processExtractionResult` | internalMutation | Saves entities/facts to DB, updates stats |
 
 ### Cache Management (`convex/llm/cache.ts`)
 
-- `checkCache`: Query to see if a result exists for a given hash.
-- `saveToCache`: Mutation to store a new LLM response.
-- `invalidateCache`: Mutation to clear expired or specific cache entries.
+| Function        | Type             | Description                           |
+| --------------- | ---------------- | ------------------------------------- |
+| `checkCache`    | query            | Look up cached result by hash+version |
+| `saveToCache`   | internalMutation | Store new LLM response                |
+| `invalidateAll` | mutation         | Clear all cache entries               |
+
+### Chunking (`convex/llm/chunk.ts`)
+
+| Function                | Type     | Description                                 |
+| ----------------------- | -------- | ------------------------------------------- |
+| `chunkDocument`         | function | Split content into overlapping chunks       |
+| `needsChunking`         | function | Check if content exceeds max chunk size     |
+| `mapEvidenceToDocument` | function | Map evidence positions to original document |
+| `getChunks`             | query    | Expose chunking for testing/debugging       |
 
 ### Entities (`convex/entities.ts`)
 
-- `create`: Add a new confirmed entity.
-- `update`: Edit entity metadata.
-- `merge`: Combine two entities (e.g., character and their alias).
-- `listByProject`: Fetch all entities for a specific project.
-- `getWithFacts`: Get entity details including associated facts.
-- `confirm`: Approve a pending entity from extraction queue.
-- `reject`: Discard an incorrect entity.
-- `listPending`: Get all entities awaiting review for a project.
-- `findSimilar`: Find potential duplicate entities for merging.
+| Function        | Type     | Description                             |
+| --------------- | -------- | --------------------------------------- |
+| `create`        | mutation | Add new entity (pending by default)     |
+| `update`        | mutation | Edit entity metadata                    |
+| `merge`         | mutation | Combine two entities (source → target)  |
+| `confirm`       | mutation | Approve pending entity                  |
+| `reject`        | mutation | Delete entity and its facts             |
+| `remove`        | mutation | Delete entity (same as reject)          |
+| `get`           | query    | Get single entity                       |
+| `getWithFacts`  | query    | Get entity with all associated facts    |
+| `listByProject` | query    | List entities with optional type/status |
+| `listPending`   | query    | Get pending entities for project        |
+| `findByName`    | query    | Find entity by exact name               |
+| `findSimilar`   | query    | Find potential duplicates for merging   |
 
 ### Facts (`convex/facts.ts`)
 
-- `create`: Add a confirmed fact.
-- `confirm`: Approve a pending fact from extraction queue.
-- `reject`: Discard an incorrect fact.
-- `listByEntity`: Get all facts related to a specific entity.
-- `listPending`: Get all facts awaiting review for a project.
+| Function         | Type     | Description                               |
+| ---------------- | -------- | ----------------------------------------- |
+| `create`         | mutation | Add new fact                              |
+| `update`         | mutation | Edit fact details                         |
+| `confirm`        | mutation | Approve pending fact                      |
+| `reject`         | mutation | Mark fact as rejected (soft delete)       |
+| `remove`         | mutation | Hard delete fact                          |
+| `get`            | query    | Get single fact                           |
+| `listByEntity`   | query    | Get facts for entity with optional status |
+| `listByDocument` | query    | Get facts extracted from document         |
+| `listByProject`  | query    | Get all facts for project                 |
+| `listPending`    | query    | Get pending facts for project             |
+
+### Seed Data (`convex/seed.ts`)
+
+| Function        | Type     | Description                               |
+| --------------- | -------- | ----------------------------------------- |
+| `seedProject`   | mutation | Create sample project with entities/facts |
+| `clearSeedData` | mutation | Delete all seed data for a project        |
 
 ### Seed Data (`convex/seed.ts`)
 
@@ -281,27 +382,69 @@ For documents exceeding LLM context limits or to improve extraction precision:
 
 ## 8. Review UI Components
 
-- **ExtractionQueue:** A dashboard listing documents that have been processed but need manual verification.
-- **ExtractionReview:** A side-by-side view showing the document text on one side and proposed entities/facts on the other.
-- **EntityCard:** Displays a proposed entity with buttons to `Confirm`, `Edit`, or `Reject`.
-- **FactCard:** Displays a proposed fact, highlighting the `evidence` snippet within the document view.
-- **MergeSuggestion:** A specialized UI that flags potential duplicates (e.g., "Jon Snow" and "Lord Snow") and offers a one-click merge.
+### Routes
+
+| Route                              | Component       | Purpose                       |
+| ---------------------------------- | --------------- | ----------------------------- |
+| `/projects/:id/review`             | Layout          | Review section container      |
+| `/projects/:id/review/`            | Index           | List documents needing review |
+| `/projects/:id/review/:documentId` | Document Review | Review entities/facts for doc |
+
+### Features
+
+- **Document Queue:** Lists documents with `processingStatus: 'completed'` that have pending entities/facts
+- **Entity Review:** Confirm/reject extracted entities with inline editing
+- **Fact Review:** Confirm/reject facts with evidence highlighting
+- **Batch Actions:** Confirm all or reject all for efficiency
 
 ---
 
-## 9. Error Handling
+## 9. Error Handling & Recovery
 
-- **Retries:** Implement exponential backoff for OpenRouter API failures (max 3 attempts).
-- **Response Healing:** Use structured output features to ensure JSON validity; manual fix-up logic for edge cases.
-- **Fail-safe:** If LLM fails repeatedly, mark the document as `failed` and allow the user to trigger a manual retry or enter data manually.
-- **Monitoring:** Log token usage and extraction failures for auditing.
+### Processing Status Flow
+
+```
+pending → processing → completed
+                    ↘ failed
+```
+
+### Error Recovery (PR #9)
+
+| Scenario                       | Behavior                                          |
+| ------------------------------ | ------------------------------------------------- |
+| Extraction fails               | Status set to `failed`, error toast shown         |
+| Failed document                | Red "Retry" button, can re-trigger extraction     |
+| Stuck in processing            | "Reset" button after 2 minutes, resets to pending |
+| Markdown-wrapped JSON          | Automatically stripped before parsing             |
+| Missing arrays in LLM response | Defensive `?? []` fallbacks                       |
+
+### Frontend Toast Notifications
+
+```typescript
+// On extraction start
+toast.info('Extraction started', { description: "You'll be notified when it finishes." });
+
+// On success
+toast.success('Extraction complete', {
+  description: `Found ${result.entitiesCreated} entities and ${result.factsCreated} facts.`,
+});
+
+// On failure
+toast.error('Extraction failed', {
+  description: error.message,
+});
+```
 
 ---
 
 ## 10. Testing Scenarios
 
-1. **Short Document:** Extract from a <1,000 word text to verify basic entity/fact extraction.
-2. **Long Document:** Verify chunking logic and context overlap on a 10,000+ word document.
-3. **Cache Hit:** Ensure subsequent extraction requests for the same content return instantly from the cache.
-4. **Merge Suggestion:** Trigger a merge prompt by extracting an entity with a name very similar to an existing one.
-5. **Rejection Flow:** Verify that rejecting a fact prevents it from appearing in the canon/knowledge graph.
+All tests in `convex/__tests__/`:
+
+1. **Entity CRUD:** Create, update, merge, confirm, reject entities
+2. **Fact CRUD:** Create, confirm, reject, list by entity/document
+3. **Chunking:** Verify chunk boundaries, overlap, evidence mapping
+4. **Caching:** Cache hits, misses, invalidation
+5. **Extraction:** Full pipeline with mocked LLM responses
+
+**Test Command:** `pnpm test`
