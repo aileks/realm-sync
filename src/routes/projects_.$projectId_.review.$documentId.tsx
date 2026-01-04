@@ -118,7 +118,7 @@ function ReviewDocumentPage() {
   const totalPending = documentEntities.length + pendingFacts.length;
 
   return (
-    <div className="bg-background flex h-[calc(100vh-4rem)] flex-col">
+    <div className="bg-background flex h-[calc(100vh-4rem)] flex-col lg:h-screen">
       <div className="border-border bg-card/50 z-10 border-b px-6 py-4 backdrop-blur-sm">
         <Button
           variant="ghost"
