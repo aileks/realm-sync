@@ -84,8 +84,8 @@ export function EntityCard({
               <Icon className="size-5" />
             </div>
             <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex items-center gap-2">
-                <CardTitle className="truncate font-serif text-base leading-none font-medium">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <CardTitle className="font-serif text-base leading-tight font-medium">
                   {entity.name}
                 </CardTitle>
                 <Badge
