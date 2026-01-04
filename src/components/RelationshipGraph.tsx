@@ -39,15 +39,6 @@ type SimulationLink = d3.SimulationLinkDatum<SimulationNode> & {
   factId: Id<'facts'>;
 };
 
-function getThemeColors(container: HTMLElement) {
-  const styles = getComputedStyle(container);
-  return {
-    foreground: styles.getPropertyValue('--foreground').trim() || 'oklch(0.1 0 0)',
-    muted: styles.getPropertyValue('--muted-foreground').trim() || 'oklch(0.5 0 0)',
-    border: styles.getPropertyValue('--border').trim() || 'oklch(0.3 0 0)',
-  };
-}
-
 export function RelationshipGraph({
   nodes,
   edges,
@@ -63,7 +54,6 @@ export function RelationshipGraph({
     const container = containerRef.current;
     const width = container.clientWidth;
     const height = container.clientHeight;
-    const colors = getThemeColors(container);
 
     d3.select(svgRef.current).selectAll('*').remove();
 
@@ -121,11 +111,11 @@ export function RelationshipGraph({
       .attr('markerHeight', 6)
       .append('path')
       .attr('d', 'M 0,-5 L 10,0 L 0,5')
-      .attr('fill', colors.muted);
+      .attr('class', 'fill-muted-foreground');
 
     const link = g
       .append('g')
-      .attr('stroke', colors.border)
+      .attr('class', 'stroke-border')
       .attr('stroke-opacity', 0.8)
       .selectAll('line')
       .data(simulationLinks)
@@ -135,11 +125,11 @@ export function RelationshipGraph({
 
     const linkLabels = g
       .append('g')
+      .attr('class', 'fill-muted-foreground')
       .selectAll('text')
       .data(simulationLinks)
       .join('text')
       .attr('font-size', 10)
-      .attr('fill', colors.muted)
       .attr('text-anchor', 'middle')
       .attr('dy', -4)
       .text((d) => d.label.replace(/_/g, ' '));
@@ -172,8 +162,8 @@ export function RelationshipGraph({
     node
       .append('circle')
       .attr('r', 20)
-      .attr('fill', (d) => entityColors[d.type] ?? colors.muted)
-      .attr('stroke', colors.border)
+      .attr('fill', (d) => entityColors[d.type] ?? 'oklch(0.5 0 0)')
+      .attr('class', 'stroke-border')
       .attr('stroke-width', 2);
 
     node
@@ -182,7 +172,7 @@ export function RelationshipGraph({
       .attr('text-anchor', 'middle')
       .attr('font-size', 12)
       .attr('font-family', 'var(--font-serif)')
-      .attr('fill', colors.foreground)
+      .attr('class', 'fill-foreground')
       .text((d) => d.name);
 
     node.on('click', (_event, d) => {
