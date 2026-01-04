@@ -28,6 +28,7 @@ import { Route as ProjectsProjectIdCanonIndexRouteImport } from './routes/projec
 import { Route as ProjectsProjectIdReviewDocumentIdRouteImport } from './routes/projects_.$projectId_.review.$documentId'
 import { Route as ProjectsProjectIdDocumentsNewRouteImport } from './routes/projects_.$projectId_.documents.new'
 import { Route as ProjectsProjectIdDocumentsDocumentIdRouteImport } from './routes/projects_.$projectId_.documents.$documentId'
+import { Route as ProjectsProjectIdCanonSearchRouteImport } from './routes/projects_.$projectId_.canon.search'
 
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
@@ -132,6 +133,12 @@ const ProjectsProjectIdDocumentsDocumentIdRoute =
     path: '/$documentId',
     getParentRoute: () => ProjectsProjectIdDocumentsRoute,
   } as any)
+const ProjectsProjectIdCanonSearchRoute =
+  ProjectsProjectIdCanonSearchRouteImport.update({
+    id: '/search',
+    path: '/search',
+    getParentRoute: () => ProjectsProjectIdCanonRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/entities': typeof ProjectsProjectIdEntitiesRoute
   '/projects/$projectId/facts': typeof ProjectsProjectIdFactsRoute
   '/projects/$projectId/review': typeof ProjectsProjectIdReviewRouteWithChildren
+  '/projects/$projectId/canon/search': typeof ProjectsProjectIdCanonSearchRoute
   '/projects/$projectId/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects/$projectId/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
   '/projects/$projectId/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
@@ -165,6 +173,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRoute
   '/projects/$projectId/entities': typeof ProjectsProjectIdEntitiesRoute
   '/projects/$projectId/facts': typeof ProjectsProjectIdFactsRoute
+  '/projects/$projectId/canon/search': typeof ProjectsProjectIdCanonSearchRoute
   '/projects/$projectId/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects/$projectId/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
   '/projects/$projectId/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
@@ -187,6 +196,7 @@ export interface FileRoutesById {
   '/projects_/$projectId_/entities': typeof ProjectsProjectIdEntitiesRoute
   '/projects_/$projectId_/facts': typeof ProjectsProjectIdFactsRoute
   '/projects_/$projectId_/review': typeof ProjectsProjectIdReviewRouteWithChildren
+  '/projects_/$projectId_/canon/search': typeof ProjectsProjectIdCanonSearchRoute
   '/projects_/$projectId_/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects_/$projectId_/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
   '/projects_/$projectId_/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/entities'
     | '/projects/$projectId/facts'
     | '/projects/$projectId/review'
+    | '/projects/$projectId/canon/search'
     | '/projects/$projectId/documents/$documentId'
     | '/projects/$projectId/documents/new'
     | '/projects/$projectId/review/$documentId'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/alerts'
     | '/projects/$projectId/entities'
     | '/projects/$projectId/facts'
+    | '/projects/$projectId/canon/search'
     | '/projects/$projectId/documents/$documentId'
     | '/projects/$projectId/documents/new'
     | '/projects/$projectId/review/$documentId'
@@ -249,6 +261,7 @@ export interface FileRouteTypes {
     | '/projects_/$projectId_/entities'
     | '/projects_/$projectId_/facts'
     | '/projects_/$projectId_/review'
+    | '/projects_/$projectId_/canon/search'
     | '/projects_/$projectId_/documents/$documentId'
     | '/projects_/$projectId_/documents/new'
     | '/projects_/$projectId_/review/$documentId'
@@ -408,15 +421,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdDocumentsDocumentIdRouteImport
       parentRoute: typeof ProjectsProjectIdDocumentsRoute
     }
+    '/projects_/$projectId_/canon/search': {
+      id: '/projects_/$projectId_/canon/search'
+      path: '/search'
+      fullPath: '/projects/$projectId/canon/search'
+      preLoaderRoute: typeof ProjectsProjectIdCanonSearchRouteImport
+      parentRoute: typeof ProjectsProjectIdCanonRoute
+    }
   }
 }
 
 interface ProjectsProjectIdCanonRouteChildren {
+  ProjectsProjectIdCanonSearchRoute: typeof ProjectsProjectIdCanonSearchRoute
   ProjectsProjectIdCanonIndexRoute: typeof ProjectsProjectIdCanonIndexRoute
 }
 
 const ProjectsProjectIdCanonRouteChildren: ProjectsProjectIdCanonRouteChildren =
   {
+    ProjectsProjectIdCanonSearchRoute: ProjectsProjectIdCanonSearchRoute,
     ProjectsProjectIdCanonIndexRoute: ProjectsProjectIdCanonIndexRoute,
   }
 

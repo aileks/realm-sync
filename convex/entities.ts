@@ -477,6 +477,46 @@ export const findSimilar = query({
   },
 });
 
+export const search = query({
+  args: {
+    projectId: v.id('projects'),
+    query: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { projectId, query, limit = 20 }) => {
+    const isOwner = await verifyProjectOwnership(ctx, projectId);
+    if (!isOwner) return [];
+
+    if (!query.trim()) return [];
+
+    const [nameResults, descriptionResults] = await Promise.all([
+      ctx.db
+        .query('entities')
+        .withSearchIndex('search_name', (q) => q.search('name', query).eq('projectId', projectId))
+        .take(limit),
+      ctx.db
+        .query('entities')
+        .withSearchIndex('search_description', (q) =>
+          q.search('description', query).eq('projectId', projectId)
+        )
+        .take(limit),
+    ]);
+
+    const seen = new Set<string>();
+    const combined: Doc<'entities'>[] = [];
+
+    for (const entity of [...nameResults, ...descriptionResults]) {
+      if (!seen.has(entity._id)) {
+        seen.add(entity._id);
+        combined.push(entity);
+      }
+      if (combined.length >= limit) break;
+    }
+
+    return combined;
+  },
+});
+
 export const getWithDetails = query({
   args: { id: v.id('entities') },
   handler: async (ctx, { id }) => {

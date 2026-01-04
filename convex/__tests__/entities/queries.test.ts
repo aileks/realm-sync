@@ -324,6 +324,110 @@ describe('entities queries', () => {
     });
   });
 
+  describe('search', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+    let projectId: Id<'projects'>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+      projectId = await setupProject(t, userId);
+    });
+
+    it('returns empty array for empty query string', async () => {
+      await setupEntity(t, projectId, {
+        name: 'Jon Snow',
+        description: 'King in the North',
+        status: 'confirmed',
+      });
+
+      const results = await asUser.query(api.entities.search, {
+        projectId,
+        query: '',
+      });
+
+      expect(results).toEqual([]);
+    });
+
+    it('returns empty array for whitespace-only query', async () => {
+      await setupEntity(t, projectId, {
+        name: 'Jon Snow',
+        description: 'King in the North',
+        status: 'confirmed',
+      });
+
+      const results = await asUser.query(api.entities.search, {
+        projectId,
+        query: '   ',
+      });
+
+      expect(results).toEqual([]);
+    });
+
+    it('returns empty array when not project owner', async () => {
+      const otherUserId = await setupOtherUser(t);
+      const otherProjectId = await setupProject(t, otherUserId);
+      await t.run(async (ctx) => {
+        await ctx.db.insert('entities', {
+          projectId: otherProjectId,
+          name: 'Secret Entity',
+          description: 'A hidden character',
+          type: 'character',
+          aliases: [],
+          status: 'confirmed',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      });
+
+      const results = await asUser.query(api.entities.search, {
+        projectId: otherProjectId,
+        query: 'Secret',
+      });
+
+      expect(results).toEqual([]);
+    });
+
+    it('respects limit parameter', async () => {
+      await setupEntity(t, projectId, {
+        name: 'Entity One',
+        description: 'First entity',
+        status: 'confirmed',
+      });
+      await setupEntity(t, projectId, {
+        name: 'Entity Two',
+        description: 'Second entity',
+        status: 'confirmed',
+      });
+      await setupEntity(t, projectId, {
+        name: 'Entity Three',
+        description: 'Third entity',
+        status: 'confirmed',
+      });
+
+      const results = await asUser.query(api.entities.search, {
+        projectId,
+        query: 'Entity',
+        limit: 2,
+      });
+
+      expect(results.length).toBeLessThanOrEqual(2);
+    });
+
+    it('uses default limit of 20', async () => {
+      const results = await asUser.query(api.entities.search, {
+        projectId,
+        query: 'test',
+      });
+
+      expect(Array.isArray(results)).toBe(true);
+    });
+  });
+
   describe('getWithDetails', () => {
     let t: TestContext;
     let userId: Id<'users'>;

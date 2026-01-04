@@ -88,6 +88,10 @@ export default defineSchema({
     .searchIndex('search_name', {
       searchField: 'name',
       filterFields: ['projectId'],
+    })
+    .searchIndex('search_description', {
+      searchField: 'description',
+      filterFields: ['projectId'],
     }),
 
   // Facts
