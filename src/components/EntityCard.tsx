@@ -74,7 +74,7 @@ export function EntityCard({
     >
       <CardHeader className="flex flex-col gap-4 p-4">
         <div className="flex w-full items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
+          <div className="flex min-w-0 flex-1 items-start gap-4">
             <div
               className={cn(
                 'flex size-10 shrink-0 items-center justify-center rounded-lg shadow-sm ring-1',
