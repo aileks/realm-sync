@@ -9,7 +9,169 @@ read_when: [UI development, navigation design, search implementation, timeline v
 
 Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and manage the extracted entities and facts. It transforms the structured data from Phase 2 into an intuitive, archival knowledge base.
 
-**Goal:** Build the UI for browsing, searching, and exploring canon (entities and facts). **Duration:** 1 week **Dependencies:** Phase 2 complete (extraction pipeline working)
+**Goal:** Build the UI for browsing, searching, and exploring canon (entities and facts). **Duration:** 2 weeks **Dependencies:** Phase 2 complete (extraction pipeline working)
+
+---
+
+## Implementation Progress
+
+| Sub-Phase                       | Status       | PR  |
+| ------------------------------- | ------------ | --- |
+| 3.1 Canon Browser Shell         | 🔄 In Review | -   |
+| 3.2 Entity Detail Page          | 🔲 Pending   | -   |
+| 3.3 Full-Text Search            | 🔲 Pending   | -   |
+| 3.4 Entity Editing & Management | 🔲 Pending   | -   |
+| 3.5 Timeline View               | 🔲 Pending   | -   |
+| 3.6 Relationship Visualization  | 🔲 Pending   | -   |
+| 3.7 Polish & Integration        | 🔲 Pending   | -   |
+
+---
+
+## Design Decisions
+
+| Decision | Choice | Notes |
+| --- | --- | --- |
+| Route structure | Keep `/entities` + `/facts`, add `/canon/` as unified browser | Share logic where possible |
+| Relationship viz | Basic D3 first, refactor to React Flow later | Sub-phase 3.6a (D3) → 3.6b (React Flow, post-MVP) |
+| Search scope | Entities only (Phase 3) | Facts search deferred |
+| Timeline ordering | Document order (`orderIndex`) | Add "may not be fully accurate" disclaimer |
+
+---
+
+## Sub-Phase Details
+
+### 3.1 Canon Browser Shell
+
+**Scope:** Create main Canon Browser page with entity type tabs, sorting, and grid/list toggle.
+
+**Routes:**
+
+- `projects_.$projectId_.canon.tsx` (layout with Outlet)
+- `projects_.$projectId_.canon.index.tsx` (main browser page)
+
+**Components:**
+
+- `CanonBrowser` - Main container with state management
+- `EntityTypeFilter` - Tab bar with type icons
+- `EntityGrid` - Responsive grid/list toggle view
+- Enhanced `EntityCard` - Add fact count display
+
+**Backend:**
+
+- `entities.listByProjectWithStats` - Add fact count and sorting options
+
+---
+
+### 3.2 Entity Detail Page
+
+**Scope:** Build comprehensive entity detail view with facts, relationships, and appearances.
+
+**Routes:**
+
+- `projects_.$projectId_.canon_.entities.$entityId.tsx`
+
+**Components:**
+
+- `EntityHeader` - Name, type badge, aliases, edit dropdown
+- `AttributeList` - Facts as "Attribute: Value" cards grouped by predicate
+- `AppearanceTimeline` - Chronological document mentions
+- `EvidencePanel` - Collapsible source quotes
+
+**Backend:**
+
+- `entities.getWithDetails` - Entity + facts + related entities + appearances
+- `entities.getRelationships` - Facts linking to other entities
+
+---
+
+### 3.3 Full-Text Search
+
+**Scope:** Implement real-time search using Convex search index.
+
+**Routes:**
+
+- `projects_.$projectId_.canon_.search.tsx`
+
+**Components:**
+
+- `SearchInput` - Command-K activated search bar
+- `SearchResults` - List with type icons and snippets
+- `SearchHighlight` - Term highlighting utility
+
+**Backend:**
+
+- `entities.search` - Query using `withSearchIndex('search_name')`
+
+---
+
+### 3.4 Entity Editing & Management
+
+**Scope:** Modal-based editing, merging, and deletion with proper UX.
+
+**Components:**
+
+- `EntityEditDialog` - Edit name, description, aliases, type
+- `EntityDeleteDialog` - Confirmation with impact summary
+- Enhanced `EntityMergeDialog` - Search-select with preview
+
+**Backend:**
+
+- `entities.getImpact` - Deletion preview (fact/relationship counts)
+
+---
+
+### 3.5 Timeline View
+
+**Scope:** Chronological visualization of events and entity appearances.
+
+**Routes:**
+
+- `projects_.$projectId_.canon_.timeline.tsx`
+
+**Components:**
+
+- `TimelineView` - Vertical timeline orchestrator with accuracy disclaimer
+- `TimelineEvent` - Event card with date, context, involvement
+- `TimelineFilter` - Filter by entity, date range
+
+**Backend:**
+
+- `entities.listEvents` - Events sorted by document `orderIndex`
+- `facts.listByTemporalBound` - Facts with temporal info
+
+**Note:** Ordering based on document order; include "Timeline ordering may not be fully accurate" disclaimer
+
+---
+
+### 3.6 Relationship Visualization (Basic D3)
+
+**Scope:** Basic node-link visualization of entity connections using D3.
+
+**Components:**
+
+- `RelationshipGraph` - Basic D3 force-directed SVG diagram
+- `RelationshipCard` - Connection type + evidence display
+
+**Backend:**
+
+- `entities.getRelationshipGraph` - Nodes (entities) and edges (relationship facts)
+
+**Future:** Refactor to React Flow post-MVP for better interactivity (zoom, pan, click-to-navigate)
+
+---
+
+### 3.7 Polish & Integration
+
+**Scope:** Empty states, keyboard navigation, Vellum personality, stats.
+
+**Components:**
+
+- Vellum empty state messages
+- `QuickStats` - Entity/fact/coverage totals
+
+**Backend:**
+
+- `projects.getCanonStats` - Aggregated canon statistics
 
 ---
 
@@ -26,17 +188,23 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 
 ## 2. Route Structure
 
-The browser follows a project-centric routing structure using TanStack Start's file-based routing.
+The browser follows a project-centric routing structure using TanStack Start's file-based routing with underscore escaping.
 
 ```
-src/routes/projects/$projectId/
-├── canon/
-│   ├── index.tsx           # Canon browser main
-│   ├── search.tsx          # Search results
-│   ├── entities/
-│   │   └── $entityId.tsx   # Entity detail
-│   └── timeline.tsx        # Timeline view
+src/routes/
+├── projects_.$projectId_.canon.tsx              # Canon layout (Outlet)
+├── projects_.$projectId_.canon.index.tsx        # Canon browser main
+├── projects_.$projectId_.canon_.search.tsx      # Search results
+├── projects_.$projectId_.canon_.entities.$entityId.tsx  # Entity detail
+└── projects_.$projectId_.canon_.timeline.tsx    # Timeline view
 ```
+
+**URL Mapping:**
+
+- `/projects/:projectId/canon` → Canon browser main
+- `/projects/:projectId/canon/search?q=...` → Search results
+- `/projects/:projectId/canon/entities/:entityId` → Entity detail
+- `/projects/:projectId/canon/timeline` → Timeline view
 
 ---
 

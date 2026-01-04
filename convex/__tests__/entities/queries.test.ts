@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { api } from '../../_generated/api';
-import type { Id } from '../../_generated/dataModel';
+import type { Doc, Id } from '../../_generated/dataModel';
 import {
   type TestContext,
   createTestContext,
@@ -12,6 +12,8 @@ import {
   setupProjectWithEntities,
   setupOtherUser,
 } from './helpers';
+
+type EntityWithStats = Doc<'entities'> & { factCount: number };
 
 describe('entities queries', () => {
   describe('listByProject', () => {
@@ -68,6 +70,123 @@ describe('entities queries', () => {
         projectId: otherProjectId,
       });
       expect(entities).toEqual([]);
+    });
+  });
+
+  describe('listByProjectWithStats', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+    let projectId: Id<'projects'>;
+    let documentId: Id<'documents'>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+      projectId = await setupProject(t, userId);
+      documentId = await setupDocument(t, projectId);
+    });
+
+    it('returns entities with fact counts', async () => {
+      const entity1 = await setupEntity(t, projectId, { name: 'Entity A', status: 'confirmed' });
+      const entity2 = await setupEntity(t, projectId, { name: 'Entity B', status: 'confirmed' });
+
+      await setupFact(t, { projectId, entityId: entity1, documentId }, { status: 'confirmed' });
+      await setupFact(t, { projectId, entityId: entity1, documentId }, { status: 'confirmed' });
+      await setupFact(t, { projectId, entityId: entity2, documentId }, { status: 'confirmed' });
+
+      const entities = await asUser.query(api.entities.listByProjectWithStats, { projectId });
+
+      expect(entities).toHaveLength(2);
+      const entityA = entities.find((e: EntityWithStats) => e.name === 'Entity A');
+      const entityB = entities.find((e: EntityWithStats) => e.name === 'Entity B');
+      expect(entityA?.factCount).toBe(2);
+      expect(entityB?.factCount).toBe(1);
+    });
+
+    it('excludes rejected facts from count', async () => {
+      const entityId = await setupEntity(t, projectId, {
+        name: 'Test Entity',
+        status: 'confirmed',
+      });
+      const ids = { projectId, entityId, documentId };
+
+      await setupFact(t, ids, { status: 'confirmed' });
+      await setupFact(t, ids, { status: 'rejected' });
+      await setupFact(t, ids, { status: 'pending' });
+
+      const entities = await asUser.query(api.entities.listByProjectWithStats, { projectId });
+
+      expect(entities[0].factCount).toBe(2);
+    });
+
+    it('sorts by name ascending by default', async () => {
+      await setupEntity(t, projectId, { name: 'Zebra', status: 'confirmed' });
+      await setupEntity(t, projectId, { name: 'Apple', status: 'confirmed' });
+      await setupEntity(t, projectId, { name: 'Mango', status: 'confirmed' });
+
+      const entities = await asUser.query(api.entities.listByProjectWithStats, { projectId });
+
+      expect(entities.map((e: EntityWithStats) => e.name)).toEqual(['Apple', 'Mango', 'Zebra']);
+    });
+
+    it('sorts by recent when specified', async () => {
+      await setupEntity(t, projectId, { name: 'Old', status: 'confirmed' });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await setupEntity(t, projectId, { name: 'New', status: 'confirmed' });
+
+      const entities = await asUser.query(api.entities.listByProjectWithStats, {
+        projectId,
+        sortBy: 'recent',
+      });
+
+      expect(entities[0].name).toBe('New');
+      expect(entities[1].name).toBe('Old');
+    });
+
+    it('sorts by fact count when specified', async () => {
+      const entity1 = await setupEntity(t, projectId, { name: 'Few Facts', status: 'confirmed' });
+      const entity2 = await setupEntity(t, projectId, { name: 'Many Facts', status: 'confirmed' });
+
+      await setupFact(t, { projectId, entityId: entity1, documentId }, { status: 'confirmed' });
+      await setupFact(t, { projectId, entityId: entity2, documentId }, { status: 'confirmed' });
+      await setupFact(t, { projectId, entityId: entity2, documentId }, { status: 'confirmed' });
+      await setupFact(t, { projectId, entityId: entity2, documentId }, { status: 'confirmed' });
+
+      const entities = await asUser.query(api.entities.listByProjectWithStats, {
+        projectId,
+        sortBy: 'factCount',
+      });
+
+      expect(entities[0].name).toBe('Many Facts');
+      expect(entities[0].factCount).toBe(3);
+      expect(entities[1].name).toBe('Few Facts');
+      expect(entities[1].factCount).toBe(1);
+    });
+
+    it('filters by type and status', async () => {
+      await setupEntity(t, projectId, {
+        name: 'Char Pending',
+        type: 'character',
+        status: 'pending',
+      });
+      await setupEntity(t, projectId, {
+        name: 'Char Confirmed',
+        type: 'character',
+        status: 'confirmed',
+      });
+      await setupEntity(t, projectId, { name: 'Loc Pending', type: 'location', status: 'pending' });
+
+      const entities = await asUser.query(api.entities.listByProjectWithStats, {
+        projectId,
+        type: 'character',
+        status: 'pending',
+      });
+
+      expect(entities).toHaveLength(1);
+      expect(entities[0].name).toBe('Char Pending');
     });
   });
 

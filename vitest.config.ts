@@ -7,10 +7,10 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./src/__tests__/setup.ts'],
     include: [
       'src/**/*.{test,spec}.{ts,tsx}',
-      'src/test/**/*.test.ts',
+      'src/__tests__/**/*.test.ts',
       'convex/__tests__/**/*.test.ts',
     ],
     server: {
@@ -25,7 +25,7 @@ export default defineConfig({
         'node_modules/',
         '.output/',
         'convex/_generated/',
-        'src/test/',
+        'src/__tests__/',
         '**/*.d.ts',
         '**/__tests__/**',
         'src/routeTree.gen.ts',

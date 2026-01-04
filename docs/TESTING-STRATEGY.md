@@ -50,7 +50,7 @@ export default defineConfig({
   plugins: [react(), tsconfigPaths()],
   test: {
     environment: 'edge-runtime',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./src/__tests__/setup.ts'],
     server: { deps: { inline: ['convex-test'] } },
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'convex/**/*.test.ts'],
     coverage: {
@@ -70,7 +70,7 @@ export default defineConfig({
 });
 ```
 
-### src/test/setup.ts
+### src/**tests**/setup.ts
 
 ```typescript
 import '@testing-library/jest-dom';
@@ -391,7 +391,7 @@ describe('FormExample', () => {
 ### Phase 1: Foundation (Completed)
 
 - [x] Create `vitest.config.ts` with jsdom
-- [x] Create `src/test/setup.ts`
+- [x] Create `src/__tests__/setup.ts`
 - [x] Install `convex-test`
 - [x] Write `convex/projects.test.ts` (100% coverage)
 - [x] Write `src/lib/utils.test.ts` (100% coverage)

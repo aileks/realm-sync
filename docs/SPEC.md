@@ -859,7 +859,7 @@ export default defineConfig({
   plugins: [react(), tsconfigPaths()],
   test: {
     environment: 'edge-runtime',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./src/__tests__/setup.ts'],
     server: { deps: { inline: ['convex-test'] } },
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'convex/**/*.test.ts'],
     coverage: {
@@ -879,7 +879,7 @@ export default defineConfig({
 });
 ```
 
-### Test Setup (`src/test/setup.ts`)
+### Test Setup (`src/__tests__/setup.ts`)
 
 ```typescript
 import '@testing-library/jest-dom';
