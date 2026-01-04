@@ -470,7 +470,6 @@ export const processExtractionResult = internalMutation({
     const doc = await ctx.db.get(documentId);
     if (!doc) {
       unwrapOrThrow(err(notFoundError('document', documentId)));
-      throw new Error('unreachable');
     }
 
     const projectId = doc.projectId;
