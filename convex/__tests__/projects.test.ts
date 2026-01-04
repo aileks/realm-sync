@@ -335,7 +335,7 @@ describe('projects', () => {
         });
       });
 
-      await t.mutation(api.projects.updateStats, {
+      await asUser.mutation(api.projects.updateStats, {
         id: projectId,
         stats: { documentCount: 6 },
       });

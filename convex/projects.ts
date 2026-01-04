@@ -153,10 +153,8 @@ export const updateStats = mutation({
     }),
   },
   handler: async (ctx, { id, stats }) => {
-    const project = await ctx.db.get(id);
-    if (!project) {
-      throw new Error('Project not found');
-    }
+    const userId = await requireAuth(ctx);
+    const project = unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
 
     const currentStats = project.stats ?? {
       documentCount: 0,
