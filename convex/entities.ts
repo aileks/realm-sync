@@ -654,7 +654,12 @@ export const getTimeline = query({
           for (const entity of allEntities) {
             if (entity._id === event._id || entity.type === 'event') continue;
             const nameLower = entity.name.toLowerCase().trim();
-            if (objectLower.includes(nameLower) || nameLower.includes(objectLower)) {
+            const nameRegex = new RegExp(
+              `\\b${nameLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`
+            );
+            const nameIsSingleWord = !nameLower.includes(' ');
+            const nameMinLength = nameIsSingleWord ? 5 : 3;
+            if (nameLower.length >= nameMinLength && nameRegex.test(objectLower)) {
               involvedEntityIds.add(entity._id);
             }
           }
