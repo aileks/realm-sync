@@ -26,11 +26,11 @@ type RelationshipGraphProps = {
 };
 
 const entityColors: Record<EntityType, string> = {
-  character: 'oklch(0.65 0.2 20)',
-  location: 'oklch(0.65 0.2 140)',
-  item: 'oklch(0.65 0.2 60)',
-  concept: 'oklch(0.65 0.2 280)',
-  event: 'oklch(0.65 0.2 220)',
+  character: 'oklch(0.6 0.17 197)',
+  location: 'oklch(0.6 0.15 165)',
+  item: 'oklch(0.7 0.16 55)',
+  concept: 'oklch(0.6 0.2 300)',
+  event: 'oklch(0.6 0.14 250)',
 };
 
 type SimulationNode = d3.SimulationNodeDatum & Node;
