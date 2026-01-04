@@ -161,7 +161,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             <Palette className="size-4" />
             {!collapsed && <span className="ml-2">Theme</span>}
           </DropdownMenuTrigger>
-          <DropdownMenuContent align={collapsed ? 'center' : 'start'} side="right" sideOffset={10}>
+          <DropdownMenuContent align="start" side="top" sideOffset={8}>
             <DropdownMenuGroup>
               <DropdownMenuLabel>Select Theme</DropdownMenuLabel>
               {THEMES.map((t) => (
