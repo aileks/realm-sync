@@ -31,10 +31,10 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 
-interface AppSidebarProps {
+type AppSidebarProps = {
   collapsed: boolean;
   onToggle: () => void;
-}
+};
 
 const THEMES = [
   { id: 'default', name: 'Ashen Tome', icon: Laptop },
@@ -270,12 +270,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   );
 }
 
-interface NavItemProps {
+type NavItemProps = {
   to: '/' | '/projects' | '/auth';
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
-}
+};
 
 function NavItem({ to, icon: Icon, children, collapsed }: NavItemProps) {
   const routerState = useRouterState();
@@ -307,13 +307,13 @@ function NavItem({ to, icon: Icon, children, collapsed }: NavItemProps) {
   return content;
 }
 
-interface ProjectNavItemProps {
+type ProjectNavItemProps = {
   projectId: string;
   to: 'review';
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
-}
+};
 
 function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: ProjectNavItemProps) {
   const routerState = useRouterState();
@@ -497,12 +497,12 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
   );
 }
 
-interface MobileNavItemProps {
+type MobileNavItemProps = {
   to: '/' | '/projects' | '/auth';
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   onClick: () => void;
-}
+};
 
 function MobileNavItem({ to, icon: Icon, children, onClick }: MobileNavItemProps) {
   const routerState = useRouterState();

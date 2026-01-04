@@ -28,11 +28,11 @@ import type { Doc } from '../../convex/_generated/dataModel';
 
 type Project = Doc<'projects'>;
 
-interface ProjectCardProps {
+type ProjectCardProps = {
   project: Project;
   onEdit?: (project: Project) => void;
   onDelete?: (project: Project) => void;
-}
+};
 
 export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   const stats = project.stats ?? {
@@ -114,12 +114,12 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   );
 }
 
-interface StatBadgeProps {
+type StatBadgeProps = {
   icon: React.ComponentType<{ className?: string }>;
   count: number;
   label: string;
   variant?: 'default' | 'destructive' | 'entity-character' | 'entity-concept';
-}
+};
 
 function StatBadge({ icon: Icon, count, label, variant = 'default' }: StatBadgeProps) {
   return (

@@ -1,6 +1,10 @@
+---
+read_when: working on UI components or adding new UI primitives
+---
+
 # src/components/ui/
 
-**Scope:** 15 Shadcn-style primitives built on @base-ui/react + CVA
+**Scope:** 17 Shadcn-style primitives built on @base-ui/react + CVA
 
 ## STRUCTURE
 
@@ -12,6 +16,7 @@ ui/
 ├── card.tsx           # Content containers
 ├── combobox.tsx       # Searchable select with autocomplete
 ├── dropdown-menu.tsx  # Action menus
+├── empty.tsx          # Empty state placeholder
 ├── field.tsx          # Form field system (10 sub-components)
 ├── input-group.tsx    # Input with prefix/suffix slots
 ├── input.tsx          # Text input
@@ -19,6 +24,7 @@ ui/
 ├── select.tsx         # Dropdown select
 ├── separator.tsx      # Visual dividers
 ├── sheet.tsx          # Slide-over panels
+├── sonner.tsx         # Toast notifications (Sonner wrapper)
 ├── textarea.tsx       # Multi-line text
 └── tooltip.tsx        # Hover hints
 ```
@@ -105,7 +111,7 @@ group-data-[disabled=true]/field:opacity-50
 | -------------------- | -------------------------------- |
 | `export default`     | Named exports only               |
 | Direct class strings | Use `cn()` always                |
-| Custom primitives    | Use existing 15 components       |
+| Custom primitives    | Use existing 17 components       |
 | Inline styles        | Tailwind classes only            |
 | Skip `data-slot`     | Required for CSS targeting       |
 | Create new UI file   | Extend existing or propose in PR |

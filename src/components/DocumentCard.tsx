@@ -23,12 +23,12 @@ import type { Doc } from '../../convex/_generated/dataModel';
 
 type Document = Doc<'documents'>;
 
-interface DocumentCardProps {
+type DocumentCardProps = {
   document: Document;
   onClick?: () => void;
   onEdit?: (document: Document) => void;
   onDelete?: (document: Document) => void;
-}
+};
 
 const contentTypeIcons = {
   text: FileText,

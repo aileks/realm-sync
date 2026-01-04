@@ -1,8 +1,11 @@
 import { v } from 'convex/values';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
-import type { Id } from './_generated/dataModel';
+import type { Doc, Id } from './_generated/dataModel';
 import { getAuthUserId, requireAuth } from './lib/auth';
+import { ok, err, authError, notFoundError } from './lib/errors';
+import type { AppError, Result } from './lib/errors';
+import { unwrapOrThrow } from './lib/result';
 
 const factStatusValidator = v.union(
   v.literal('pending'),
@@ -26,6 +29,33 @@ async function verifyProjectOwnership(
   if (!project) return false;
 
   return project.userId === userId;
+}
+
+async function verifyProjectAccess(
+  ctx: MutationCtx,
+  projectId: Id<'projects'>,
+  userId: Id<'users'>
+): Promise<Result<Doc<'projects'>, AppError>> {
+  const project = await ctx.db.get(projectId);
+  if (!project) return err(notFoundError('project', projectId));
+  if (project.userId !== userId) return err(authError('UNAUTHORIZED', 'Unauthorized'));
+  return ok(project);
+}
+
+async function verifyFactAccess(
+  ctx: MutationCtx,
+  factId: Id<'facts'>,
+  userId: Id<'users'>
+): Promise<Result<Doc<'facts'>, AppError>> {
+  const fact = await ctx.db.get(factId);
+  if (!fact) return err(notFoundError('fact', factId));
+
+  const project = await ctx.db.get(fact.projectId);
+  if (!project || project.userId !== userId) {
+    return err(authError('UNAUTHORIZED', 'Unauthorized'));
+  }
+
+  return ok(fact);
 }
 
 export const create = mutation({
@@ -63,12 +93,8 @@ export const create = mutation({
       status,
     }
   ) => {
-    await requireAuth(ctx);
-
-    const isOwner = await verifyProjectOwnership(ctx, projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized: Not project owner');
-    }
+    const userId = await requireAuth(ctx);
+    const project = unwrapOrThrow(await verifyProjectAccess(ctx, projectId, userId));
 
     const factId = await ctx.db.insert('facts', {
       projectId,
@@ -87,19 +113,16 @@ export const create = mutation({
 
     const effectiveStatus = status ?? 'pending';
     if (effectiveStatus !== 'rejected') {
-      const project = await ctx.db.get(projectId);
-      if (project) {
-        const stats = project.stats ?? {
-          documentCount: 0,
-          entityCount: 0,
-          factCount: 0,
-          alertCount: 0,
-        };
-        await ctx.db.patch(projectId, {
-          updatedAt: Date.now(),
-          stats: { ...stats, factCount: stats.factCount + 1 },
-        });
-      }
+      const stats = project.stats ?? {
+        documentCount: 0,
+        entityCount: 0,
+        factCount: 0,
+        alertCount: 0,
+      };
+      await ctx.db.patch(projectId, {
+        updatedAt: Date.now(),
+        stats: { ...stats, factCount: stats.factCount + 1 },
+      });
     }
 
     return factId;
@@ -109,17 +132,8 @@ export const create = mutation({
 export const confirm = mutation({
   args: { id: v.id('facts') },
   handler: async (ctx, { id }) => {
-    await requireAuth(ctx);
-
-    const fact = await ctx.db.get(id);
-    if (!fact) {
-      throw new Error('Fact not found');
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, fact.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
 
     const wasRejected = fact.status === 'rejected';
 
@@ -148,17 +162,8 @@ export const confirm = mutation({
 export const reject = mutation({
   args: { id: v.id('facts') },
   handler: async (ctx, { id }) => {
-    await requireAuth(ctx);
-
-    const fact = await ctx.db.get(id);
-    if (!fact) {
-      throw new Error('Fact not found');
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, fact.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
 
     const wasAlreadyRejected = fact.status === 'rejected';
 
@@ -278,17 +283,8 @@ export const get = query({
 export const remove = mutation({
   args: { id: v.id('facts') },
   handler: async (ctx, { id }) => {
-    await requireAuth(ctx);
-
-    const fact = await ctx.db.get(id);
-    if (!fact) {
-      throw new Error('Fact not found');
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, fact.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
 
     await ctx.db.delete(id);
 
@@ -327,17 +323,8 @@ export const update = mutation({
     ctx,
     { id, subject, predicate, object, confidence, evidenceSnippet, temporalBound, status }
   ) => {
-    await requireAuth(ctx);
-
-    const fact = await ctx.db.get(id);
-    if (!fact) {
-      throw new Error('Fact not found');
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, fact.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
 
     const oldStatus = fact.status;
 

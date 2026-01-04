@@ -7,12 +7,12 @@ import type { Doc, Id } from '../../convex/_generated/dataModel';
 
 type Fact = Doc<'facts'>;
 
-interface FactCardProps {
+type FactCardProps = {
   fact: Fact;
   onConfirm: (id: Id<'facts'>) => void;
   onReject: (id: Id<'facts'>) => void;
   onHighlight?: (position: { start: number; end: number } | undefined) => void;
-}
+};
 
 function getConfidenceColor(confidence: number): string {
   if (confidence >= 0.9)

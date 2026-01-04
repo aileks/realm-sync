@@ -18,14 +18,14 @@ import type { Doc, Id } from '../../convex/_generated/dataModel';
 type Entity = Doc<'entities'>;
 type EntityType = Entity['type'];
 
-interface EntityCardProps {
+type EntityCardProps = {
   entity: Entity;
   onConfirm: (id: Id<'entities'>) => void;
   onReject: (id: Id<'entities'>) => void;
   onEdit?: (entity: Entity) => void;
   similarEntities?: Entity[];
   onMerge?: (sourceId: Id<'entities'>, targetId: Id<'entities'>) => void;
-}
+};
 
 const defaultConfig = {
   icon: HelpCircle,

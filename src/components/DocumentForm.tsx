@@ -7,18 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { cn, formatError } from '@/lib/utils';
 import type { Doc, Id } from '../../convex/_generated/dataModel';
 
 type Document = Doc<'documents'>;
 type ContentType = 'text' | 'markdown' | 'file';
 
-interface DocumentFormProps {
+type DocumentFormProps = {
   projectId: Id<'projects'>;
   document?: Document;
   onSuccess?: (documentId: Id<'documents'>) => void;
   onCancel?: () => void;
-}
+};
 
 export function DocumentForm({ projectId, document, onSuccess, onCancel }: DocumentFormProps) {
   const [title, setTitle] = useState(document?.title ?? '');
@@ -84,7 +84,7 @@ export function DocumentForm({ projectId, document, onSuccess, onCancel }: Docum
         onSuccess?.(docId);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save document');
+      setError(formatError(err));
     } finally {
       setIsLoading(false);
     }

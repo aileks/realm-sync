@@ -1,3 +1,7 @@
+---
+read_when: working on Convex backend (database, functions, auth)
+---
+
 # convex/
 
 **Scope:** Real-time backend—database, server functions, subscriptions
@@ -9,7 +13,9 @@ convex/
 ├── _generated/      # Auto-generated types (NEVER EDIT)
 ├── __tests__/       # Test files (convex-test)
 ├── lib/
-│   └── auth.ts      # Auth helpers (getAuthUserId, requireAuth, getCurrentUser, requireAuthUser)
+│   ├── auth.ts      # Auth helpers (getAuthUserId, requireAuth, getCurrentUser, requireAuthUser)
+│   ├── errors.ts    # Error types (AppError, AuthError, NotFoundError, ValidationError)
+│   └── result.ts    # Result utilities (unwrapOrThrow, safeJsonParse)
 ├── llm/
 │   ├── cache.ts     # LLM response caching
 │   ├── chunk.ts     # Document chunking for large texts
@@ -20,10 +26,13 @@ convex/
 ├── documents.ts     # Document CRUD operations
 ├── entities.ts      # Entity CRUD + merge
 ├── facts.ts         # Fact CRUD + confirm/reject
-├── http.ts          # HTTP router for auth endpoints
+├── chat.ts          # Vellum streaming chat (sendMessage, streamChat httpAction)
+├── http.ts          # HTTP router for auth + chat endpoints
 ├── projects.ts      # Project CRUD operations
 ├── schema.ts        # Table definitions (defineSchema, defineTable)
+├── seed.ts          # Demo data seeding (seedProject, clearSeedData)
 ├── storage.ts       # File upload/download
+├── users.ts         # User query (viewer)
 └── tsconfig.json    # Convex-specific TS config
 ```
 
@@ -150,5 +159,5 @@ npx convex deploy        # Deploy to production
 - Schema changes may prompt migration
 - Real-time via Convex query hooks (useQuery)
 - Functions auto-reload during `npx convex dev`
-- All 94 tests passing (projects, entities, facts, llm/cache, llm/chunk, llm/extract, utils)
+- All 151 tests passing (projects, documents, entities, facts, seed, llm/cache, llm/chunk, llm/extract, lib/auth, lib/errors, lib/result, utils)
 - Cascade deletes: manually delete related documents before project

@@ -76,11 +76,11 @@ function LandingPage() {
   );
 }
 
-interface FeatureCardProps {
+type FeatureCardProps = {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
-}
+};
 
 function FeatureCard({ icon: Icon, title, description }: FeatureCardProps) {
   return (

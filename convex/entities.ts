@@ -1,8 +1,11 @@
 import { v } from 'convex/values';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
-import type { Id } from './_generated/dataModel';
+import type { Doc, Id } from './_generated/dataModel';
 import { getAuthUserId, requireAuth } from './lib/auth';
+import { ok, err, authError, notFoundError } from './lib/errors';
+import type { AppError, Result } from './lib/errors';
+import { unwrapOrThrow } from './lib/result';
 
 const entityTypeValidator = v.union(
   v.literal('character'),
@@ -27,6 +30,33 @@ async function verifyProjectOwnership(
   return project.userId === userId;
 }
 
+async function verifyProjectAccess(
+  ctx: MutationCtx,
+  projectId: Id<'projects'>,
+  userId: Id<'users'>
+): Promise<Result<Doc<'projects'>, AppError>> {
+  const project = await ctx.db.get(projectId);
+  if (!project) return err(notFoundError('project', projectId));
+  if (project.userId !== userId) return err(authError('UNAUTHORIZED', 'Unauthorized'));
+  return ok(project);
+}
+
+async function verifyEntityAccess(
+  ctx: MutationCtx,
+  entityId: Id<'entities'>,
+  userId: Id<'users'>
+): Promise<Result<Doc<'entities'>, AppError>> {
+  const entity = await ctx.db.get(entityId);
+  if (!entity) return err(notFoundError('entity', entityId));
+
+  const project = await ctx.db.get(entity.projectId);
+  if (!project || project.userId !== userId) {
+    return err(authError('UNAUTHORIZED', 'Unauthorized'));
+  }
+
+  return ok(entity);
+}
+
 export const create = mutation({
   args: {
     projectId: v.id('projects'),
@@ -41,12 +71,8 @@ export const create = mutation({
     ctx,
     { projectId, name, type, description, aliases, firstMentionedIn, status }
   ) => {
-    await requireAuth(ctx);
-
-    const isOwner = await verifyProjectOwnership(ctx, projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized: Not project owner');
-    }
+    const userId = await requireAuth(ctx);
+    const project = unwrapOrThrow(await verifyProjectAccess(ctx, projectId, userId));
 
     const now = Date.now();
     const entityId = await ctx.db.insert('entities', {
@@ -61,19 +87,16 @@ export const create = mutation({
       updatedAt: now,
     });
 
-    const project = await ctx.db.get(projectId);
-    if (project) {
-      const stats = project.stats ?? {
-        documentCount: 0,
-        entityCount: 0,
-        factCount: 0,
-        alertCount: 0,
-      };
-      await ctx.db.patch(projectId, {
-        updatedAt: now,
-        stats: { ...stats, entityCount: stats.entityCount + 1 },
-      });
-    }
+    const stats = project.stats ?? {
+      documentCount: 0,
+      entityCount: 0,
+      factCount: 0,
+      alertCount: 0,
+    };
+    await ctx.db.patch(projectId, {
+      updatedAt: now,
+      stats: { ...stats, entityCount: stats.entityCount + 1 },
+    });
 
     return entityId;
   },
@@ -89,17 +112,8 @@ export const update = mutation({
     status: v.optional(entityStatusValidator),
   },
   handler: async (ctx, { id, name, type, description, aliases, status }) => {
-    await requireAuth(ctx);
-
-    const entity = await ctx.db.get(id);
-    if (!entity) {
-      throw new Error('Entity not found');
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, entity.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
 
     await ctx.db.patch(id, {
       updatedAt: Date.now(),
@@ -120,24 +134,13 @@ export const merge = mutation({
     targetId: v.id('entities'),
   },
   handler: async (ctx, { sourceId, targetId }) => {
-    await requireAuth(ctx);
+    const userId = await requireAuth(ctx);
 
-    const source = await ctx.db.get(sourceId);
-    const target = await ctx.db.get(targetId);
-
-    if (!source || !target) {
-      throw new Error('Entity not found');
-    }
+    const source = unwrapOrThrow(await verifyEntityAccess(ctx, sourceId, userId));
+    const target = unwrapOrThrow(await verifyEntityAccess(ctx, targetId, userId));
 
     if (source.projectId !== target.projectId) {
-      throw new Error(
-        'Cannot merge entities from different projects. Entities must be in the same project.'
-      );
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, source.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
+      throw new Error('Cannot merge entities from different projects');
     }
 
     const mergedAliases = [...new Set([...target.aliases, source.name, ...source.aliases])];
@@ -236,17 +239,8 @@ export const getWithFacts = query({
 export const remove = mutation({
   args: { id: v.id('entities') },
   handler: async (ctx, { id }) => {
-    await requireAuth(ctx);
-
-    const entity = await ctx.db.get(id);
-    if (!entity) {
-      throw new Error('Entity not found');
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, entity.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    const entity = unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
 
     const facts = await ctx.db
       .query('facts')
@@ -314,17 +308,8 @@ export const findByName = query({
 export const confirm = mutation({
   args: { id: v.id('entities') },
   handler: async (ctx, { id }) => {
-    await requireAuth(ctx);
-
-    const entity = await ctx.db.get(id);
-    if (!entity) {
-      throw new Error('Entity not found');
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, entity.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
 
     await ctx.db.patch(id, {
       status: 'confirmed',
@@ -338,17 +323,8 @@ export const confirm = mutation({
 export const reject = mutation({
   args: { id: v.id('entities') },
   handler: async (ctx, { id }) => {
-    await requireAuth(ctx);
-
-    const entity = await ctx.db.get(id);
-    if (!entity) {
-      throw new Error('Entity not found');
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, entity.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    const entity = unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
 
     const facts = await ctx.db
       .query('facts')

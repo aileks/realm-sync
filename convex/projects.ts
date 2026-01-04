@@ -1,6 +1,25 @@
 import { v } from 'convex/values';
+import type { Doc, Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 import { getAuthUserId, requireAuth } from './lib/auth';
+import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
+import { unwrapOrThrow } from './lib/result';
+
+async function verifyProjectAccess(
+  ctx: MutationCtx,
+  projectId: Id<'projects'>,
+  userId: Id<'users'>
+): Promise<Result<Doc<'projects'>, AppError>> {
+  const project = await ctx.db.get(projectId);
+  if (!project) {
+    return err(notFoundError('project', projectId));
+  }
+  if (project.userId !== userId) {
+    return err(authError('UNAUTHORIZED', 'Unauthorized'));
+  }
+  return ok(project);
+}
 
 export const list = query({
   args: {},
@@ -62,14 +81,7 @@ export const update = mutation({
   },
   handler: async (ctx, { id, name, description }) => {
     const userId = await requireAuth(ctx);
-    const project = await ctx.db.get(id);
-
-    if (!project) {
-      throw new Error('Project not found');
-    }
-    if (project.userId !== userId) {
-      throw new Error('Unauthorized');
-    }
+    const project = unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
 
     const updates: Partial<typeof project> = { updatedAt: Date.now() };
     if (name !== undefined) updates.name = name;
@@ -84,14 +96,7 @@ export const remove = mutation({
   args: { id: v.id('projects') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    const project = await ctx.db.get(id);
-
-    if (!project) {
-      throw new Error('Project not found');
-    }
-    if (project.userId !== userId) {
-      throw new Error('Unauthorized');
-    }
+    unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
 
     const documents = await ctx.db
       .query('documents')
@@ -148,10 +153,8 @@ export const updateStats = mutation({
     }),
   },
   handler: async (ctx, { id, stats }) => {
-    const project = await ctx.db.get(id);
-    if (!project) {
-      throw new Error('Project not found');
-    }
+    const userId = await requireAuth(ctx);
+    const project = unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
 
     const currentStats = project.stats ?? {
       documentCount: 0,

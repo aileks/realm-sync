@@ -15,6 +15,8 @@ import type * as entities from "../entities.js";
 import type * as facts from "../facts.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_errors from "../lib/errors.js";
+import type * as lib_result from "../lib/result.js";
 import type * as llm_cache from "../llm/cache.js";
 import type * as llm_chunk from "../llm/chunk.js";
 import type * as llm_extract from "../llm/extract.js";
@@ -38,6 +40,8 @@ declare const fullApi: ApiFromModules<{
   facts: typeof facts;
   http: typeof http;
   "lib/auth": typeof lib_auth;
+  "lib/errors": typeof lib_errors;
+  "lib/result": typeof lib_result;
   "llm/cache": typeof llm_cache;
   "llm/chunk": typeof llm_chunk;
   "llm/extract": typeof llm_extract;

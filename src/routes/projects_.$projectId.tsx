@@ -213,13 +213,13 @@ function ProjectDashboard() {
   );
 }
 
-interface StatCardProps {
+type StatCardProps = {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: number;
   variant?: 'entity-character' | 'entity-concept' | 'destructive';
   onClick?: () => void;
-}
+};
 
 function StatCard({ icon: Icon, label, value, variant, onClick }: StatCardProps) {
   return (

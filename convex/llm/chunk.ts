@@ -5,12 +5,12 @@ export const MAX_CHUNK_CHARS = 12000;
 export const OVERLAP_CHARS = 800;
 export const MIN_CHUNK_CHARS = 1000;
 
-export interface Chunk {
+export type Chunk = {
   text: string;
   startOffset: number;
   endOffset: number;
   index: number;
-}
+};
 
 export function chunkDocument(
   content: string,

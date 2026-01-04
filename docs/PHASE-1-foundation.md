@@ -25,161 +25,17 @@ Establish the core data model, authentication, and basic CRUD operations for pro
 
 ## 1. Convex Schema
 
-```typescript
-import { defineSchema, defineTable } from 'convex/server';
-import { v } from 'convex/values';
+> **See [SCHEMA.md](./SCHEMA.md) for complete schema reference.**
 
-export default defineSchema({
-  // Users (extended from Convex Auth)
-  users: defineTable({
-    name: v.optional(v.string()),
-    email: v.optional(v.string()),
-    emailVerificationTime: v.optional(v.float64()),
-    image: v.optional(v.string()),
-    isAnonymous: v.optional(v.boolean()),
-    createdAt: v.number(),
-    settings: v.optional(
-      v.object({
-        theme: v.optional(v.string()),
-        notifications: v.optional(v.boolean()),
-      })
-    ),
-  }).index('by_email', ['email']),
+Phase 1 establishes all 7 tables: `users`, `projects`, `documents`, `entities`, `facts`, `alerts`, `llmCache`.
 
-  // Projects
-  projects: defineTable({
-    userId: v.id('users'),
-    name: v.string(),
-    description: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    stats: v.optional(
-      v.object({
-        documentCount: v.number(),
-        entityCount: v.number(),
-        factCount: v.number(),
-        alertCount: v.number(),
-      })
-    ),
-  }).index('by_user', ['userId', 'updatedAt']),
+Key tables for Phase 1:
 
-  // Documents
-  documents: defineTable({
-    projectId: v.id('projects'),
-    title: v.string(),
-    content: v.optional(v.string()), // Inline content ≤1MB
-    storageId: v.optional(v.id('_storage')), // File reference >1MB
-    contentType: v.union(v.literal('text'), v.literal('markdown'), v.literal('file')),
-    orderIndex: v.number(),
-    wordCount: v.number(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-    processedAt: v.optional(v.number()),
-    processingStatus: v.union(
-      v.literal('pending'),
-      v.literal('processing'),
-      v.literal('completed'),
-      v.literal('failed')
-    ),
-  })
-    .index('by_project', ['projectId', 'orderIndex'])
-    .index('by_project_status', ['projectId', 'processingStatus'])
-    .searchIndex('search_content', {
-      searchField: 'content',
-      filterFields: ['projectId'],
-    }),
-
-  // Entities (Placeholder for Phase 2)
-  entities: defineTable({
-    projectId: v.id('projects'),
-    name: v.string(),
-    type: v.union(
-      v.literal('character'),
-      v.literal('location'),
-      v.literal('item'),
-      v.literal('concept'),
-      v.literal('event')
-    ),
-    description: v.optional(v.string()),
-    aliases: v.array(v.string()),
-    firstMentionedIn: v.optional(v.id('documents')),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index('by_project', ['projectId', 'type'])
-    .index('by_name', ['projectId', 'name'])
-    .searchIndex('search_name', {
-      searchField: 'name',
-      filterFields: ['projectId'],
-    }),
-
-  // Facts (Placeholder for Phase 2)
-  facts: defineTable({
-    projectId: v.id('projects'),
-    entityId: v.id('entities'),
-    documentId: v.id('documents'),
-    subject: v.string(),
-    predicate: v.string(),
-    object: v.string(),
-    confidence: v.number(),
-    evidenceSnippet: v.string(),
-    evidencePosition: v.optional(
-      v.object({
-        start: v.number(),
-        end: v.number(),
-      })
-    ),
-    temporalBound: v.optional(
-      v.object({
-        type: v.union(v.literal('point'), v.literal('range'), v.literal('relative')),
-        value: v.string(),
-      })
-    ),
-    status: v.union(v.literal('pending'), v.literal('confirmed'), v.literal('rejected')),
-    createdAt: v.number(),
-  })
-    .index('by_entity', ['entityId', 'status'])
-    .index('by_document', ['documentId'])
-    .index('by_project', ['projectId', 'status']),
-
-  // Alerts (Placeholder for Phase 4)
-  alerts: defineTable({
-    projectId: v.id('projects'),
-    documentId: v.id('documents'),
-    factIds: v.array(v.id('facts')),
-    entityIds: v.array(v.id('entities')),
-    type: v.union(v.literal('contradiction'), v.literal('timeline'), v.literal('ambiguity')),
-    severity: v.union(v.literal('error'), v.literal('warning')),
-    title: v.string(),
-    description: v.string(),
-    evidence: v.array(
-      v.object({
-        snippet: v.string(),
-        documentId: v.id('documents'),
-        documentTitle: v.string(),
-      })
-    ),
-    suggestedFix: v.optional(v.string()),
-    status: v.union(v.literal('open'), v.literal('resolved'), v.literal('dismissed')),
-    resolutionNotes: v.optional(v.string()),
-    createdAt: v.number(),
-    resolvedAt: v.optional(v.number()),
-  })
-    .index('by_project', ['projectId', 'status'])
-    .index('by_document', ['documentId']),
-
-  // LLM Cache
-  llmCache: defineTable({
-    inputHash: v.string(),
-    promptVersion: v.string(),
-    modelId: v.string(),
-    response: v.string(), // Stringified JSON
-    tokenCount: v.optional(v.number()),
-    createdAt: v.number(),
-    expiresAt: v.number(),
-  }).index('by_hash', ['inputHash', 'promptVersion']),
-});
-```
+| Table       | Purpose                       | Key Indexes                       |
+| ----------- | ----------------------------- | --------------------------------- |
+| `users`     | Extended from Convex Auth     | `by_email`                        |
+| `projects`  | User-owned project containers | `by_user` (userId, updatedAt)     |
+| `documents` | Source text with processing   | `by_project`, `by_project_status` |
 
 ---
 
@@ -215,17 +71,27 @@ export default defineSchema({
 
 ## 3. Frontend Route Structure
 
+TanStack Start uses file-based routing with underscore-escaping (`_.` escapes folder nesting).
+
 ```
 src/routes/
-├── __root.tsx           # Layout with auth check
-├── index.tsx            # Landing/Dashboard
-├── auth.tsx             # Sign in/up
-├── projects.tsx         # Project list
-├── projects.new.tsx     # Create project
-├── projects.$projectId.tsx # Project dashboard
-├── projects.$projectId.documents.tsx # Document list
-├── projects.$projectId.documents.new.tsx # Add document
-└── projects.$projectId.documents.$documentId.tsx # Editor
+├── __root.tsx                              # Root layout
+├── index.tsx                               # / (Dashboard)
+├── auth.tsx                                # /auth
+├── dev.chat.tsx                            # /dev/chat (Vellum chat)
+├── projects.tsx                            # /projects (list)
+├── projects_.new.tsx                       # /projects/new
+├── projects_.$projectId.tsx                # /projects/:projectId (layout)
+├── projects_.$projectId_.documents.tsx     # /projects/:projectId/documents (layout)
+├── projects_.$projectId_.documents.index.tsx    # /projects/:projectId/documents
+├── projects_.$projectId_.documents.new.tsx      # /projects/:projectId/documents/new
+├── projects_.$projectId_.documents.$documentId.tsx  # /projects/:projectId/documents/:documentId
+├── projects_.$projectId_.entities.tsx      # /projects/:projectId/entities
+├── projects_.$projectId_.facts.tsx         # /projects/:projectId/facts
+├── projects_.$projectId_.review.tsx        # /projects/:projectId/review (layout)
+├── projects_.$projectId_.review.index.tsx  # /projects/:projectId/review
+├── projects_.$projectId_.review.$documentId.tsx  # /projects/:projectId/review/:documentId
+└── projects_.$projectId_.alerts.tsx        # /projects/:projectId/alerts
 ```
 
 ---
