@@ -2,7 +2,7 @@ import { convexTest } from 'convex-test';
 import type { Id } from '../../_generated/dataModel';
 import schema from '../../schema';
 
-export const modules = import.meta.glob('../../**/*.ts');
+const getModules = () => import.meta.glob('../../**/*.ts');
 
 export type TestContext = ReturnType<typeof convexTest>;
 
@@ -14,7 +14,7 @@ export const defaultStats = () => ({
 });
 
 export function createTestContext() {
-  return convexTest(schema, modules);
+  return convexTest(schema, getModules());
 }
 
 export async function setupAuthenticatedUser(t: TestContext) {

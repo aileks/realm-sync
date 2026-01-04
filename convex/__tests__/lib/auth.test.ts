@@ -2,12 +2,12 @@ import { convexTest } from 'convex-test';
 import { describe, it, expect } from 'vitest';
 import schema from '../../schema';
 
-const modules = import.meta.glob('../../**/*.ts');
+const getModules = () => import.meta.glob('../../**/*.ts');
 
 describe('auth helpers', () => {
   describe('getCurrentUser', () => {
     it('returns null when not authenticated', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
 
       const user = await t.run(async (ctx) => {
         const { getCurrentUser } = await import('../../lib/auth');
@@ -18,7 +18,7 @@ describe('auth helpers', () => {
     });
 
     it('returns user when authenticated', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
 
       const userId = await t.run(async (ctx) => {
         return await ctx.db.insert('users', {
@@ -42,7 +42,7 @@ describe('auth helpers', () => {
 
   describe('requireAuth', () => {
     it('throws when not authenticated', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
 
       await expect(
         t.run(async (ctx) => {
@@ -53,7 +53,7 @@ describe('auth helpers', () => {
     });
 
     it('returns userId when authenticated', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
 
       const userId = await t.run(async (ctx) => {
         return await ctx.db.insert('users', {
@@ -76,7 +76,7 @@ describe('auth helpers', () => {
 
   describe('requireAuthUser', () => {
     it('throws when not authenticated', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
 
       await expect(
         t.run(async (ctx) => {
@@ -87,7 +87,7 @@ describe('auth helpers', () => {
     });
 
     it('returns full user object when authenticated', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
 
       const userId = await t.run(async (ctx) => {
         return await ctx.db.insert('users', {

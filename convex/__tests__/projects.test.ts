@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import schema from '../schema';
 
-const modules = import.meta.glob('../**/*.ts');
+const getModules = () => import.meta.glob('../**/*.ts');
 
 async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
   const userId = await t.run(async (ctx) => {
@@ -21,7 +21,7 @@ async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
 describe('projects', () => {
   describe('list query', () => {
     it('returns empty array when user has no projects', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const projects = await asUser.query(api.projects.list, {});
@@ -29,13 +29,13 @@ describe('projects', () => {
     });
 
     it('returns empty array when not authenticated', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const projects = await t.query(api.projects.list, {});
       expect(projects).toEqual([]);
     });
 
     it('returns only user projects, not other users', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       await t.run(async (ctx) => {
@@ -67,7 +67,7 @@ describe('projects', () => {
 
   describe('get query', () => {
     it('returns project when user is owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -87,7 +87,7 @@ describe('projects', () => {
     });
 
     it('returns null when user is not owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -109,7 +109,7 @@ describe('projects', () => {
     });
 
     it('returns null for non-existent project', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -130,7 +130,7 @@ describe('projects', () => {
 
   describe('create mutation', () => {
     it('creates project with initialized stats', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await asUser.mutation(api.projects.create, {
@@ -151,7 +151,7 @@ describe('projects', () => {
     });
 
     it('throws when not authenticated', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
 
       await expect(t.mutation(api.projects.create, { name: 'Test' })).rejects.toThrow(
         /unauthorized/i
@@ -159,7 +159,7 @@ describe('projects', () => {
     });
 
     it('creates project without description', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await asUser.mutation(api.projects.create, {
@@ -174,7 +174,7 @@ describe('projects', () => {
 
   describe('update mutation', () => {
     it('updates project name', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -196,7 +196,7 @@ describe('projects', () => {
     });
 
     it('throws when not owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -219,7 +219,7 @@ describe('projects', () => {
     });
 
     it('throws when project not found', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -241,7 +241,7 @@ describe('projects', () => {
 
   describe('remove mutation', () => {
     it('deletes project', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -260,7 +260,7 @@ describe('projects', () => {
     });
 
     it('cascades delete to documents', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const { projectId, documentId } = await t.run(async (ctx) => {
@@ -292,7 +292,7 @@ describe('projects', () => {
     });
 
     it('throws when not owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -317,7 +317,7 @@ describe('projects', () => {
 
   describe('updateStats mutation', () => {
     it('updates stats partially', async () => {
-      const t = convexTest(schema, modules);
+      const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {

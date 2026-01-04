@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { internal } from '../../_generated/api';
 import schema from '../../schema';
 
-const modules = import.meta.glob('../../**/*.ts');
+const getModules = () => import.meta.glob('../../**/*.ts');
 
 async function setupProjectWithDocument(t: ReturnType<typeof convexTest>) {
   return await t.run(async (ctx) => {
@@ -39,7 +39,7 @@ async function setupProjectWithDocument(t: ReturnType<typeof convexTest>) {
 
 describe('processExtractionResult', () => {
   it('creates entities with pending status from extraction result', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
@@ -87,7 +87,7 @@ describe('processExtractionResult', () => {
   });
 
   it('creates facts with pending status from extraction result', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
@@ -139,7 +139,7 @@ describe('processExtractionResult', () => {
   });
 
   it('stores relationships as facts with relationshipType as predicate', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
@@ -178,7 +178,7 @@ describe('processExtractionResult', () => {
   });
 
   it('reuses existing entity when name matches', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { projectId, documentId } = await setupProjectWithDocument(t);
 
     await t.run(async (ctx) => {
@@ -234,7 +234,7 @@ describe('processExtractionResult', () => {
   });
 
   it('updates document processingStatus to completed', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
@@ -254,7 +254,7 @@ describe('processExtractionResult', () => {
   });
 
   it('updates project stats with new entity and fact counts', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
@@ -286,7 +286,7 @@ describe('processExtractionResult', () => {
   });
 
   it('handles empty extraction result gracefully', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
@@ -305,7 +305,7 @@ describe('processExtractionResult', () => {
   });
 
   it('skips facts for entities that do not exist', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
@@ -348,7 +348,7 @@ describe('processExtractionResult', () => {
   });
 
   it('persists evidencePosition for facts when provided', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
@@ -384,7 +384,7 @@ describe('processExtractionResult', () => {
   });
 
   it('persists evidencePosition for relationships when provided', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
@@ -421,7 +421,7 @@ describe('processExtractionResult', () => {
   });
 
   it('handles facts without evidencePosition', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
@@ -456,7 +456,7 @@ describe('processExtractionResult', () => {
   });
 
   it('handles entity with missing aliases array', async () => {
-    const t = convexTest(schema, modules);
+    const t = convexTest(schema, getModules());
     const { projectId, documentId } = await setupProjectWithDocument(t);
 
     const extractionResult = {
