@@ -270,7 +270,7 @@ export const listByProjectWithStats = query({
       })
     );
 
-    return entitiesWithStats.sort((a, b) => {
+    return entitiesWithStats.toSorted((a, b) => {
       switch (sortBy) {
         case 'name':
           return a.name.localeCompare(b.name);
