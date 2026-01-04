@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Save, Loader2, CheckCircle, Clock, Sparkles } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
@@ -25,12 +25,12 @@ function DocumentEditorPage() {
   const { projectId, documentId } = Route.useParams();
   const document = useQuery(api.documents.get, { id: documentId as Id<'documents'> });
   const updateDocument = useMutation(api.documents.update);
-  const chunkAndExtract = useMutation(
+  const chunkAndExtract = useAction(
     (
       api as unknown as {
         'llm/extract': {
           chunkAndExtract: FunctionReference<
-            'mutation',
+            'action',
             'public',
             { documentId: Id<'documents'> },
             { entitiesCreated: number; factsCreated: number }
