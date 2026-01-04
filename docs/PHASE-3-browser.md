@@ -15,15 +15,15 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 
 ## Implementation Progress
 
-| Sub-Phase                       | Status      | PR  | Notes                              |
-| ------------------------------- | ----------- | --- | ---------------------------------- |
-| 3.1 Canon Browser Shell         | ✅ Complete | #16 | Merged 2026-01-04                  |
-| 3.2 Entity Detail Page          | 🔲 Pending  | -   | Sheet exists, needs dedicated page |
-| 3.3 Full-Text Search            | 🔲 Pending  | -   | Nav link ready, route missing      |
-| 3.4 Entity Editing & Management | 🟡 Partial  | #16 | Inline editing in Sheet works      |
-| 3.5 Timeline View               | 🔲 Pending  | -   | Nav link ready, route missing      |
-| 3.6 Relationship Visualization  | 🔲 Pending  | -   | Backend functions missing          |
-| 3.7 Polish & Integration        | 🔲 Pending  | -   | -                                  |
+| Sub-Phase                       | Status      | PR  | Notes                           |
+| ------------------------------- | ----------- | --- | ------------------------------- |
+| 3.1 Canon Browser Shell         | ✅ Complete | #16 | Merged 2026-01-04               |
+| 3.2 Entity Detail Page          | ✅ Complete | #18 | Merged 2026-01-04               |
+| 3.3 Full-Text Search            | 🔲 Pending  | -   | Nav link ready, route missing   |
+| 3.4 Entity Editing & Management | ✅ Complete | #18 | Inline + dedicated page editing |
+| 3.5 Timeline View               | 🔲 Pending  | -   | Nav link ready, route missing   |
+| 3.6 Relationship Visualization  | 🔲 Pending  | -   | Backend functions missing       |
+| 3.7 Polish & Integration        | 🔲 Pending  | -   | -                               |
 
 ### What's Implemented (from PR #16)
 
@@ -43,14 +43,14 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 
 **Backend functions needed:**
 
-- `entities.getWithDetails` - Entity + facts + relationships + appearances
+- ~~`entities.getWithDetails`~~ ✅ Implemented in PR #18
 - `entities.search` - Full-text search using search index
-- `entities.getRelationships` - Facts linking to other entities
+- ~~`entities.getRelationships`~~ ✅ Implemented via `getWithDetails.relatedEntities`
 - `entities.getRelationshipGraph` - Nodes and edges for visualization
 
 **Routes needed:**
 
-- `projects_.$projectId_.canon_.entities.$entityId.tsx` - Dedicated entity detail page
+- ~~`projects_.$projectId_.canon_.entities.$entityId.tsx`~~ ✅ Changed to `/entities/$entityId` (PR #18)
 - `projects_.$projectId_.canon_.search.tsx` - Search results page
 - `projects_.$projectId_.canon_.timeline.tsx` - Timeline view
 
