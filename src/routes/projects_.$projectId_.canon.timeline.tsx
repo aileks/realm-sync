@@ -11,11 +11,13 @@ import {
   Lightbulb,
   Users,
   Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -23,6 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 import { cn } from '@/lib/utils';
@@ -57,10 +66,20 @@ const entityBadgeColors: Record<EntityType, string> = {
   event: 'bg-entity-event/15 text-entity-event ring-entity-event/20',
 };
 
+type SelectedEntity = {
+  _id: Id<'entities'>;
+  name: string;
+  type: string;
+  description?: string;
+  document?: { _id: Id<'documents'>; title: string } | null;
+  involvedEntities?: Array<{ _id: Id<'entities'>; name: string; type: string }>;
+};
+
 function CanonTimeline() {
   const { projectId } = Route.useParams();
   const [entityFilter, setEntityFilter] = useState<string>('all');
   const [showAppearances, setShowAppearances] = useState(true);
+  const [selectedEntity, setSelectedEntity] = useState<SelectedEntity | null>(null);
 
   const timeline = useQuery(api.entities.getTimeline, {
     projectId: projectId as Id<'projects'>,
@@ -99,7 +118,7 @@ function CanonTimeline() {
                 }
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent alignItemWithTrigger={false}>
               <SelectItem value="all">All entities</SelectItem>
               {timeline.entities.map((entity) => (
                 <SelectItem key={entity._id} value={entity._id}>
@@ -147,8 +166,16 @@ function CanonTimeline() {
           <div className="space-y-4">
             {timelineItems.map((item) =>
               item.itemType === 'event' ?
-                <TimelineEventCard key={item._id} event={item} projectId={projectId} />
-              : <TimelineAppearanceCard key={item._id} appearance={item} projectId={projectId} />
+                <TimelineEventCard
+                  key={item._id}
+                  event={item}
+                  onSelect={() => setSelectedEntity(item)}
+                />
+              : <TimelineAppearanceCard
+                  key={item._id}
+                  appearance={item}
+                  onSelect={() => setSelectedEntity({ ...item, description: undefined })}
+                />
             )}
           </div>
         </div>
@@ -161,6 +188,90 @@ function CanonTimeline() {
             ` and ${timeline.appearances.length} first appearance${timeline.appearances.length !== 1 ? 's' : ''}`}
         </p>
       )}
+
+      <Sheet
+        open={selectedEntity !== null}
+        onOpenChange={(open) => !open && setSelectedEntity(null)}
+      >
+        <SheetContent>
+          {selectedEntity && (
+            <>
+              <SheetHeader>
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const Icon = entityIcons[selectedEntity.type as EntityType] ?? User;
+                    return <Icon className="size-5" />;
+                  })()}
+                  <SheetTitle className="font-serif">{selectedEntity.name}</SheetTitle>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'h-5 px-1.5 py-0 text-xs font-normal capitalize',
+                      entityBadgeColors[selectedEntity.type as EntityType] ??
+                        'bg-muted text-muted-foreground'
+                    )}
+                  >
+                    {selectedEntity.type}
+                  </Badge>
+                </div>
+                {selectedEntity.description && (
+                  <SheetDescription>{selectedEntity.description}</SheetDescription>
+                )}
+              </SheetHeader>
+
+              <CardContent className="space-y-4">
+                {selectedEntity.document && (
+                  <div className="space-y-1">
+                    <p className="text-muted-foreground text-xs font-medium">Source Document</p>
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <FileText className="text-muted-foreground size-4" />
+                      {selectedEntity.document.title}
+                    </div>
+                  </div>
+                )}
+
+                {selectedEntity.involvedEntities && selectedEntity.involvedEntities.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-muted-foreground text-xs font-medium">Involved Entities</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedEntity.involvedEntities.map((entity) => {
+                        const EntityIcon = entityIcons[entity.type as EntityType] ?? User;
+                        return (
+                          <Badge
+                            key={entity._id}
+                            variant="secondary"
+                            className="h-6 gap-1 px-2 text-xs font-normal"
+                          >
+                            <EntityIcon className="size-3" />
+                            {entity.name}
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    render={
+                      <Link
+                        to="/entities/$entityId"
+                        params={{ entityId: selectedEntity._id }}
+                        search={{ project: projectId }}
+                      />
+                    }
+                  >
+                    <ExternalLink className="size-4" />
+                    View Full Details
+                  </Button>
+                </div>
+              </CardContent>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -174,10 +285,10 @@ type TimelineEventCardProps = {
     document: { _id: Id<'documents'>; title: string; orderIndex: number } | null;
     involvedEntities: Array<{ _id: Id<'entities'>; name: string; type: string }>;
   };
-  projectId: string;
+  onSelect: () => void;
 };
 
-function TimelineEventCard({ event, projectId }: TimelineEventCardProps) {
+function TimelineEventCard({ event, onSelect }: TimelineEventCardProps) {
   const Icon = entityIcons.event;
 
   return (
@@ -191,12 +302,7 @@ function TimelineEventCard({ event, projectId }: TimelineEventCardProps) {
         <Icon className="size-3" />
       </div>
 
-      <Link
-        to="/entities/$entityId"
-        params={{ entityId: event._id }}
-        search={{ project: projectId }}
-        className="block"
-      >
+      <button type="button" onClick={onSelect} className="block w-full text-left">
         <Card className="hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1">
           <CardHeader className="p-4">
             <div className="space-y-2">
@@ -255,7 +361,7 @@ function TimelineEventCard({ event, projectId }: TimelineEventCardProps) {
             </div>
           </CardHeader>
         </Card>
-      </Link>
+      </button>
     </div>
   );
 }
@@ -267,10 +373,10 @@ type TimelineAppearanceCardProps = {
     type: string;
     document: { _id: Id<'documents'>; title: string; orderIndex: number } | null;
   };
-  projectId: string;
+  onSelect: () => void;
 };
 
-function TimelineAppearanceCard({ appearance, projectId }: TimelineAppearanceCardProps) {
+function TimelineAppearanceCard({ appearance, onSelect }: TimelineAppearanceCardProps) {
   const entityType = appearance.type as EntityType;
   const Icon = entityIcons[entityType] ?? User;
 
@@ -285,12 +391,7 @@ function TimelineAppearanceCard({ appearance, projectId }: TimelineAppearanceCar
         <Icon className="size-3" />
       </div>
 
-      <Link
-        to="/entities/$entityId"
-        params={{ entityId: appearance._id }}
-        search={{ project: projectId }}
-        className="block"
-      >
+      <button type="button" onClick={onSelect} className="block w-full text-left">
         <Card className="hover:border-primary/50 hover:ring-primary/20 border-dashed transition-all duration-200 hover:shadow-md hover:ring-1">
           <CardHeader className="p-3">
             <div className="flex items-center justify-between gap-4">
@@ -317,7 +418,7 @@ function TimelineAppearanceCard({ appearance, projectId }: TimelineAppearanceCar
             </div>
           </CardHeader>
         </Card>
-      </Link>
+      </button>
     </div>
   );
 }
