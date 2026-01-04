@@ -317,7 +317,7 @@ function AttributeList({ facts, entityId, projectId }: AttributeListProps) {
                     : <span className="text-muted-foreground">Select a document...</span>}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent className="w-auto min-w-max">
+                <SelectContent className="w-auto min-w-max" alignItemWithTrigger={false}>
                   {documents?.map((doc) => (
                     <SelectItem key={doc._id} value={doc._id}>
                       {doc.title}
