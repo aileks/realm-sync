@@ -1,66 +1,11 @@
-import { convexTest } from 'convex-test';
 import { describe, it, expect } from 'vitest';
-import { api } from '../_generated/api';
-import type { Id } from '../_generated/dataModel';
-import schema from '../schema';
+import { api } from '../../_generated/api';
+import { createTestContext, setupAuthenticatedUser, setupProjectWithEntities } from './helpers';
 
-const modules = import.meta.glob('../**/*.ts');
-
-async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
-  const userId = await t.run(async (ctx) => {
-    return await ctx.db.insert('users', {
-      name: 'Test User',
-      email: 'test@example.com',
-      createdAt: Date.now(),
-    });
-  });
-
-  const asUser = t.withIdentity({ subject: userId });
-  return { userId, asUser };
-}
-
-async function setupProjectWithEntities(t: ReturnType<typeof convexTest>, userId: Id<'users'>) {
-  return await t.run(async (ctx) => {
-    const projectId = await ctx.db.insert('projects', {
-      userId,
-      name: 'Test Project',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      stats: { documentCount: 0, entityCount: 0, factCount: 0, alertCount: 0 },
-    });
-
-    const documentId = await ctx.db.insert('documents', {
-      projectId,
-      title: 'Test Document',
-      content: 'Test content',
-      contentType: 'text',
-      orderIndex: 0,
-      wordCount: 2,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      processingStatus: 'pending',
-    });
-
-    const entityId = await ctx.db.insert('entities', {
-      projectId,
-      name: 'Jon Snow',
-      type: 'character',
-      description: 'King in the North',
-      aliases: ['Lord Snow', 'The White Wolf'],
-      firstMentionedIn: documentId,
-      status: 'confirmed',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-
-    return { projectId, documentId, entityId };
-  });
-}
-
-describe('entities', () => {
-  describe('create mutation', () => {
+describe('entities mutations', () => {
+  describe('create', () => {
     it('creates entity with pending status by default', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -90,7 +35,7 @@ describe('entities', () => {
     });
 
     it('creates entity with confirmed status when specified', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -115,7 +60,7 @@ describe('entities', () => {
     });
 
     it('increments project entityCount stat', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -139,7 +84,7 @@ describe('entities', () => {
     });
 
     it('works on projects without pre-existing stats', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -162,7 +107,7 @@ describe('entities', () => {
     });
 
     it('throws when not authenticated', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
 
       const projectId = await t.run(async (ctx) => {
         const userId = await ctx.db.insert('users', {
@@ -188,7 +133,7 @@ describe('entities', () => {
     });
 
     it('throws when not project owner', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { asUser } = await setupAuthenticatedUser(t);
 
       const projectId = await t.run(async (ctx) => {
@@ -215,9 +160,9 @@ describe('entities', () => {
     });
   });
 
-  describe('update mutation', () => {
+  describe('update', () => {
     it('updates entity fields', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { entityId } = await setupProjectWithEntities(t, userId);
 
@@ -233,7 +178,7 @@ describe('entities', () => {
     });
 
     it('confirms pending entity', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const entityId = await t.run(async (ctx) => {
@@ -264,7 +209,7 @@ describe('entities', () => {
     });
 
     it('throws when entity not found', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { entityId } = await setupProjectWithEntities(t, userId);
 
@@ -279,9 +224,9 @@ describe('entities', () => {
     });
   });
 
-  describe('merge mutation', () => {
+  describe('merge', () => {
     it('merges two entities, combining aliases', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const { projectId, sourceId, targetId, factId } = await t.run(async (ctx) => {
@@ -361,7 +306,7 @@ describe('entities', () => {
     });
 
     it('throws when merging entities from different projects', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const { sourceId, targetId } = await t.run(async (ctx) => {
@@ -407,270 +352,9 @@ describe('entities', () => {
     });
   });
 
-  describe('listByProject query', () => {
-    it('returns all entities for project', async () => {
-      const t = convexTest(schema, modules);
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const projectId = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Character 1',
-          type: 'character',
-          aliases: [],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Location 1',
-          type: 'location',
-          aliases: [],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        return pId;
-      });
-
-      const entities = await asUser.query(api.entities.listByProject, { projectId });
-      expect(entities).toHaveLength(2);
-    });
-
-    it('filters by type when provided', async () => {
-      const t = convexTest(schema, modules);
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const projectId = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Character 1',
-          type: 'character',
-          aliases: [],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Location 1',
-          type: 'location',
-          aliases: [],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        return pId;
-      });
-
-      const entities = await asUser.query(api.entities.listByProject, {
-        projectId,
-        type: 'character',
-      });
-      expect(entities).toHaveLength(1);
-      expect(entities[0].type).toBe('character');
-    });
-
-    it('filters by status when provided', async () => {
-      const t = convexTest(schema, modules);
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const projectId = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Confirmed Entity',
-          type: 'character',
-          aliases: [],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Pending Entity',
-          type: 'character',
-          aliases: [],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        return pId;
-      });
-
-      const entities = await asUser.query(api.entities.listByProject, {
-        projectId,
-        status: 'pending',
-      });
-      expect(entities).toHaveLength(1);
-      expect(entities[0].name).toBe('Pending Entity');
-    });
-
-    it('returns empty array when not project owner', async () => {
-      const t = convexTest(schema, modules);
-      const { asUser } = await setupAuthenticatedUser(t);
-
-      const projectId = await t.run(async (ctx) => {
-        const otherUserId = await ctx.db.insert('users', {
-          name: 'Other',
-          email: 'other@test.com',
-          createdAt: Date.now(),
-        });
-        return await ctx.db.insert('projects', {
-          userId: otherUserId,
-          name: 'Other Project',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-      });
-
-      const entities = await asUser.query(api.entities.listByProject, { projectId });
-      expect(entities).toEqual([]);
-    });
-  });
-
-  describe('getWithFacts query', () => {
-    it('returns entity with associated facts', async () => {
-      const t = convexTest(schema, modules);
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const entityId = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        const docId = await ctx.db.insert('documents', {
-          projectId: pId,
-          title: 'Doc',
-          contentType: 'text',
-          orderIndex: 0,
-          wordCount: 0,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          processingStatus: 'completed',
-        });
-
-        const eId = await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Jon Snow',
-          type: 'character',
-          aliases: [],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('facts', {
-          projectId: pId,
-          entityId: eId,
-          documentId: docId,
-          subject: 'Jon Snow',
-          predicate: 'is',
-          object: 'King in the North',
-          confidence: 1.0,
-          evidenceSnippet: '"Jon Snow is King in the North"',
-          status: 'confirmed',
-          createdAt: Date.now(),
-        });
-
-        await ctx.db.insert('facts', {
-          projectId: pId,
-          entityId: eId,
-          documentId: docId,
-          subject: 'Jon Snow',
-          predicate: 'knows',
-          object: 'nothing',
-          confidence: 0.9,
-          evidenceSnippet: '"You know nothing, Jon Snow"',
-          status: 'pending',
-          createdAt: Date.now(),
-        });
-
-        return eId;
-      });
-
-      const result = await asUser.query(api.entities.getWithFacts, { id: entityId });
-      expect(result).not.toBeNull();
-      expect(result?.entity.name).toBe('Jon Snow');
-      expect(result?.facts).toHaveLength(2);
-    });
-
-    it('returns null when entity not found', async () => {
-      const t = convexTest(schema, modules);
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-      const { entityId } = await setupProjectWithEntities(t, userId);
-
-      await t.run(async (ctx) => ctx.db.delete(entityId));
-
-      const result = await asUser.query(api.entities.getWithFacts, { id: entityId });
-      expect(result).toBeNull();
-    });
-
-    it('returns null when not project owner', async () => {
-      const t = convexTest(schema, modules);
-      const { asUser } = await setupAuthenticatedUser(t);
-
-      const entityId = await t.run(async (ctx) => {
-        const otherUserId = await ctx.db.insert('users', {
-          name: 'Other',
-          email: 'other@test.com',
-          createdAt: Date.now(),
-        });
-        const pId = await ctx.db.insert('projects', {
-          userId: otherUserId,
-          name: 'Other',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-        return await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Secret Entity',
-          type: 'character',
-          aliases: [],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-      });
-
-      const result = await asUser.query(api.entities.getWithFacts, { id: entityId });
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('confirm mutation', () => {
+  describe('confirm', () => {
     it('confirms a pending entity', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const entityId = await t.run(async (ctx) => {
@@ -698,7 +382,7 @@ describe('entities', () => {
     });
 
     it('throws when entity not found', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
       const { entityId } = await setupProjectWithEntities(t, userId);
 
@@ -710,9 +394,9 @@ describe('entities', () => {
     });
   });
 
-  describe('reject mutation', () => {
+  describe('reject', () => {
     it('rejects entity and cascades to delete facts', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const { projectId, entityId, factId } = await t.run(async (ctx) => {
@@ -775,152 +459,9 @@ describe('entities', () => {
     });
   });
 
-  describe('listPending query', () => {
-    it('returns only pending entities for project', async () => {
-      const t = convexTest(schema, modules);
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const projectId = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Pending 1',
-          type: 'character',
-          aliases: [],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Pending 2',
-          type: 'location',
-          aliases: [],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Confirmed',
-          type: 'item',
-          aliases: [],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        return pId;
-      });
-
-      const pending = await asUser.query(api.entities.listPending, { projectId });
-      expect(pending).toHaveLength(2);
-      expect(pending.every((e) => e.status === 'pending')).toBe(true);
-    });
-  });
-
-  describe('findSimilar query', () => {
-    it('finds entities with overlapping names', async () => {
-      const t = convexTest(schema, modules);
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const { projectId, entityId } = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        const eId = await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Jon',
-          type: 'character',
-          aliases: [],
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Jon Snow',
-          type: 'character',
-          aliases: ['Lord Snow'],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Daenerys',
-          type: 'character',
-          aliases: [],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        return { projectId: pId, entityId: eId };
-      });
-
-      const similar = await asUser.query(api.entities.findSimilar, {
-        projectId,
-        name: 'Jon',
-        excludeId: entityId,
-      });
-
-      expect(similar).toHaveLength(1);
-      expect(similar[0].name).toBe('Jon Snow');
-    });
-
-    it('finds entities by alias match', async () => {
-      const t = convexTest(schema, modules);
-      const { userId, asUser } = await setupAuthenticatedUser(t);
-
-      const projectId = await t.run(async (ctx) => {
-        const pId = await ctx.db.insert('projects', {
-          userId,
-          name: 'Test',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        await ctx.db.insert('entities', {
-          projectId: pId,
-          name: 'Jon Snow',
-          type: 'character',
-          aliases: ['Lord Snow', 'The White Wolf'],
-          status: 'confirmed',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-        });
-
-        return pId;
-      });
-
-      const similar = await asUser.query(api.entities.findSimilar, {
-        projectId,
-        name: 'Lord Snow',
-      });
-
-      expect(similar).toHaveLength(1);
-      expect(similar[0].name).toBe('Jon Snow');
-    });
-  });
-
-  describe('remove mutation', () => {
+  describe('remove', () => {
     it('only decrements factCount for non-rejected facts when cascading', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const { projectId, entityId } = await t.run(async (ctx) => {
@@ -1003,7 +544,7 @@ describe('entities', () => {
     });
 
     it('deletes entity and cascades to facts', async () => {
-      const t = convexTest(schema, modules);
+      const t = createTestContext();
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
       const { projectId, entityId, factId } = await t.run(async (ctx) => {
