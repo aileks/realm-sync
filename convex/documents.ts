@@ -1,8 +1,10 @@
 import { v } from 'convex/values';
-import type { MutationCtx, QueryCtx } from './_generated/server';
+import type { Doc, Id } from './_generated/dataModel';
+import type { MutationCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
-import type { Id } from './_generated/dataModel';
 import { getAuthUserId, requireAuth } from './lib/auth';
+import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
+import { unwrapOrThrow } from './lib/result';
 
 const contentTypeValidator = v.union(v.literal('text'), v.literal('markdown'), v.literal('file'));
 
@@ -18,23 +20,44 @@ function countWords(text: string): number {
 }
 
 async function verifyProjectOwnership(
-  ctx: QueryCtx | MutationCtx,
-  projectId: Id<'projects'>
-): Promise<boolean> {
-  const userId = await getAuthUserId(ctx);
-  if (!userId) return false;
-
+  ctx: MutationCtx,
+  projectId: Id<'projects'>,
+  userId: Id<'users'>
+): Promise<Result<Doc<'projects'>, AppError>> {
   const project = await ctx.db.get(projectId);
-  if (!project) return false;
+  if (!project) {
+    return err(notFoundError('project', projectId));
+  }
+  if (project.userId !== userId) {
+    return err(authError('UNAUTHORIZED', 'Unauthorized'));
+  }
+  return ok(project);
+}
 
-  return project.userId === userId;
+async function verifyDocumentAccess(
+  ctx: MutationCtx,
+  documentId: Id<'documents'>,
+  userId: Id<'users'>
+): Promise<Result<Doc<'documents'>, AppError>> {
+  const doc = await ctx.db.get(documentId);
+  if (!doc) {
+    return err(notFoundError('document', documentId));
+  }
+  const projectResult = await verifyProjectOwnership(ctx, doc.projectId, userId);
+  if (projectResult.isErr()) {
+    return err(projectResult.error);
+  }
+  return ok(doc);
 }
 
 export const list = query({
   args: { projectId: v.id('projects') },
   handler: async (ctx, { projectId }) => {
-    const isOwner = await verifyProjectOwnership(ctx, projectId);
-    if (!isOwner) return [];
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const project = await ctx.db.get(projectId);
+    if (!project || project.userId !== userId) return [];
 
     return await ctx.db
       .query('documents')
@@ -49,8 +72,11 @@ export const get = query({
     const doc = await ctx.db.get(id);
     if (!doc) return null;
 
-    const isOwner = await verifyProjectOwnership(ctx, doc.projectId);
-    if (!isOwner) return null;
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const project = await ctx.db.get(doc.projectId);
+    if (!project || project.userId !== userId) return null;
 
     return doc;
   },
@@ -65,12 +91,8 @@ export const create = mutation({
     contentType: contentTypeValidator,
   },
   handler: async (ctx, { projectId, title, content, storageId, contentType }) => {
-    await requireAuth(ctx);
-
-    const isOwner = await verifyProjectOwnership(ctx, projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized: Not project owner');
-    }
+    const userId = await requireAuth(ctx);
+    unwrapOrThrow(await verifyProjectOwnership(ctx, projectId, userId));
 
     const existingDocs = await ctx.db
       .query('documents')
@@ -122,17 +144,8 @@ export const update = mutation({
     contentType: v.optional(contentTypeValidator),
   },
   handler: async (ctx, { id, title, content, storageId, contentType }) => {
-    await requireAuth(ctx);
-
-    const doc = await ctx.db.get(id);
-    if (!doc) {
-      throw new Error('Document not found');
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, doc.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    unwrapOrThrow(await verifyDocumentAccess(ctx, id, userId));
 
     await ctx.db.patch(id, {
       updatedAt: Date.now(),
@@ -153,17 +166,8 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('documents') },
   handler: async (ctx, { id }) => {
-    await requireAuth(ctx);
-
-    const doc = await ctx.db.get(id);
-    if (!doc) {
-      throw new Error('Document not found');
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, doc.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    const doc = unwrapOrThrow(await verifyDocumentAccess(ctx, id, userId));
 
     if (doc.storageId) {
       await ctx.storage.delete(doc.storageId);
@@ -194,12 +198,8 @@ export const reorder = mutation({
     documentIds: v.array(v.id('documents')),
   },
   handler: async (ctx, { projectId, documentIds }) => {
-    await requireAuth(ctx);
-
-    const isOwner = await verifyProjectOwnership(ctx, projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    unwrapOrThrow(await verifyProjectOwnership(ctx, projectId, userId));
 
     for (let i = 0; i < documentIds.length; i++) {
       await ctx.db.patch(documentIds[i], { orderIndex: i });
@@ -215,17 +215,8 @@ export const updateProcessingStatus = mutation({
     status: processingStatusValidator,
   },
   handler: async (ctx, { id, status }) => {
-    await requireAuth(ctx);
-
-    const doc = await ctx.db.get(id);
-    if (!doc) {
-      throw new Error('Document not found');
-    }
-
-    const isOwner = await verifyProjectOwnership(ctx, doc.projectId);
-    if (!isOwner) {
-      throw new Error('Unauthorized');
-    }
+    const userId = await requireAuth(ctx);
+    unwrapOrThrow(await verifyDocumentAccess(ctx, id, userId));
 
     await ctx.db.patch(id, {
       processingStatus: status,
@@ -241,8 +232,11 @@ export const search = query({
     query: v.string(),
   },
   handler: async (ctx, { projectId, query: searchQuery }) => {
-    const isOwner = await verifyProjectOwnership(ctx, projectId);
-    if (!isOwner) return [];
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const project = await ctx.db.get(projectId);
+    if (!project || project.userId !== userId) return [];
 
     return await ctx.db
       .query('documents')
@@ -256,8 +250,11 @@ export const search = query({
 export const listNeedingReview = query({
   args: { projectId: v.id('projects') },
   handler: async (ctx, { projectId }) => {
-    const isOwner = await verifyProjectOwnership(ctx, projectId);
-    if (!isOwner) return [];
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const project = await ctx.db.get(projectId);
+    if (!project || project.userId !== userId) return [];
 
     const completedDocs = await ctx.db
       .query('documents')

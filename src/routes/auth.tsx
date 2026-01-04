@@ -12,6 +12,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
+type AuthErrorType = 'account_not_found' | 'invalid_credentials' | 'unknown';
+
+function classifyAuthError(error: unknown): AuthErrorType {
+  const message = error instanceof Error ? error.message : '';
+  if (message.includes('InvalidAccountId') || message.includes('Could not find')) {
+    return 'account_not_found';
+  }
+  if (message.includes('InvalidSecret') || message.includes('password')) {
+    return 'invalid_credentials';
+  }
+  return 'unknown';
+}
+
+function getAuthErrorMessage(errorType: AuthErrorType, mode: 'signin' | 'signup'): string {
+  switch (errorType) {
+    case 'account_not_found':
+      return mode === 'signin' ?
+          'Account not found. Please sign up first.'
+        : 'Failed to create account.';
+    case 'invalid_credentials':
+      return 'Invalid email or password.';
+    case 'unknown':
+      return 'Authentication failed. Please try again.';
+  }
+}
+
 export const Route = createFileRoute('/auth')({
   component: AuthPage,
 });
@@ -71,18 +97,7 @@ function AuthPage() {
 
         await signIn('password', formData);
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Authentication failed';
-        if (message.includes('InvalidAccountId') || message.includes('Could not find')) {
-          setError(
-            mode === 'signin' ?
-              'Account not found. Please sign up first.'
-            : 'Failed to create account.'
-          );
-        } else if (message.includes('InvalidSecret') || message.includes('password')) {
-          setError('Invalid email or password.');
-        } else {
-          setError(message);
-        }
+        setError(getAuthErrorMessage(classifyAuthError(err), mode));
       } finally {
         setIsLoading(false);
       }
@@ -100,8 +115,8 @@ function AuthPage() {
     setIsLoading(true);
     try {
       await signIn('google');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google authentication failed');
+    } catch {
+      setError('Google authentication failed. Please try again.');
       setIsLoading(false);
     }
   }

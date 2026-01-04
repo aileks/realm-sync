@@ -1,18 +1,18 @@
 import { getAuthUserId as convexGetAuthUserId } from '@convex-dev/auth/server';
-import type { Id } from '../_generated/dataModel';
+import type { Id, Doc } from '../_generated/dataModel';
 import type { MutationCtx, QueryCtx } from '../_generated/server';
 
-export async function getAuthUserId(ctx: QueryCtx | MutationCtx): Promise<Id<'users'> | null> {
+async function getAuthUserId(ctx: QueryCtx | MutationCtx): Promise<Id<'users'> | null> {
   return await convexGetAuthUserId(ctx);
 }
 
-export async function getCurrentUser(ctx: QueryCtx | MutationCtx) {
+async function getCurrentUser(ctx: QueryCtx | MutationCtx): Promise<Doc<'users'> | null> {
   const userId = await getAuthUserId(ctx);
   if (!userId) return null;
   return await ctx.db.get(userId);
 }
 
-export async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<Id<'users'>> {
+async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<Id<'users'>> {
   const userId = await getAuthUserId(ctx);
   if (!userId) {
     throw new Error('Unauthorized: Authentication required');
@@ -20,10 +20,12 @@ export async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<Id<'user
   return userId;
 }
 
-export async function requireAuthUser(ctx: QueryCtx | MutationCtx) {
+async function requireAuthUser(ctx: QueryCtx | MutationCtx): Promise<Doc<'users'>> {
   const user = await getCurrentUser(ctx);
   if (!user) {
     throw new Error('Unauthorized: Authentication required');
   }
   return user;
 }
+
+export { getAuthUserId, getCurrentUser, requireAuth, requireAuthUser };

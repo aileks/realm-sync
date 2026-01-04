@@ -402,7 +402,7 @@ describe('entities', () => {
       });
 
       await expect(asUser.mutation(api.entities.merge, { sourceId, targetId })).rejects.toThrow(
-        /same project/i
+        /different projects/i
       );
     });
   });

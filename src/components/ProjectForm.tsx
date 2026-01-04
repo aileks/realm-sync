@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import type { Doc, Id } from '../../convex/_generated/dataModel';
+import { formatError } from '@/lib/utils';
 
 type Project = Doc<'projects'>;
 
@@ -49,7 +50,7 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
         onSuccess?.(projectId);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save project');
+      setError(formatError(err));
     } finally {
       setIsLoading(false);
     }

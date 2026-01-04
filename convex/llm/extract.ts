@@ -3,6 +3,8 @@ import { api, internal } from '../_generated/api';
 import { v } from 'convex/values';
 import type { Id } from '../_generated/dataModel';
 import { chunkDocument, needsChunking, mapEvidenceToDocument, type Chunk } from './chunk';
+import { err, apiError, notFoundError } from '../lib/errors';
+import { unwrapOrThrow, safeJsonParse } from '../lib/result';
 
 export const PROMPT_VERSION = 'v1';
 
@@ -78,7 +80,7 @@ export const EXTRACTION_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-interface ExtractionResult {
+type ExtractionResult = {
   entities: Array<{
     name: string;
     type: 'character' | 'location' | 'item' | 'concept' | 'event';
@@ -111,7 +113,7 @@ interface ExtractionResult {
       end: number;
     };
   }>;
-}
+};
 
 async function callLLM(content: string, apiKey: string, model: string): Promise<ExtractionResult> {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -141,24 +143,23 @@ async function callLLM(content: string, apiKey: string, model: string): Promise<
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(
-      `OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`
+    unwrapOrThrow(
+      err(apiError(response.status, `OpenRouter API error: ${response.statusText} - ${errorText}`))
     );
   }
 
   const data = await response.json();
   if (!data.choices?.[0]?.message?.content) {
-    throw new Error('Invalid response from OpenRouter API');
+    unwrapOrThrow(err(apiError(500, 'Invalid response from OpenRouter API')));
   }
 
   let llmResponse = data.choices[0].message.content.trim();
 
-  // Strip markdown code blocks: ```json\n{...}\n``` → {...}
   if (llmResponse.startsWith('```')) {
     llmResponse = llmResponse.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
   }
 
-  const parsed = JSON.parse(llmResponse);
+  const parsed = unwrapOrThrow(safeJsonParse(llmResponse));
   return normalizeExtractionResult(parsed);
 }
 
@@ -468,7 +469,8 @@ export const processExtractionResult = internalMutation({
   handler: async (ctx, { documentId, result }) => {
     const doc = await ctx.db.get(documentId);
     if (!doc) {
-      throw new Error('Document not found');
+      unwrapOrThrow(err(notFoundError('document', documentId)));
+      throw new Error('unreachable');
     }
 
     const projectId = doc.projectId;
