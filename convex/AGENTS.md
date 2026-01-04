@@ -1,3 +1,7 @@
+---
+read_when: working on Convex backend (database, functions, auth)
+---
+
 # convex/
 
 **Scope:** Real-time backend—database, server functions, subscriptions

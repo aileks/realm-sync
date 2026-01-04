@@ -1,3 +1,7 @@
+---
+read_when: working on UI components or adding new UI primitives
+---
+
 # src/components/ui/
 
 **Scope:** 15 Shadcn-style primitives built on @base-ui/react + CVA

@@ -1,4 +1,10 @@
+---
+read_when: starting any work on this codebase
+---
+
 # PROJECT KNOWLEDGE BASE
+
+**Generated:** 2026-01-03 **Last Updated:** See git history
 
 Be extremely concise. Sacrifice grammar for concision.
 
@@ -57,12 +63,13 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 
 - **Types**: Use types over interfaces unless an interface is explicitly need; use a comment for explanation/justification
 - **Runtime**: `pnpm` exclusively
+- **Linter**: Oxlint (not ESLint) - oxc parser, error-level rules block `as any` and `@ts-ignore`
 - **Path aliases**: `@/*` → `./src/*` (but Convex uses relative `../../convex/_generated/api`)
 - **Routing**: Underscore-escaped filenames for nested routes (`projects_.$projectId_.documents.tsx` → `/projects/:projectId/documents`); `_.` escapes prevent folder nesting
 - **Typography**: DM Sans (body), Aleo (headings), iA Writer Mono (code)
 - **Colors**: OKLCH exclusively; 3 themes: default, twilight-study, amber-archive
 - **UI primitives**: @base-ui/react + CVA variants + `data-slot` attributes
-- **Styling**: Always use `cn()` for class merging
+- **Styling**: Always use `cn()` for Tailwind conflict resolution
 - **Components**: Named exports only; no default exports in ui/
 - **Error handling**: NeverThrow for Result pattern; avoid try/catch
 - **Server functions**: Wrap with `Sentry.startSpan({ name: '...' }, async () => {...})`
@@ -77,11 +84,15 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | `createServerFn` without Sentry  | Must wrap with `Sentry.startSpan`           |
 | Custom UI when Shadcn provides   | Use 15 existing primitives                  |
 | Direct class strings             | Use `cn()` for Tailwind conflict resolution |
-| `as any`, `@ts-ignore`           | Error-level lint rule                       |
+| `as any`, `@ts-ignore`           | Error-level lint rule (Oxlint)              |
+| `@ts-expect-error`               | Prefer proper types over silencing errors   |
 | Empty catch blocks               | Oxlint blocks these                         |
+| Silent failures                  | Throw explicit errors                       |
 | npm/yarn                         | pnpm only (frozen lockfile in CI)           |
 | index.html or main.tsx           | TanStack Start handles entry                |
 | Indices on `_id`/`_creationTime` | Convex auto-handles                         |
+| `getAuthUserId` in mutations     | Use `requireAuth` instead                   |
+| Validation in handler (not args) | Use `v` validators in Convex args           |
 
 ## COMMANDS
 
@@ -90,11 +101,20 @@ pnpm dev              # Dev server (port 3000, Sentry injected)
 pnpm run build        # Production build
 pnpm run start        # Production server
 pnpm test             # Vitest (94 tests)
-pnpm run lint         # Oxlint with --fix
+pnpm run lint         # Oxlint with --fix, --type-aware
 pnpm run typecheck    # tsc --noEmit
-pnpm run format       # Prettier
+pnpm run format       # Prettier (with Tailwind plugin)
 pnpm docs:list        # List docs with front-matter check
 ```
+
+## CI/CD
+
+4 parallel jobs (Ubuntu latest, Node.js 20):
+
+1. **Lint** - oxlint --fix
+2. **Type Check** - tsc --noEmit
+3. **Test** - vitest run
+4. **Build** - vite build
 
 ## CURRENT STATE
 

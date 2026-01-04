@@ -7,7 +7,7 @@
   },
   "rules": {
     "typescript/consistent-type-imports": "error",
-    "typescript/consistent-type-definitions": "error",
+    "typescript/consistent-type-definitions": ["error", "type"],
     "typescript/tsconfig-error": "off",
     "typescript/no-explicit-any": "error",
     "typescript/no-unused-vars": "error",
