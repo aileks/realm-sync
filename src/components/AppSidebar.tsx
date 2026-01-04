@@ -37,7 +37,7 @@ type AppSidebarProps = {
 };
 
 const THEMES = [
-  { id: 'default', name: 'Book Nook', icon: Laptop },
+  { id: 'default', name: 'Fireside', icon: Laptop },
   { id: 'twilight', name: 'Twilight', icon: Moon },
   { id: 'daylight', name: 'Daylight', icon: Sun },
 ] as const;
