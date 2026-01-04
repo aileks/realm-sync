@@ -1,6 +1,13 @@
 ---
 summary: Implementation details for the continuity checking system (Conflict detection, Vellum alerts).
-read_when: [continuity checking, conflict resolution, LLM alert generation, Vellum messaging, chat]
+read_when:
+  [
+    continuity checking,
+    conflict resolution,
+    LLM alert generation,
+    Vellum messaging,
+    chat,
+  ]
 ---
 
 # Phase 4: Continuity Checking - Realm Sync
@@ -51,11 +58,15 @@ Before building the full continuity checking system, we implemented a dev chat i
 // Streaming chat with persistent text streaming
 import { PersistentTextStreaming } from '@convex-dev/persistent-text-streaming';
 
-const streaming = new PersistentTextStreaming(components.persistentTextStreaming);
+const streaming = new PersistentTextStreaming(
+  components.persistentTextStreaming
+);
 
 // 1. Create stream (mutation)
 export const createStreamingChat = mutation({
-  args: { messages: v.array(v.object({ role: v.string(), content: v.string() })) },
+  args: {
+    messages: v.array(v.object({ role: v.string(), content: v.string() })),
+  },
   handler: async (ctx, { messages }) => {
     const streamId = await streaming.createStream(ctx);
     return { streamId, messages };
@@ -68,9 +79,12 @@ export const streamChat = httpAction(async (ctx, request) => {
 
   const generateChat = async (ctx, request, streamId, appendChunk) => {
     // Call OpenRouter with streaming enabled
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      body: JSON.stringify({ model, messages: apiMessages, stream: true }),
-    });
+    const response = await fetch(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        body: JSON.stringify({ model, messages: apiMessages, stream: true }),
+      }
+    );
 
     // Parse SSE and append chunks (library auto-batches at sentence boundaries)
     for await (const chunk of parseSSE(response)) {

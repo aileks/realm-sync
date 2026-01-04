@@ -8,5 +8,13 @@
   "git": true,
   "version": 1,
   "framework": "react-cra",
-  "chosenAddOns": ["nitro", "start", "convex", "sentry", "compiler", "form", "t3env"]
+  "chosenAddOns": [
+    "nitro",
+    "start",
+    "convex",
+    "sentry",
+    "compiler",
+    "form",
+    "t3env"
+  ]
 }

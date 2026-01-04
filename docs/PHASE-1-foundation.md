@@ -1,6 +1,7 @@
 ---
 summary: Implementation details for the foundation phase (Schema, Auth, CRUD).
-read_when: [database setup, authentication implementation, core project structure]
+read_when:
+  [database setup, authentication implementation, core project structure]
 ---
 
 # Phase 1: Foundation - Realm Sync
@@ -32,11 +33,11 @@ Phase 1 establishes all 8 tables: `users`, `projects`, `documents`, `notes`, `en
 
 Key tables for Phase 1:
 
-| Table       | Purpose                       | Key Indexes                       |
-| ----------- | ----------------------------- | --------------------------------- |
-| `users`     | Extended from Convex Auth     | `by_email`                        |
-| `projects`  | User-owned project containers | `by_user` (userId, updatedAt)     |
-| `documents` | Source text with processing   | `by_project`, `by_project_status` |
+| Table | Purpose | Key Indexes |
+| --- | --- | --- |
+| `users` | Extended from Convex Auth | `by_email` |
+| `projects` | User-owned project containers | `by_user` (userId, updatedAt) |
+| `documents` | Source text with processing | `by_project`, `by_project_status` |
 
 ---
 

@@ -61,11 +61,17 @@ export const chunkAndExtract = action({
     });
 
     try {
-      const result = await ctx.runAction(internal.llm.extract.extractFromDocument, { documentId });
-      return await ctx.runMutation(internal.llm.extract.processExtractionResult, {
-        documentId,
-        result,
-      });
+      const result = await ctx.runAction(
+        internal.llm.extract.extractFromDocument,
+        { documentId }
+      );
+      return await ctx.runMutation(
+        internal.llm.extract.processExtractionResult,
+        {
+          documentId,
+          result,
+        }
+      );
     } catch (error) {
       await ctx.runMutation(api.documents.updateProcessingStatus, {
         id: documentId,
@@ -108,7 +114,11 @@ export const extractFromDocument = internalAction({
       for (const chunk of chunks) {
         // Per-chunk caching + extraction
         const chunkResult = await callLLM(chunk.text, apiKey, model);
-        const adjusted = adjustEvidencePositions(chunkResult, chunk, doc.content);
+        const adjusted = adjustEvidencePositions(
+          chunkResult,
+          chunk,
+          doc.content
+        );
         chunkResults.push(adjusted);
       }
       return mergeExtractionResults(chunkResults);
@@ -124,34 +134,47 @@ export const extractFromDocument = internalAction({
 The `callLLM` function handles markdown-wrapped responses from some models:
 
 ````typescript
-async function callLLM(content: string, apiKey: string, model: string): Promise<ExtractionResult> {
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://realmsync.app',
-      'X-Title': 'Realm Sync',
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: VELLUM_SYSTEM_PROMPT },
-        { role: 'user', content },
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: { name: 'canon_extraction', strict: true, schema: EXTRACTION_SCHEMA },
+async function callLLM(
+  content: string,
+  apiKey: string,
+  model: string
+): Promise<ExtractionResult> {
+  const response = await fetch(
+    'https://openrouter.ai/api/v1/chat/completions',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://realmsync.app',
+        'X-Title': 'Realm Sync',
       },
-    }),
-  });
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: VELLUM_SYSTEM_PROMPT },
+          { role: 'user', content },
+        ],
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'canon_extraction',
+            strict: true,
+            schema: EXTRACTION_SCHEMA,
+          },
+        },
+      }),
+    }
+  );
 
   const data = await response.json();
   let llmResponse = data.choices[0].message.content.trim();
 
   // Strip markdown code blocks: ```json\n{...}\n``` → {...}
   if (llmResponse.startsWith('```')) {
-    llmResponse = llmResponse.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+    llmResponse = llmResponse
+      .replace(/^```(?:json)?\s*\n?/, '')
+      .replace(/\n?```\s*$/, '');
   }
 
   return JSON.parse(llmResponse);
@@ -220,7 +243,14 @@ const EXTRACTION_SCHEMA = {
             },
           },
         },
-        required: ['entityName', 'subject', 'predicate', 'object', 'confidence', 'evidence'],
+        required: [
+          'entityName',
+          'subject',
+          'predicate',
+          'object',
+          'confidence',
+          'evidence',
+        ],
         additionalProperties: false,
       },
     },
@@ -234,7 +264,12 @@ const EXTRACTION_SCHEMA = {
           relationshipType: { type: 'string' },
           evidence: { type: 'string' },
         },
-        required: ['sourceEntity', 'targetEntity', 'relationshipType', 'evidence'],
+        required: [
+          'sourceEntity',
+          'targetEntity',
+          'relationshipType',
+          'evidence',
+        ],
         additionalProperties: false,
       },
     },
@@ -301,10 +336,10 @@ await ctx.runMutation(internal.llm.cache.saveToCache, {
 
 ### LLM Pipeline (`convex/llm/extract.ts`)
 
-| Function                  | Type             | Description                               |
-| ------------------------- | ---------------- | ----------------------------------------- |
-| `chunkAndExtract`         | action (public)  | Entry point for frontend; handles status  |
-| `extractFromDocument`     | internalAction   | Orchestrates chunking, caching, LLM calls |
+| Function | Type | Description |
+| --- | --- | --- |
+| `chunkAndExtract` | action (public) | Entry point for frontend; handles status |
+| `extractFromDocument` | internalAction | Orchestrates chunking, caching, LLM calls |
 | `processExtractionResult` | internalMutation | Saves entities/facts to DB, updates stats |
 
 ### Cache Management (`convex/llm/cache.ts`)
@@ -317,12 +352,12 @@ await ctx.runMutation(internal.llm.cache.saveToCache, {
 
 ### Chunking (`convex/llm/chunk.ts`)
 
-| Function                | Type     | Description                                 |
-| ----------------------- | -------- | ------------------------------------------- |
-| `chunkDocument`         | function | Split content into overlapping chunks       |
-| `needsChunking`         | function | Check if content exceeds max chunk size     |
+| Function | Type | Description |
+| --- | --- | --- |
+| `chunkDocument` | function | Split content into overlapping chunks |
+| `needsChunking` | function | Check if content exceeds max chunk size |
 | `mapEvidenceToDocument` | function | Map evidence positions to original document |
-| `getChunks`             | query    | Expose chunking for testing/debugging       |
+| `getChunks` | query | Expose chunking for testing/debugging |
 
 ### Entities (`convex/entities.ts`)
 
@@ -384,10 +419,10 @@ await ctx.runMutation(internal.llm.cache.saveToCache, {
 
 ### Routes
 
-| Route                              | Component       | Purpose                       |
-| ---------------------------------- | --------------- | ----------------------------- |
-| `/projects/:id/review`             | Layout          | Review section container      |
-| `/projects/:id/review/`            | Index           | List documents needing review |
+| Route | Component | Purpose |
+| --- | --- | --- |
+| `/projects/:id/review` | Layout | Review section container |
+| `/projects/:id/review/` | Index | List documents needing review |
 | `/projects/:id/review/:documentId` | Document Review | Review entities/facts for doc |
 
 ### Features
@@ -410,21 +445,23 @@ pending → processing → completed
 
 ### Error Recovery (PR #9)
 
-| Scenario                       | Behavior                                          |
-| ------------------------------ | ------------------------------------------------- |
-| Extraction fails               | Status set to `failed`, error toast shown         |
-| Failed document                | Red "Retry" button, can re-trigger extraction     |
-| Stuck in processing            | "Reset" button after 2 minutes, resets to pending |
-| Markdown-wrapped JSON          | Automatically stripped before parsing             |
-| Missing arrays in LLM response | Defensive `?? []` fallbacks                       |
-| Extra entity fields            | Stripped during normalization (e.g. confidence)   |
-| Array-based evidence           | Joined into string during normalization           |
+| Scenario | Behavior |
+| --- | --- |
+| Extraction fails | Status set to `failed`, error toast shown |
+| Failed document | Red "Retry" button, can re-trigger extraction |
+| Stuck in processing | "Reset" button after 2 minutes, resets to pending |
+| Markdown-wrapped JSON | Automatically stripped before parsing |
+| Missing arrays in LLM response | Defensive `?? []` fallbacks |
+| Extra entity fields | Stripped during normalization (e.g. confidence) |
+| Array-based evidence | Joined into string during normalization |
 
 ### Frontend Toast Notifications
 
 ```typescript
 // On extraction start
-toast.info('Extraction started', { description: "You'll be notified when it finishes." });
+toast.info('Extraction started', {
+  description: "You'll be notified when it finishes.",
+});
 
 // On success
 toast.success('Extraction complete', {

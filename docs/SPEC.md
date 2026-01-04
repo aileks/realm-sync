@@ -7,23 +7,23 @@ read_when: starting any work on this codebase
 
 ## Technical Stack
 
-| Component          | Technology       | Version  | Purpose                                |
-| ------------------ | ---------------- | -------- | -------------------------------------- |
-| **Framework**      | TanStack Start   | ^1.132.0 | React 19 + SSR via Nitro               |
-| **Runtime**        | pnpm             | latest   | Package manager                        |
-| **Backend**        | Convex           | ^1.27.3  | Database, Functions, Auth, Storage     |
-| **LLM Provider**   | OpenRouter       | latest   | `tngtech/deepseek-r1t2-chimera:free`   |
-| **Error Handling** | NeverThrow       | latest   | Type-safe Result pattern               |
-| **Styling**        | Tailwind CSS     | ^4.0.6   | CSS-first, OKLCH colors                |
-| **UI Components**  | Shadcn / Base UI | latest   | 17 primitives                          |
-| **Monitoring**     | Sentry           | ^10.22.0 | Error tracking + instrumentation       |
-| **Fonts**          | Fontsource       | latest   | DM Sans, Aleo Variable, iA Writer Mono |
-| **State**          | TanStack Query   | ^1.0.0   | React Query for data fetching          |
-| **Form State**     | TanStack Form    | ^1.0.0   | Form management                        |
-| **Router**         | TanStack Router  | ^1.132.0 | File-based routing                     |
-| **Validation**     | Zod              | ^4.1.11  | Runtime validation                     |
-| **Testing**        | Vitest           | ^3.2.4   | Unit + integration tests               |
-| **Markdown**       | marked           | ^17.0.1  | Markdown rendering                     |
+| Component | Technology | Version | Purpose |
+| --- | --- | --- | --- |
+| **Framework** | TanStack Start | ^1.132.0 | React 19 + SSR via Nitro |
+| **Runtime** | pnpm | latest | Package manager |
+| **Backend** | Convex | ^1.27.3 | Database, Functions, Auth, Storage |
+| **LLM Provider** | OpenRouter | latest | `tngtech/deepseek-r1t2-chimera:free` |
+| **Error Handling** | NeverThrow | latest | Type-safe Result pattern |
+| **Styling** | Tailwind CSS | ^4.0.6 | CSS-first, OKLCH colors |
+| **UI Components** | Shadcn / Base UI | latest | 17 primitives |
+| **Monitoring** | Sentry | ^10.22.0 | Error tracking + instrumentation |
+| **Fonts** | Fontsource | latest | DM Sans, Aleo Variable, iA Writer Mono |
+| **State** | TanStack Query | ^1.0.0 | React Query for data fetching |
+| **Form State** | TanStack Form | ^1.0.0 | Form management |
+| **Router** | TanStack Router | ^1.132.0 | File-based routing |
+| **Validation** | Zod | ^4.1.11 | Runtime validation |
+| **Testing** | Vitest | ^3.2.4 | Unit + integration tests |
+| **Markdown** | marked | ^17.0.1 | Markdown rendering |
 
 ---
 
@@ -383,7 +383,11 @@ export const create = mutation({
     projectId: v.id('projects'),
     title: v.string(),
     content: v.optional(v.string()),
-    contentType: v.union(v.literal('text'), v.literal('markdown'), v.literal('file')),
+    contentType: v.union(
+      v.literal('text'),
+      v.literal('markdown'),
+      v.literal('file')
+    ),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -416,7 +420,8 @@ export const update = mutation({
     const doc = await ctx.db.get(documentId);
     if (!doc) throw new Error('Document not found');
 
-    const wordCount = updates.content ? updates.content.split(/\s+/).length : doc.wordCount;
+    const wordCount =
+      updates.content ? updates.content.split(/\s+/).length : doc.wordCount;
 
     return await ctx.db.patch(documentId, {
       ...updates,
@@ -568,30 +573,33 @@ export const extractFromDocument = internalAction({
     const chunks = chunkDocument(doc.content, 3000, 200);
 
     // 4. Call OpenRouter
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://realmsync.app',
-        'X-Title': 'Realm Sync',
-      },
-      body: JSON.stringify({
-        model: 'tngtech/deepseek-r1t2-chimera:free',
-        messages: [
-          { role: 'system', content: Vellum_SYSTEM_PROMPT },
-          { role: 'user', content: chunks[0] },
-        ],
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'canon_extraction',
-            strict: true,
-            schema: EXTRACTION_SCHEMA,
-          },
+    const response = await fetch(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://realmsync.app',
+          'X-Title': 'Realm Sync',
         },
-      }),
-    });
+        body: JSON.stringify({
+          model: 'tngtech/deepseek-r1t2-chimera:free',
+          messages: [
+            { role: 'system', content: Vellum_SYSTEM_PROMPT },
+            { role: 'user', content: chunks[0] },
+          ],
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'canon_extraction',
+              strict: true,
+              schema: EXTRACTION_SCHEMA,
+            },
+          },
+        }),
+      }
+    );
 
     const data = await response.json();
     const result = JSON.parse(data.choices[0].message.content);
@@ -665,7 +673,14 @@ const EXTRACTION_SCHEMA = {
             },
           },
         },
-        required: ['entityName', 'subject', 'predicate', 'object', 'confidence', 'evidence'],
+        required: [
+          'entityName',
+          'subject',
+          'predicate',
+          'object',
+          'confidence',
+          'evidence',
+        ],
         additionalProperties: false,
       },
     },
@@ -679,7 +694,12 @@ const EXTRACTION_SCHEMA = {
           relationshipType: { type: 'string' },
           evidence: { type: 'string' },
         },
-        required: ['sourceEntity', 'targetEntity', 'relationshipType', 'evidence'],
+        required: [
+          'sourceEntity',
+          'targetEntity',
+          'relationshipType',
+          'evidence',
+        ],
         additionalProperties: false,
       },
     },
@@ -720,24 +740,31 @@ export const runCheck = internalAction({
     });
 
     // 3. Call LLM with check prompt
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'tngtech/deepseek-r1t2-chimera:free',
-        messages: [
-          { role: 'system', content: CHECK_SYSTEM_PROMPT },
-          { role: 'user', content: context },
-        ],
-        response_format: {
-          type: 'json_schema',
-          json_schema: { name: 'continuity_check', strict: true, schema: CHECK_SCHEMA },
+    const response = await fetch(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
         },
-      }),
-    });
+        body: JSON.stringify({
+          model: 'tngtech/deepseek-r1t2-chimera:free',
+          messages: [
+            { role: 'system', content: CHECK_SYSTEM_PROMPT },
+            { role: 'user', content: context },
+          ],
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'continuity_check',
+              strict: true,
+              schema: CHECK_SCHEMA,
+            },
+          },
+        }),
+      }
+    );
 
     const data = await response.json();
     const result = JSON.parse(data.choices[0].message.content);

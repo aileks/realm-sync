@@ -5,7 +5,7 @@ read_when: [testing, integration, unit, end-to-end, regression]
 
 # Testing Strategy
 
-**Status:** Ready for Implementation **Coverage Target:** 80% (Unit + Integration) **E2E/Visual:** Deferred until MVP **Current Test Count:** 168 passing
+**Status:** Ready for Implementation **Coverage Target:** 80% (Unit + Integration) **E2E/Visual:** Deferred until MVP **Current Test Count:** 173 passing
 
 **_FOLLOW TDD! TEST BEHAVIOR, NOT IMPLEMENTATION!_**
 
@@ -433,7 +433,8 @@ describe('FormExample', () => {
 // ✅ GOOD - Test behavior
 it('toggles completed status', async () => {
   const id = await t.run(
-    async (ctx) => await ctx.db.insert('todos', { text: 'Task', completed: false })
+    async (ctx) =>
+      await ctx.db.insert('todos', { text: 'Task', completed: false })
   );
 
   await t.mutation(api.todos.toggle, { id });

@@ -28,6 +28,7 @@ import { Route as ProjectsProjectIdCanonIndexRouteImport } from './routes/projec
 import { Route as ProjectsProjectIdReviewDocumentIdRouteImport } from './routes/projects_.$projectId_.review.$documentId'
 import { Route as ProjectsProjectIdDocumentsNewRouteImport } from './routes/projects_.$projectId_.documents.new'
 import { Route as ProjectsProjectIdDocumentsDocumentIdRouteImport } from './routes/projects_.$projectId_.documents.$documentId'
+import { Route as ProjectsProjectIdCanonTimelineRouteImport } from './routes/projects_.$projectId_.canon.timeline'
 import { Route as ProjectsProjectIdCanonSearchRouteImport } from './routes/projects_.$projectId_.canon.search'
 
 const ProjectsRoute = ProjectsRouteImport.update({
@@ -133,6 +134,12 @@ const ProjectsProjectIdDocumentsDocumentIdRoute =
     path: '/$documentId',
     getParentRoute: () => ProjectsProjectIdDocumentsRoute,
   } as any)
+const ProjectsProjectIdCanonTimelineRoute =
+  ProjectsProjectIdCanonTimelineRouteImport.update({
+    id: '/timeline',
+    path: '/timeline',
+    getParentRoute: () => ProjectsProjectIdCanonRoute,
+  } as any)
 const ProjectsProjectIdCanonSearchRoute =
   ProjectsProjectIdCanonSearchRouteImport.update({
     id: '/search',
@@ -155,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/facts': typeof ProjectsProjectIdFactsRoute
   '/projects/$projectId/review': typeof ProjectsProjectIdReviewRouteWithChildren
   '/projects/$projectId/canon/search': typeof ProjectsProjectIdCanonSearchRoute
+  '/projects/$projectId/canon/timeline': typeof ProjectsProjectIdCanonTimelineRoute
   '/projects/$projectId/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects/$projectId/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
   '/projects/$projectId/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
@@ -174,6 +182,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/entities': typeof ProjectsProjectIdEntitiesRoute
   '/projects/$projectId/facts': typeof ProjectsProjectIdFactsRoute
   '/projects/$projectId/canon/search': typeof ProjectsProjectIdCanonSearchRoute
+  '/projects/$projectId/canon/timeline': typeof ProjectsProjectIdCanonTimelineRoute
   '/projects/$projectId/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects/$projectId/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
   '/projects/$projectId/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
@@ -197,6 +206,7 @@ export interface FileRoutesById {
   '/projects_/$projectId_/facts': typeof ProjectsProjectIdFactsRoute
   '/projects_/$projectId_/review': typeof ProjectsProjectIdReviewRouteWithChildren
   '/projects_/$projectId_/canon/search': typeof ProjectsProjectIdCanonSearchRoute
+  '/projects_/$projectId_/canon/timeline': typeof ProjectsProjectIdCanonTimelineRoute
   '/projects_/$projectId_/documents/$documentId': typeof ProjectsProjectIdDocumentsDocumentIdRoute
   '/projects_/$projectId_/documents/new': typeof ProjectsProjectIdDocumentsNewRoute
   '/projects_/$projectId_/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/facts'
     | '/projects/$projectId/review'
     | '/projects/$projectId/canon/search'
+    | '/projects/$projectId/canon/timeline'
     | '/projects/$projectId/documents/$documentId'
     | '/projects/$projectId/documents/new'
     | '/projects/$projectId/review/$documentId'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/entities'
     | '/projects/$projectId/facts'
     | '/projects/$projectId/canon/search'
+    | '/projects/$projectId/canon/timeline'
     | '/projects/$projectId/documents/$documentId'
     | '/projects/$projectId/documents/new'
     | '/projects/$projectId/review/$documentId'
@@ -262,6 +274,7 @@ export interface FileRouteTypes {
     | '/projects_/$projectId_/facts'
     | '/projects_/$projectId_/review'
     | '/projects_/$projectId_/canon/search'
+    | '/projects_/$projectId_/canon/timeline'
     | '/projects_/$projectId_/documents/$documentId'
     | '/projects_/$projectId_/documents/new'
     | '/projects_/$projectId_/review/$documentId'
@@ -421,6 +434,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdDocumentsDocumentIdRouteImport
       parentRoute: typeof ProjectsProjectIdDocumentsRoute
     }
+    '/projects_/$projectId_/canon/timeline': {
+      id: '/projects_/$projectId_/canon/timeline'
+      path: '/timeline'
+      fullPath: '/projects/$projectId/canon/timeline'
+      preLoaderRoute: typeof ProjectsProjectIdCanonTimelineRouteImport
+      parentRoute: typeof ProjectsProjectIdCanonRoute
+    }
     '/projects_/$projectId_/canon/search': {
       id: '/projects_/$projectId_/canon/search'
       path: '/search'
@@ -433,12 +453,14 @@ declare module '@tanstack/react-router' {
 
 interface ProjectsProjectIdCanonRouteChildren {
   ProjectsProjectIdCanonSearchRoute: typeof ProjectsProjectIdCanonSearchRoute
+  ProjectsProjectIdCanonTimelineRoute: typeof ProjectsProjectIdCanonTimelineRoute
   ProjectsProjectIdCanonIndexRoute: typeof ProjectsProjectIdCanonIndexRoute
 }
 
 const ProjectsProjectIdCanonRouteChildren: ProjectsProjectIdCanonRouteChildren =
   {
     ProjectsProjectIdCanonSearchRoute: ProjectsProjectIdCanonSearchRoute,
+    ProjectsProjectIdCanonTimelineRoute: ProjectsProjectIdCanonTimelineRoute,
     ProjectsProjectIdCanonIndexRoute: ProjectsProjectIdCanonIndexRoute,
   }
 

@@ -93,12 +93,12 @@ export const Route = createFileRoute('/projects_.$projectId')({
 
 ## ANTI-PATTERNS
 
-| Forbidden                      | Why                                             |
-| ------------------------------ | ----------------------------------------------- |
-| Edit `routeTree.gen.ts`        | Auto-generated, overwritten on route change     |
-| Folder nesting for routes      | Use underscore escape pattern instead           |
+| Forbidden | Why |
+| --- | --- |
+| Edit `routeTree.gen.ts` | Auto-generated, overwritten on route change |
+| Folder nesting for routes | Use underscore escape pattern instead |
 | Default export of Route object | Use `export const Route = createFileRoute(...)` |
-| Direct routing to functions    | Use TanStack Router's navigate()                |
+| Direct routing to functions | Use TanStack Router's navigate() |
 
 ## NOTES
 
