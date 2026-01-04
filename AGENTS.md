@@ -58,6 +58,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | `env` | `src/env.ts` | Type-safe env (server: SERVER*URL; client: VITE*\*) |
 | `cn` | `src/lib/utils.ts` | Tailwind class merging (clsx + twMerge) |
 | `toId` | `src/lib/utils.ts` | Type-safe Convex ID conversion |
+| `ReviewEntityCard` | `src/components/ReviewEntityCard.tsx` | EntityCard wrapper with merge suggestions |
 
 ## CONVENTIONS
 
@@ -141,6 +142,7 @@ pnpm docs:list        # List docs with front-matter check
 | Monitoring | Sentry                    | 10.22.0 |
 | Testing    | Vitest + convex-test      | 3.2.4   |
 | Linting    | Oxlint                    | 1.36.0  |
+| Markdown   | marked                    | 17.0.1  |
 
 ## NOTES
 

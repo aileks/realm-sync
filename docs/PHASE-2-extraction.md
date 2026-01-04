@@ -23,7 +23,7 @@ Phase 2 focuses on the LLM-powered pipeline that extracts entities, facts, and r
 | 2.4 Document Chunking                            | ✅ Complete | #5  |
 | 2.5 Extraction Review UI                         | ✅ Complete | #7  |
 | 2.6 Error Handling & Recovery                    | ✅ Complete | #9  |
-| 2.7 Entity Merging UI                            | ⏳ Pending  | -   |
+| 2.7 Entity Merging UI                            | ✅ Complete | #11 |
 
 ---
 
@@ -37,7 +37,7 @@ Phase 2 focuses on the LLM-powered pipeline that extracts entities, facts, and r
 - ✅ Build extraction review UI.
 - ✅ Implement entity merging/aliasing (backend).
 - ✅ Add toast notifications and error recovery.
-- ⏳ Build entity merging UI.
+- ✅ Build entity merging UI.
 
 ---
 
@@ -417,6 +417,8 @@ pending → processing → completed
 | Stuck in processing            | "Reset" button after 2 minutes, resets to pending |
 | Markdown-wrapped JSON          | Automatically stripped before parsing             |
 | Missing arrays in LLM response | Defensive `?? []` fallbacks                       |
+| Extra entity fields            | Stripped during normalization (e.g. confidence)   |
+| Array-based evidence           | Joined into string during normalization           |
 
 ### Frontend Toast Notifications
 

@@ -19,19 +19,21 @@ components/
 ├── FactCard.tsx         # Fact display card
 ├── LoadingState.tsx      # Loading spinner/skeleton
 ├── ProjectCard.tsx       # Project display card
+├── ProjectForm.tsx       # Project creation/editing form
+├── ReviewEntityCard.tsx  # Entity card wrapper for merge review
 └── ui/                  # UI primitives (17 Shadcn/Base components)
     └── AGENTS.md        # See ui/AGENTS.md for UI component patterns
 ```
 
 ## WHERE TO LOOK
 
-| Task             | Location         | Notes                                 |
-| ---------------- | ---------------- | ------------------------------------- |
-| App shell layout | `AppLayout.tsx`  | Wraps all pages with sidebar          |
-| Navigation       | `AppSidebar.tsx` | Project list + navigation links       |
-| Display cards    | `*Card.tsx`      | Document, Entity, Fact, Project cards |
-| Forms            | `*Form.tsx`      | DocumentForm, ProjectForm             |
-| UI primitives    | `ui/`            | Button, Card, Input, etc.             |
+| Task             | Location         | Notes                                               |
+| ---------------- | ---------------- | --------------------------------------------------- |
+| App shell layout | `AppLayout.tsx`  | Wraps all pages with sidebar                        |
+| Navigation       | `AppSidebar.tsx` | Project list + navigation links                     |
+| Display cards    | `*Card.tsx`      | Document, Entity, Fact, Project, ReviewEntity cards |
+| Forms            | `*Form.tsx`      | DocumentForm, ProjectForm                           |
+| UI primitives    | `ui/`            | Button, Card, Input, etc.                           |
 
 ## CONVENTIONS
 

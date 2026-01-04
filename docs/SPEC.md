@@ -1,3 +1,8 @@
+---
+summary: Technical specification for the Realm Sync project.
+read_when: starting any work on this codebase
+---
+
 # Realm Sync - Technical Specification
 
 ## Technical Stack
@@ -18,6 +23,7 @@
 | **Router**         | TanStack Router  | ^1.132.0 | File-based routing                     |
 | **Validation**     | Zod              | ^4.1.11  | Runtime validation                     |
 | **Testing**        | Vitest           | ^3.2.4   | Unit + integration tests               |
+| **Markdown**       | marked           | ^17.0.1  | Markdown rendering                     |
 
 ---
 
