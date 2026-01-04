@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { useState } from 'react';
-import { Users, AlertTriangle } from 'lucide-react';
+import { Users, AlertTriangle, User, MapPin, Package, Lightbulb, Calendar } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import {
@@ -14,6 +14,14 @@ import {
 import { RelationshipGraph } from '@/components/RelationshipGraph';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
+
+const entityTypeColors = [
+  { type: 'Character', color: 'bg-entity-character', icon: User },
+  { type: 'Location', color: 'bg-entity-location', icon: MapPin },
+  { type: 'Item', color: 'bg-entity-item', icon: Package },
+  { type: 'Concept', color: 'bg-entity-concept', icon: Lightbulb },
+  { type: 'Event', color: 'bg-entity-event', icon: Calendar },
+];
 
 export const Route = createFileRoute('/projects_/$projectId_/canon/connections')({
   component: CanonConnections,
@@ -48,35 +56,40 @@ function CanonConnections() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <Select value={entityFilter} onValueChange={(v) => setEntityFilter(v ?? 'all')}>
-            <SelectTrigger className="w-[200px]">
-              <Users className="text-muted-foreground mr-2 size-4" />
-              <SelectValue>
-                {entityFilter === 'all' ?
-                  'All entities'
-                : (entities.find((e) => e._id === entityFilter)?.name ?? 'Filter by entity')}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              <SelectItem value="all">All entities</SelectItem>
-              {entities.map((entity) => (
-                <SelectItem key={entity._id} value={entity._id}>
-                  {entity.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex flex-wrap items-center gap-4">
+        <Select value={entityFilter} onValueChange={(v) => setEntityFilter(v ?? 'all')}>
+          <SelectTrigger className="w-[200px]">
+            <Users className="text-muted-foreground mr-2 size-4" />
+            <SelectValue>
+              {entityFilter === 'all' ?
+                'All entities'
+              : (entities.find((e) => e._id === entityFilter)?.name ?? 'Filter by entity')}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent alignItemWithTrigger={false}>
+            <SelectItem value="all">All entities</SelectItem>
+            {entities.map((entity) => (
+              <SelectItem key={entity._id} value={entity._id}>
+                {entity.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
+          <AlertTriangle className="size-3.5 text-amber-500" />
+          <span>Inferred from facts. Click to view. Drag to move. Scroll to zoom.</span>
         </div>
       </div>
 
-      <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
-        <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400" />
-        <p className="text-sm text-amber-800 dark:text-amber-200">
-          Relationships are inferred from facts. Click a node to view entity details. Drag nodes to
-          rearrange. Scroll to zoom.
-        </p>
+      <div className="flex flex-wrap items-center gap-3">
+        {entityTypeColors.map(({ type, color, icon: Icon }) => (
+          <div key={type} className="flex items-center gap-1.5">
+            <span className={`size-3 rounded-full ${color}`} />
+            <Icon className="text-muted-foreground size-3.5" />
+            <span className="text-muted-foreground text-xs">{type}</span>
+          </div>
+        ))}
       </div>
 
       {graph.nodes.length === 0 ?
