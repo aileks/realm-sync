@@ -37,15 +37,27 @@ All colors use OKLCH format. Source of truth: `src/styles.css`
 
 ### Three Themes
 
-| Theme                    | Personality      | Primary      | Secondary   | Accent           |
-| ------------------------ | ---------------- | ------------ | ----------- | ---------------- |
-| **Default** (Ashen Tome) | Warm browns      | Amber        | Sage teal   | Terracotta       |
-| **Twilight Study**       | Cool purples     | Violet       | Spirit teal | Candlelight gold |
-| **Amber Archive**        | High-chroma warm | Bright amber | Slate blue  | Sealing wax red  |
+| Theme        | Vibe                        | Background          | Accent       |
+| ------------ | --------------------------- | ------------------- | ------------ |
+| **Fireside** | Dark cozy library (default) | Warm charcoal slate | Amber/gold   |
+| **Twilight** | Deep navy night reading     | Navy blue           | Gold         |
+| **Daylight** | Sunlit reading room         | Warm parchment      | Forest green |
 
-### Color Harmony
+**Theme switching:**
 
-Split-complementary: warm primary, cool secondary, warm accent. This creates visual interest without rainbow chaos.
+```html
+<div data-theme="twilight">...</div>
+<div data-theme="daylight">...</div>
+<!-- No attribute = Fireside (default) -->
+```
+
+### Scrollbar Styling
+
+Scrollbars adapt to theme via CSS variables:
+
+- **Thumb**: `--muted-foreground`
+- **Hover**: `--foreground`
+- **Track**: transparent
 
 ### Entity Colors
 

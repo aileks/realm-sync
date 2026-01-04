@@ -218,6 +218,73 @@ export const listByProject = query({
   },
 });
 
+const sortByValidator = v.union(v.literal('name'), v.literal('recent'), v.literal('factCount'));
+
+export const listByProjectWithStats = query({
+  args: {
+    projectId: v.id('projects'),
+    type: v.optional(entityTypeValidator),
+    status: v.optional(entityStatusValidator),
+    sortBy: v.optional(sortByValidator),
+  },
+  handler: async (ctx, { projectId, type, status, sortBy = 'name' }) => {
+    const isOwner = await verifyProjectOwnership(ctx, projectId);
+    if (!isOwner) return [];
+
+    let entities;
+
+    if (type && status) {
+      entities = await ctx.db
+        .query('entities')
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
+        .filter((q) => q.eq(q.field('type'), type))
+        .collect();
+    } else if (type) {
+      entities = await ctx.db
+        .query('entities')
+        .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', type))
+        .collect();
+    } else if (status) {
+      entities = await ctx.db
+        .query('entities')
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
+        .collect();
+    } else {
+      entities = await ctx.db
+        .query('entities')
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
+        .collect();
+    }
+
+    const entitiesWithStats = await Promise.all(
+      entities.map(async (entity) => {
+        const facts = await ctx.db
+          .query('facts')
+          .withIndex('by_entity', (q) => q.eq('entityId', entity._id))
+          .filter((q) => q.neq(q.field('status'), 'rejected'))
+          .collect();
+        return {
+          ...entity,
+          factCount: facts.length,
+        };
+      })
+    );
+
+    return [...entitiesWithStats].sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'recent':
+          return b.updatedAt - a.updatedAt;
+        case 'factCount':
+          return b.factCount - a.factCount;
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
+  },
+});
+
 export const getWithFacts = query({
   args: { id: v.id('entities') },
   handler: async (ctx, { id }) => {

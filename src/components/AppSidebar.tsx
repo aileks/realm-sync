@@ -37,9 +37,9 @@ type AppSidebarProps = {
 };
 
 const THEMES = [
-  { id: 'default', name: 'Ashen Tome', icon: Laptop },
-  { id: 'twilight-study', name: 'Twilight Study', icon: Moon },
-  { id: 'amber-archive', name: 'Amber Archive', icon: Sun },
+  { id: 'default', name: 'Fireside', icon: Laptop },
+  { id: 'twilight', name: 'Twilight', icon: Moon },
+  { id: 'daylight', name: 'Daylight', icon: Sun },
 ] as const;
 
 type Theme = (typeof THEMES)[number]['id'];

@@ -20,11 +20,12 @@ type EntityType = Entity['type'];
 
 type EntityCardProps = {
   entity: Entity;
-  onConfirm: (id: Id<'entities'>) => void;
-  onReject: (id: Id<'entities'>) => void;
+  onConfirm?: (id: Id<'entities'>) => void;
+  onReject?: (id: Id<'entities'>) => void;
   onEdit?: (entity: Entity) => void;
   similarEntities?: Entity[];
   onMerge?: (sourceId: Id<'entities'>, targetId: Id<'entities'>) => void;
+  className?: string;
 };
 
 const defaultConfig = {
@@ -59,15 +60,21 @@ export function EntityCard({
   onEdit,
   similarEntities,
   onMerge,
+  className,
 }: EntityCardProps) {
   const config = entityTypeConfig[entity.type] ?? defaultConfig;
   const Icon = config.icon;
 
   return (
-    <Card className="group hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1">
+    <Card
+      className={cn(
+        'group hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1',
+        className
+      )}
+    >
       <CardHeader className="flex flex-col gap-4 p-4">
         <div className="flex w-full items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
+          <div className="flex min-w-0 flex-1 items-start gap-4">
             <div
               className={cn(
                 'flex size-10 shrink-0 items-center justify-center rounded-lg shadow-sm ring-1',
@@ -102,7 +109,7 @@ export function EntityCard({
                     <Badge
                       key={alias}
                       variant="secondary"
-                      className="text-muted-foreground h-5 px-1.5 text-xs font-normal"
+                      className="h-5 px-1.5 text-xs font-normal"
                     >
                       {alias}
                     </Badge>
@@ -111,34 +118,40 @@ export function EntityCard({
               )}
             </div>
           </div>
-          <CardAction className="flex shrink-0 gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-muted-foreground size-8 p-0 hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400"
-              onClick={() => onConfirm(entity._id)}
-            >
-              <Check className="size-4" />
-            </Button>
-            {onEdit && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-muted-foreground hover:bg-primary/10 hover:text-primary size-8 p-0"
-                onClick={() => onEdit(entity)}
-              >
-                <Pencil className="size-4" />
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-8 p-0"
-              onClick={() => onReject(entity._id)}
-            >
-              <X className="size-4" />
-            </Button>
-          </CardAction>
+          {(onConfirm || onEdit || onReject) && (
+            <CardAction className="flex shrink-0 gap-1">
+              {onConfirm && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground size-8 p-0 hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400"
+                  onClick={() => onConfirm(entity._id)}
+                >
+                  <Check className="size-4" />
+                </Button>
+              )}
+              {onEdit && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground hover:bg-primary/10 hover:text-primary size-8 p-0"
+                  onClick={() => onEdit(entity)}
+                >
+                  <Pencil className="size-4" />
+                </Button>
+              )}
+              {onReject && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-8 p-0"
+                  onClick={() => onReject(entity._id)}
+                >
+                  <X className="size-4" />
+                </Button>
+              )}
+            </CardAction>
+          )}
         </div>
 
         {similarEntities && similarEntities.length > 0 && onMerge && (

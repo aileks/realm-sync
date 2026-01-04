@@ -1,7 +1,16 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useState } from 'react';
-import { FileText, Users, Lightbulb, AlertTriangle, Plus, Settings, ArrowLeft } from 'lucide-react';
+import {
+  FileText,
+  Users,
+  Lightbulb,
+  AlertTriangle,
+  Plus,
+  Settings,
+  ArrowLeft,
+  BookOpen,
+} from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
@@ -128,6 +137,17 @@ function ProjectDashboard() {
           variant={stats.alertCount > 0 ? 'destructive' : undefined}
           onClick={() => navigate({ to: '/projects/$projectId/alerts', params: { projectId } })}
         />
+      </div>
+
+      <div className="mb-8">
+        <Button
+          size="lg"
+          className="w-full sm:w-auto"
+          onClick={() => navigate({ to: '/projects/$projectId/canon', params: { projectId } })}
+        >
+          <BookOpen className="mr-2 size-5" />
+          Browse Canon
+        </Button>
       </div>
 
       <div className="mb-4 flex items-center justify-between">
