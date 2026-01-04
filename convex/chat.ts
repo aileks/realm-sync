@@ -154,15 +154,15 @@ export const streamChat = httpAction(async (ctx, request) => {
     }
 
     const decoder = new TextDecoder();
-    let buffer = '';
+    let sseBuffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() ?? '';
+      sseBuffer += decoder.decode(value, { stream: true });
+      const lines = sseBuffer.split('\n');
+      sseBuffer = lines.pop() ?? '';
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
@@ -176,7 +176,7 @@ export const streamChat = httpAction(async (ctx, request) => {
               await appendChunk(content);
             }
           } catch {
-            // SSE streams may have incomplete JSON chunks
+            // SSE partial JSON
           }
         }
       }

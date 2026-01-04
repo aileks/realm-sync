@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, useRef, useEffect } from 'react';
-import { useMutation, useQuery } from 'convex/react';
+import { useMutation } from 'convex/react';
+import { useStream } from '@convex-dev/persistent-text-streaming/react';
+import type { StreamId } from '@convex-dev/persistent-text-streaming';
 import Markdown from 'react-markdown';
 import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
@@ -42,9 +44,17 @@ interface Message {
 }
 
 function StreamingMessage({ streamId }: { streamId: string }) {
-  const streamBody = useQuery(api.chat.getStreamBody, { streamId });
+  const convexSiteUrl = env.VITE_CONVEX_URL.replace('.convex.cloud', '.convex.site');
+  const streamUrl = new URL(`${convexSiteUrl}/chat-stream`);
 
-  if (!streamBody) {
+  const { text, status } = useStream(
+    api.chat.getStreamBody,
+    streamUrl,
+    false,
+    streamId as StreamId
+  );
+
+  if (status === 'pending' || (!text && status === 'streaming')) {
     return (
       <div className="flex gap-1.5">
         <div
@@ -65,10 +75,8 @@ function StreamingMessage({ streamId }: { streamId: string }) {
 
   return (
     <>
-      <Markdown>{streamBody.text || '...'}</Markdown>
-      {streamBody.status === 'streaming' && (
-        <span className="ml-1 inline-block animate-pulse">▋</span>
-      )}
+      <Markdown>{text || '...'}</Markdown>
+      {status === 'streaming' && <span className="ml-1 inline-block animate-pulse">▋</span>}
     </>
   );
 }
@@ -102,8 +110,10 @@ function DevChat() {
     setIsLoading(true);
 
     try {
+      const cleanMessages = newMessages.map(({ role, content }) => ({ role, content }));
+
       const { streamId, messages: chatMessages } = await createStreamingChat({
-        messages: newMessages,
+        messages: cleanMessages,
       });
 
       setCurrentStreamId(streamId);
