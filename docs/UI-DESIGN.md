@@ -27,7 +27,7 @@ Reject template layouts. Strive for bespoke design that serves the archival narr
 
 - DO NOT build custom modals, dropdowns, buttons, or dialogs from scratch
 - Check `src/components/ui/` before creating anything new
-- Available primitives: AlertDialog, Badge, Button, Card, Combobox, DropdownMenu, Field, Input, Label, Select, Separator, Textarea
+- Available primitives: AlertDialog, Badge, Button, Card, Combobox, DropdownMenu, Empty, Field, Input, InputGroup, Label, Select, Separator, Sheet, Textarea, Tooltip, Toaster (Sonner)
 
 ---
 
@@ -97,6 +97,43 @@ Use Lucide React exclusively. Key mappings:
 
 - Entity types: User, MapPin, Package, Lightbulb, Calendar
 - Actions: Search, Sparkles, Plus, Pencil, Trash2
+
+### Toast Notifications
+
+Use Sonner (`src/components/ui/sonner.tsx`) for all user feedback:
+
+```tsx
+import { toast } from 'sonner';
+
+// Success
+toast.success('Extraction complete', {
+  description: 'Found 5 entities and 12 facts.',
+});
+
+// Error
+toast.error('Extraction failed', {
+  description: error.message,
+});
+
+// Info
+toast.info('Extraction started', {
+  description: "You'll be notified when it finishes.",
+});
+```
+
+**Placement:** Bottom-right, dark theme styling. Added via `<Toaster />` in `__root.tsx`.
+
+---
+
+## Vellum Chat UI
+
+The dev chat (`/dev/chat`) showcases Vellum's personality:
+
+- **Moth icon**: Custom SVG silhouette for Vellum avatar
+- **Streaming indicator**: Animated cursor (▋) during response generation
+- **Message bubbles**: User (right, primary tint) / Assistant (left, muted with border)
+- **Loading dots**: Bouncing animation with staggered delays
+- **Markdown rendering**: Full support via `react-markdown`
 
 ---
 

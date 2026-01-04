@@ -342,6 +342,7 @@ src/routes/projects/$projectId/
 
 - `checks.ts`: runCheck (action), createAlerts (mutation)
 - `alerts.ts`: listByProject, listByDocument, resolve
+- `chat.ts`: createStreamingChat (mutation), streamChat (httpAction), getStreamBody (query), sendMessage (action)
 
 **JSON Schema for Check**:
 
@@ -445,27 +446,30 @@ src/routes/projects/$projectId/
 
 - ✅ TanStack Start + React 19 routing infrastructure
 - ✅ Convex integration with provider (`src/integrations/convex/provider.tsx`)
-- ✅ 13 Shadcn UI primitives (`src/components/ui/`)
+- ✅ 15 Shadcn UI primitives (`src/components/ui/`) including toast (Sonner)
 - ✅ Tailwind v4 with OKLCH design tokens (`src/styles.css`)
 - ✅ Base layout with Header (`src/routes/__root.tsx`)
+- ✅ Auth (Google OAuth + Email/Password via Convex Auth)
+- ✅ Full schema (users, projects, documents, entities, facts, alerts, llmCache)
+- ✅ Project/Document CRUD with auto-save
+- ✅ LLM extraction pipeline (OpenRouter, chunking, caching)
+- ✅ Extraction review UI with confirm/reject workflow
+- ✅ Vellum chat interface (`/dev/chat`) with persistent streaming
+- ✅ Toast notifications (Sonner) for user feedback
+- ✅ 94 passing tests (Vitest + convex-test)
 
-### What Exists (Placeholder/Demo)
+### In Progress
 
-- ❌ `convex/schema.ts` — Only contains `todos` and `products` (example tables)
-- ❌ `convex/todos.ts` — Standard CRUD example (delete in Phase 1)
-- ❌ `src/routes/index.tsx` — Renders `<ComponentExample />` (placeholder)
-- ❌ `src/routes/demo.theme.tsx` — Design system showcase (delete after Phase 1)
-- ❌ `src/components/component-example.tsx` — Demo component grid (delete after Phase 1)
+- 🔄 Canon Browser (entities, facts tabs exist)
+- 🔄 Entity merging UI
 
 ### What's Missing
 
-- ❌ Auth implementation (Convex Auth: Google OAuth + Email/Password)
-- ❌ Real schema (`users`, `projects`, `documents`, `entities`, `facts`, `alerts`, `llmCache`)
-- ❌ Project/Document CRUD functions
-- ❌ LLM integration (OpenRouter, Vellum extraction prompts)
-- ❌ Canon Browser routes and components
-- ❌ Continuity checking system
-- ❌ Vellum mascot integration
+- ❌ Full continuity checking pipeline
+- ❌ Alerts Dashboard UI
+- ❌ Alert resolution workflow
+- ❌ Timeline view for events
+- ❌ Full Vellum mascot integration (visual + animations)
 
 ---
 
@@ -609,4 +613,4 @@ pnpm docs:list         # List all docs
 
 ---
 
-_Last Updated: January 2, 2026_
+_Last Updated: January 3, 2026_
