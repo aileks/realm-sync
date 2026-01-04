@@ -37,7 +37,7 @@ import { LoadingState } from '@/components/LoadingState';
 import { EmptyState } from '@/components/EmptyState';
 import { cn } from '@/lib/utils';
 
-export const Route = createFileRoute('/projects_/$projectId_/canon_/entities/$entityId')({
+export const Route = createFileRoute('/entities/$entityId')({
   component: EntityDetailPage,
 });
 
@@ -79,7 +79,7 @@ const defaultConfig = {
 
 function EntityDetailPage() {
   const navigate = useNavigate();
-  const { projectId, entityId } = Route.useParams();
+  const { entityId } = Route.useParams();
   const [isEditing, setIsEditing] = useState(false);
 
   const data = useQuery(api.entities.getWithDetails, {
@@ -97,11 +97,8 @@ function EntityDetailPage() {
           title="Entity not found"
           description="This entity may have been deleted or you don't have access to it."
           action={
-            <Button
-              variant="outline"
-              onClick={() => navigate({ to: '/projects/$projectId/canon', params: { projectId } })}
-            >
-              Back to Canon
+            <Button variant="outline" onClick={() => navigate({ to: '/projects' })}>
+              Back to Projects
             </Button>
           }
         />
@@ -110,10 +107,11 @@ function EntityDetailPage() {
   }
 
   const { entity, facts, appearances, relatedEntities } = data;
+  const projectId = entity.projectId;
   const config = typeConfig[entity.type] ?? defaultConfig;
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto space-y-8 p-6">
       <Button
         variant="ghost"
         size="sm"
@@ -135,17 +133,18 @@ function EntityDetailPage() {
 
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
-              <AttributeList facts={facts} />
+              <AttributeList
+                facts={facts}
+                entityId={entity._id}
+                projectId={projectId}
+                appearances={appearances}
+              />
               <EvidencePanel facts={facts} />
             </div>
 
             <div className="space-y-6">
               <AppearanceTimeline appearances={appearances} projectId={projectId} />
-              <RelatedEntitiesCard
-                entities={relatedEntities}
-                projectId={projectId}
-                currentEntityId={entity._id}
-              />
+              <RelatedEntitiesCard entities={relatedEntities} currentEntityId={entity._id} />
             </div>
           </div>
         </>
@@ -204,9 +203,19 @@ function EntityHeader({ entity, config, onEdit }: EntityHeaderProps) {
 
 type AttributeListProps = {
   facts: Doc<'facts'>[];
+  entityId: Id<'entities'>;
+  projectId: Id<'projects'>;
+  appearances: { _id: Id<'documents'>; title: string }[];
 };
 
-function AttributeList({ facts }: AttributeListProps) {
+function AttributeList({ facts, entityId, projectId, appearances }: AttributeListProps) {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const createFact = useMutation(api.facts.create);
+  const [isAdding, setIsAdding] = useState(false);
+  const [predicate, setPredicate] = useState('');
+  const [object, setObject] = useState('');
+  const [documentId, setDocumentId] = useState<Id<'documents'> | ''>('');
+
   const confirmedFacts = facts.filter((f) => f.status === 'confirmed');
   const pendingFacts = facts.filter((f) => f.status === 'pending');
 
@@ -223,63 +232,184 @@ function AttributeList({ facts }: AttributeListProps) {
   const confirmedGrouped = groupByPredicate(confirmedFacts);
   const pendingGrouped = groupByPredicate(pendingFacts);
 
-  if (facts.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Attributes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-sm italic">
-            No facts recorded yet. Process documents to extract canon.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const handleAddFact = async () => {
+    if (!predicate.trim() || !object.trim() || !documentId) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      await createFact({
+        projectId,
+        entityId,
+        documentId: documentId,
+        subject: '',
+        predicate: predicate.trim().toLowerCase().replace(/\s+/g, '_'),
+        object: object.trim(),
+        confidence: 1.0,
+        evidenceSnippet: 'Manually added',
+        status: 'confirmed',
+      });
+      toast.success('Attribute added');
+      setPredicate('');
+      setObject('');
+      setDocumentId('');
+      setShowAddForm(false);
+    } catch (error) {
+      toast.error('Failed to add attribute', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+      });
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Attributes</CardTitle>
+        <Button variant="ghost" size="sm" onClick={() => setShowAddForm(!showAddForm)}>
+          <Plus className="mr-1 size-4" />
+          Add
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        {Object.entries(confirmedGrouped).map(([predicate, predicateFacts]) => (
-          <div key={predicate} className="space-y-1">
-            <h4 className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-              {predicate.replace(/_/g, ' ')}
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {predicateFacts.map((fact) => (
-                <Badge key={fact._id} variant="secondary" className="bg-primary/10 text-foreground">
-                  {fact.object}
-                </Badge>
-              ))}
+        {showAddForm && (
+          <div className="bg-muted/30 space-y-3 rounded-lg border p-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <label htmlFor="predicate" className="text-xs font-medium">
+                  Attribute Name
+                </label>
+                <Input
+                  id="predicate"
+                  value={predicate}
+                  onChange={(e) => setPredicate(e.target.value)}
+                  placeholder="e.g. eye color, title, birthplace"
+                  className="h-9"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="document" className="text-xs font-medium">
+                  Source Document
+                </label>
+                <Select
+                  value={documentId || undefined}
+                  onValueChange={(v) => setDocumentId(v as Id<'documents'>)}
+                >
+                  <SelectTrigger id="document" className="h-9">
+                    <SelectValue>
+                      {documentId ?
+                        appearances.find((d) => d._id === documentId)?.title
+                      : <span className="text-muted-foreground">Select a document...</span>}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {appearances.map((doc) => (
+                      <SelectItem key={doc._id} value={doc._id}>
+                        {doc.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {appearances.length === 0 && (
+                  <p className="text-muted-foreground text-xs">
+                    No documents available. Process a document first.
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="document" className="text-xs font-medium">
+                Source Document
+              </label>
+              <Select
+                value={documentId || undefined}
+                onValueChange={(v) => setDocumentId(v as Id<'documents'>)}
+              >
+                <SelectTrigger id="document" className="h-9">
+                  <SelectValue>
+                    {documentId ?
+                      appearances.find((d) => d._id === documentId)?.title
+                    : <span className="text-muted-foreground">Select a document...</span>}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {appearances.map((doc) => (
+                    <SelectItem key={doc._id} value={doc._id}>
+                      {doc.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {appearances.length === 0 && (
+                <p className="text-muted-foreground text-xs">
+                  No documents available. Process a document first.
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleAddFact} disabled={isAdding || !documentId}>
+                {isAdding && <Loader2 className="mr-1 size-3 animate-spin" />}
+                Add Attribute
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setShowAddForm(false)}>
+                Cancel
+              </Button>
             </div>
           </div>
-        ))}
-
-        {Object.keys(pendingGrouped).length > 0 && (
-          <>
-            <div className="border-t pt-4">
-              <h4 className="text-muted-foreground mb-2 text-xs font-medium">Pending Review</h4>
-              {Object.entries(pendingGrouped).map(([predicate, predicateFacts]) => (
-                <div key={predicate} className="mb-2 space-y-1">
-                  <span className="text-muted-foreground text-xs">
-                    {predicate.replace(/_/g, ' ')}:
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {predicateFacts.map((fact) => (
-                      <Badge key={fact._id} variant="outline" className="border-dashed opacity-70">
-                        {fact.object}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
         )}
+
+        {facts.length === 0 && !showAddForm ?
+          <p className="text-muted-foreground py-4 text-center text-sm italic">
+            No facts recorded yet. Process documents to extract canon or add manually.
+          </p>
+        : <>
+            {Object.entries(confirmedGrouped).map(([pred, predicateFacts]) => (
+              <div key={pred} className="space-y-1">
+                <h4 className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                  {pred.replace(/_/g, ' ')}
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {predicateFacts.map((fact) => (
+                    <Badge
+                      key={fact._id}
+                      variant="secondary"
+                      className="bg-primary/10 text-foreground"
+                    >
+                      {fact.object}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {Object.keys(pendingGrouped).length > 0 && (
+              <div className="border-t pt-4">
+                <h4 className="text-muted-foreground mb-2 text-xs font-medium">Pending Review</h4>
+                {Object.entries(pendingGrouped).map(([pred, predicateFacts]) => (
+                  <div key={pred} className="mb-2 space-y-1">
+                    <span className="text-muted-foreground text-xs">
+                      {pred.replace(/_/g, ' ')}:
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {predicateFacts.map((fact) => (
+                        <Badge
+                          key={fact._id}
+                          variant="outline"
+                          className="border-dashed opacity-70"
+                        >
+                          {fact.object}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        }
       </CardContent>
     </Card>
   );
@@ -343,7 +473,7 @@ function EvidencePanel({ facts }: EvidencePanelProps) {
 
 type AppearanceTimelineProps = {
   appearances: { _id: Id<'documents'>; title: string; orderIndex: number }[];
-  projectId: string;
+  projectId: Id<'projects'>;
 };
 
 function AppearanceTimeline({ appearances, projectId }: AppearanceTimelineProps) {
@@ -399,11 +529,10 @@ function AppearanceTimeline({ appearances, projectId }: AppearanceTimelineProps)
 
 type RelatedEntitiesCardProps = {
   entities: Doc<'entities'>[];
-  projectId: string;
   currentEntityId: Id<'entities'>;
 };
 
-function RelatedEntitiesCard({ entities, projectId }: RelatedEntitiesCardProps) {
+function RelatedEntitiesCard({ entities }: RelatedEntitiesCardProps) {
   if (entities.length === 0) {
     return (
       <Card>
@@ -437,8 +566,8 @@ function RelatedEntitiesCard({ entities, projectId }: RelatedEntitiesCardProps) 
           return (
             <Link
               key={entity._id}
-              to="/projects/$projectId/canon/entities/$entityId"
-              params={{ projectId, entityId: entity._id }}
+              to="/entities/$entityId"
+              params={{ entityId: entity._id }}
               className="hover:bg-muted/50 flex items-center gap-3 rounded-md p-2 transition-colors"
             >
               <div

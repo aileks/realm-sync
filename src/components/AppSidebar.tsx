@@ -136,6 +136,15 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
 
             <ProjectNavItem
               projectId={params.projectId}
+              to="canon"
+              icon={BookOpen}
+              collapsed={collapsed}
+            >
+              Canon Browser
+            </ProjectNavItem>
+
+            <ProjectNavItem
+              projectId={params.projectId}
               to="review"
               icon={Sparkles}
               collapsed={collapsed}
@@ -144,26 +153,6 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             </ProjectNavItem>
           </>
         )}
-
-        <div className="my-4 px-2">
-          <div className="border-sidebar-border border-t" />
-        </div>
-
-        {!collapsed && (
-          <p className="text-muted-foreground mb-2 px-3 font-mono text-[10px] tracking-widest uppercase">
-            Coming Soon
-          </p>
-        )}
-
-        <div
-          className={cn(
-            'text-muted-foreground/50 flex cursor-not-allowed items-center gap-3 rounded-lg p-3',
-            collapsed && 'justify-center'
-          )}
-        >
-          <BookOpen className="size-5" />
-          {!collapsed && <span className="text-sm">Canon Browser</span>}
-        </div>
       </nav>
 
       <div className="border-sidebar-border flex flex-col gap-1 border-t p-2">
@@ -309,11 +298,16 @@ function NavItem({ to, icon: Icon, children, collapsed }: NavItemProps) {
 
 type ProjectNavItemProps = {
   projectId: string;
-  to: 'review';
+  to: 'review' | 'canon';
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
 };
+
+const projectRoutes = {
+  review: '/projects/$projectId/review',
+  canon: '/projects/$projectId/canon',
+} as const;
 
 function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: ProjectNavItemProps) {
   const routerState = useRouterState();
@@ -322,7 +316,7 @@ function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: Proj
 
   const content = (
     <Link
-      to="/projects/$projectId/review"
+      to={projectRoutes[to]}
       params={{ projectId }}
       className={cn(
         'flex items-center gap-3 rounded-lg p-3 transition-colors',
@@ -388,14 +382,6 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
           Projects
         </MobileNavItem>
       )}
-
-      <div className="my-4">
-        <div className="border-sidebar-border border-t" />
-      </div>
-
-      <p className="text-muted-foreground mb-2 px-3 font-mono text-[10px] tracking-widest uppercase">
-        Project Tools
-      </p>
 
       <div className="mb-2">
         <DropdownMenu>
@@ -480,19 +466,6 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
           </DropdownMenu>
         </div>
       )}
-
-      <div className="my-4">
-        <div className="border-border border-t" />
-      </div>
-
-      <p className="text-muted-foreground mb-2 px-3 font-mono text-[10px] tracking-widest uppercase">
-        Coming Soon
-      </p>
-
-      <div className="text-muted-foreground/50 flex cursor-not-allowed items-center gap-3 rounded-lg p-3">
-        <BookOpen className="size-5" />
-        <span className="text-sm">Canon Browser</span>
-      </div>
     </nav>
   );
 }

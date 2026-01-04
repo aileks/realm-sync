@@ -156,12 +156,7 @@ function CanonBrowserIndex() {
           )}
         >
           {entities.map((entity: EntityWithStats) => (
-            <EntityCardLink
-              key={entity._id}
-              entity={entity}
-              projectId={projectId}
-              viewMode={viewMode}
-            />
+            <EntityCardLink key={entity._id} entity={entity} viewMode={viewMode} />
           ))}
         </div>
       }
@@ -177,11 +172,10 @@ function CanonBrowserIndex() {
 
 type EntityCardLinkProps = {
   entity: EntityWithStats;
-  projectId: string;
   viewMode: ViewMode;
 };
 
-function EntityCardLink({ entity, projectId, viewMode }: EntityCardLinkProps) {
+function EntityCardLink({ entity, viewMode }: EntityCardLinkProps) {
   const entityForCard = {
     ...entity,
     description:
@@ -192,11 +186,7 @@ function EntityCardLink({ entity, projectId, viewMode }: EntityCardLinkProps) {
   };
 
   return (
-    <Link
-      to="/projects/$projectId/canon/entities/$entityId"
-      params={{ projectId, entityId: entity._id }}
-      className="block"
-    >
+    <Link to="/entities/$entityId" params={{ entityId: entity._id }} className="block">
       <EntityCard entity={entityForCard} className={viewMode === 'grid' ? 'h-full' : undefined} />
     </Link>
   );
