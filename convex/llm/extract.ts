@@ -3,7 +3,7 @@ import { api, internal } from '../_generated/api';
 import { v } from 'convex/values';
 import type { Id } from '../_generated/dataModel';
 import { chunkDocument, needsChunking, mapEvidenceToDocument, type Chunk } from './chunk';
-import { err, apiError, notFoundError } from '../lib/errors';
+import { err, apiError } from '../lib/errors';
 import { unwrapOrThrow, safeJsonParse } from '../lib/result';
 
 export const PROMPT_VERSION = 'v1';
@@ -469,7 +469,7 @@ export const processExtractionResult = internalMutation({
   handler: async (ctx, { documentId, result }) => {
     const doc = await ctx.db.get(documentId);
     if (!doc) {
-      unwrapOrThrow(err(notFoundError('document', documentId)));
+      throw new Error('Document not found');
     }
 
     const projectId = doc.projectId;

@@ -145,6 +145,7 @@ pnpm docs:list        # List docs with front-matter check
 ## NOTES
 
 - **ALWAYS RUN `pnpm docs:list` FIRST**
+- Keep files ~500 lines max; more is ok with proper reason
 - No `index.html`—TanStack Start generates HTML via `__root.tsx`
 - React Compiler enabled: no manual memoization needed
 - Tailwind v4 = CSS-first (no `tailwind.config.js`)
