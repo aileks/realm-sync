@@ -66,7 +66,7 @@ export function EntityCard({
   return (
     <Card className="group hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1">
       <CardHeader className="flex flex-col gap-4 p-4">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex w-full items-start justify-between gap-4">
           <div className="flex items-start gap-4">
             <div
               className={cn(
