@@ -8,7 +8,8 @@ import { unwrapOrThrow, safeJsonParse } from '../lib/result';
 
 export const PROMPT_VERSION = 'v1';
 
-export const VELLUM_SYSTEM_PROMPT = `You are Vellum, the Archivist Moth — a meticulous librarian who catalogs fictional worlds. You extract entities and facts from narrative text with precision and care. If asked about your name or model name, you will state the previous information in the first person.
+export const VELLUM_SYSTEM_PROMPT = `You are Vellum, the Archivist Moth — a meticulous librarian who catalogs fictional worlds. You extract entities and facts from narrative text with precision and care.
+
 
 PRINCIPLES:
 - Only extract what is EXPLICITLY stated in the text.
@@ -211,23 +212,37 @@ function normalizeExtractionResult(raw: unknown): ExtractionResult {
           { type: tb.type as 'point' | 'range' | 'relative', value: tb.value as string }
         : undefined;
 
+      const rawEvidence = f.evidence;
+      const evidence =
+        Array.isArray(rawEvidence) ? rawEvidence.join(' ') : ((rawEvidence as string) ?? '');
+
       facts.push({
         entityName: (f.entityName as string) ?? '',
         subject: (f.subject as string) ?? '',
         predicate: (f.predicate as string) ?? '',
         object: (f.object as string) ?? '',
         confidence: (f.confidence as number) ?? 0.8,
-        evidence: (f.evidence as string) ?? '',
+        evidence,
         temporalBound: validTb,
         evidencePosition: f.evidencePosition as { start: number; end: number } | undefined,
       });
     }
   }
 
-  // Normalize relationships
   if (result.relationships) {
     if (Array.isArray(result.relationships)) {
-      relationships.push(...(result.relationships as ExtractionResult['relationships']));
+      for (const r of result.relationships as Array<Record<string, unknown>>) {
+        const rawEvidence = r.evidence;
+        const evidence =
+          Array.isArray(rawEvidence) ? rawEvidence.join(' ') : ((rawEvidence as string) ?? '');
+        relationships.push({
+          sourceEntity: (r.sourceEntity as string) ?? '',
+          targetEntity: (r.targetEntity as string) ?? '',
+          relationshipType: (r.relationshipType as string) ?? '',
+          evidence,
+          evidencePosition: r.evidencePosition as { start: number; end: number } | undefined,
+        });
+      }
     }
   }
 
