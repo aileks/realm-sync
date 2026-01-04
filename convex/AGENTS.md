@@ -159,5 +159,5 @@ npx convex deploy        # Deploy to production
 - Schema changes may prompt migration
 - Real-time via Convex query hooks (useQuery)
 - Functions auto-reload during `npx convex dev`
-- All 168 tests passing (projects, documents, entities, facts, seed, llm/cache, llm/chunk, llm/extract, lib/auth, lib/errors, lib/result, utils)
+- All 173 tests passing (projects, documents, entities, facts, seed, llm/cache, llm/chunk, llm/extract, lib/auth, lib/errors, lib/result, utils)
 - Cascade deletes: manually delete related documents before project

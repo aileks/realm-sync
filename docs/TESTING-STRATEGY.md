@@ -5,7 +5,7 @@ read_when: [testing, integration, unit, end-to-end, regression]
 
 # Testing Strategy
 
-**Status:** Ready for Implementation **Coverage Target:** 80% (Unit + Integration) **E2E/Visual:** Deferred until MVP **Current Test Count:** 168 passing
+**Status:** Ready for Implementation **Coverage Target:** 80% (Unit + Integration) **E2E/Visual:** Deferred until MVP **Current Test Count:** 173 passing
 
 **_FOLLOW TDD! TEST BEHAVIOR, NOT IMPLEMENTATION!_**
 

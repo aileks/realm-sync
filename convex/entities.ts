@@ -584,3 +584,38 @@ export const getWithDetails = query({
     };
   },
 });
+
+export const listEvents = query({
+  args: {
+    projectId: v.id('projects'),
+  },
+  handler: async (ctx, { projectId }) => {
+    const isOwner = await verifyProjectOwnership(ctx, projectId);
+    if (!isOwner) return [];
+
+    const events = await ctx.db
+      .query('entities')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', 'event'))
+      .filter((q) => q.eq(q.field('status'), 'confirmed'))
+      .collect();
+
+    const eventsWithDocs = await Promise.all(
+      events.map(async (event) => {
+        const document = event.firstMentionedIn ? await ctx.db.get(event.firstMentionedIn) : null;
+        return {
+          ...event,
+          document:
+            document ?
+              { _id: document._id, title: document.title, orderIndex: document.orderIndex }
+            : null,
+        };
+      })
+    );
+
+    return eventsWithDocs.toSorted((a, b) => {
+      const orderA = a.document?.orderIndex ?? Infinity;
+      const orderB = b.document?.orderIndex ?? Infinity;
+      return orderA - orderB;
+    });
+  },
+});

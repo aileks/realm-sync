@@ -21,7 +21,7 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 | 3.2 Entity Detail Page          | ✅ Complete | #18 | Merged 2026-01-04               |
 | 3.3 Full-Text Search            | ✅ Complete | -   | Search index + debounced input  |
 | 3.4 Entity Editing & Management | ✅ Complete | #18 | Inline + dedicated page editing |
-| 3.5 Timeline View               | 🔲 Pending  | -   | Nav link ready, route missing   |
+| 3.5 Timeline View               | ✅ Complete | -   | Events by document order        |
 | 3.6 Relationship Visualization  | 🔲 Pending  | -   | Backend functions missing       |
 | 3.7 Polish & Integration        | 🔲 Pending  | -   | -                               |
 
@@ -52,7 +52,7 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 
 - ~~`projects_.$projectId_.canon_.entities.$entityId.tsx`~~ ✅ Changed to `/entities/$entityId` (PR #18)
 - ~~`projects_.$projectId_.canon.search.tsx`~~ ✅ Search with highlight + debounce
-- `projects_.$projectId_.canon_.timeline.tsx` - Timeline view
+- ~~`projects_.$projectId_.canon.timeline.tsx`~~ ✅ Timeline with accuracy disclaimer
 
 ---
 

@@ -548,4 +548,130 @@ describe('entities queries', () => {
       expect(result?.relatedEntities[0]._id).toBe(daenerysId);
     });
   });
+
+  describe('listEvents', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+    let projectId: Id<'projects'>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+      projectId = await setupProject(t, userId);
+    });
+
+    it('returns only event-type entities', async () => {
+      const doc = await setupDocument(t, projectId, { title: 'Chapter 1' });
+      await setupEntity(t, projectId, {
+        name: 'The Battle',
+        type: 'event',
+        description: 'A great battle',
+        status: 'confirmed',
+        firstMentionedIn: doc,
+      });
+      await setupEntity(t, projectId, {
+        name: 'Jon Snow',
+        type: 'character',
+        description: 'A character',
+        status: 'confirmed',
+      });
+
+      const events = await asUser.query(api.entities.listEvents, { projectId });
+
+      expect(events).toHaveLength(1);
+      expect(events[0].name).toBe('The Battle');
+      expect(events[0].type).toBe('event');
+    });
+
+    it('orders events by document orderIndex', async () => {
+      const doc1 = await setupDocument(t, projectId, { title: 'Chapter 1' });
+      const doc2 = await setupDocument(t, projectId, { title: 'Chapter 2' });
+
+      await t.run(async (ctx) => {
+        await ctx.db.patch(doc1, { orderIndex: 1 });
+        await ctx.db.patch(doc2, { orderIndex: 0 });
+      });
+
+      await setupEntity(t, projectId, {
+        name: 'Later Event',
+        type: 'event',
+        description: 'Happens in chapter 1',
+        status: 'confirmed',
+        firstMentionedIn: doc1,
+      });
+      await setupEntity(t, projectId, {
+        name: 'Earlier Event',
+        type: 'event',
+        description: 'Happens in chapter 2 but ordered first',
+        status: 'confirmed',
+        firstMentionedIn: doc2,
+      });
+
+      const events = await asUser.query(api.entities.listEvents, { projectId });
+
+      expect(events).toHaveLength(2);
+      expect(events[0].name).toBe('Earlier Event');
+      expect(events[1].name).toBe('Later Event');
+    });
+
+    it('returns empty array when not project owner', async () => {
+      const otherUserId = await setupOtherUser(t);
+      const otherProjectId = await setupProject(t, otherUserId);
+      const doc = await setupDocument(t, otherProjectId, { title: 'Secret' });
+      await setupEntity(t, otherProjectId, {
+        name: 'Secret Event',
+        type: 'event',
+        description: 'Hidden event',
+        status: 'confirmed',
+        firstMentionedIn: doc,
+      });
+
+      const events = await asUser.query(api.entities.listEvents, { projectId: otherProjectId });
+
+      expect(events).toEqual([]);
+    });
+
+    it('includes document info for each event', async () => {
+      const doc = await setupDocument(t, projectId, { title: 'The Beginning' });
+      await setupEntity(t, projectId, {
+        name: 'Opening Battle',
+        type: 'event',
+        description: 'The first battle',
+        status: 'confirmed',
+        firstMentionedIn: doc,
+      });
+
+      const events = await asUser.query(api.entities.listEvents, { projectId });
+
+      expect(events).toHaveLength(1);
+      expect(events[0].document).toBeDefined();
+      expect(events[0].document?.title).toBe('The Beginning');
+    });
+
+    it('returns only confirmed events by default', async () => {
+      const doc = await setupDocument(t, projectId, { title: 'Chapter 1' });
+      await setupEntity(t, projectId, {
+        name: 'Confirmed Event',
+        type: 'event',
+        description: 'Confirmed',
+        status: 'confirmed',
+        firstMentionedIn: doc,
+      });
+      await setupEntity(t, projectId, {
+        name: 'Pending Event',
+        type: 'event',
+        description: 'Pending',
+        status: 'pending',
+        firstMentionedIn: doc,
+      });
+
+      const events = await asUser.query(api.entities.listEvents, { projectId });
+
+      expect(events).toHaveLength(1);
+      expect(events[0].name).toBe('Confirmed Event');
+    });
+  });
 });
