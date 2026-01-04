@@ -109,7 +109,7 @@ export function EntityCard({
                     <Badge
                       key={alias}
                       variant="secondary"
-                      className="text-muted-foreground h-5 px-1.5 text-xs font-normal"
+                      className="h-5 px-1.5 text-xs font-normal"
                     >
                       {alias}
                     </Badge>

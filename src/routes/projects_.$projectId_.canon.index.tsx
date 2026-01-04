@@ -37,6 +37,23 @@ type EntityType = 'character' | 'location' | 'item' | 'concept' | 'event';
 type SortBy = 'name' | 'recent' | 'factCount';
 type ViewMode = 'grid' | 'list';
 
+const typeLabels: Record<EntityType, string> = {
+  character: 'Character',
+  location: 'Location',
+  item: 'Item',
+  concept: 'Concept',
+  event: 'Event',
+};
+
+const typePlurals: Record<EntityType | 'all', string> = {
+  all: 'entities',
+  character: 'characters',
+  location: 'locations',
+  item: 'items',
+  concept: 'concepts',
+  event: 'events',
+};
+
 type EntityWithStats = {
   _id: Id<'entities'>;
   _creationTime: number;
@@ -139,7 +156,7 @@ function CanonBrowserIndex() {
           description={
             typeFilter === 'all' ?
               'No confirmed entities yet. Process documents to extract canon, then confirm entities in the review queue.'
-            : `No confirmed ${typeFilter}s found. Try a different filter or process more documents.`
+            : `No confirmed ${typePlurals[typeFilter]} found. Try a different filter or process more documents.`
           }
           action={
             <Button
@@ -174,7 +191,7 @@ function CanonBrowserIndex() {
 
       {entities.length > 0 && (
         <p className="text-muted-foreground text-center text-sm">
-          Showing {entities.length} {typeFilter === 'all' ? 'entities' : typeFilter + 's'}
+          Showing {entities.length} {typePlurals[typeFilter]}
         </p>
       )}
     </div>
@@ -298,7 +315,7 @@ function EntityDetailSheet({ entity, onClose }: EntityDetailSheetProps) {
         <SheetHeader className="pr-12">
           <div className="flex items-center gap-3">
             <SheetTitle className="min-w-0 truncate font-serif text-2xl">{entity.name}</SheetTitle>
-            <Badge className={cn('capitalize', typeColors[entity.type])}>{entity.type}</Badge>
+            <Badge className={cn(typeColors[entity.type])}>{typeLabels[entity.type]}</Badge>
           </div>
         </SheetHeader>
 
@@ -322,12 +339,15 @@ function EntityDetailSheet({ entity, onClose }: EntityDetailSheetProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                  <label
+                    htmlFor="type"
+                    className="text-muted-foreground text-xs font-medium tracking-wider uppercase"
+                  >
                     Type
                   </label>
                   <Select value={type} onValueChange={(v) => setType(v as EntityType)}>
-                    <SelectTrigger>
-                      <SelectValue />
+                    <SelectTrigger id="type">
+                      <SelectValue>{typeLabels[type]}</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="character">Character</SelectItem>
