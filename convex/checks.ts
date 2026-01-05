@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { internalAction, internalMutation, action } from './_generated/server';
 import { internal, api } from './_generated/api';
-import type { Id, Doc } from './_generated/dataModel';
+import type { Id } from './_generated/dataModel';
 import { err, apiError } from './lib/errors';
 import { unwrapOrThrow, safeJsonParse } from './lib/result';
 
@@ -123,26 +123,40 @@ async function buildCanonContext(
   },
   projectId: Id<'projects'>
 ): Promise<CanonContext> {
+  type EntityRecord = { _id: Id<'entities'>; name: string; type: string };
+  type FactRecord = {
+    _id: Id<'facts'>;
+    status: string;
+    documentId: Id<'documents'>;
+    predicate: string;
+    object: string;
+    evidenceSnippet: string;
+  };
+  type EntityWithFacts = { entity: EntityRecord; facts: FactRecord[] } | null;
+  type DocumentRecord = { title: string } | null;
+
   const entities = (await ctx.runQuery(api.entities.listByProject, {
     projectId,
     status: 'confirmed',
-  }));
+  })) as EntityRecord[];
 
   const entitiesWithFacts: CanonContextEntity[] = [];
   let formattedContext = '';
 
   for (const entity of entities) {
-    const entityData = (await ctx.runQuery(api.entities.getWithFacts, { id: entity._id }));
+    const entityData = (await ctx.runQuery(api.entities.getWithFacts, {
+      id: entity._id,
+    })) as EntityWithFacts;
     if (!entityData) continue;
 
-    const confirmedFacts = entityData.facts.filter((f) => f.status === 'confirmed');
+    const confirmedFacts = entityData.facts.filter((f: FactRecord) => f.status === 'confirmed');
     if (confirmedFacts.length === 0) continue;
 
     const factsWithDocs = await Promise.all(
-      confirmedFacts.map(async (fact) => {
+      confirmedFacts.map(async (fact: FactRecord) => {
         const doc = (await ctx.runQuery(api.documents.get, {
           id: fact.documentId,
-        }));
+        })) as DocumentRecord;
         return {
           id: fact._id,
           predicate: fact.predicate,
@@ -311,16 +325,7 @@ export const runCheck = internalAction({
     });
 
     if (cached) {
-      const cachedResult = normalizeCheckResult(cached);
-      if (cachedResult.alerts.length > 0) {
-        await ctx.runMutation(internal.checks.createAlerts, {
-          documentId,
-          projectId: doc.projectId,
-          checkResult: cachedResult,
-          canonContext: canonContext.entities,
-        });
-      }
-      return cachedResult;
+      return normalizeCheckResult(cached);
     }
 
     const result = await callCheckLLM(canonContext.formattedContext, doc.content, apiKey, model);
