@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { Command } from 'cmdk';
@@ -35,14 +35,11 @@ export function CommandPalette({ open, onOpenChange, initialView }: CommandPalet
   const documents = useQuery(api.documents.list, projectId ? { projectId } : 'skip');
   const entities = useQuery(api.entities.listByProject, projectId ? { projectId } : 'skip');
 
-  const runAction = useCallback(
-    (action: () => void) => {
-      onOpenChange(false);
-      setSearch('');
-      action();
-    },
-    [onOpenChange]
-  );
+  function runAction(action: () => void) {
+    onOpenChange(false);
+    setSearch('');
+    action();
+  }
 
   useEffect(() => {
     if (open) {
