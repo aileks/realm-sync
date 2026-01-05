@@ -24,7 +24,7 @@ const TIPS = [
   'Review extracted entities in the Canon Browser to confirm or reject them.',
   'Use the Timeline view to see events in chronological order.',
   'The Connections view shows relationships between your entities.',
-  'Keyboard shortcut: Press Cmd+K to open the command palette.',
+  'Keyboard shortcut: Press Cmd+K to open the command palette, or Cmd+Shift+K for all shortcuts.',
 ];
 
 type VellumButtonProps = {

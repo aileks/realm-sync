@@ -132,6 +132,8 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           </NavItem>
         )}
 
+        <RecentProjects collapsed={collapsed} />
+
         {isAuthenticated && projectId && (
           <>
             <div className="my-4 px-2">
@@ -184,8 +186,6 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             </ProjectNavItem>
           </>
         )}
-
-        <RecentProjects collapsed={collapsed} />
       </nav>
 
       <div className="border-sidebar-border flex flex-col gap-1 border-t p-2">

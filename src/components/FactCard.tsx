@@ -27,7 +27,7 @@ export function FactCard({ fact, onConfirm, onReject, onHighlight }: FactCardPro
 
   return (
     <Card
-      className="group hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1"
+      className="group hover:border-primary/50 hover:ring-primary/20 w-full transition-all duration-200 hover:shadow-md hover:ring-1"
       onMouseEnter={() => onHighlight?.(fact.evidencePosition ?? undefined)}
       onMouseLeave={() => onHighlight?.(undefined)}
     >

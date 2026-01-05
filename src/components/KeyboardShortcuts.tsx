@@ -117,7 +117,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   );
 
   useHotkeys(
-    'shift+/',
+    'mod+shift+k',
     (e) => {
       e.preventDefault();
       setCommandPaletteView('shortcuts');

@@ -70,7 +70,7 @@ export function CommandPalette({ open, onOpenChange, initialView }: CommandPalet
         <div className="max-h-96 overflow-y-auto p-4">
           <ShortcutSection title="Global">
             <ShortcutItem keys={['⌘', 'K']} description="Open command palette" />
-            <ShortcutItem keys={['⇧', '?']} description="Show shortcuts" />
+            <ShortcutItem keys={['⌘', '⇧', 'K']} description="Show shortcuts" />
             <ShortcutItem keys={['/']} description="Focus search" />
           </ShortcutSection>
           <ShortcutSection title="Navigation (g + key)">
