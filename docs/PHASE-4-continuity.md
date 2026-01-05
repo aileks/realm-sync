@@ -22,12 +22,14 @@ Phase 4 focuses on the continuity checking system, the "Archivist's Eye" that de
 
 ## Implementation Progress
 
-| Sub-Phase                 | Status      | Notes                         |
-| ------------------------- | ----------- | ----------------------------- |
+| Sub-Phase | Status | Notes |
+| --- | --- | --- |
 | Vellum Chat (Dev Testing) | ✅ Complete | Streaming chat at `/dev/chat` |
-| Continuity Check Pipeline | ⏳ Pending  | -                             |
-| Alerts Dashboard          | ⏳ Pending  | -                             |
-| Alert Resolution UI       | ⏳ Pending  | -                             |
+| Continuity Check Pipeline | ✅ Complete | `convex/checks.ts` - runCheck, createAlerts |
+| Alerts Dashboard | ✅ Complete | AlertCard, AlertFilters, bulk actions |
+| Alert Resolution UI | ✅ Complete | Detail page with side-by-side evidence |
+| Auto-Check on Save | ✅ Complete | Triggered after extraction if canon exists |
+| Update Canon from Alert | ✅ Complete | resolveWithCanonUpdate mutation |
 
 ---
 

@@ -590,6 +590,11 @@ export const processExtractionResult = internalMutation({
           factCount: stats.factCount + newFactCount,
         },
       });
+
+      const hasConfirmedCanon = stats.entityCount > 0 || stats.factCount > 0;
+      if (hasConfirmedCanon) {
+        await ctx.scheduler.runAfter(0, internal.checks.runCheck, { documentId });
+      }
     }
 
     return { entitiesCreated: newEntityCount, factsCreated: newFactCount };

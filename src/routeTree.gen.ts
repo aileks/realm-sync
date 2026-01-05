@@ -31,6 +31,7 @@ import { Route as ProjectsProjectIdDocumentsDocumentIdRouteImport } from './rout
 import { Route as ProjectsProjectIdCanonTimelineRouteImport } from './routes/projects_.$projectId_.canon.timeline'
 import { Route as ProjectsProjectIdCanonSearchRouteImport } from './routes/projects_.$projectId_.canon.search'
 import { Route as ProjectsProjectIdCanonConnectionsRouteImport } from './routes/projects_.$projectId_.canon.connections'
+import { Route as ProjectsProjectIdAlertsAlertIdRouteImport } from './routes/projects_.$projectId_.alerts.$alertId'
 
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
@@ -153,6 +154,12 @@ const ProjectsProjectIdCanonConnectionsRoute =
     path: '/connections',
     getParentRoute: () => ProjectsProjectIdCanonRoute,
   } as any)
+const ProjectsProjectIdAlertsAlertIdRoute =
+  ProjectsProjectIdAlertsAlertIdRouteImport.update({
+    id: '/$alertId',
+    path: '/$alertId',
+    getParentRoute: () => ProjectsProjectIdAlertsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -162,12 +169,13 @@ export interface FileRoutesByFullPath {
   '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
-  '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRoute
+  '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRouteWithChildren
   '/projects/$projectId/canon': typeof ProjectsProjectIdCanonRouteWithChildren
   '/projects/$projectId/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
   '/projects/$projectId/entities': typeof ProjectsProjectIdEntitiesRoute
   '/projects/$projectId/facts': typeof ProjectsProjectIdFactsRoute
   '/projects/$projectId/review': typeof ProjectsProjectIdReviewRouteWithChildren
+  '/projects/$projectId/alerts/$alertId': typeof ProjectsProjectIdAlertsAlertIdRoute
   '/projects/$projectId/canon/connections': typeof ProjectsProjectIdCanonConnectionsRoute
   '/projects/$projectId/canon/search': typeof ProjectsProjectIdCanonSearchRoute
   '/projects/$projectId/canon/timeline': typeof ProjectsProjectIdCanonTimelineRoute
@@ -186,9 +194,10 @@ export interface FileRoutesByTo {
   '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
-  '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRoute
+  '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRouteWithChildren
   '/projects/$projectId/entities': typeof ProjectsProjectIdEntitiesRoute
   '/projects/$projectId/facts': typeof ProjectsProjectIdFactsRoute
+  '/projects/$projectId/alerts/$alertId': typeof ProjectsProjectIdAlertsAlertIdRoute
   '/projects/$projectId/canon/connections': typeof ProjectsProjectIdCanonConnectionsRoute
   '/projects/$projectId/canon/search': typeof ProjectsProjectIdCanonSearchRoute
   '/projects/$projectId/canon/timeline': typeof ProjectsProjectIdCanonTimelineRoute
@@ -208,12 +217,13 @@ export interface FileRoutesById {
   '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/projects_/$projectId': typeof ProjectsProjectIdRoute
   '/projects_/new': typeof ProjectsNewRoute
-  '/projects_/$projectId_/alerts': typeof ProjectsProjectIdAlertsRoute
+  '/projects_/$projectId_/alerts': typeof ProjectsProjectIdAlertsRouteWithChildren
   '/projects_/$projectId_/canon': typeof ProjectsProjectIdCanonRouteWithChildren
   '/projects_/$projectId_/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
   '/projects_/$projectId_/entities': typeof ProjectsProjectIdEntitiesRoute
   '/projects_/$projectId_/facts': typeof ProjectsProjectIdFactsRoute
   '/projects_/$projectId_/review': typeof ProjectsProjectIdReviewRouteWithChildren
+  '/projects_/$projectId_/alerts/$alertId': typeof ProjectsProjectIdAlertsAlertIdRoute
   '/projects_/$projectId_/canon/connections': typeof ProjectsProjectIdCanonConnectionsRoute
   '/projects_/$projectId_/canon/search': typeof ProjectsProjectIdCanonSearchRoute
   '/projects_/$projectId_/canon/timeline': typeof ProjectsProjectIdCanonTimelineRoute
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/entities'
     | '/projects/$projectId/facts'
     | '/projects/$projectId/review'
+    | '/projects/$projectId/alerts/$alertId'
     | '/projects/$projectId/canon/connections'
     | '/projects/$projectId/canon/search'
     | '/projects/$projectId/canon/timeline'
@@ -261,6 +272,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/alerts'
     | '/projects/$projectId/entities'
     | '/projects/$projectId/facts'
+    | '/projects/$projectId/alerts/$alertId'
     | '/projects/$projectId/canon/connections'
     | '/projects/$projectId/canon/search'
     | '/projects/$projectId/canon/timeline'
@@ -285,6 +297,7 @@ export interface FileRouteTypes {
     | '/projects_/$projectId_/entities'
     | '/projects_/$projectId_/facts'
     | '/projects_/$projectId_/review'
+    | '/projects_/$projectId_/alerts/$alertId'
     | '/projects_/$projectId_/canon/connections'
     | '/projects_/$projectId_/canon/search'
     | '/projects_/$projectId_/canon/timeline'
@@ -304,7 +317,7 @@ export interface RootRouteChildren {
   EntitiesEntityIdRoute: typeof EntitiesEntityIdRoute
   ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
-  ProjectsProjectIdAlertsRoute: typeof ProjectsProjectIdAlertsRoute
+  ProjectsProjectIdAlertsRoute: typeof ProjectsProjectIdAlertsRouteWithChildren
   ProjectsProjectIdCanonRoute: typeof ProjectsProjectIdCanonRouteWithChildren
   ProjectsProjectIdDocumentsRoute: typeof ProjectsProjectIdDocumentsRouteWithChildren
   ProjectsProjectIdEntitiesRoute: typeof ProjectsProjectIdEntitiesRoute
@@ -468,8 +481,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsProjectIdCanonConnectionsRouteImport
       parentRoute: typeof ProjectsProjectIdCanonRoute
     }
+    '/projects_/$projectId_/alerts/$alertId': {
+      id: '/projects_/$projectId_/alerts/$alertId'
+      path: '/$alertId'
+      fullPath: '/projects/$projectId/alerts/$alertId'
+      preLoaderRoute: typeof ProjectsProjectIdAlertsAlertIdRouteImport
+      parentRoute: typeof ProjectsProjectIdAlertsRoute
+    }
   }
 }
+
+interface ProjectsProjectIdAlertsRouteChildren {
+  ProjectsProjectIdAlertsAlertIdRoute: typeof ProjectsProjectIdAlertsAlertIdRoute
+}
+
+const ProjectsProjectIdAlertsRouteChildren: ProjectsProjectIdAlertsRouteChildren =
+  {
+    ProjectsProjectIdAlertsAlertIdRoute: ProjectsProjectIdAlertsAlertIdRoute,
+  }
+
+const ProjectsProjectIdAlertsRouteWithChildren =
+  ProjectsProjectIdAlertsRoute._addFileChildren(
+    ProjectsProjectIdAlertsRouteChildren,
+  )
 
 interface ProjectsProjectIdCanonRouteChildren {
   ProjectsProjectIdCanonConnectionsRoute: typeof ProjectsProjectIdCanonConnectionsRoute
@@ -536,7 +570,7 @@ const rootRouteChildren: RootRouteChildren = {
   EntitiesEntityIdRoute: EntitiesEntityIdRoute,
   ProjectsProjectIdRoute: ProjectsProjectIdRoute,
   ProjectsNewRoute: ProjectsNewRoute,
-  ProjectsProjectIdAlertsRoute: ProjectsProjectIdAlertsRoute,
+  ProjectsProjectIdAlertsRoute: ProjectsProjectIdAlertsRouteWithChildren,
   ProjectsProjectIdCanonRoute: ProjectsProjectIdCanonRouteWithChildren,
   ProjectsProjectIdDocumentsRoute: ProjectsProjectIdDocumentsRouteWithChildren,
   ProjectsProjectIdEntitiesRoute: ProjectsProjectIdEntitiesRoute,

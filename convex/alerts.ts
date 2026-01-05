@@ -315,6 +315,59 @@ export const remove = mutation({
   },
 });
 
+export const resolveWithCanonUpdate = mutation({
+  args: {
+    id: v.id('alerts'),
+    factId: v.id('facts'),
+    newValue: v.string(),
+    resolutionNotes: v.optional(v.string()),
+  },
+  handler: async (ctx, { id, factId, newValue, resolutionNotes }) => {
+    const userId = await requireAuth(ctx);
+    const alert = unwrapOrThrow(await verifyAlertAccess(ctx, id, userId));
+
+    const fact = await ctx.db.get(factId);
+    if (!fact) {
+      throw new Error('Fact not found');
+    }
+
+    if (!alert.factIds.includes(factId)) {
+      throw new Error('Fact not associated with this alert');
+    }
+
+    await ctx.db.patch(factId, {
+      object: newValue,
+    });
+
+    const wasOpen = alert.status === 'open';
+
+    await ctx.db.patch(id, {
+      status: 'resolved',
+      resolvedAt: Date.now(),
+      resolutionNotes:
+        resolutionNotes ?? `Updated fact: ${fact.subject} ${fact.predicate} ${newValue}`,
+    });
+
+    if (wasOpen) {
+      const project = await ctx.db.get(alert.projectId);
+      if (project) {
+        const stats = project.stats ?? {
+          documentCount: 0,
+          entityCount: 0,
+          factCount: 0,
+          alertCount: 0,
+        };
+        await ctx.db.patch(alert.projectId, {
+          updatedAt: Date.now(),
+          stats: { ...stats, alertCount: Math.max(0, stats.alertCount - 1) },
+        });
+      }
+    }
+
+    return { alertId: id, factId };
+  },
+});
+
 export const resolveAll = mutation({
   args: {
     projectId: v.id('projects'),
