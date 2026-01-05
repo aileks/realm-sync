@@ -4,7 +4,7 @@ import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-r
 
 import { AppLayout } from '../components/AppLayout';
 import { Toaster } from '../components/ui/sonner';
-import { Vellum } from '../components/Vellum';
+import { KeyboardShortcutsProvider } from '../components/KeyboardShortcuts';
 import ConvexProvider from '../integrations/convex/provider';
 
 import appCss from '../styles.css?url';
@@ -52,11 +52,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 function RootLayout() {
   return (
     <ConvexProvider>
-      <AppLayout>
-        <Outlet />
-      </AppLayout>
-      <Toaster position="bottom-right" />
-      <Vellum />
+      <KeyboardShortcutsProvider>
+        <AppLayout>
+          <Outlet />
+        </AppLayout>
+        <Toaster position="bottom-right" />
+      </KeyboardShortcutsProvider>
       {/* <TanStackDevtools
         config={{
           position: 'bottom-right',
