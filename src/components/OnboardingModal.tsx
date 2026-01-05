@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { useNavigate } from '@tanstack/react-router';
 import { BookOpen, FileText, Sparkles, Search, Shield, ArrowRight, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import {
@@ -69,17 +70,29 @@ export function OnboardingModal() {
 
   async function handleNext() {
     if (isLastStep) {
-      await completeOnboarding();
-      setIsOpen(false);
-      void navigate({ to: '/projects' });
+      try {
+        await completeOnboarding();
+        setIsOpen(false);
+        void navigate({ to: '/projects' });
+      } catch (error) {
+        toast.error('Failed to complete onboarding', {
+          description: error instanceof Error ? error.message : 'Please try again.',
+        });
+      }
     } else {
       setCurrentStep((prev) => prev + 1);
     }
   }
 
-  function handleSkip() {
-    void completeOnboarding();
-    setIsOpen(false);
+  async function handleSkip() {
+    try {
+      await completeOnboarding();
+      setIsOpen(false);
+    } catch (error) {
+      toast.error('Failed to skip onboarding', {
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    }
   }
 
   return (

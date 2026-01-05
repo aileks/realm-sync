@@ -147,19 +147,20 @@ A guided experience for first-time users to ensure they understand the value of 
 
 Power users can navigate the archive without leaving the keyboard.
 
-| Category    | Shortcut           | Action                            |
-| ----------- | ------------------ | --------------------------------- |
-| **Global**  | `Cmd/Ctrl + K`     | Open Command Palette / Search     |
-|             | `Cmd/Ctrl + N`     | Create new document               |
-|             | `Cmd/Ctrl + E`     | Trigger extraction on current doc |
-|             | `Cmd/Ctrl + /`     | Show shortcut cheatsheet          |
-| **Editor**  | `Cmd/Ctrl + S`     | Save document                     |
-|             | `Cmd/Ctrl + Enter` | Save and trigger extraction       |
-|             | `Escape`           | Close editor / Cancel             |
-| **Browser** | `J / K`            | Navigate up/down in lists         |
-|             | `Enter`            | Open selected entity/document     |
-|             | `E`                | Edit selected item                |
-|             | `/`                | Focus search input                |
+| Category       | Shortcut               | Action                  |
+| -------------- | ---------------------- | ----------------------- |
+| **Global**     | `Cmd/Ctrl + K`         | Open Command Palette    |
+|                | `Cmd/Ctrl + Shift + K` | Show keyboard shortcuts |
+|                | `/`                    | Focus search input      |
+| **Navigation** | `g` then `p`           | Go to Projects          |
+|                | `g` then `d`           | Go to Documents         |
+|                | `g` then `c`           | Go to Canon             |
+|                | `g` then `e`           | Go to Entities          |
+|                | `g` then `f`           | Go to Facts             |
+|                | `g` then `a`           | Go to Alerts            |
+|                | `g` then `r`           | Go to Review            |
+| **Editor**     | `Cmd/Ctrl + E`         | Trigger extraction      |
+|                | `Escape`               | Close editor / Cancel   |
 
 ---
 

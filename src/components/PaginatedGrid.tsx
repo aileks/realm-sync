@@ -37,9 +37,11 @@ export function PaginatedGrid<T extends { _id: string }>({
 
   return (
     <div className={className}>
-      <div className={cn('grid gap-4 md:grid-cols-2 lg:grid-cols-3', gridClassName)}>
+      <div className={cn('grid auto-rows-fr gap-4 md:grid-cols-2 lg:grid-cols-3', gridClassName)}>
         {results.map((item, index) => (
-          <div key={item._id}>{renderItem(item, index)}</div>
+          <div key={item._id} className="flex">
+            {renderItem(item, index)}
+          </div>
         ))}
       </div>
 

@@ -24,7 +24,7 @@ const TIPS = [
   'Review extracted entities in the Canon Browser to confirm or reject them.',
   'Use the Timeline view to see events in chronological order.',
   'The Connections view shows relationships between your entities.',
-  'Keyboard shortcut: Press Cmd+K to open the command palette.',
+  'Keyboard shortcut: Press Cmd+K to open the command palette, or Cmd+Shift+K for all shortcuts.',
 ];
 
 type VellumButtonProps = {
@@ -88,11 +88,11 @@ function MessageBubble({ children, variant = 'default' }: MessageBubbleProps) {
       className={cn(
         'rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed',
         variant === 'default' && 'bg-muted',
-        variant === 'tip' && 'border border-amber-500/20 bg-amber-500/5 text-amber-200/80'
+        variant === 'tip' && 'border-primary/20 bg-primary/5 text-foreground/80 border'
       )}
     >
       {variant === 'tip' && (
-        <span className="mb-1 block text-[10px] font-medium tracking-wider text-amber-400/70 uppercase">
+        <span className="text-primary mb-1 block text-[10px] font-medium tracking-wider uppercase">
           Tip
         </span>
       )}

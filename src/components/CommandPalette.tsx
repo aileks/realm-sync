@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { Command } from 'cmdk';
@@ -19,9 +19,10 @@ import type { Id } from '../../convex/_generated/dataModel';
 type CommandPaletteProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialView?: 'commands' | 'shortcuts';
 };
 
-export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
+export function CommandPalette({ open, onOpenChange, initialView }: CommandPaletteProps) {
   const navigate = useNavigate();
   const params = useParams({ strict: false });
   const projectId = (params as { projectId?: string }).projectId as Id<'projects'> | undefined;
@@ -33,49 +34,54 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const documents = useQuery(api.documents.list, projectId ? { projectId } : 'skip');
   const entities = useQuery(api.entities.listByProject, projectId ? { projectId } : 'skip');
 
-  const runAction = useCallback(
-    (action: () => void) => {
-      onOpenChange(false);
-      setSearch('');
-      action();
-    },
-    [onOpenChange]
-  );
+  function runAction(action: () => void) {
+    onOpenChange(false);
+    setSearch('');
+    action();
+  }
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      setShowShortcuts(initialView === 'shortcuts');
+    } else {
       setSearch('');
       setShowShortcuts(false);
     }
-  }, [open]);
+  }, [open, initialView]);
 
   if (showShortcuts) {
     return (
       <Command.Dialog
         open={open}
         onOpenChange={onOpenChange}
+        label="Keyboard shortcuts"
+        aria-describedby={undefined}
         className="bg-popover fixed top-1/2 left-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl shadow-2xl"
       >
+        <h1 className="sr-only">Keyboard Shortcuts</h1>
         <div className="border-border border-b px-4 py-3">
-          <h2 className="font-serif text-lg font-semibold">Keyboard Shortcuts</h2>
+          <h2 className="font-serif text-lg font-semibold" aria-hidden>
+            Keyboard Shortcuts
+          </h2>
         </div>
         <div className="max-h-96 overflow-y-auto p-4">
           <ShortcutSection title="Global">
             <ShortcutItem keys={['⌘', 'K']} description="Open command palette" />
-            <ShortcutItem keys={['⌘', 'N']} description="New document" />
-            <ShortcutItem keys={['⌘', 'E']} description="Trigger extraction" />
-            <ShortcutItem keys={['⌘', '/']} description="Show shortcuts" />
+            <ShortcutItem keys={['⌘', '⇧', 'K']} description="Show shortcuts" />
+            <ShortcutItem keys={['/']} description="Focus search" />
+          </ShortcutSection>
+          <ShortcutSection title="Navigation (g + key)">
+            <ShortcutItem keys={['g', 'p']} description="Go to projects" />
+            <ShortcutItem keys={['g', 'd']} description="Go to documents" />
+            <ShortcutItem keys={['g', 'c']} description="Go to canon" />
+            <ShortcutItem keys={['g', 'e']} description="Go to entities" />
+            <ShortcutItem keys={['g', 'f']} description="Go to facts" />
+            <ShortcutItem keys={['g', 'a']} description="Go to alerts" />
+            <ShortcutItem keys={['g', 'r']} description="Go to review" />
           </ShortcutSection>
           <ShortcutSection title="Editor">
-            <ShortcutItem keys={['⌘', 'S']} description="Save document" />
-            <ShortcutItem keys={['⌘', '↵']} description="Save and extract" />
+            <ShortcutItem keys={['⌘', 'E']} description="Trigger extraction" />
             <ShortcutItem keys={['Esc']} description="Close / Cancel" />
-          </ShortcutSection>
-          <ShortcutSection title="Lists">
-            <ShortcutItem keys={['J']} description="Move down" />
-            <ShortcutItem keys={['K']} description="Move up" />
-            <ShortcutItem keys={['↵']} description="Open selected" />
-            <ShortcutItem keys={['/']} description="Focus search" />
           </ShortcutSection>
         </div>
         <div className="border-border border-t px-4 py-3">
@@ -94,8 +100,11 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     <Command.Dialog
       open={open}
       onOpenChange={onOpenChange}
+      label="Command palette"
+      aria-describedby={undefined}
       className="bg-popover fixed top-1/2 left-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl shadow-2xl"
     >
+      <h1 className="sr-only">Command palette</h1>
       <div className="border-border flex items-center gap-2 border-b px-4">
         <Search className="text-muted-foreground size-4" />
         <Command.Input
@@ -231,9 +240,9 @@ function CommandItem({ icon: Icon, children, onSelect }: CommandItemProps) {
   return (
     <Command.Item
       onSelect={onSelect}
-      className="aria-selected:bg-accent aria-selected:text-accent-foreground flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm outline-none"
+      className="aria-selected:bg-accent aria-selected:text-accent-foreground group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm outline-none"
     >
-      <Icon className="text-muted-foreground size-4" />
+      <Icon className="text-muted-foreground group-aria-selected:text-accent-foreground size-4" />
       <span>{children}</span>
     </Command.Item>
   );

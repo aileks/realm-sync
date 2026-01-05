@@ -68,7 +68,7 @@ export function EntityCard({
   return (
     <Card
       className={cn(
-        'group hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1',
+        'group hover:border-primary/50 hover:ring-primary/20 flex w-full flex-col transition-all duration-200 hover:shadow-md hover:ring-1',
         className
       )}
     >

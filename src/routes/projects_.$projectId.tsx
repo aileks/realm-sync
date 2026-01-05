@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { addRecentProject } from '@/components/AppSidebar';
 import {
   FileText,
   Users,
@@ -44,6 +45,12 @@ function ProjectDashboard() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  useEffect(() => {
+    if (project) {
+      addRecentProject(projectId, project.name);
+    }
+  }, [project, projectId]);
 
   if (project === undefined) {
     return <LoadingState message="Loading project..." />;

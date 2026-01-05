@@ -22,12 +22,27 @@ function getConfidenceColor(confidence: number): string {
   return 'bg-red-500/15 text-red-600 dark:text-red-400 ring-red-500/20';
 }
 
+function formatPredicate(predicate: string): string {
+  return predicate.replace(/_/g, ' ');
+}
+
+function getStatusStyle(status: string): string {
+  switch (status) {
+    case 'confirmed':
+      return 'bg-green-500/15 text-green-600 dark:text-green-400 ring-green-500/20';
+    case 'rejected':
+      return 'bg-red-500/15 text-red-600 dark:text-red-400 ring-red-500/20';
+    default:
+      return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 ring-amber-500/20';
+  }
+}
+
 export function FactCard({ fact, onConfirm, onReject, onHighlight }: FactCardProps) {
   const confidencePercent = Math.round(fact.confidence * 100);
 
   return (
     <Card
-      className="group hover:border-primary/50 hover:ring-primary/20 transition-all duration-200 hover:shadow-md hover:ring-1"
+      className="group hover:border-primary/50 hover:ring-primary/20 w-full transition-all duration-200 hover:shadow-md hover:ring-1"
       onMouseEnter={() => onHighlight?.(fact.evidencePosition ?? undefined)}
       onMouseLeave={() => onHighlight?.(undefined)}
     >
@@ -39,14 +54,23 @@ export function FactCard({ fact, onConfirm, onReject, onHighlight }: FactCardPro
                 {fact.subject}
               </span>
               <ArrowRight className="text-muted-foreground/70 size-3.5" />
-              <span className="text-muted-foreground italic">{fact.predicate}</span>
+              <span className="text-predicate italic">{formatPredicate(fact.predicate)}</span>
               <ArrowRight className="text-muted-foreground/70 size-3.5" />
               <span className="text-foreground bg-secondary/50 rounded-md px-1.5 py-0.5 font-serif font-medium">
                 {fact.object}
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant="outline"
+                className={cn(
+                  'h-5 border-transparent px-1.5 text-[10px] font-normal ring-1',
+                  getStatusStyle(fact.status)
+                )}
+              >
+                {fact.status}
+              </Badge>
               <Badge
                 variant="outline"
                 className={cn(
@@ -54,7 +78,7 @@ export function FactCard({ fact, onConfirm, onReject, onHighlight }: FactCardPro
                   getConfidenceColor(fact.confidence)
                 )}
               >
-                {confidencePercent}% confidence
+                {confidencePercent}%
               </Badge>
               {fact.temporalBound && (
                 <Badge
@@ -74,24 +98,28 @@ export function FactCard({ fact, onConfirm, onReject, onHighlight }: FactCardPro
             </div>
           </div>
 
-          <CardAction className="flex shrink-0 gap-1 opacity-80 transition-opacity group-hover:opacity-100">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-muted-foreground size-8 p-0 hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400"
-              onClick={() => onConfirm(fact._id)}
-            >
-              <Check className="size-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-8 p-0"
-              onClick={() => onReject(fact._id)}
-            >
-              <X className="size-4" />
-            </Button>
-          </CardAction>
+          {fact.status === 'pending' && (
+            <CardAction className="flex shrink-0 gap-1 opacity-80 transition-opacity group-hover:opacity-100">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-muted-foreground size-8 p-0 hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400"
+                onClick={() => onConfirm(fact._id)}
+                title="Confirm fact"
+              >
+                <Check className="size-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-8 p-0"
+                onClick={() => onReject(fact._id)}
+                title="Reject fact"
+              >
+                <X className="size-4" />
+              </Button>
+            </CardAction>
+          )}
         </div>
       </CardHeader>
     </Card>

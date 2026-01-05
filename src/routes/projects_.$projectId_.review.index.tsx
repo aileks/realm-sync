@@ -37,7 +37,7 @@ function ReviewQueuePage() {
   }
 
   return (
-    <div className="container mx-auto max-w-4xl p-6 py-8">
+    <div className="container mx-auto p-6">
       <div className="mb-8">
         <Button
           variant="ghost"
