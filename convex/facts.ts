@@ -1,4 +1,5 @@
 import { v } from 'convex/values';
+import { paginationOptsValidator } from 'convex/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
@@ -264,6 +265,32 @@ export const listByProject = query({
       .query('facts')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .collect();
+  },
+});
+
+export const listByProjectPaginated = query({
+  args: {
+    projectId: v.id('projects'),
+    status: v.optional(factStatusValidator),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { projectId, status, paginationOpts }) => {
+    const isOwner = await verifyProjectOwnership(ctx, projectId);
+    if (!isOwner) {
+      return { page: [], isDone: true, continueCursor: '' };
+    }
+
+    if (status) {
+      return await ctx.db
+        .query('facts')
+        .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('status', status))
+        .paginate(paginationOpts);
+    }
+
+    return await ctx.db
+      .query('facts')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .paginate(paginationOpts);
   },
 });
 

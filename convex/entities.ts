@@ -1,4 +1,5 @@
 import { v } from 'convex/values';
+import { paginationOptsValidator } from 'convex/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
@@ -437,6 +438,44 @@ export const listPending = query({
       .query('entities')
       .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', 'pending'))
       .collect();
+  },
+});
+
+export const listByProjectPaginated = query({
+  args: {
+    projectId: v.id('projects'),
+    type: v.optional(entityTypeValidator),
+    status: v.optional(entityStatusValidator),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { projectId, type, status, paginationOpts }) => {
+    const isOwner = await verifyProjectOwnership(ctx, projectId);
+    if (!isOwner) {
+      return { page: [], isDone: true, continueCursor: '' };
+    }
+
+    if (type && status) {
+      return await ctx.db
+        .query('entities')
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
+        .filter((q) => q.eq(q.field('type'), type))
+        .paginate(paginationOpts);
+    } else if (type) {
+      return await ctx.db
+        .query('entities')
+        .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', type))
+        .paginate(paginationOpts);
+    } else if (status) {
+      return await ctx.db
+        .query('entities')
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
+        .paginate(paginationOpts);
+    } else {
+      return await ctx.db
+        .query('entities')
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
+        .paginate(paginationOpts);
+    }
   },
 });
 
