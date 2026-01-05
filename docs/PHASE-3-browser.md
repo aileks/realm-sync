@@ -29,7 +29,7 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 | 3.4 Entity Editing & Management | ✅ Complete | #18 | Inline + dedicated page editing |
 | 3.5 Timeline View | ✅ Complete | - | Events by document order |
 | 3.6 Relationship Visualization | ✅ Complete | - | D3 force-directed graph |
-| 3.7 Polish & Integration | 🔲 Pending | - | - |
+| 3.7 Polish & Integration | ✅ Complete | - | QuickStats + Vellum empty states |
 
 ### What's Implemented (from PR #16)
 
@@ -201,12 +201,12 @@ Phase 3 focuses on the Canon Browser UI, allowing users to explore, search, and 
 
 **Components:**
 
-- Vellum empty state messages
-- `QuickStats` - Entity/fact/coverage totals
+- ✅ Vellum empty state messages (enhanced across all Canon pages)
+- ✅ `QuickStats` - Entity/fact/coverage totals with entity type breakdown
 
 **Backend:**
 
-- `projects.getCanonStats` - Aggregated canon statistics
+- ✅ `projects.getCanonStats` - Aggregated canon statistics (entities, facts, documents, coverage)
 
 ---
 

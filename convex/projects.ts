@@ -174,3 +174,58 @@ export const updateStats = mutation({
     });
   },
 });
+
+export const getCanonStats = query({
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
+    const userId = await getAuthUserId(ctx);
+    const project = await ctx.db.get(projectId);
+
+    if (!project || project.userId !== userId) {
+      return null;
+    }
+
+    const confirmedEntities = await ctx.db
+      .query('entities')
+      .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', 'confirmed'))
+      .collect();
+
+    const confirmedFacts = await ctx.db
+      .query('facts')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('status', 'confirmed'))
+      .collect();
+
+    const allDocuments = await ctx.db
+      .query('documents')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .collect();
+
+    const processedDocuments = allDocuments.filter(
+      (d) => d.processingStatus === 'completed'
+    ).length;
+
+    const entityCounts = {
+      character: 0,
+      location: 0,
+      item: 0,
+      concept: 0,
+      event: 0,
+    };
+
+    for (const entity of confirmedEntities) {
+      entityCounts[entity.type]++;
+    }
+
+    const coveragePercent =
+      allDocuments.length > 0 ? (processedDocuments / allDocuments.length) * 100 : 0;
+
+    return {
+      totalEntities: confirmedEntities.length,
+      totalFacts: confirmedFacts.length,
+      totalDocuments: allDocuments.length,
+      processedDocuments,
+      coverage: Math.round(coveragePercent),
+      entityCounts,
+    };
+  },
+});

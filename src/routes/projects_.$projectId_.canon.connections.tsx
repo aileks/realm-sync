@@ -94,13 +94,11 @@ function CanonConnections() {
 
       {graph.nodes.length === 0 ?
         <EmptyState
-          title={
-            entityFilter !== 'all' ? 'No relationships for this entity' : 'No relationships yet'
-          }
+          title={entityFilter !== 'all' ? 'No connections traced' : 'The web awaits its threads'}
           description={
             entityFilter !== 'all' ?
-              'This entity has no inferred connections to other entities based on current facts.'
-            : 'Relationships will appear here as facts are extracted that mention multiple entities.'
+              'This entity stands alone in the archive—for now. Connections will emerge as more facts are cataloged.'
+            : 'Relationships between entities will materialize here as Vellum weaves connections from the facts you confirm.'
           }
         />
       : <div className="bg-card h-[600px] rounded-lg border">

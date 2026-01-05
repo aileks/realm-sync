@@ -153,11 +153,11 @@ function CanonTimeline() {
 
       {timelineItems.length === 0 ?
         <EmptyState
-          title={entityFilter !== 'all' ? 'No timeline entries for this entity' : 'No events yet'}
+          title={entityFilter !== 'all' ? 'No chronicle entries found' : 'The timeline awaits'}
           description={
             entityFilter !== 'all' ?
-              'This entity has no events or first appearances in your canon yet.'
-            : 'Events and entity first appearances will show here as you add documents and extract canon.'
+              'This entity has yet to make their mark on the timeline. Their story will unfold as you process more documents.'
+            : 'Events and first appearances will emerge here as Vellum catalogs your documents. The chronicle builds itself, one extraction at a time.'
           }
         />
       : <div className="relative">

@@ -5,6 +5,7 @@ import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/LoadingState';
+import { QuickStats } from '@/components/QuickStats';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/projects_/$projectId_/canon')({
@@ -15,6 +16,9 @@ function CanonLayout() {
   const navigate = useNavigate();
   const { projectId } = Route.useParams();
   const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
+  const canonStats = useQuery(api.projects.getCanonStats, {
+    projectId: projectId as Id<'projects'>,
+  });
 
   if (project === undefined) {
     return <LoadingState message="Loading project..." />;
@@ -64,6 +68,17 @@ function CanonLayout() {
             </NavLink>
           </nav>
         </div>
+        {canonStats && (
+          <QuickStats
+            totalEntities={canonStats.totalEntities}
+            totalFacts={canonStats.totalFacts}
+            totalDocuments={canonStats.totalDocuments}
+            processedDocuments={canonStats.processedDocuments}
+            coverage={canonStats.coverage}
+            entityCounts={canonStats.entityCounts}
+            className="mt-4"
+          />
+        )}
       </div>
       <Outlet />
     </div>

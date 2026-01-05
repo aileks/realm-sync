@@ -349,4 +349,187 @@ describe('projects', () => {
       });
     });
   });
+
+  describe('getCanonStats query', () => {
+    it('returns null for non-existent project', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const projectId = await t.run(async (ctx) => {
+        const id = await ctx.db.insert('projects', {
+          userId,
+          name: 'Temp',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        await ctx.db.delete(id);
+        return id;
+      });
+
+      const stats = await asUser.query(api.projects.getCanonStats, { projectId });
+      expect(stats).toBeNull();
+    });
+
+    it('returns null when user is not owner', async () => {
+      const t = convexTest(schema, getModules());
+      const { asUser } = await setupAuthenticatedUser(t);
+
+      const projectId = await t.run(async (ctx) => {
+        const otherUserId = await ctx.db.insert('users', {
+          name: 'Other',
+          email: 'other@example.com',
+          createdAt: Date.now(),
+        });
+        return await ctx.db.insert('projects', {
+          userId: otherUserId,
+          name: 'Other Project',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      });
+
+      const stats = await asUser.query(api.projects.getCanonStats, { projectId });
+      expect(stats).toBeNull();
+    });
+
+    it('returns zero counts for empty project', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const projectId = await t.run(async (ctx) => {
+        return await ctx.db.insert('projects', {
+          userId,
+          name: 'Empty Project',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      });
+
+      const stats = await asUser.query(api.projects.getCanonStats, { projectId });
+      expect(stats).toEqual({
+        totalEntities: 0,
+        totalFacts: 0,
+        totalDocuments: 0,
+        processedDocuments: 0,
+        coverage: 0,
+        entityCounts: {
+          character: 0,
+          location: 0,
+          item: 0,
+          concept: 0,
+          event: 0,
+        },
+      });
+    });
+
+    it('returns accurate counts with confirmed entities and facts', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const projectId = await t.run(async (ctx) => {
+        const pId = await ctx.db.insert('projects', {
+          userId,
+          name: 'Populated Project',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        const docId = await ctx.db.insert('documents', {
+          projectId: pId,
+          title: 'Chapter 1',
+          contentType: 'text',
+          orderIndex: 0,
+          wordCount: 500,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          processingStatus: 'completed',
+        });
+
+        await ctx.db.insert('documents', {
+          projectId: pId,
+          title: 'Chapter 2',
+          contentType: 'text',
+          orderIndex: 1,
+          wordCount: 300,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          processingStatus: 'pending',
+        });
+
+        const entityId = await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Jon Snow',
+          type: 'character',
+          aliases: [],
+          status: 'confirmed',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Winterfell',
+          type: 'location',
+          aliases: [],
+          status: 'confirmed',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await ctx.db.insert('entities', {
+          projectId: pId,
+          name: 'Pending Entity',
+          type: 'item',
+          aliases: [],
+          status: 'pending',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        await ctx.db.insert('facts', {
+          projectId: pId,
+          entityId,
+          documentId: docId,
+          subject: 'Jon Snow',
+          predicate: 'has_title',
+          object: 'Lord Commander',
+          confidence: 0.95,
+          evidenceSnippet: 'Jon Snow became Lord Commander',
+          status: 'confirmed',
+          createdAt: Date.now(),
+        });
+
+        await ctx.db.insert('facts', {
+          projectId: pId,
+          entityId,
+          documentId: docId,
+          subject: 'Jon Snow',
+          predicate: 'has_trait',
+          object: 'Knows nothing',
+          confidence: 0.9,
+          evidenceSnippet: 'You know nothing, Jon Snow',
+          status: 'pending',
+          createdAt: Date.now(),
+        });
+
+        return pId;
+      });
+
+      const stats = await asUser.query(api.projects.getCanonStats, { projectId });
+      expect(stats).toEqual({
+        totalEntities: 2,
+        totalFacts: 1,
+        totalDocuments: 2,
+        processedDocuments: 1,
+        coverage: 50,
+        entityCounts: {
+          character: 1,
+          location: 1,
+          item: 0,
+          concept: 0,
+          event: 0,
+        },
+      });
+    });
+  });
 });
