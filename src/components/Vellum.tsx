@@ -28,7 +28,7 @@ export function Vellum({ mood = 'neutral', message, onDismiss, className }: Vell
   const [isExpanded, setIsExpanded] = useState(!!message);
 
   return (
-    <div className={cn('fixed right-6 bottom-6 z-40 flex flex-col items-end gap-2', className)}>
+    <div className={cn('fixed bottom-6 left-20 z-40 flex flex-col items-start gap-2', className)}>
       {isExpanded && message && (
         <div className="bg-card ring-primary/20 animate-in slide-in-from-bottom-2 fade-in relative max-w-xs rounded-2xl p-4 shadow-xl ring-1 duration-200">
           {onDismiss && (
