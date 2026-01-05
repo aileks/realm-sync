@@ -13,6 +13,7 @@ export default defineSchema({
     image: v.optional(v.string()),
     isAnonymous: v.optional(v.boolean()),
     createdAt: v.number(),
+    onboardingCompleted: v.optional(v.boolean()),
     settings: v.optional(
       v.object({
         theme: v.optional(v.string()),
