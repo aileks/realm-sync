@@ -348,9 +348,64 @@ Allow users to restart the tour from settings or help menu.
 
 ---
 
-## 8. Future Enhancements
+## 8. Project Sharing (DM/Player Collaboration)
+
+Enable dungeon masters to share their world canon with players in a read-only or limited capacity.
+
+### Use Cases
+
+- **DM shares world lore** with players without revealing plot secrets
+- **Players reference** character facts, location details, item descriptions
+- **Collaborative worldbuilding** where players can suggest (but not directly edit) canon
+
+### Permission Model
+
+| Role       | Capabilities                                               |
+| ---------- | ---------------------------------------------------------- |
+| **Owner**  | Full access (create, edit, delete, share)                  |
+| **Editor** | Add/edit documents, confirm entities (no delete, no share) |
+| **Viewer** | Read-only access to confirmed canon (no pending items)     |
+
+### Schema Extension
+
+```typescript
+// convex/schema.ts
+projectShares: defineTable({
+  projectId: v.id('projects'),
+  sharedWithEmail: v.string(),
+  role: v.union(v.literal('editor'), v.literal('viewer')),
+  invitedBy: v.id('users'),
+  acceptedAt: v.optional(v.number()),
+  createdAt: v.number(),
+})
+  .index('by_project', ['projectId'])
+  .index('by_email', ['sharedWithEmail']);
+```
+
+### Sharing UI
+
+```typescript
+// Project settings - Share tab
+- Email invite input
+- Role selector (Editor/Viewer)
+- List of current shares with remove option
+- Copy shareable link (generates invite token)
+```
+
+### Viewer Restrictions
+
+- See only `status: 'confirmed'` entities and facts
+- No access to pending extractions or alerts
+- Cannot see document raw content (only entity/fact references)
+- Read-only timeline and connections views
+
+---
+
+## 9. Future Enhancements
 
 - **Contextual Tips:** Show feature-specific tips when users access features for the first time.
 - **Video Snippets:** Add short video clips to tour steps.
 - **Achievement System:** Reward users for completing tutorial milestones.
 - **A/B Testing:** Track tour completion rates and optimize step content.
+- **Public Sharing:** Generate public read-only links for world wikis.
+- **Export for Players:** Generate player-facing PDF/markdown handouts.
