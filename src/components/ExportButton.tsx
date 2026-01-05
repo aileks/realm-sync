@@ -7,9 +7,9 @@ import type { Id } from '../../convex/_generated/dataModel';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
@@ -79,20 +79,21 @@ export function ExportButton({ projectId, projectName, className }: ExportButton
         {isExporting ? 'Exporting...' : 'Export'}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Export Format</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => handleExport('json')}>
-          <FileJson className="mr-2 size-4" />
-          JSON
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleExport('markdown')}>
-          <FileText className="mr-2 size-4" />
-          Markdown
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleExport('csv')}>
-          <Table className="mr-2 size-4" />
-          CSV
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => handleExport('json')}>
+            <FileJson className="mr-2 size-4" />
+            JSON
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport('markdown')}>
+            <FileText className="mr-2 size-4" />
+            Markdown
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport('csv')}>
+            <Table className="mr-2 size-4" />
+            CSV
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
