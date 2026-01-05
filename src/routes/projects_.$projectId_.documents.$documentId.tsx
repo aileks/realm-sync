@@ -104,25 +104,7 @@ function DocumentEditorPage() {
     return () => clearTimeout(timer);
   }, [hasChanges, save]);
 
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-        e.preventDefault();
-        void save();
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
-        e.preventDefault();
-        if (!isExtracting && !hasChanges && document?.processingStatus !== 'processing') {
-          void handleExtract();
-        }
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [save, isExtracting, hasChanges, document?.processingStatus]);
-
-  async function handleExtract() {
+  const handleExtract = useCallback(async () => {
     if (!document) return;
     setIsExtracting(true);
     toast.info('Extraction started', {
@@ -141,7 +123,25 @@ function DocumentEditorPage() {
     } finally {
       setIsExtracting(false);
     }
-  }
+  }, [document, chunkAndExtract]);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        void save();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
+        e.preventDefault();
+        if (!isExtracting && !hasChanges && document?.processingStatus !== 'processing') {
+          void handleExtract();
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [save, isExtracting, hasChanges, document?.processingStatus, handleExtract]);
 
   async function handleReset() {
     if (!document) return;
