@@ -178,6 +178,7 @@ function AlertsPage() {
             <AlertCard
               key={alert._id}
               alert={alert}
+              projectId={projectId}
               onResolve={handleResolve}
               onDismiss={handleDismiss}
               entityNames={alert.entityIds.map((id) => entityNameMap.get(id) ?? 'Unknown')}
