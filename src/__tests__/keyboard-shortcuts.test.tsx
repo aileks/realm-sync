@@ -86,25 +86,28 @@ describe('CommandPalette', () => {
       expect(screen.getByText('Show shortcuts')).toBeDefined();
     });
 
+    it('lists all documented navigation shortcuts', () => {
+      render(
+        <CommandPalette open={true} onOpenChange={mockOnOpenChange} initialView="shortcuts" />
+      );
+
+      expect(screen.getByText('Go to projects')).toBeDefined();
+      expect(screen.getByText('Go to documents')).toBeDefined();
+      expect(screen.getByText('Go to canon')).toBeDefined();
+      expect(screen.getByText('Go to entities')).toBeDefined();
+      expect(screen.getByText('Go to facts')).toBeDefined();
+      expect(screen.getByText('Go to alerts')).toBeDefined();
+      expect(screen.getByText('Go to review')).toBeDefined();
+    });
+
     it('lists all documented editor shortcuts', () => {
       render(
         <CommandPalette open={true} onOpenChange={mockOnOpenChange} initialView="shortcuts" />
       );
 
       expect(screen.getByText('Save document')).toBeDefined();
-      expect(screen.getByText('Save and extract')).toBeDefined();
+      expect(screen.getByText('Trigger extraction')).toBeDefined();
       expect(screen.getByText('Close / Cancel')).toBeDefined();
-    });
-
-    it('lists all documented list shortcuts', () => {
-      render(
-        <CommandPalette open={true} onOpenChange={mockOnOpenChange} initialView="shortcuts" />
-      );
-
-      expect(screen.getByText('Move down')).toBeDefined();
-      expect(screen.getByText('Move up')).toBeDefined();
-      expect(screen.getByText('Open selected')).toBeDefined();
-      expect(screen.getByText('Focus search')).toBeDefined();
     });
   });
 });

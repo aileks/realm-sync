@@ -66,17 +66,21 @@ export function CommandPalette({ open, onOpenChange, initialView }: CommandPalet
           <ShortcutSection title="Global">
             <ShortcutItem keys={['⌘', 'K']} description="Open command palette" />
             <ShortcutItem keys={['⇧', '?']} description="Show shortcuts" />
+            <ShortcutItem keys={['/']} description="Focus search" />
+          </ShortcutSection>
+          <ShortcutSection title="Navigation (g + key)">
+            <ShortcutItem keys={['g', 'p']} description="Go to projects" />
+            <ShortcutItem keys={['g', 'd']} description="Go to documents" />
+            <ShortcutItem keys={['g', 'c']} description="Go to canon" />
+            <ShortcutItem keys={['g', 'e']} description="Go to entities" />
+            <ShortcutItem keys={['g', 'f']} description="Go to facts" />
+            <ShortcutItem keys={['g', 'a']} description="Go to alerts" />
+            <ShortcutItem keys={['g', 'r']} description="Go to review" />
           </ShortcutSection>
           <ShortcutSection title="Editor">
             <ShortcutItem keys={['⌘', 'S']} description="Save document" />
-            <ShortcutItem keys={['⌘', '↵']} description="Save and extract" />
+            <ShortcutItem keys={['⌘', 'E']} description="Trigger extraction" />
             <ShortcutItem keys={['Esc']} description="Close / Cancel" />
-          </ShortcutSection>
-          <ShortcutSection title="Lists">
-            <ShortcutItem keys={['J']} description="Move down" />
-            <ShortcutItem keys={['K']} description="Move up" />
-            <ShortcutItem keys={['↵']} description="Open selected" />
-            <ShortcutItem keys={['/']} description="Focus search" />
           </ShortcutSection>
         </div>
         <div className="border-border border-t px-4 py-3">
