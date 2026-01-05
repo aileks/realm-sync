@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { VellumChat } from './VellumChat';
 
 export type VellumMood = 'neutral' | 'alert' | 'success' | 'thinking';
 
@@ -19,21 +19,11 @@ export const VELLUM_MESSAGES = {
   deleteConfirm: 'This will remove {name} and all associated facts. Are you certain?',
 } as const;
 
-const TIPS = [
-  'Add documents to your project, then extract entities and facts from them.',
-  'Review extracted entities in the Canon Browser to confirm or reject them.',
-  'Use the Timeline view to see events in chronological order.',
-  'The Connections view shows relationships between your entities.',
-  'Keyboard shortcut: Press Cmd+K to open the command palette, or Cmd+Shift+K for all shortcuts.',
-];
-
 type VellumButtonProps = {
   collapsed: boolean;
 };
 
 export function VellumButton({ collapsed }: VellumButtonProps) {
-  const [tip] = useState(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
-
   const button = (
     <SheetTrigger
       className={cn(
@@ -55,7 +45,7 @@ export function VellumButton({ collapsed }: VellumButtonProps) {
           <TooltipContent side="right">Vellum</TooltipContent>
         </Tooltip>
       : button}
-      <SheetContent side="left" className="w-80 sm:max-w-80">
+      <SheetContent side="left" className="flex w-80 flex-col sm:max-w-80">
         <SheetHeader className="border-b pb-4">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/30 ring-1 ring-amber-500/30">
@@ -68,36 +58,9 @@ export function VellumButton({ collapsed }: VellumButtonProps) {
           </div>
         </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-          <MessageBubble>{VELLUM_MESSAGES.welcome}</MessageBubble>
-          <MessageBubble variant="tip">{tip}</MessageBubble>
-        </div>
+        <VellumChat />
       </SheetContent>
     </Sheet>
-  );
-}
-
-type MessageBubbleProps = {
-  children: React.ReactNode;
-  variant?: 'default' | 'tip';
-};
-
-function MessageBubble({ children, variant = 'default' }: MessageBubbleProps) {
-  return (
-    <div
-      className={cn(
-        'rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed',
-        variant === 'default' && 'bg-muted',
-        variant === 'tip' && 'border-primary/20 bg-primary/5 text-foreground/80 border'
-      )}
-    >
-      {variant === 'tip' && (
-        <span className="text-primary mb-1 block text-[10px] font-medium tracking-wider uppercase">
-          Tip
-        </span>
-      )}
-      {children}
-    </div>
   );
 }
 
