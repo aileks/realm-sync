@@ -28,6 +28,9 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   const projectId = (params as { projectId?: string }).projectId as Id<'projects'> | undefined;
 
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [commandPaletteView, setCommandPaletteView] = useState<'commands' | 'shortcuts'>(
+    'commands'
+  );
 
   const openCommandPalette = useCallback(() => {
     setCommandPaletteOpen(true);
@@ -46,6 +49,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
     'mod+/',
     (e) => {
       e.preventDefault();
+      setCommandPaletteView('shortcuts');
       setCommandPaletteOpen(true);
     },
     { enableOnFormTags: false }
@@ -70,7 +74,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
 
       e.preventDefault();
       const searchInput = document.querySelector<HTMLInputElement>(
-        '[data-search-input], input[placeholder*="Search"]'
+        'input[type="search"], input[placeholder*="Search" i]'
       );
       searchInput?.focus();
     },
@@ -80,7 +84,14 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   return (
     <KeyboardShortcutsContext value={{ openCommandPalette }}>
       {children}
-      <CommandPalette open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen} />
+      <CommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={(open) => {
+          setCommandPaletteOpen(open);
+          if (!open) setCommandPaletteView('commands');
+        }}
+        initialView={commandPaletteView}
+      />
     </KeyboardShortcutsContext>
   );
 }

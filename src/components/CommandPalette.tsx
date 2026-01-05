@@ -19,9 +19,10 @@ import type { Id } from '../../convex/_generated/dataModel';
 type CommandPaletteProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialView?: 'commands' | 'shortcuts';
 };
 
-export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
+export function CommandPalette({ open, onOpenChange, initialView }: CommandPaletteProps) {
   const navigate = useNavigate();
   const params = useParams({ strict: false });
   const projectId = (params as { projectId?: string }).projectId as Id<'projects'> | undefined;
@@ -43,11 +44,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   );
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      setShowShortcuts(initialView === 'shortcuts');
+    } else {
       setSearch('');
       setShowShortcuts(false);
     }
-  }, [open]);
+  }, [open, initialView]);
 
   if (showShortcuts) {
     return (

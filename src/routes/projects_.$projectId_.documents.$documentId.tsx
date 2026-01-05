@@ -110,11 +110,17 @@ function DocumentEditorPage() {
         e.preventDefault();
         void save();
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
+        e.preventDefault();
+        if (!isExtracting && !hasChanges && document?.processingStatus !== 'processing') {
+          void handleExtract();
+        }
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [save]);
+  }, [save, isExtracting, hasChanges, document?.processingStatus]);
 
   async function handleExtract() {
     if (!document) return;
