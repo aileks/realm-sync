@@ -141,9 +141,11 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
     { enableOnFormTags: false }
   );
 
-  useHotkeys(
-    'g',
-    (e) => {
+  useEffect(() => {
+    function handleGKey(e: KeyboardEvent) {
+      if (e.key !== 'g' || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      if (awaitingChord) return;
+
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return;
@@ -157,9 +159,11 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
         setAwaitingChord(false);
         toast.dismiss('chord-hint');
       }, CHORD_TIMEOUT);
-    },
-    { enableOnFormTags: false }
-  );
+    }
+
+    window.addEventListener('keydown', handleGKey);
+    return () => window.removeEventListener('keydown', handleGKey);
+  }, [awaitingChord]);
 
   return (
     <KeyboardShortcutsContext value={{ openCommandPalette }}>

@@ -17,6 +17,11 @@ import {
   LogOut,
   User,
   Check,
+  FileText,
+  Users,
+  ScrollText,
+  AlertTriangle,
+  History,
 } from 'lucide-react';
 import { VellumButton } from '@/components/Vellum';
 import { cn } from '@/lib/utils';
@@ -139,15 +144,48 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               </p>
             )}
 
+            <ProjectNavItem
+              projectId={projectId}
+              to="documents"
+              icon={FileText}
+              collapsed={collapsed}
+            >
+              Documents
+            </ProjectNavItem>
+
             <ProjectNavItem projectId={projectId} to="canon" icon={BookOpen} collapsed={collapsed}>
               Canon Browser
             </ProjectNavItem>
 
+            <ProjectNavItem projectId={projectId} to="entities" icon={Users} collapsed={collapsed}>
+              Entities
+            </ProjectNavItem>
+
+            <ProjectNavItem
+              projectId={projectId}
+              to="facts"
+              icon={ScrollText}
+              collapsed={collapsed}
+            >
+              Facts
+            </ProjectNavItem>
+
+            <ProjectNavItem
+              projectId={projectId}
+              to="alerts"
+              icon={AlertTriangle}
+              collapsed={collapsed}
+            >
+              Alerts
+            </ProjectNavItem>
+
             <ProjectNavItem projectId={projectId} to="review" icon={Sparkles} collapsed={collapsed}>
-              Review Extractions
+              Review
             </ProjectNavItem>
           </>
         )}
+
+        <RecentProjects collapsed={collapsed} />
       </nav>
 
       <div className="border-sidebar-border flex flex-col gap-1 border-t p-2">
@@ -295,15 +333,19 @@ function NavItem({ to, icon: Icon, children, collapsed }: NavItemProps) {
 
 type ProjectNavItemProps = {
   projectId: string;
-  to: 'review' | 'canon';
+  to: 'documents' | 'canon' | 'entities' | 'facts' | 'alerts' | 'review';
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
 };
 
 const projectRoutes = {
-  review: '/projects/$projectId/review',
+  documents: '/projects/$projectId/documents',
   canon: '/projects/$projectId/canon',
+  entities: '/projects/$projectId/entities',
+  facts: '/projects/$projectId/facts',
+  alerts: '/projects/$projectId/alerts',
+  review: '/projects/$projectId/review',
 } as const;
 
 function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: ProjectNavItemProps) {
@@ -490,5 +532,99 @@ function MobileNavItem({ to, icon: Icon, children, onClick }: MobileNavItemProps
       <Icon className="size-5" />
       <span className="text-sm font-medium">{children}</span>
     </Link>
+  );
+}
+
+const RECENT_PROJECTS_KEY = 'realm-sync:recent-projects';
+const MAX_RECENT_PROJECTS = 5;
+
+type RecentProject = {
+  id: string;
+  name: string;
+  visitedAt: number;
+};
+
+function getRecentProjects(): RecentProject[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(RECENT_PROJECTS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function addRecentProject(id: string, name: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const recent = getRecentProjects().filter((p) => p.id !== id);
+    recent.unshift({ id, name, visitedAt: Date.now() });
+    localStorage.setItem(RECENT_PROJECTS_KEY, JSON.stringify(recent.slice(0, MAX_RECENT_PROJECTS)));
+  } catch {
+    /* empty */
+  }
+}
+
+function RecentProjects({ collapsed }: { collapsed: boolean }) {
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
+  const { isAuthenticated } = useConvexAuth();
+
+  useEffect(() => {
+    setRecentProjects(getRecentProjects());
+
+    function handleStorage(e: StorageEvent) {
+      if (e.key === RECENT_PROJECTS_KEY) {
+        setRecentProjects(getRecentProjects());
+      }
+    }
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  if (!isAuthenticated || recentProjects.length === 0) return null;
+
+  return (
+    <>
+      <div className="my-4 px-2">
+        <div className="border-sidebar-border border-t" />
+      </div>
+
+      {!collapsed && (
+        <p className="text-muted-foreground mb-2 px-3 font-mono text-[10px] tracking-widest uppercase">
+          <History className="mr-1 inline size-3" />
+          Recent
+        </p>
+      )}
+
+      {recentProjects.slice(0, collapsed ? 3 : 5).map((project) => {
+        const content = (
+          <Link
+            key={project.id}
+            to="/projects/$projectId"
+            params={{ projectId: project.id }}
+            className={cn(
+              'flex items-center gap-3 rounded-lg p-2 transition-colors',
+              collapsed && 'justify-center',
+              'hover:bg-muted text-foreground text-sm'
+            )}
+          >
+            <FolderOpen className="size-4 opacity-60" />
+            {!collapsed && <span className="truncate text-xs">{project.name}</span>}
+          </Link>
+        );
+
+        if (collapsed) {
+          return (
+            <Tooltip key={project.id}>
+              <TooltipTrigger render={content} />
+              <TooltipContent side="right">{project.name}</TooltipContent>
+            </Tooltip>
+          );
+        }
+
+        return content;
+      })}
+    </>
   );
 }
