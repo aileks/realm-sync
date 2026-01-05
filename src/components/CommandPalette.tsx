@@ -65,9 +65,7 @@ export function CommandPalette({ open, onOpenChange, initialView }: CommandPalet
         <div className="max-h-96 overflow-y-auto p-4">
           <ShortcutSection title="Global">
             <ShortcutItem keys={['⌘', 'K']} description="Open command palette" />
-            <ShortcutItem keys={['⌘', 'N']} description="New document" />
-            <ShortcutItem keys={['⌘', 'E']} description="Trigger extraction" />
-            <ShortcutItem keys={['⌘', '/']} description="Show shortcuts" />
+            <ShortcutItem keys={['⇧', '?']} description="Show shortcuts" />
           </ShortcutSection>
           <ShortcutSection title="Editor">
             <ShortcutItem keys={['⌘', 'S']} description="Save document" />
@@ -234,9 +232,9 @@ function CommandItem({ icon: Icon, children, onSelect }: CommandItemProps) {
   return (
     <Command.Item
       onSelect={onSelect}
-      className="aria-selected:bg-accent aria-selected:text-accent-foreground flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm outline-none"
+      className="aria-selected:bg-accent aria-selected:text-accent-foreground group flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-sm outline-none"
     >
-      <Icon className="text-muted-foreground size-4" />
+      <Icon className="text-muted-foreground group-aria-selected:text-accent-foreground size-4" />
       <span>{children}</span>
     </Command.Item>
   );

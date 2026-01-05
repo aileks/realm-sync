@@ -9,6 +9,7 @@ beforeAll(() => {
     disconnect: vi.fn(),
   }));
 
+  // oxlint-disable-next-line eslint/no-extend-native
   Element.prototype.scrollIntoView = vi.fn();
 });
 
@@ -58,7 +59,6 @@ describe('CommandPalette', () => {
 
       expect(screen.getByText('← Back to commands')).toBeDefined();
       expect(screen.getByText('Open command palette')).toBeDefined();
-      expect(screen.getByText('Trigger extraction')).toBeDefined();
       expect(screen.getByText('Show shortcuts')).toBeDefined();
     });
 
@@ -83,8 +83,6 @@ describe('CommandPalette', () => {
       );
 
       expect(screen.getByText('Open command palette')).toBeDefined();
-      expect(screen.getByText('New document')).toBeDefined();
-      expect(screen.getByText('Trigger extraction')).toBeDefined();
       expect(screen.getByText('Show shortcuts')).toBeDefined();
     });
 

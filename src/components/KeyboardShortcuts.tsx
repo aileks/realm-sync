@@ -1,7 +1,5 @@
 import { useState, createContext, useContext, useCallback } from 'react';
-import { useNavigate, useParams } from '@tanstack/react-router';
 import { useHotkeys } from 'react-hotkeys-hook';
-import type { Id } from '../../convex/_generated/dataModel';
 import { CommandPalette } from './CommandPalette';
 
 type KeyboardShortcutsContextValue = {
@@ -23,10 +21,6 @@ type KeyboardShortcutsProviderProps = {
 };
 
 export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProviderProps) {
-  const navigate = useNavigate();
-  const params = useParams({ strict: false });
-  const projectId = (params as { projectId?: string }).projectId as Id<'projects'> | undefined;
-
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [commandPaletteView, setCommandPaletteView] = useState<'commands' | 'shortcuts'>(
     'commands'
@@ -46,22 +40,11 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   );
 
   useHotkeys(
-    'mod+/',
+    'shift+?',
     (e) => {
       e.preventDefault();
       setCommandPaletteView('shortcuts');
       setCommandPaletteOpen(true);
-    },
-    { enableOnFormTags: false }
-  );
-
-  useHotkeys(
-    'mod+n',
-    (e) => {
-      e.preventDefault();
-      if (projectId) {
-        void navigate({ to: '/projects/$projectId/documents/new', params: { projectId } });
-      }
     },
     { enableOnFormTags: false }
   );
