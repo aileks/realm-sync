@@ -25,11 +25,12 @@ type VellumProps = {
 };
 
 export function Vellum({ mood = 'neutral', message, onDismiss, className }: VellumProps) {
-  const [isExpanded, setIsExpanded] = useState(!!message);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const displayMessage = message ?? VELLUM_MESSAGES.welcome;
 
   return (
-    <div className={cn('fixed bottom-6 left-20 z-40 flex flex-col items-start gap-2', className)}>
-      {isExpanded && message && (
+    <div className={cn('fixed bottom-6 left-72 z-40 flex flex-col items-start gap-2', className)}>
+      {isExpanded && (
         <div className="bg-card ring-primary/20 animate-in slide-in-from-bottom-2 fade-in relative max-w-xs rounded-2xl p-4 shadow-xl ring-1 duration-200">
           {onDismiss && (
             <button
@@ -43,7 +44,7 @@ export function Vellum({ mood = 'neutral', message, onDismiss, className }: Vell
               <X className="size-4" />
             </button>
           )}
-          <p className="pr-6 text-sm leading-relaxed">{message}</p>
+          <p className="pr-6 text-sm leading-relaxed">{displayMessage}</p>
         </div>
       )}
 
