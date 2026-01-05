@@ -62,6 +62,10 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | `unwrapOrThrow` | `convex/lib/result.ts` | Convert Result<T,E> to T or throw |
 | `ReviewEntityCard` | `src/components/ReviewEntityCard.tsx` | EntityCard wrapper with merge suggestions |
 | `EntityTypeFilter` | `src/components/EntityTypeFilter.tsx` | Filter dropdown for entity types |
+| `AlertCard` | `src/components/AlertCard.tsx` | Alert display card with actions |
+| `AlertFilters` | `src/components/AlertFilters.tsx` | Filter buttons for alerts (status/type/severity) |
+| `runCheck` | `convex/checks.ts` | Continuity check pipeline action |
+| `createAlerts` | `convex/checks.ts` | Batch insert alerts from check results |
 
 ## CONVENTIONS
 

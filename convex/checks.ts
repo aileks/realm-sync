@@ -1,8 +1,7 @@
 import { v } from 'convex/values';
 import { internalAction, internalMutation, action } from './_generated/server';
 import { internal, api } from './_generated/api';
-import type { Id } from './_generated/dataModel';
-import type { Doc } from './_generated/dataModel';
+import type { Id, Doc } from './_generated/dataModel';
 import { err, apiError } from './lib/errors';
 import { unwrapOrThrow, safeJsonParse } from './lib/result';
 
@@ -127,16 +126,13 @@ async function buildCanonContext(
   const entities = (await ctx.runQuery(api.entities.listByProject, {
     projectId,
     status: 'confirmed',
-  })) as Doc<'entities'>[];
+  }));
 
   const entitiesWithFacts: CanonContextEntity[] = [];
   let formattedContext = '';
 
   for (const entity of entities) {
-    const entityData = (await ctx.runQuery(api.entities.getWithFacts, { id: entity._id })) as {
-      entity: Doc<'entities'>;
-      facts: Doc<'facts'>[];
-    } | null;
+    const entityData = (await ctx.runQuery(api.entities.getWithFacts, { id: entity._id }));
     if (!entityData) continue;
 
     const confirmedFacts = entityData.facts.filter((f) => f.status === 'confirmed');
@@ -146,7 +142,7 @@ async function buildCanonContext(
       confirmedFacts.map(async (fact) => {
         const doc = (await ctx.runQuery(api.documents.get, {
           id: fact.documentId,
-        })) as Doc<'documents'> | null;
+        }));
         return {
           id: fact._id,
           predicate: fact.predicate,

@@ -94,7 +94,7 @@ function AlertDetailPage() {
         id: alert._id,
         resolutionNotes: resolutionNote || undefined,
       });
-      navigate({ to: '/projects/$projectId/alerts', params: { projectId } });
+      void navigate({ to: '/projects/$projectId/alerts', params: { projectId } });
     } finally {
       setIsSubmitting(false);
     }
@@ -104,7 +104,7 @@ function AlertDetailPage() {
     setIsSubmitting(true);
     try {
       await dismissAlert({ id: alert._id });
-      navigate({ to: '/projects/$projectId/alerts', params: { projectId } });
+      void navigate({ to: '/projects/$projectId/alerts', params: { projectId } });
     } finally {
       setIsSubmitting(false);
     }
@@ -129,7 +129,7 @@ function AlertDetailPage() {
         newValue: newFactValue.trim(),
         resolutionNotes: resolutionNote || undefined,
       });
-      navigate({ to: '/projects/$projectId/alerts', params: { projectId } });
+      void navigate({ to: '/projects/$projectId/alerts', params: { projectId } });
     } finally {
       setIsSubmitting(false);
     }

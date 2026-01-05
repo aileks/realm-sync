@@ -90,19 +90,19 @@ function AlertsPage() {
   }
 
   const handleResolve = (id: Id<'alerts'>) => {
-    resolveAlert({ id });
+    void resolveAlert({ id });
   };
 
   const handleDismiss = (id: Id<'alerts'>) => {
-    dismissAlert({ id });
+    void dismissAlert({ id });
   };
 
   const handleResolveAll = () => {
-    resolveAll({ projectId: projectId as Id<'projects'> });
+    void resolveAll({ projectId: projectId as Id<'projects'> });
   };
 
   const handleDismissAll = () => {
-    dismissAll({ projectId: projectId as Id<'projects'> });
+    void dismissAll({ projectId: projectId as Id<'projects'> });
   };
 
   return (
