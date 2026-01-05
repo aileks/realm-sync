@@ -219,23 +219,3 @@ export const exportProject = action({
     }
   },
 });
-
-export const getExportFilename = query({
-  args: {
-    projectId: v.id('projects'),
-    format: formatValidator,
-  },
-  handler: async (ctx, { projectId, format }): Promise<string | null> => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return null;
-
-    const project = await ctx.db.get(projectId);
-    if (!project || project.userId !== userId) return null;
-
-    const safeName = project.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const date = new Date().toISOString().split('T')[0];
-    const ext = format === 'markdown' ? 'md' : format;
-
-    return `${safeName}-export-${date}.${ext}`;
-  },
-});
