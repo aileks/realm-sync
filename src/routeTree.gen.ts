@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VellumChatRouteImport } from './routes/vellum.chat'
 import { Route as ProjectsNewRouteImport } from './routes/projects_.new'
 import { Route as ProjectsProjectIdRouteImport } from './routes/projects_.$projectId'
 import { Route as EntitiesEntityIdRouteImport } from './routes/entities.$entityId'
@@ -46,6 +47,11 @@ const AuthRoute = AuthRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VellumChatRoute = VellumChatRouteImport.update({
+  id: '/vellum/chat',
+  path: '/vellum/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsNewRoute = ProjectsNewRouteImport.update({
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/vellum/chat': typeof VellumChatRoute
   '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRouteWithChildren
   '/projects/$projectId/canon': typeof ProjectsProjectIdCanonRouteWithChildren
   '/projects/$projectId/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/projects/$projectId': typeof ProjectsProjectIdRoute
   '/projects/new': typeof ProjectsNewRoute
+  '/vellum/chat': typeof VellumChatRoute
   '/projects/$projectId/alerts': typeof ProjectsProjectIdAlertsRouteWithChildren
   '/projects/$projectId/entities': typeof ProjectsProjectIdEntitiesRoute
   '/projects/$projectId/facts': typeof ProjectsProjectIdFactsRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/projects_/$projectId': typeof ProjectsProjectIdRoute
   '/projects_/new': typeof ProjectsNewRoute
+  '/vellum/chat': typeof VellumChatRoute
   '/projects_/$projectId_/alerts': typeof ProjectsProjectIdAlertsRouteWithChildren
   '/projects_/$projectId_/canon': typeof ProjectsProjectIdCanonRouteWithChildren
   '/projects_/$projectId_/documents': typeof ProjectsProjectIdDocumentsRouteWithChildren
@@ -244,6 +253,7 @@ export interface FileRouteTypes {
     | '/entities/$entityId'
     | '/projects/$projectId'
     | '/projects/new'
+    | '/vellum/chat'
     | '/projects/$projectId/alerts'
     | '/projects/$projectId/canon'
     | '/projects/$projectId/documents'
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/entities/$entityId'
     | '/projects/$projectId'
     | '/projects/new'
+    | '/vellum/chat'
     | '/projects/$projectId/alerts'
     | '/projects/$projectId/entities'
     | '/projects/$projectId/facts'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/entities/$entityId'
     | '/projects_/$projectId'
     | '/projects_/new'
+    | '/vellum/chat'
     | '/projects_/$projectId_/alerts'
     | '/projects_/$projectId_/canon'
     | '/projects_/$projectId_/documents'
@@ -317,6 +329,7 @@ export interface RootRouteChildren {
   EntitiesEntityIdRoute: typeof EntitiesEntityIdRoute
   ProjectsProjectIdRoute: typeof ProjectsProjectIdRoute
   ProjectsNewRoute: typeof ProjectsNewRoute
+  VellumChatRoute: typeof VellumChatRoute
   ProjectsProjectIdAlertsRoute: typeof ProjectsProjectIdAlertsRouteWithChildren
   ProjectsProjectIdCanonRoute: typeof ProjectsProjectIdCanonRouteWithChildren
   ProjectsProjectIdDocumentsRoute: typeof ProjectsProjectIdDocumentsRouteWithChildren
@@ -346,6 +359,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vellum/chat': {
+      id: '/vellum/chat'
+      path: '/vellum/chat'
+      fullPath: '/vellum/chat'
+      preLoaderRoute: typeof VellumChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects_/new': {
@@ -570,6 +590,7 @@ const rootRouteChildren: RootRouteChildren = {
   EntitiesEntityIdRoute: EntitiesEntityIdRoute,
   ProjectsProjectIdRoute: ProjectsProjectIdRoute,
   ProjectsNewRoute: ProjectsNewRoute,
+  VellumChatRoute: VellumChatRoute,
   ProjectsProjectIdAlertsRoute: ProjectsProjectIdAlertsRouteWithChildren,
   ProjectsProjectIdCanonRoute: ProjectsProjectIdCanonRouteWithChildren,
   ProjectsProjectIdDocumentsRoute: ProjectsProjectIdDocumentsRouteWithChildren,

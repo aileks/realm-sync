@@ -3,6 +3,7 @@ import { useMutation } from 'convex/react';
 import { useStream } from '@convex-dev/persistent-text-streaming/react';
 import type { StreamId } from '@convex-dev/persistent-text-streaming';
 import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,14 +12,22 @@ import { Send, User, Loader2, AlertCircle } from 'lucide-react';
 import { env } from '@/env';
 
 type Message = {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
   streamId?: string;
 };
 
+const CONVEX_SITE_URL = env.VITE_CONVEX_URL.replace('.convex.cloud', '.convex.site');
+
+function generateId() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
 function MarkdownContent({ children }: { children: string }) {
-  const html = marked.parse(children, { async: false });
-  return <span dangerouslySetInnerHTML={{ __html: html }} />;
+  const rawHtml = marked.parse(children, { async: false });
+  const sanitizedHtml = DOMPurify.sanitize(rawHtml);
+  return <span dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />;
 }
 
 function MothIcon({ className }: { className?: string }) {
@@ -54,9 +63,13 @@ function MothIcon({ className }: { className?: string }) {
   );
 }
 
-function StreamingMessage({ streamId }: { streamId: string }) {
-  const convexSiteUrl = env.VITE_CONVEX_URL.replace('.convex.cloud', '.convex.site');
-  const streamUrl = new URL(`${convexSiteUrl}/chat-stream`);
+type StreamingMessageProps = {
+  streamId: string;
+  siteUrl: string;
+};
+
+function StreamingMessage({ streamId, siteUrl }: StreamingMessageProps) {
+  const streamUrl = new URL(`${siteUrl}/chat-stream`);
 
   const { text, status } = useStream(
     api.chat.getStreamBody,
@@ -128,8 +141,6 @@ export function VellumChat() {
   const createStreamingChat = useMutation(api.chat.createStreamingChat);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const convexSiteUrl = env.VITE_CONVEX_URL.replace('.convex.cloud', '.convex.site');
-
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -141,7 +152,7 @@ export function VellumChat() {
     if (!inputValue.trim() || isLoading) return;
 
     setError(null);
-    const userMessage: Message = { role: 'user', content: inputValue.trim() };
+    const userMessage: Message = { id: generateId(), role: 'user', content: inputValue.trim() };
     const newMessages: Message[] = [...messages, userMessage];
 
     setMessages(newMessages);
@@ -155,10 +166,16 @@ export function VellumChat() {
         messages: cleanMessages,
       });
 
+      const assistantMessage: Message = {
+        id: generateId(),
+        role: 'assistant',
+        content: '',
+        streamId,
+      };
       setCurrentStreamId(streamId);
-      setMessages([...newMessages, { role: 'assistant', content: '', streamId }]);
+      setMessages([...newMessages, assistantMessage]);
 
-      const response = await fetch(`${convexSiteUrl}/chat-stream`, {
+      const response = await fetch(`${CONVEX_SITE_URL}/chat-stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ streamId, messages: chatMessages }),
@@ -180,7 +197,9 @@ export function VellumChat() {
     } catch (err) {
       console.error('Failed to send message:', err);
       setError('Failed to get response. Please try again.');
-      setMessages(newMessages);
+      setMessages((prev) =>
+        prev.filter((msg) => !msg.streamId || msg.streamId !== currentStreamId)
+      );
       setCurrentStreamId(null);
     } finally {
       setIsLoading(false);
@@ -197,9 +216,9 @@ export function VellumChat() {
           </div>
         )}
 
-        {messages.map((msg, i) => (
+        {messages.map((msg) => (
           <div
-            key={i}
+            key={msg.id}
             className={cn('flex items-start gap-2', msg.role === 'user' && 'flex-row-reverse')}
           >
             <div
@@ -225,7 +244,7 @@ export function VellumChat() {
               {msg.role === 'user' ?
                 msg.content
               : msg.streamId ?
-                <StreamingMessage streamId={msg.streamId} />
+                <StreamingMessage streamId={msg.streamId} siteUrl={CONVEX_SITE_URL} />
               : <MarkdownContent>{msg.content}</MarkdownContent>}
             </div>
           </div>
