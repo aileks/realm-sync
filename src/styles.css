@@ -172,6 +172,22 @@
   text-shadow: 0 0 15px var(--primary);
 }
 
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.8;
+    filter: brightness(1.2);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/80;
