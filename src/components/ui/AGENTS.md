@@ -52,7 +52,7 @@ const buttonVariants = cva('base-classes...', {
 function Button({ className, variant, size, ...props }: Props) {
   return (
     <ButtonPrimitive
-      data-slot="button"           // Always add data-slot
+      data-slot="button" // Always add data-slot
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
@@ -97,12 +97,15 @@ Target components in CSS via `data-slot`:
 
 ```css
 /* Tailwind v4 */
-[data-slot="button"] { ... }
-[data-slot="field-error"] { ... }
+[data-slot='button'] {
+  ...;
+}
+[data-slot='field-error'] {
+  ...;
+}
 
 /* In components */
-has-data-[slot=field]:rounded-xl
-group-data-[disabled=true]/field:opacity-50
+has-data-[slot=field]:rounded-xl group-data-[disabled=true]/field:opacity-50;
 ```
 
 ## ANTI-PATTERNS

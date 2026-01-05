@@ -11,9 +11,9 @@ read_when: adding routes or working on routing
 ```
 routes/
 ├── __root.tsx              # Root route + HTML shell + providers
-├── auth.tsx               # Auth pages (login/signup)
+├── auth.tsx               # Auth pages (login/signup) - 309 lines
 ├── dev.chat.tsx           # Dev chat route
-├── entities.$entityId.tsx  # Entity detail page
+├── entities.$entityId.tsx  # Entity detail page - 750 lines (complexity hotspot)
 ├── index.tsx              # Home page
 ├── projects.tsx           # Projects list
 ├── projects_.new.tsx       # New project form
@@ -22,7 +22,7 @@ routes/
 ├── projects_.$projectId_.canon.tsx        # Canon parent layout
 ├── projects_.$projectId_.canon.index.tsx  # Canon index
 ├── projects_.$projectId_.canon.search.tsx # Canon search
-├── projects_.$projectId_.canon.timeline.tsx # Canon timeline
+├── projects_.$projectId_.canon.timeline.tsx # Canon timeline - 424 lines
 ├── projects_.$projectId_.documents.tsx      # Documents list
 ├── projects_.$projectId_.documents.index.tsx # Documents index
 ├── projects_.$projectId_.documents.$documentId.tsx # Document detail
@@ -54,7 +54,7 @@ index.tsx          → /
 // Parameter route (single underscore)
 projects.$projectId.tsx  → /projects/:projectId
 
-// Nested parameter (double underscore)
+// Nested parameter (double underscore escape)
 projects_.$projectId_.documents.$documentId.tsx
 → /projects/:projectId/documents/:documentId
 
@@ -72,16 +72,15 @@ projects.new.tsx    → /projects/new
 - **File naming**: Dotted segments with `$` for params
 - **Params**: Access via `useParams()` hook from TanStack Router
 - **Auto-generated**: `routeTree.gen.ts` - NEVER EDIT (overwritten on route change)
-- **Route component**: Export default component with loader/action as needed
+- **Route component**: Export `Route` via `createFileRoute()`, not default export
 
 ## ROUTE COMPONENT STRUCTURE
 
 ```typescript
 import { createFileRoute } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query-ssr';
 
 // Simple route
-export const Route = createFileRoute('/projects_.$projectId')({
+export const Route = createFileRoute('/projects_/$projectId')({
   component: ProjectDetail,
 });
 
@@ -91,7 +90,7 @@ function ProjectDetail() {
 }
 
 // With data loading
-export const Route = createFileRoute('/projects_.$projectId')({
+export const Route = createFileRoute('/projects_/$projectId')({
   loader: ({ params }) => fetchProject(params.projectId),
   component: ProjectDetail,
 });
@@ -106,6 +105,14 @@ export const Route = createFileRoute('/projects_.$projectId')({
 | Default export of Route object | Use `export const Route = createFileRoute(...)` |
 | Direct routing to functions | Use TanStack Router's navigate() |
 
+## COMPLEXITY HOTSPOTS
+
+| File | Lines | Notes |
+| --- | --- | --- |
+| `entities.$entityId.tsx` | 750 | Entity detail + edit form; consider splitting |
+| `projects_.$projectId_.canon.timeline.tsx` | 424 | D3 visualization; complex |
+| `auth.tsx` | 309 | Login/signup forms |
+
 ## NOTES
 
 - TanStack Start auto-generates HTML via `__root.tsx` (no `index.html`)
@@ -113,3 +120,4 @@ export const Route = createFileRoute('/projects_.$projectId')({
 - Route params are type-safe via generated types
 - Use `useNavigate()` for programmatic navigation
 - Preload routes with `<Link to="..." preload />` for performance
+- React Compiler enabled: no manual memoization needed

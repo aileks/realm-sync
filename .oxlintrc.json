@@ -16,6 +16,8 @@
     "react/exhaustive-deps": "warn",
     "react/rules-of-hooks": "error",
 
+    "jsx-a11y/no-static-element-interactions": "off",
+
     "import/consistent-type-specifier-style": "error",
     "eslint-plugin-react/react-in-jsx-scope": "off",
     "jest/no-conditional-expect": "off",
