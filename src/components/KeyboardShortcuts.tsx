@@ -1,4 +1,4 @@
-import { useState, createContext, useContext, useEffect, useRef } from 'react';
+import { useState, createContext, useContext, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { toast } from 'sonner';
@@ -51,13 +51,13 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
     setCommandPaletteOpen(true);
   }
 
-  function cancelChord() {
+  const cancelChord = useCallback(() => {
     setAwaitingChord(false);
     if (chordTimeoutRef.current) {
       clearTimeout(chordTimeoutRef.current);
       chordTimeoutRef.current = null;
     }
-  }
+  }, []);
 
   useEffect(() => {
     function handleChordKey(e: KeyboardEvent) {
@@ -117,7 +117,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   );
 
   useHotkeys(
-    'shift+?',
+    'shift+/',
     (e) => {
       e.preventDefault();
       setCommandPaletteView('shortcuts');
