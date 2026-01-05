@@ -17,6 +17,7 @@ import type { Id, Doc } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingState } from '@/components/LoadingState';
 import { cn } from '@/lib/utils';
@@ -56,8 +57,10 @@ function AlertDetailPage() {
   const resolveAlert = useMutation(api.alerts.resolve);
   const dismissAlert = useMutation(api.alerts.dismiss);
   const reopenAlert = useMutation(api.alerts.reopen);
+  const resolveWithCanonUpdate = useMutation(api.alerts.resolveWithCanonUpdate);
 
   const [resolutionNote, setResolutionNote] = useState('');
+  const [newFactValue, setNewFactValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (alertData === undefined || project === undefined) {
@@ -79,9 +82,10 @@ function AlertDetailPage() {
     );
   }
 
-  const { alert, entities, document: alertDocument } = alertData;
+  const { alert, entities, facts, document: alertDocument } = alertData;
   const TypeIcon = typeConfig[alert.type].icon;
   const severityStyle = severityConfig[alert.severity];
+  const linkedFacts = facts.filter((f): f is NonNullable<typeof f> => f !== null);
 
   const handleResolve = async () => {
     setIsSubmitting(true);
@@ -110,6 +114,22 @@ function AlertDetailPage() {
     setIsSubmitting(true);
     try {
       await reopenAlert({ id: alert._id });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateCanon = async (factId: Id<'facts'>) => {
+    if (!newFactValue.trim()) return;
+    setIsSubmitting(true);
+    try {
+      await resolveWithCanonUpdate({
+        id: alert._id,
+        factId,
+        newValue: newFactValue.trim(),
+        resolutionNotes: resolutionNote || undefined,
+      });
+      navigate({ to: '/projects/$projectId/alerts', params: { projectId } });
     } finally {
       setIsSubmitting(false);
     }
@@ -272,6 +292,38 @@ function AlertDetailPage() {
             <h2 className="font-serif text-lg font-semibold">Take Action</h2>
           </CardHeader>
           <CardContent className="space-y-4">
+            {linkedFacts.length > 0 && (
+              <div className="border-border bg-muted/20 space-y-3 rounded-lg border p-4">
+                <p className="text-sm font-medium">Update Canon Fact</p>
+                <p className="text-muted-foreground text-xs">
+                  Change the established fact to match the new document:
+                </p>
+                {linkedFacts.map((fact) => (
+                  <div key={fact._id} className="space-y-2">
+                    <p className="text-muted-foreground text-xs">
+                      {fact.subject} {fact.predicate}{' '}
+                      <span className="line-through">{fact.object}</span>
+                    </p>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="New value..."
+                        value={newFactValue}
+                        onChange={(e) => setNewFactValue(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleUpdateCanon(fact._id)}
+                        disabled={isSubmitting || !newFactValue.trim()}
+                      >
+                        Update Canon
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             <Textarea
               placeholder="Add a note about how you resolved this (optional)..."
               value={resolutionNote}
