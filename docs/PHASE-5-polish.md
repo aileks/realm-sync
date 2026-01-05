@@ -20,6 +20,19 @@ Phase 5 focuses on refining the user experience, fully integrating the **Vellum*
 
 ---
 
+## Implementation Status
+
+| Feature                  | Status   | PR  |
+| ------------------------ | -------- | --- |
+| Export Functionality     | Complete | #25 |
+| Keyboard Shortcuts       | Complete | #26 |
+| Vellum Mascot            | Complete | #27 |
+| Animations               | Complete | #28 |
+| Onboarding Flow          | Complete | #29 |
+| Performance (Pagination) | Complete | #30 |
+
+---
+
 ## 1. Objectives
 
 - Full Vellum mascot integration (visual + voice).
