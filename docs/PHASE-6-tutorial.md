@@ -348,9 +348,6 @@ Allow users to restart the tour from settings or help menu.
 
 ---
 
-<<<<<<< HEAD
-## 8. Future Enhancements
-=======
 ## 8. Project Sharing (DM/Player Collaboration)
 
 Enable dungeon masters to share their world canon with players in a read-only or limited capacity.
@@ -405,14 +402,10 @@ projectShares: defineTable({
 ---
 
 ## 9. Future Enhancements
->>>>>>> feat/phase-6-docs
 
 - **Contextual Tips:** Show feature-specific tips when users access features for the first time.
 - **Video Snippets:** Add short video clips to tour steps.
 - **Achievement System:** Reward users for completing tutorial milestones.
 - **A/B Testing:** Track tour completion rates and optimize step content.
-<<<<<<< HEAD
-=======
 - **Public Sharing:** Generate public read-only links for world wikis.
 - **Export for Players:** Generate player-facing PDF/markdown handouts.
->>>>>>> feat/phase-6-docs
