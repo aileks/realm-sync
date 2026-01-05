@@ -4,6 +4,7 @@ import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-r
 
 import { AppLayout } from '../components/AppLayout';
 import { Toaster } from '../components/ui/sonner';
+import { OnboardingModal } from '../components/OnboardingModal';
 import ConvexProvider from '../integrations/convex/provider';
 
 import appCss from '../styles.css?url';
@@ -55,6 +56,7 @@ function RootLayout() {
         <Outlet />
       </AppLayout>
       <Toaster position="bottom-right" />
+      <OnboardingModal />
       {/* <TanStackDevtools
         config={{
           position: 'bottom-right',
