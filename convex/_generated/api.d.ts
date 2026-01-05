@@ -9,6 +9,7 @@
  */
 
 import type * as __tests___entities_helpers from "../__tests__/entities/helpers.js";
+import type * as alerts from "../alerts.js";
 import type * as auth from "../auth.js";
 import type * as chat from "../chat.js";
 import type * as cleanup from "../cleanup.js";
@@ -37,6 +38,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "__tests__/entities/helpers": typeof __tests___entities_helpers;
+  alerts: typeof alerts;
   auth: typeof auth;
   chat: typeof chat;
   cleanup: typeof cleanup;

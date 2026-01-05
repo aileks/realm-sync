@@ -11,7 +11,7 @@ read_when: working on app components (not UI primitives)
 ```
 components/
 ├── AppLayout.tsx        # Main app shell (sidebar + content area)
-├── AppSidebar.tsx       # Navigation sidebar with project list
+├── AppSidebar.tsx       # Navigation sidebar with project list - 491 lines
 ├── DocumentCard.tsx      # Document display card
 ├── DocumentForm.tsx      # Document creation/editing form
 ├── EmptyState.tsx        # Empty state placeholder component
@@ -31,7 +31,7 @@ components/
 | Task | Location | Notes |
 | --- | --- | --- |
 | App shell layout | `AppLayout.tsx` | Wraps all pages with sidebar |
-| Navigation | `AppSidebar.tsx` | Project list + navigation links |
+| Navigation | `AppSidebar.tsx` | Project list + navigation links (491 lines) |
 | Display cards | `*Card.tsx` | Document, Entity, Fact, Project, ReviewEntity cards |
 | Filters | `*Filter.tsx` | EntityTypeFilter for entity filtering |
 | Forms | `*Form.tsx` | DocumentForm, ProjectForm |
@@ -52,13 +52,13 @@ components/
 ### Display Card Pattern
 
 ```typescript
-import { Card, CardHeader, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 type EntityCardProps = {
-  entity: Entity
-  className?: string
-}
+  entity: Entity;
+  className?: string;
+};
 
 export function EntityCard({ entity, className }: EntityCardProps) {
   return (
@@ -66,45 +66,48 @@ export function EntityCard({ entity, className }: EntityCardProps) {
       <CardHeader>
         <EntityColorBadge type={entity.type} />
       </CardHeader>
-      <CardContent>
-        {entity.name}
-      </CardContent>
+      <CardContent>{entity.name}</CardContent>
     </Card>
-  )
+  );
 }
 ```
 
 ### Form Component Pattern
 
 ```typescript
-import { useMutation } from '@tanstack/react-query-ssr'
-import { api } from '@convex/_generated/api'
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
-export function DocumentForm({ projectId, onSuccess }: Props) {
-  const { mutate: createDocument, isPending } = useMutation({
-    mutationFn: (data) => api.documents.create({ projectId, ...data }),
-    onSuccess,
-  })
+type DocumentFormProps = {
+  projectId: Id<'projects'>;
+  onSuccess?: () => void;
+};
 
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); createDocument(formData); }}>
-      {/* Form fields */}
-    </form>
-  )
+export function DocumentForm({ projectId, onSuccess }: DocumentFormProps) {
+  const createDocument = useMutation(api.documents.create);
+
+  const handleSubmit = async (data: FormData) => {
+    await createDocument({ projectId, ...data });
+    onSuccess?.();
+  };
+
+  return <form onSubmit={handleSubmit}>{/* Form fields */}</form>;
 }
 ```
 
 ## ENTITY TYPE COLORS
 
-Entity types use predefined OKLCH colors:
+Entity types use predefined OKLCH colors (from styles.css):
 
-- **character**: red (`oklch(0.5 0.2 20)`)
-- **location**: green (`oklch(0.5 0.2 140)`)
-- **item**: gold (`oklch(0.5 0.2 60)`)
-- **concept**: purple (`oklch(0.5 0.2 280)`)
-- **event**: blue (`oklch(0.5 0.2 220)`)
+| Type      | Color  | OKLCH                |
+| --------- | ------ | -------------------- |
+| character | red    | `oklch(0.5 0.2 20)`  |
+| location  | green  | `oklch(0.5 0.2 140)` |
+| item      | gold   | `oklch(0.5 0.2 60)`  |
+| concept   | purple | `oklch(0.5 0.2 280)` |
+| event     | blue   | `oklch(0.5 0.2 220)` |
 
-Use these colors in `EntityCard` and entity-related components.
+Use these colors in `EntityCard` and entity-related components via CSS vars.
 
 ## ANTI-PATTERNS
 
@@ -116,9 +119,15 @@ Use these colors in `EntityCard` and entity-related components.
 | Skip empty states        | Always show EmptyState when no data  |
 | Direct class strings     | Use `cn()` for Tailwind merging      |
 
+## COMPLEXITY HOTSPOTS
+
+| File             | Lines | Notes                                      |
+| ---------------- | ----- | ------------------------------------------ |
+| `AppSidebar.tsx` | 491   | Consider extracting NavItem/ProjectNavItem |
+
 ## NOTES
 
 - UI primitives are in `ui/` subdirectory (see `ui/AGENTS.md`)
 - React Compiler enabled: no manual memoization needed
 - Convex handles real-time updates via `useQuery` hooks
-- Forms use TanStack Query `useMutation` for optimistic updates
+- Forms use Convex `useMutation` directly (no TanStack Query wrapper needed)

@@ -4,7 +4,7 @@ read_when: starting any work on this codebase
 
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-01-04 **Commit:** dc638f0 **Branch:** main
+**Generated:** 2026-01-05 **Commit:** 710a8fd **Branch:** main
 
 Be extremely concise. Sacrifice grammar for concision.
 
@@ -22,8 +22,8 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 │   ├── components/   # App + UI components
 │   │   └── ui/       # 17 Shadcn/Base UI primitives (CVA + data-slot)
 │   ├── integrations/ # Convex provider bridge
-│   ├── lib/          # Utilities (cn, toId)
-│   ├── test/         # Test setup
+│   ├── lib/          # Utilities (cn, toId, formatError)
+│   ├── __tests__/    # Frontend test setup
 │   ├── router.tsx    # Router factory + Sentry init
 │   ├── env.ts        # T3Env + Zod validated env
 │   └── styles.css    # Tailwind v4 CSS-first (OKLCH tokens)
@@ -45,7 +45,8 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | Root layout | `src/routes/__root.tsx` | HTML shell, providers, no index.html |
 | Server instrumentation | `instrument.server.mjs` | Sentry/OpenTelemetry |
 | Tests | `*.test.ts` alongside source | Vitest; `convex-test` for backend |
-| Auth helpers | `convex/lib/auth.ts` | getAuthUserId, requireAuth, getCurrentUser |
+| Auth helpers | `convex/lib/auth.ts` | getAuthUserId, requireAuth, getCurrentUser, requireAuthUser |
+| Error handling | `convex/lib/errors.ts` | AppError types + neverthrow Result pattern |
 
 ## CODE MAP
 
@@ -58,12 +59,13 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | `env` | `src/env.ts` | Type-safe env (server: SERVER*URL; client: VITE*\*) |
 | `cn` | `src/lib/utils.ts` | Tailwind class merging (clsx + twMerge) |
 | `toId` | `src/lib/utils.ts` | Type-safe Convex ID conversion |
+| `unwrapOrThrow` | `convex/lib/result.ts` | Convert Result<T,E> to T or throw |
 | `ReviewEntityCard` | `src/components/ReviewEntityCard.tsx` | EntityCard wrapper with merge suggestions |
 | `EntityTypeFilter` | `src/components/EntityTypeFilter.tsx` | Filter dropdown for entity types |
 
 ## CONVENTIONS
 
-- **Types**: Use types over interfaces unless an interface is explicitly need; use a comment for explanation/justification
+- **Types**: Use types over interfaces unless interface explicitly needed; comment justification
 - **Runtime**: `pnpm` exclusively
 - **Linter**: Oxlint (not ESLint) - oxc parser, error-level rules block `as any` and `@ts-ignore`
 - **Path aliases**: `@/*` → `./src/*` (but Convex uses relative `../../convex/_generated/api`)
@@ -73,7 +75,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 - **UI primitives**: @base-ui/react + CVA variants + `data-slot` attributes
 - **Styling**: Always use `cn()` for Tailwind conflict resolution
 - **Components**: Named exports only; no default exports in ui/
-- **Error handling**: NeverThrow for Result pattern; avoid try/catch
+- **Error handling**: NeverThrow for Result pattern; avoid try/catch; use lib/errors.ts factories
 - **Server functions**: Wrap with `Sentry.startSpan({ name: '...' }, async () => {...})`
 - **Build**: `vite build && cp instrument.server.mjs .output/server`
 
@@ -157,3 +159,4 @@ pnpm docs:list        # List docs with front-matter check
 - Entity colors defined: character (red), location (green), item (gold), concept (purple), event (blue)
 - Before commits: `pnpm run format && pnpm run lint && pnpm run typecheck`
 - Follow TDD when implementing new features
+- Large files: entities.ts (844), seed.ts (811), entities.$entityId.tsx (750) - consider splitting
