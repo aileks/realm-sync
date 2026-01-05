@@ -1,14 +1,15 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useQuery, useMutation } from 'convex/react';
-import { useState } from 'react';
+import { useQuery, useMutation, usePaginatedQuery } from 'convex/react';
+import { useState, useMemo } from 'react';
 import { Lightbulb, Search, ArrowLeft, Filter } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import type { Id, Doc } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FactCard } from '@/components/FactCard';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
+import { PaginatedGrid } from '@/components/PaginatedGrid';
 import {
   Select,
   SelectContent,
@@ -16,6 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
+const PAGE_SIZE = 24;
+
+type FactStatus = 'pending' | 'confirmed' | 'rejected';
 
 export const Route = createFileRoute('/projects_/$projectId_/facts')({
   component: FactsPage,
@@ -25,15 +30,39 @@ function FactsPage() {
   const navigate = useNavigate();
   const { projectId } = Route.useParams();
   const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
-  const facts = useQuery(api.facts.listByProject, { projectId: projectId as Id<'projects'> });
-
-  const confirmFact = useMutation(api.facts.confirm);
-  const rejectFact = useMutation(api.facts.reject);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  if (project === undefined || facts === undefined) {
+  const confirmFact = useMutation(api.facts.confirm);
+  const rejectFact = useMutation(api.facts.reject);
+
+  const paginatedArgs = useMemo(
+    () => ({
+      projectId: projectId as Id<'projects'>,
+      status: statusFilter !== 'all' ? (statusFilter as FactStatus) : undefined,
+    }),
+    [projectId, statusFilter]
+  );
+
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.facts.listByProjectPaginated,
+    paginatedArgs,
+    { initialNumItems: PAGE_SIZE }
+  );
+
+  const filteredResults = useMemo(() => {
+    if (!searchQuery.trim()) return results;
+    const query = searchQuery.toLowerCase();
+    return results.filter(
+      (fact) =>
+        fact.subject.toLowerCase().includes(query) ||
+        fact.object.toLowerCase().includes(query) ||
+        fact.predicate.toLowerCase().includes(query)
+    );
+  }, [results, searchQuery]);
+
+  if (project === undefined) {
     return <LoadingState message="Loading facts..." />;
   }
 
@@ -47,16 +76,6 @@ function FactsPage() {
       </div>
     );
   }
-
-  const filteredFacts = facts.filter((fact) => {
-    const matchesSearch =
-      fact.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      fact.object.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      fact.predicate.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || fact.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
 
   return (
     <div className="container mx-auto p-6">
@@ -72,9 +91,12 @@ function FactsPage() {
         </Button>
         <div className="flex items-center justify-between">
           <h1 className="font-serif text-3xl font-bold">Facts</h1>
-          <div className="text-muted-foreground text-sm">
-            {facts.length} total • {filteredFacts.length} visible
-          </div>
+          {status !== 'LoadingFirstPage' && (
+            <div className="text-muted-foreground text-sm">
+              {filteredResults.length} loaded
+              {status !== 'Exhausted' && '+'}
+            </div>
+          )}
         </div>
       </div>
 
@@ -102,39 +124,36 @@ function FactsPage() {
         </Select>
       </div>
 
-      {facts.length === 0 ?
-        <EmptyState
-          icon={<Lightbulb className="text-muted-foreground size-8" />}
-          title="No facts yet"
-          description="Facts will appear here once extracted from your documents."
-        />
-      : filteredFacts.length === 0 ?
-        <EmptyState
-          title="No matching facts"
-          description="Try adjusting your search or filters."
-          action={
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSearchQuery('');
-                setStatusFilter('all');
-              }}
-            >
-              Clear Filters
-            </Button>
-          }
-        />
-      : <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredFacts.map((fact) => (
-            <FactCard
-              key={fact._id}
-              fact={fact}
-              onConfirm={(id) => confirmFact({ id })}
-              onReject={(id) => rejectFact({ id })}
+      <PaginatedGrid
+        results={filteredResults}
+        status={status}
+        loadMore={loadMore}
+        pageSize={PAGE_SIZE}
+        emptyState={
+          results.length === 0 ?
+            <EmptyState
+              icon={<Lightbulb className="text-muted-foreground size-8" />}
+              title="No facts yet"
+              description="Facts will appear here once extracted from your documents."
             />
-          ))}
-        </div>
-      }
+          : <EmptyState
+              title="No matching facts"
+              description="Try adjusting your search."
+              action={
+                <Button variant="outline" onClick={() => setSearchQuery('')}>
+                  Clear Search
+                </Button>
+              }
+            />
+        }
+        renderItem={(fact: Doc<'facts'>) => (
+          <FactCard
+            fact={fact}
+            onConfirm={(id) => confirmFact({ id })}
+            onReject={(id) => rejectFact({ id })}
+          />
+        )}
+      />
     </div>
   );
 }
