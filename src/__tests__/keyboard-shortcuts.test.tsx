@@ -105,7 +105,6 @@ describe('CommandPalette', () => {
         <CommandPalette open={true} onOpenChange={mockOnOpenChange} initialView="shortcuts" />
       );
 
-      expect(screen.getByText('Save document')).toBeDefined();
       expect(screen.getByText('Trigger extraction')).toBeDefined();
       expect(screen.getByText('Close / Cancel')).toBeDefined();
     });

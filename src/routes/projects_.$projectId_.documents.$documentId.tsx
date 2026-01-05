@@ -127,10 +127,6 @@ function DocumentEditorPage() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-        e.preventDefault();
-        void save();
-      }
       if ((e.metaKey || e.ctrlKey) && e.key === 'e') {
         e.preventDefault();
         if (!isExtracting && !hasChanges && document?.processingStatus !== 'processing') {
@@ -141,7 +137,7 @@ function DocumentEditorPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [save, isExtracting, hasChanges, document?.processingStatus, handleExtract]);
+  }, [isExtracting, hasChanges, document?.processingStatus, handleExtract]);
 
   async function handleReset() {
     if (!document) return;

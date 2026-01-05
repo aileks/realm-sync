@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { Command } from 'cmdk';
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import {
   FileText,
   Search,
@@ -57,10 +58,19 @@ export function CommandPalette({ open, onOpenChange, initialView }: CommandPalet
       <Command.Dialog
         open={open}
         onOpenChange={onOpenChange}
+        label="Keyboard shortcuts"
+        aria-describedby={undefined}
         className="bg-popover fixed top-1/2 left-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl shadow-2xl"
       >
+        <VisuallyHidden.Root asChild>
+          <span role="heading" aria-level={1}>
+            Keyboard Shortcuts
+          </span>
+        </VisuallyHidden.Root>
         <div className="border-border border-b px-4 py-3">
-          <h2 className="font-serif text-lg font-semibold">Keyboard Shortcuts</h2>
+          <h2 className="font-serif text-lg font-semibold" aria-hidden>
+            Keyboard Shortcuts
+          </h2>
         </div>
         <div className="max-h-96 overflow-y-auto p-4">
           <ShortcutSection title="Global">
@@ -78,7 +88,6 @@ export function CommandPalette({ open, onOpenChange, initialView }: CommandPalet
             <ShortcutItem keys={['g', 'r']} description="Go to review" />
           </ShortcutSection>
           <ShortcutSection title="Editor">
-            <ShortcutItem keys={['⌘', 'S']} description="Save document" />
             <ShortcutItem keys={['⌘', 'E']} description="Trigger extraction" />
             <ShortcutItem keys={['Esc']} description="Close / Cancel" />
           </ShortcutSection>
@@ -99,8 +108,15 @@ export function CommandPalette({ open, onOpenChange, initialView }: CommandPalet
     <Command.Dialog
       open={open}
       onOpenChange={onOpenChange}
+      label="Command palette"
+      aria-describedby={undefined}
       className="bg-popover fixed top-1/2 left-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl shadow-2xl"
     >
+      <VisuallyHidden.Root asChild>
+        <span role="heading" aria-level={1}>
+          Command palette
+        </span>
+      </VisuallyHidden.Root>
       <div className="border-border flex items-center gap-2 border-b px-4">
         <Search className="text-muted-foreground size-4" />
         <Command.Input
