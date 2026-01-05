@@ -105,7 +105,7 @@ function ProjectDashboard() {
           )}
         </div>
         <div className="flex gap-2">
-          <ExportButton projectId={projectId as Id<'projects'>} />
+          <ExportButton projectId={projectId as Id<'projects'>} projectName={project.name} />
           <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
             <Settings className="mr-2 size-4" />
             Settings

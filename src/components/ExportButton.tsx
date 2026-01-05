@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAction, useQuery } from 'convex/react';
+import { useAction } from 'convex/react';
 import { Download, FileJson, FileText, Table } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
@@ -18,13 +18,13 @@ type ExportFormat = 'json' | 'markdown' | 'csv';
 
 type ExportButtonProps = {
   projectId: Id<'projects'>;
+  projectName: string;
   className?: string;
 };
 
-export function ExportButton({ projectId, className }: ExportButtonProps) {
+export function ExportButton({ projectId, projectName, className }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   const exportProject = useAction(api.export.exportProject);
-  const getFilename = useQuery(api.export.getExportFilename, { projectId, format: 'json' });
 
   async function handleExport(format: ExportFormat) {
     setIsExporting(true);
@@ -35,7 +35,7 @@ export function ExportButton({ projectId, className }: ExportButtonProps) {
         return;
       }
 
-      const safeName = getFilename?.replace(/-export-.*/, '') ?? 'project';
+      const safeName = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'project';
       const date = new Date().toISOString().split('T')[0];
       const ext = format === 'markdown' ? 'md' : format;
       const filename = `${safeName}-export-${date}.${ext}`;
