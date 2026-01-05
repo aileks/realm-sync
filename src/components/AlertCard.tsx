@@ -126,7 +126,11 @@ export function AlertCard({ alert, projectId, onResolve, onDismiss, entityNames 
                   size="sm"
                   variant="ghost"
                   className="text-muted-foreground size-8 p-0 hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400"
-                  onClick={() => onResolve(alert._id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onResolve(alert._id);
+                  }}
                   title="Mark as resolved"
                 >
                   <Check className="size-4" />
@@ -135,7 +139,11 @@ export function AlertCard({ alert, projectId, onResolve, onDismiss, entityNames 
                   size="sm"
                   variant="ghost"
                   className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-8 p-0"
-                  onClick={() => onDismiss(alert._id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onDismiss(alert._id);
+                  }}
                   title="Dismiss alert"
                 >
                   <X className="size-4" />

@@ -1,4 +1,5 @@
 import { v } from 'convex/values';
+import type { FunctionReference } from 'convex/server';
 import { internalAction, internalMutation, action } from './_generated/server';
 import { internal, api } from './_generated/api';
 import type { Id } from './_generated/dataModel';
@@ -123,7 +124,6 @@ async function buildCanonContext(
   },
   projectId: Id<'projects'>
 ): Promise<CanonContext> {
-  type EntityRecord = { _id: Id<'entities'>; name: string; type: string };
   type FactRecord = {
     _id: Id<'facts'>;
     status: string;
@@ -132,21 +132,20 @@ async function buildCanonContext(
     object: string;
     evidenceSnippet: string;
   };
-  type EntityWithFacts = { entity: EntityRecord; facts: FactRecord[] } | null;
-  type DocumentRecord = { title: string } | null;
 
-  const entities = (await ctx.runQuery(api.entities.listByProject, {
-    projectId,
-    status: 'confirmed',
-  })) as EntityRecord[];
+  const entities = await ctx.runQuery<{ _id: Id<'entities'>; name: string; type: string }[]>(
+    api.entities.listByProject,
+    { projectId, status: 'confirmed' }
+  );
 
   const entitiesWithFacts: CanonContextEntity[] = [];
   let formattedContext = '';
 
   for (const entity of entities) {
-    const entityData = (await ctx.runQuery(api.entities.getWithFacts, {
-      id: entity._id,
-    })) as EntityWithFacts;
+    const entityData = await ctx.runQuery<{
+      entity: { _id: Id<'entities'>; name: string; type: string };
+      facts: FactRecord[];
+    } | null>(api.entities.getWithFacts, { id: entity._id });
     if (!entityData) continue;
 
     const confirmedFacts = entityData.facts.filter((f: FactRecord) => f.status === 'confirmed');
@@ -154,9 +153,9 @@ async function buildCanonContext(
 
     const factsWithDocs = await Promise.all(
       confirmedFacts.map(async (fact: FactRecord) => {
-        const doc = (await ctx.runQuery(api.documents.get, {
+        const doc = await ctx.runQuery<{ title: string } | null>(api.documents.get, {
           id: fact.documentId,
-        })) as DocumentRecord;
+        });
         return {
           id: fact._id,
           predicate: fact.predicate,
@@ -304,7 +303,10 @@ export const runCheck = internalAction({
     }
 
     const canonContext = await buildCanonContext(
-      { runQuery: ctx.runQuery as <T>(ref: unknown, args: unknown) => Promise<T> },
+      {
+        runQuery: <T>(ref: unknown, args: unknown) =>
+          ctx.runQuery(ref as FunctionReference<'query'>, args) as Promise<T>,
+      },
       doc.projectId
     );
 
