@@ -22,6 +22,7 @@ import {
   ScrollText,
   AlertTriangle,
   History,
+  Home,
 } from 'lucide-react';
 import { VellumButton } from '@/components/Vellum';
 import { cn } from '@/lib/utils';
@@ -127,8 +128,8 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
 
       <nav className="flex-1 overflow-y-auto p-2">
         {isAuthenticated && (
-          <NavItem to="/projects" icon={FolderOpen} collapsed={collapsed}>
-            Projects
+          <NavItem to="/projects" icon={Home} collapsed={collapsed}>
+            Home
           </NavItem>
         )}
 
