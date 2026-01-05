@@ -354,9 +354,9 @@ function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: Proj
       to={projectRoutes[to]}
       params={{ projectId }}
       className={cn(
-        'flex items-center gap-3 rounded-lg p-3 transition-colors',
+        'my-1 flex items-center gap-3 rounded-lg p-3 transition-colors',
         collapsed && 'justify-center',
-        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-sidebar-accent text-foreground'
+        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-predicate/20 text-foreground'
       )}
     >
       <Icon className="size-5" />
