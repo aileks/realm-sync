@@ -1,0 +1,135 @@
+import { useState } from 'react';
+import { useQuery, useMutation } from 'convex/react';
+import { useNavigate } from '@tanstack/react-router';
+import { BookOpen, FileText, Sparkles, Search, Shield, ArrowRight, X } from 'lucide-react';
+import { api } from '../../convex/_generated/api';
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+} from '@/components/ui/alert-dialog';
+import { cn } from '@/lib/utils';
+
+const STEPS = [
+  {
+    id: 'welcome',
+    title: 'Welcome to Your Archive',
+    description:
+      "I'm Vellum, the Archivist Moth. I'll help you track your world's canon and catch contradictions before they become plot holes.",
+    icon: BookOpen,
+  },
+  {
+    id: 'documents',
+    title: 'Add Your Documents',
+    description:
+      'Start by uploading your manuscripts, session notes, or worldbuilding documents. I can read text, markdown, and plain files.',
+    icon: FileText,
+  },
+  {
+    id: 'extraction',
+    title: 'Extract Canon Facts',
+    description:
+      "I'll analyze your text and extract characters, locations, items, and key facts. You review and confirm what becomes official canon.",
+    icon: Sparkles,
+  },
+  {
+    id: 'browse',
+    title: 'Browse Your Canon',
+    description:
+      "Search entities, view timelines, and explore connections between your world's elements. Everything is linked and searchable.",
+    icon: Search,
+  },
+  {
+    id: 'continuity',
+    title: 'Guard Your Continuity',
+    description:
+      "When you add new content, I'll check it against established facts and alert you to any contradictions or timeline issues.",
+    icon: Shield,
+  },
+];
+
+export function OnboardingModal() {
+  const navigate = useNavigate();
+  const user = useQuery(api.users.viewer);
+  const completeOnboarding = useMutation(api.users.completeOnboarding);
+
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isOpen, setIsOpen] = useState(true);
+
+  const showOnboarding = user && !user.onboardingCompleted && isOpen;
+
+  if (!showOnboarding) return null;
+
+  const step = STEPS[currentStep];
+  const isLastStep = currentStep === STEPS.length - 1;
+
+  async function handleNext() {
+    if (isLastStep) {
+      await completeOnboarding();
+      setIsOpen(false);
+      void navigate({ to: '/projects' });
+    } else {
+      setCurrentStep((prev) => prev + 1);
+    }
+  }
+
+  function handleSkip() {
+    void completeOnboarding();
+    setIsOpen(false);
+  }
+
+  return (
+    <AlertDialog open>
+      <AlertDialogContent className="max-w-md">
+        <button
+          onClick={handleSkip}
+          className="text-muted-foreground hover:text-foreground absolute top-4 right-4"
+          aria-label="Skip onboarding"
+        >
+          <X className="size-4" />
+        </button>
+
+        <div className="flex justify-center gap-1.5 pb-2">
+          {STEPS.map((_, index) => (
+            <div
+              key={index}
+              className={cn(
+                'h-1.5 w-8 rounded-full transition-colors',
+                index === currentStep ? 'bg-primary' : 'bg-muted'
+              )}
+            />
+          ))}
+        </div>
+
+        <AlertDialogHeader className="text-center">
+          <div className="bg-primary/10 mx-auto mb-4 flex size-16 items-center justify-center rounded-full">
+            <step.icon className="text-primary size-8" />
+          </div>
+          <AlertDialogTitle className="font-serif text-xl">{step.title}</AlertDialogTitle>
+          <AlertDialogDescription className="text-base leading-relaxed">
+            {step.description}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+          <Button onClick={handleNext} className="w-full">
+            {isLastStep ? "Let's Begin" : 'Next'}
+            <ArrowRight className="ml-2 size-4" />
+          </Button>
+          {!isLastStep && (
+            <button
+              onClick={handleSkip}
+              className="text-muted-foreground hover:text-foreground text-sm"
+            >
+              Skip introduction
+            </button>
+          )}
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
