@@ -428,7 +428,7 @@ export const createAlerts = internalMutation({
 
       for (const entityName of alert.affectedEntities ?? []) {
         const entityId = entityNameToId.get(entityName.toLowerCase());
-        if (entityId) {
+        if (entityId && !entityIds.includes(entityId)) {
           entityIds.push(entityId);
 
           const facts = factsByEntity.get(entityName.toLowerCase());
