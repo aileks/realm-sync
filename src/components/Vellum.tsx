@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { buttonVariants } from '@/components/ui/button';
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 export type VellumMood = 'neutral' | 'alert' | 'success' | 'thinking';
 
@@ -17,82 +19,96 @@ export const VELLUM_MESSAGES = {
   deleteConfirm: 'This will remove {name} and all associated facts. Are you certain?',
 } as const;
 
-type VellumProps = {
-  mood?: VellumMood;
-  message?: string;
-  onDismiss?: () => void;
-  className?: string;
+const TIPS = [
+  'Add documents to your project, then extract entities and facts from them.',
+  'Review extracted entities in the Canon Browser to confirm or reject them.',
+  'Use the Timeline view to see events in chronological order.',
+  'The Connections view shows relationships between your entities.',
+  'Keyboard shortcut: Press Cmd+K to open the command palette.',
+];
+
+type VellumButtonProps = {
+  collapsed: boolean;
 };
 
-export function Vellum({ mood = 'neutral', message, onDismiss, className }: VellumProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const displayMessage = message ?? VELLUM_MESSAGES.welcome;
+export function VellumButton({ collapsed }: VellumButtonProps) {
+  const [tip] = useState(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
+
+  const button = (
+    <SheetTrigger
+      className={cn(
+        buttonVariants({ variant: 'ghost', size: 'sm' }),
+        'w-full cursor-pointer',
+        collapsed ? 'justify-center px-0' : 'justify-start'
+      )}
+    >
+      <MothIcon className="size-4" />
+      {!collapsed && <span className="ml-2">Vellum</span>}
+    </SheetTrigger>
+  );
 
   return (
-    <div className={cn('fixed bottom-6 left-72 z-40 flex flex-col items-start gap-2', className)}>
-      {isExpanded && (
-        <div className="bg-card ring-primary/20 animate-in slide-in-from-bottom-2 fade-in relative max-w-xs rounded-2xl p-4 shadow-xl ring-1 duration-200">
-          {onDismiss && (
-            <button
-              onClick={() => {
-                setIsExpanded(false);
-                onDismiss();
-              }}
-              className="text-muted-foreground hover:text-foreground absolute top-2 right-2"
-              aria-label="Dismiss"
-            >
-              <X className="size-4" />
-            </button>
-          )}
-          <p className="pr-6 text-sm leading-relaxed">{displayMessage}</p>
+    <Sheet>
+      {collapsed ?
+        <Tooltip>
+          <TooltipTrigger render={button} />
+          <TooltipContent side="right">Vellum</TooltipContent>
+        </Tooltip>
+      : button}
+      <SheetContent side="left" className="w-80 sm:max-w-80">
+        <SheetHeader className="border-b pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/30 ring-1 ring-amber-500/30">
+              <MothIcon className="size-6 text-amber-400" />
+            </div>
+            <div>
+              <SheetTitle className="font-serif">Vellum</SheetTitle>
+              <p className="text-muted-foreground text-xs">Your Archive Assistant</p>
+            </div>
+          </div>
+        </SheetHeader>
+
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+          <MessageBubble>{VELLUM_MESSAGES.welcome}</MessageBubble>
+          <MessageBubble variant="tip">{tip}</MessageBubble>
         </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+type MessageBubbleProps = {
+  children: React.ReactNode;
+  variant?: 'default' | 'tip';
+};
+
+function MessageBubble({ children, variant = 'default' }: MessageBubbleProps) {
+  return (
+    <div
+      className={cn(
+        'rounded-2xl rounded-tl-sm px-4 py-3 text-sm leading-relaxed',
+        variant === 'default' && 'bg-muted',
+        variant === 'tip' && 'border border-amber-500/20 bg-amber-500/5 text-amber-200/80'
       )}
-
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className={cn(
-          'group relative flex size-14 items-center justify-center rounded-full transition-all duration-300',
-          'bg-gradient-to-br from-amber-500/20 to-amber-600/30',
-          'hover:from-amber-500/30 hover:to-amber-600/40',
-          'ring-1 ring-amber-500/30 hover:ring-amber-500/50',
-          'shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20',
-          mood === 'alert' && 'shadow-amber-400/30 ring-amber-400/60',
-          mood === 'success' && 'animate-pulse',
-          mood === 'thinking' && 'animate-shimmer'
-        )}
-        aria-label="Vellum the Archivist Moth"
-      >
-        <MothIcon mood={mood} />
-
-        {mood === 'alert' && (
-          <span className="absolute -top-0.5 -right-0.5 size-3 animate-pulse rounded-full bg-amber-400" />
-        )}
-      </button>
+    >
+      {variant === 'tip' && (
+        <span className="mb-1 block text-[10px] font-medium tracking-wider text-amber-400/70 uppercase">
+          Tip
+        </span>
+      )}
+      {children}
     </div>
   );
 }
 
 type MothIconProps = {
-  mood: VellumMood;
   className?: string;
 };
 
-function MothIcon({ mood, className }: MothIconProps) {
-  const wingSpread = mood === 'alert' ? 1.1 : 1;
-
+function MothIcon({ className }: MothIconProps) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      className={cn(
-        'size-8 transition-transform duration-300',
-        'text-amber-400 group-hover:text-amber-300',
-        mood === 'thinking' && 'animate-pulse',
-        className
-      )}
-      style={{ transform: `scale(${wingSpread})` }}
-    >
-      <g className="origin-center transition-transform duration-500 group-hover:scale-105">
+    <svg viewBox="0 0 24 24" fill="none" className={cn('text-amber-400', className)}>
+      <g className="origin-center">
         <path
           d="M12 4C10 4 8.5 6 8 8C7 9.5 4 10 3 12C4 14 7 14.5 8 16C8.5 18 10 20 12 20C14 20 15.5 18 16 16C17 14.5 20 14 21 12C20 10 17 9.5 16 8C15.5 6 14 4 12 4Z"
           fill="currentColor"
@@ -102,31 +118,20 @@ function MothIcon({ mood, className }: MothIconProps) {
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-
         <path
           d="M12 6C11 6 10 7.5 9.5 9C9 10 7 10.5 6 12C7 13.5 9 14 9.5 15C10 16.5 11 18 12 18C13 18 14 16.5 14.5 15C15 14 17 13.5 18 12C17 10.5 15 10 14.5 9C14 7.5 13 6 12 6Z"
           fill="currentColor"
           fillOpacity="0.5"
         />
-
         <circle cx="10" cy="11" r="1" fill="currentColor" />
         <circle cx="14" cy="11" r="1" fill="currentColor" />
-
-        <path
-          d="M10 7C9 5 8 4 7 3"
-          stroke="currentColor"
-          strokeWidth="1"
-          strokeLinecap="round"
-          className="origin-bottom-right transition-transform duration-300 group-hover:-rotate-12"
-        />
+        <path d="M10 7C9 5 8 4 7 3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
         <path
           d="M14 7C15 5 16 4 17 3"
           stroke="currentColor"
           strokeWidth="1"
           strokeLinecap="round"
-          className="origin-bottom-left transition-transform duration-300 group-hover:rotate-12"
         />
-
         <ellipse cx="12" cy="12" rx="2" ry="4" fill="currentColor" fillOpacity="0.7" />
       </g>
     </svg>
@@ -152,7 +157,7 @@ export function VellumEmptyState({ type, query }: VellumEmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-4 flex size-20 items-center justify-center rounded-full bg-gradient-to-br from-amber-500/10 to-amber-600/20">
-        <MothIcon mood="neutral" className="size-12" />
+        <MothIcon className="size-12" />
       </div>
       <p className="text-muted-foreground max-w-sm text-sm italic">{messages[type]}</p>
     </div>
