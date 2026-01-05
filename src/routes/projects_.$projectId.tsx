@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ProjectForm } from '@/components/ProjectForm';
 import { LoadingState } from '@/components/LoadingState';
+import { ExportButton } from '@/components/ExportButton';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/projects_/$projectId')({
@@ -103,10 +104,13 @@ function ProjectDashboard() {
             <p className="text-muted-foreground mt-1">{project.description}</p>
           )}
         </div>
-        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-          <Settings className="mr-2 size-4" />
-          Settings
-        </Button>
+        <div className="flex gap-2">
+          <ExportButton projectId={projectId as Id<'projects'>} projectName={project.name} />
+          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+            <Settings className="mr-2 size-4" />
+            Settings
+          </Button>
+        </div>
       </div>
 
       <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
