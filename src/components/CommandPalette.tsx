@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { Command } from 'cmdk';
-import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import {
   FileText,
   Search,
@@ -59,9 +58,7 @@ export function CommandPalette({ open, onOpenChange, initialView }: CommandPalet
         aria-describedby={undefined}
         className="bg-popover fixed top-1/2 left-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl shadow-2xl"
       >
-        <VisuallyHidden.Root asChild>
-          <h1>Keyboard Shortcuts</h1>
-        </VisuallyHidden.Root>
+        <h1 className="sr-only">Keyboard Shortcuts</h1>
         <div className="border-border border-b px-4 py-3">
           <h2 className="font-serif text-lg font-semibold" aria-hidden>
             Keyboard Shortcuts
@@ -107,9 +104,7 @@ export function CommandPalette({ open, onOpenChange, initialView }: CommandPalet
       aria-describedby={undefined}
       className="bg-popover fixed top-1/2 left-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl shadow-2xl"
     >
-      <VisuallyHidden.Root asChild>
-        <h1>Command palette</h1>
-      </VisuallyHidden.Root>
+      <h1 className="sr-only">Command palette</h1>
       <div className="border-border flex items-center gap-2 border-b px-4">
         <Search className="text-muted-foreground size-4" />
         <Command.Input
