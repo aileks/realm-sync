@@ -18,6 +18,7 @@ import {
   User,
   Check,
 } from 'lucide-react';
+import { VellumButton } from '@/components/Vellum';
 import { cn } from '@/lib/utils';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -150,6 +151,8 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       </nav>
 
       <div className="border-sidebar-border flex flex-col gap-1 border-t p-2">
+        <VellumButton collapsed={collapsed} />
+
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
