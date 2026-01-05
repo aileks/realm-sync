@@ -1,14 +1,15 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useQuery, useMutation } from 'convex/react';
-import { useState } from 'react';
+import { useQuery, useMutation, usePaginatedQuery } from 'convex/react';
+import { useState, useMemo } from 'react';
 import { Users, Search, ArrowLeft, Filter } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import type { Id, Doc } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { EntityCard } from '@/components/EntityCard';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
+import { PaginatedGrid } from '@/components/PaginatedGrid';
 import {
   Select,
   SelectContent,
@@ -16,6 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
+const PAGE_SIZE = 24;
+
+type EntityType = 'character' | 'location' | 'item' | 'concept' | 'event';
+type EntityStatus = 'pending' | 'confirmed';
 
 export const Route = createFileRoute('/projects_/$projectId_/entities')({
   component: EntitiesPage,
@@ -25,16 +31,40 @@ function EntitiesPage() {
   const navigate = useNavigate();
   const { projectId } = Route.useParams();
   const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
-  const entities = useQuery(api.entities.listByProject, { projectId: projectId as Id<'projects'> });
-
-  const confirmEntity = useMutation(api.entities.confirm);
-  const rejectEntity = useMutation(api.entities.reject);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  if (project === undefined || entities === undefined) {
+  const confirmEntity = useMutation(api.entities.confirm);
+  const rejectEntity = useMutation(api.entities.reject);
+
+  const paginatedArgs = useMemo(
+    () => ({
+      projectId: projectId as Id<'projects'>,
+      type: typeFilter !== 'all' ? (typeFilter as EntityType) : undefined,
+      status: statusFilter !== 'all' ? (statusFilter as EntityStatus) : undefined,
+    }),
+    [projectId, typeFilter, statusFilter]
+  );
+
+  const { results, status, loadMore } = usePaginatedQuery(
+    api.entities.listByProjectPaginated,
+    paginatedArgs,
+    { initialNumItems: PAGE_SIZE }
+  );
+
+  const filteredResults = useMemo(() => {
+    if (!searchQuery.trim()) return results;
+    const query = searchQuery.toLowerCase();
+    return results.filter(
+      (entity) =>
+        entity.name.toLowerCase().includes(query) ||
+        entity.aliases.some((a) => a.toLowerCase().includes(query))
+    );
+  }, [results, searchQuery]);
+
+  if (project === undefined) {
     return <LoadingState message="Loading entities..." />;
   }
 
@@ -48,16 +78,6 @@ function EntitiesPage() {
       </div>
     );
   }
-
-  const filteredEntities = entities.filter((entity) => {
-    const matchesSearch =
-      entity.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      entity.aliases.some((a) => a.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesType = typeFilter === 'all' || entity.type === typeFilter;
-    const matchesStatus = statusFilter === 'all' || entity.status === statusFilter;
-
-    return matchesSearch && matchesType && matchesStatus;
-  });
 
   return (
     <div className="container mx-auto p-6">
@@ -73,9 +93,12 @@ function EntitiesPage() {
         </Button>
         <div className="flex items-center justify-between">
           <h1 className="font-serif text-3xl font-bold">Entities</h1>
-          <div className="text-muted-foreground text-sm">
-            {entities.length} total • {filteredEntities.length} visible
-          </div>
+          {status !== 'LoadingFirstPage' && (
+            <div className="text-muted-foreground text-sm">
+              {filteredResults.length} loaded
+              {status !== 'Exhausted' && '+'}
+            </div>
+          )}
         </div>
       </div>
 
@@ -116,40 +139,36 @@ function EntitiesPage() {
         </Select>
       </div>
 
-      {entities.length === 0 ?
-        <EmptyState
-          icon={<Users className="text-muted-foreground size-8" />}
-          title="No entities yet"
-          description="Entities will appear here once extracted from your documents."
-        />
-      : filteredEntities.length === 0 ?
-        <EmptyState
-          title="No matching entities"
-          description="Try adjusting your search or filters."
-          action={
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSearchQuery('');
-                setTypeFilter('all');
-                setStatusFilter('all');
-              }}
-            >
-              Clear Filters
-            </Button>
-          }
-        />
-      : <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredEntities.map((entity) => (
-            <EntityCard
-              key={entity._id}
-              entity={entity}
-              onConfirm={entity.status === 'pending' ? (id) => confirmEntity({ id }) : undefined}
-              onReject={entity.status === 'pending' ? (id) => rejectEntity({ id }) : undefined}
+      <PaginatedGrid
+        results={filteredResults}
+        status={status}
+        loadMore={loadMore}
+        pageSize={PAGE_SIZE}
+        emptyState={
+          results.length === 0 ?
+            <EmptyState
+              icon={<Users className="text-muted-foreground size-8" />}
+              title="No entities yet"
+              description="Entities will appear here once extracted from your documents."
             />
-          ))}
-        </div>
-      }
+          : <EmptyState
+              title="No matching entities"
+              description="Try adjusting your search."
+              action={
+                <Button variant="outline" onClick={() => setSearchQuery('')}>
+                  Clear Search
+                </Button>
+              }
+            />
+        }
+        renderItem={(entity: Doc<'entities'>) => (
+          <EntityCard
+            entity={entity}
+            onConfirm={entity.status === 'pending' ? (id) => confirmEntity({ id }) : undefined}
+            onReject={entity.status === 'pending' ? (id) => rejectEntity({ id }) : undefined}
+          />
+        )}
+      />
     </div>
   );
 }
