@@ -5,7 +5,6 @@ type AnimatedListProps<T> = {
   items: T[];
   renderItem: (item: T, index: number) => ReactNode;
   keyExtractor: (item: T) => string;
-  staggerDelay?: number;
   className?: string;
   itemClassName?: string;
 };
@@ -14,23 +13,18 @@ export function AnimatedList<T>({
   items,
   renderItem,
   keyExtractor,
-  staggerDelay = 50,
   className,
   itemClassName,
 }: AnimatedListProps<T>) {
   return (
-    <div className={cn('motion-safe:space-y-0', className)}>
+    <div className={className}>
       {items.map((item, index) => (
         <div
           key={keyExtractor(item)}
           className={cn(
-            'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2',
+            'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-200',
             itemClassName
           )}
-          style={{
-            animationDelay: `${index * staggerDelay}ms`,
-            animationFillMode: 'backwards',
-          }}
         >
           {renderItem(item, index)}
         </div>
@@ -43,7 +37,6 @@ type AnimatedGridProps<T> = {
   items: T[];
   renderItem: (item: T, index: number) => ReactNode;
   keyExtractor: (item: T) => string;
-  staggerDelay?: number;
   className?: string;
   itemClassName?: string;
 };
@@ -52,7 +45,6 @@ export function AnimatedGrid<T>({
   items,
   renderItem,
   keyExtractor,
-  staggerDelay = 30,
   className,
   itemClassName,
 }: AnimatedGridProps<T>) {
@@ -62,13 +54,9 @@ export function AnimatedGrid<T>({
         <div
           key={keyExtractor(item)}
           className={cn(
-            'motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95',
+            'motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200',
             itemClassName
           )}
-          style={{
-            animationDelay: `${index * staggerDelay}ms`,
-            animationFillMode: 'backwards',
-          }}
         >
           {renderItem(item, index)}
         </div>
