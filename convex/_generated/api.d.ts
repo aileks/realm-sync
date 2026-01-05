@@ -17,6 +17,7 @@ import type * as cleanup from "../cleanup.js";
 import type * as crons from "../crons.js";
 import type * as documents from "../documents.js";
 import type * as entities from "../entities.js";
+import type * as export_ from "../export.js";
 import type * as facts from "../facts.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -47,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   documents: typeof documents;
   entities: typeof entities;
+  export: typeof export_;
   facts: typeof facts;
   http: typeof http;
   "lib/auth": typeof lib_auth;
