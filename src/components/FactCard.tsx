@@ -22,6 +22,10 @@ function getConfidenceColor(confidence: number): string {
   return 'bg-red-500/15 text-red-600 dark:text-red-400 ring-red-500/20';
 }
 
+function formatPredicate(predicate: string): string {
+  return predicate.replace(/_/g, ' ');
+}
+
 function getStatusStyle(status: string): string {
   switch (status) {
     case 'confirmed':
@@ -50,7 +54,7 @@ export function FactCard({ fact, onConfirm, onReject, onHighlight }: FactCardPro
                 {fact.subject}
               </span>
               <ArrowRight className="text-muted-foreground/70 size-3.5" />
-              <span className="text-muted-foreground italic">{fact.predicate}</span>
+              <span className="text-predicate italic">{formatPredicate(fact.predicate)}</span>
               <ArrowRight className="text-muted-foreground/70 size-3.5" />
               <span className="text-foreground bg-secondary/50 rounded-md px-1.5 py-0.5 font-serif font-medium">
                 {fact.object}
