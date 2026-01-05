@@ -252,17 +252,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               </div>
               {!collapsed && <span className="ml-2 truncate">{user?.name ?? 'Account'}</span>}
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align={collapsed ? 'center' : 'start'}
-              side="right"
-              sideOffset={10}
-              className="w-48"
-            >
+            <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-48">
               <DropdownMenuGroup>
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => navigate({ to: '/projects' })}>
-                  <FolderOpen className="mr-2 size-4" />
-                  Projects
+                <DropdownMenuItem disabled className="text-muted-foreground">
+                  <User className="mr-2 size-4" />
+                  Profile (coming soon)
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
@@ -312,7 +307,7 @@ function NavItem({ to, icon: Icon, children, collapsed }: NavItemProps) {
       className={cn(
         'flex items-center gap-3 rounded-lg p-3 transition-colors',
         collapsed && 'justify-center',
-        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground'
+        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-sidebar-accent text-foreground'
       )}
     >
       <Icon className="size-5" />
@@ -361,7 +356,7 @@ function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: Proj
       className={cn(
         'flex items-center gap-3 rounded-lg p-3 transition-colors',
         collapsed && 'justify-center',
-        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground'
+        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-sidebar-accent text-foreground'
       )}
     >
       <Icon className="size-5" />
@@ -527,7 +522,7 @@ function MobileNavItem({ to, icon: Icon, children, onClick }: MobileNavItemProps
       onClick={onClick}
       className={cn(
         'flex items-center gap-3 rounded-lg p-3 transition-colors',
-        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground'
+        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-sidebar-accent text-foreground'
       )}
     >
       <Icon className="size-5" />
@@ -607,7 +602,7 @@ function RecentProjects({ collapsed }: { collapsed: boolean }) {
             className={cn(
               'flex items-center gap-3 rounded-lg p-2 transition-colors',
               collapsed && 'justify-center',
-              'hover:bg-muted text-foreground text-sm'
+              'hover:bg-sidebar-accent text-foreground text-sm'
             )}
           >
             <FolderOpen className="size-4 opacity-60" />
