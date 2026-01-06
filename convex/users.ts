@@ -46,7 +46,6 @@ export const recordTutorialStep = mutation({
   args: { stepId: v.string() },
   handler: async (ctx, { stepId }) => {
     const user = await requireAuthUser(ctx);
-    const now = Date.now();
     const tutorialState = user.tutorialState ?? {
       hasSeenTour: false,
       completedSteps: [],
@@ -60,7 +59,7 @@ export const recordTutorialStep = mutation({
       tutorialState: {
         hasSeenTour: tutorialState.hasSeenTour ?? false,
         completedSteps: nextSteps,
-        tourStartedAt: tutorialState.tourStartedAt ?? now,
+        tourStartedAt: tutorialState.tourStartedAt,
         tourCompletedAt: tutorialState.tourCompletedAt,
       },
     });
