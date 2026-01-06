@@ -1,5 +1,5 @@
 ---
-summary: User engagement features including Vellum AI assistant, interactive tutorials, project sharing, user profiles, and monetization.
+summary: User engagement features including Vellum AI assistant, interactive tutorials, project sharing, project categories, user profiles, and monetization.
 read_when:
   [
     engagement,
@@ -13,6 +13,12 @@ read_when:
     avatar,
     email,
     password,
+    categories,
+    ttrpg,
+    dm,
+    fiction,
+    fanfic,
+    reveal,
   ]
 ---
 
@@ -40,6 +46,7 @@ Phase 6 transforms Realm Sync from a tool into an experience. The Vellum moth ma
 | Onboarding Modal | Complete | New user welcome flow |
 | Project Sharing (Backend) | Complete | `projectShares.ts`, `projectAccess.ts`, role-based access |
 | Project Sharing (UI) | Pending | ShareProjectDialog, shared projects list |
+| Project Categories | Pending | TTRPG/Fiction/Game Design/General modes + reveal mechanics |
 | User Profiles | Pending | Email/password change, bio, avatar uploads via Convex storage |
 | Polar.sh Integration | Pending | Sponsorship, funding, premium features |
 
@@ -328,7 +335,229 @@ projectShares: defineTable({
 
 ---
 
-## 4. User Profiles
+## 4. Project Categories
+
+Enable users to select what kind of projects they work on, with mode-specific features.
+
+### Problem Statement
+
+Different users have different needs:
+
+- **TTRPG DMs** need hidden content players can't see until revealed
+- **Fiction writers** need timeline tracking and character arcs
+- **Game designers** need asset tracking and lore bibles
+- **General worldbuilders** need standard canon tracking
+
+### Categories
+
+| Category | Slug | Use Case | Key Features |
+| --- | --- | --- | --- |
+| **TTRPG / DM Mode** | `ttrpg` | Tabletop RPG game masters | Hidden content, player handouts, reveal mechanics |
+| **Original Fiction** | `original-fiction` | Novels, short stories | Timeline tracking, character arcs, plot threads |
+| **Fanfiction** | `fanfiction` | Stories in existing universes | Canon vs headcanon, source tracking |
+| **Game Design** | `game-design` | Video games, board games | Asset tracking, lore bibles, design docs |
+| **General** | `general` | Wiki-style, collaborative | Standard canon tracking (default) |
+
+### Data Model
+
+#### User Preferences
+
+Add to `users.settings`:
+
+```typescript
+settings: v.optional(v.object({
+  theme: v.optional(v.string()),
+  notifications: v.optional(v.boolean()),
+  projectModes: v.optional(v.array(v.union(
+    v.literal('ttrpg'),
+    v.literal('original-fiction'),
+    v.literal('fanfiction'),
+    v.literal('game-design'),
+    v.literal('general')
+  ))),
+})),
+```
+
+#### Project Type
+
+Add to `projects` table:
+
+```typescript
+projects: defineTable({
+  // ... existing fields
+  projectType: v.optional(
+    v.union(
+      v.literal('ttrpg'),
+      v.literal('original-fiction'),
+      v.literal('fanfiction'),
+      v.literal('game-design'),
+      v.literal('general')
+    )
+  ),
+});
+```
+
+**Default behavior:** New projects use user's first preference, or `general` if none set.
+
+### TTRPG Mode: Reveal Mechanics
+
+For TTRPG projects, entities need visibility control for the DM/player dynamic.
+
+#### Schema Extension
+
+Add to `entities` table:
+
+```typescript
+entities: defineTable({
+  // ... existing fields
+  revealedToViewers: v.optional(v.boolean()), // default false = hidden from players
+  revealedAt: v.optional(v.number()), // timestamp of reveal
+});
+```
+
+#### Viewer Filtering (Extended)
+
+Current viewer filtering:
+
+```typescript
+// Viewers see only confirmed content
+if (access.isViewer) {
+  entities = entities.filter((e) => e.status === 'confirmed');
+}
+```
+
+Extended for TTRPG projects:
+
+```typescript
+// TTRPG viewers see only confirmed AND revealed content
+if (access.isViewer && project.projectType === 'ttrpg') {
+  entities = entities.filter(
+    (e) => e.status === 'confirmed' && e.revealedToViewers === true
+  );
+}
+```
+
+#### Reveal Mutation
+
+```typescript
+export const revealToPlayers = mutation({
+  args: {
+    entityId: v.id('entities'),
+  },
+  handler: async (ctx, { entityId }) => {
+    const userId = await requireAuth(ctx);
+    const entity = await ctx.db.get(entityId);
+    if (!entity) throw new Error('Entity not found');
+
+    // Only project owner can reveal
+    const project = await ctx.db.get(entity.projectId);
+    if (!project || project.userId !== userId) {
+      throw new Error('Not authorized');
+    }
+
+    // Only TTRPG projects have reveal mechanics
+    if (project.projectType !== 'ttrpg') {
+      throw new Error('Reveal is only available for TTRPG projects');
+    }
+
+    await ctx.db.patch(entityId, {
+      revealedToViewers: true,
+      revealedAt: Date.now(),
+    });
+  },
+});
+
+export const hideFromPlayers = mutation({
+  args: {
+    entityId: v.id('entities'),
+  },
+  handler: async (ctx, { entityId }) => {
+    // Similar auth checks...
+    await ctx.db.patch(entityId, {
+      revealedToViewers: false,
+      revealedAt: undefined,
+    });
+  },
+});
+```
+
+### UX Flow
+
+#### Onboarding
+
+After signup, ask "What are you building?" with multi-select:
+
+```
+┌─────────────────────────────────────────────────┐
+│ What are you building?                          │
+│ (Select all that apply)                         │
+│                                                 │
+│ ☐ TTRPG Campaigns (D&D, Pathfinder, etc.)      │
+│ ☐ Original Fiction (novels, short stories)     │
+│ ☐ Fanfiction                                   │
+│ ☐ Game Design (video games, board games)       │
+│ ☐ General Worldbuilding                        │
+│                                                 │
+│                            [Continue]           │
+└─────────────────────────────────────────────────┘
+```
+
+Stored in `users.settings.projectModes`.
+
+Also mention the command palette (Cmd+K / Ctrl+K) for quick navigation during onboarding.
+
+#### Project Creation
+
+Default to user's first preference. Allow override:
+
+```
+Project Type: [TTRPG Campaign ▼]
+```
+
+#### Settings Page
+
+Users can update their preferences anytime in `/settings`.
+
+#### TTRPG Entity List
+
+For TTRPG projects, entity rows show reveal status:
+
+| Entity            | Type      | Status    | Visible to Players |
+| ----------------- | --------- | --------- | ------------------ |
+| Dragon of Ashfall | character | confirmed | 🔒 Hidden          |
+| Thornhaven        | location  | confirmed | 👁 Revealed        |
+| The Emerald Crown | item      | pending   | —                  |
+
+Toggle via row action menu: "Reveal to Players" / "Hide from Players"
+
+### Implementation Order
+
+1. **Schema changes** - Add `projectType` to projects, `revealedToViewers` to entities, `projectModes` to user settings
+2. **Backend mutations** - `revealToPlayers`, `hideFromPlayers`, update entity queries for TTRPG filtering
+3. **Onboarding step** - Project mode selection in OnboardingModal
+4. **Project creation** - Type selector in new project form
+5. **Entity reveal UI** - Toggle in entity list/detail for TTRPG projects
+6. **Settings page** - Preferences management
+
+### Testing Strategy
+
+**Backend:**
+
+- Reveal/hide mutations require project ownership
+- TTRPG viewers only see revealed entities
+- Non-TTRPG projects ignore reveal fields
+- Reveal persists across sessions
+
+**Frontend:**
+
+- Onboarding saves preferences
+- Project type selector works
+- Reveal toggle appears only for TTRPG projects
+- Viewers don't see hidden entities
+
+---
+
+## 5. User Profiles
 
 Enable users to manage their account settings, profile information, and security credentials. This feature allows users to update their email, password, display name, bio, and profile picture using Convex's built-in file storage.
 
