@@ -18,9 +18,13 @@ Phase 6 transforms Realm Sync from a tool into an experience. The Vellum moth ma
 | Sub-Phase | Status | Notes |
 | --- | --- | --- |
 | Vellum AI Assistant | Complete | Streaming chat with personality (PR #35) |
+| Chat History Persistence | Complete | `convex/chatHistory.ts`, `chatMessages` table |
 | Demo Project Seeding | Complete | "The Verdant Realm" with 3 docs, 12 entities, 10 facts, 2 alerts |
 | Tour Library Setup | Complete | Custom overlay tour with data-tour targets |
 | Tour Step Definitions | Complete | Project overview, documents, entities, alerts, Vellum |
+| Command Palette | Complete | Cmd+K navigation with fuzzy search |
+| Keyboard Shortcuts | Complete | Global shortcuts with chord support |
+| Onboarding Modal | Complete | New user welcome flow |
 | Project Sharing | Pending | DM/Player collaboration with roles |
 | Polar.sh Integration | Pending | Sponsorship, funding, premium features |
 

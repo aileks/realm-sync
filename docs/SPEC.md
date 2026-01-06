@@ -100,6 +100,7 @@ Extended from Convex Auth (custom fields merged automatically).
 | `description` | optional string | Brief overview of the project | `v.optional(v.string())` |
 | `createdAt` | number | Creation timestamp | `v.number()` |
 | `updatedAt` | number | Last modification timestamp | `v.number()` |
+| `isTutorial` | optional boolean | Marks demo/tutorial projects | `v.optional(v.boolean())` |
 | `stats` | optional object | Cached counts for docs, entities, facts, alerts | `v.optional(v.object({...}))` |
 
 **Stats Object Structure**:
@@ -277,6 +278,21 @@ Extended from Convex Auth (custom fields merged automatically).
 **Constraints**:
 
 - TTL: 7 days (configurable via prompt version bump)
+
+---
+
+### Table: `chatMessages`
+
+| Field | Type | Description | Validation |
+| --- | --- | --- | --- |
+| `userId` | id("users") | Reference to the user | `v.id("users")` |
+| `role` | union | "user" \| "assistant" | `v.union(v.literal("user"), v.literal("assistant"))` |
+| `content` | string | Message content | `v.string()` |
+| `createdAt` | number | Message timestamp | `v.number()` |
+
+**Indexes**:
+
+- `by_user`: `["userId", "createdAt"]` (ordered message history per user)
 
 ---
 
@@ -1154,10 +1170,16 @@ pnpm docs:list             # List all docs
 
 - ✅ TanStack Start + React 19 routing infrastructure
 - ✅ Convex integration with provider (`src/integrations/convex/provider.tsx`)
-- ✅ 13 Shadcn UI primitives (`src/components/ui/`)
+- ✅ 17 Shadcn UI primitives (`src/components/ui/`)
 - ✅ Tailwind v4 with OKLCH design tokens (`src/styles.css`)
 - ✅ Base layout with Header (`src/routes/__root.tsx`)
 - ✅ Sentry instrumentation (`instrument.server.mjs`)
+- ✅ Vellum AI Chat with streaming (`src/components/VellumChat.tsx`)
+- ✅ Interactive Tutorial Tour (`src/components/TutorialTour.tsx`)
+- ✅ Command Palette (`src/components/CommandPalette.tsx`)
+- ✅ Keyboard Shortcuts (`src/components/KeyboardShortcuts.tsx`)
+- ✅ Chat History Persistence (`convex/chatHistory.ts`)
+- ✅ Demo Project Seeding (`convex/tutorial.ts`)
 
 ### Placeholder/Demo (Remove in Phase 1)
 

@@ -12,16 +12,21 @@ read_when: working on app components (not UI primitives)
 components/
 ├── AppLayout.tsx        # Main app shell (sidebar + content area)
 ├── AppSidebar.tsx       # Navigation sidebar with project list - 491 lines
-├── DocumentCard.tsx      # Document display card
-├── DocumentForm.tsx      # Document creation/editing form
-├── EmptyState.tsx        # Empty state placeholder component
+├── CommandPalette.tsx   # Cmd+K command palette for navigation
+├── DocumentCard.tsx     # Document display card
+├── DocumentForm.tsx     # Document creation/editing form
+├── EmptyState.tsx       # Empty state placeholder component
 ├── EntityCard.tsx       # Entity display card (with type color)
-├── EntityTypeFilter.tsx  # Filter dropdown for entity types
+├── EntityTypeFilter.tsx # Filter dropdown for entity types
 ├── FactCard.tsx         # Fact display card
-├── LoadingState.tsx      # Loading spinner/skeleton
-├── ProjectCard.tsx       # Project display card
-├── ProjectForm.tsx       # Project creation/editing form
-├── ReviewEntityCard.tsx  # Entity card wrapper for merge review
+├── KeyboardShortcuts.tsx # Global keyboard shortcut handling
+├── LoadingState.tsx     # Loading spinner/skeleton
+├── OnboardingModal.tsx  # New user onboarding modal
+├── ProjectCard.tsx      # Project display card
+├── ProjectForm.tsx      # Project creation/editing form
+├── ReviewEntityCard.tsx # Entity card wrapper for merge review
+├── TutorialTour.tsx     # Interactive tutorial overlay
+├── VellumChat.tsx       # AI chat interface with streaming
 └── ui/                  # UI primitives (17 Shadcn/Base components)
     └── AGENTS.md        # See ui/AGENTS.md for UI component patterns
 ```
@@ -36,6 +41,9 @@ components/
 | Filters | `*Filter.tsx` | EntityTypeFilter for entity filtering |
 | Forms | `*Form.tsx` | DocumentForm, ProjectForm |
 | UI primitives | `ui/` | Button, Card, Input, etc. |
+| AI assistant | `VellumChat.tsx` | Streaming chat with context |
+| Onboarding | `OnboardingModal.tsx`, `TutorialTour.tsx` | New user flow + guided tour |
+| Keyboard | `KeyboardShortcuts.tsx`, `CommandPalette.tsx` | Global shortcuts + Cmd+K |
 
 ## CONVENTIONS
 
