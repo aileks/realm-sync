@@ -21,6 +21,7 @@ import {
 import { ProjectForm } from '@/components/ProjectForm';
 import { LoadingState } from '@/components/LoadingState';
 import { ExportButton } from '@/components/ExportButton';
+import { useTour } from '@/lib/tour';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/projects_/$projectId')({
@@ -32,16 +33,19 @@ function ProjectDashboard() {
   const { projectId } = Route.useParams();
   const project = useQuery(api.projects.get, { id: projectId as Id<'projects'> });
   const documents = useQuery(api.documents.list, { projectId: projectId as Id<'projects'> });
+  const user = useQuery(api.users.viewer);
   const deleteProject = useMutation(api.projects.remove);
 
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  useTour();
+
   useEffect(() => {
-    if (project) {
-      addRecentProject(projectId, project.name);
+    if (project && user?._id) {
+      addRecentProject(projectId, project.name, user._id);
     }
-  }, [project, projectId]);
+  }, [project, projectId, user?._id]);
 
   if (project === undefined) {
     return <LoadingState message="Loading project..." />;
@@ -85,7 +89,7 @@ function ProjectDashboard() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6" data-tour="project-overview">
       <div className="mb-6 flex items-start justify-between">
         <div>
           <Button

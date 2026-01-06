@@ -126,7 +126,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-2">
+      <nav className="flex-1 overflow-y-auto p-2" data-tour="sidebar-nav">
         {isAuthenticated && (
           <NavItem to="/projects" icon={Home} collapsed={collapsed}>
             Home
@@ -152,6 +152,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               to="documents"
               icon={FileText}
               collapsed={collapsed}
+              dataTour="documents"
             >
               Documents
             </ProjectNavItem>
@@ -160,7 +161,13 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               Canon Browser
             </ProjectNavItem>
 
-            <ProjectNavItem projectId={projectId} to="entities" icon={Users} collapsed={collapsed}>
+            <ProjectNavItem
+              projectId={projectId}
+              to="entities"
+              icon={Users}
+              collapsed={collapsed}
+              dataTour="entities"
+            >
               Entities
             </ProjectNavItem>
 
@@ -178,6 +185,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               to="alerts"
               icon={AlertTriangle}
               collapsed={collapsed}
+              dataTour="alerts"
             >
               Alerts
             </ProjectNavItem>
@@ -333,6 +341,7 @@ type ProjectNavItemProps = {
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
+  dataTour?: string;
 };
 
 const projectRoutes = {
@@ -344,7 +353,14 @@ const projectRoutes = {
   review: '/projects/$projectId/review',
 } as const;
 
-function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: ProjectNavItemProps) {
+function ProjectNavItem({
+  projectId,
+  to,
+  icon: Icon,
+  children,
+  collapsed,
+  dataTour,
+}: ProjectNavItemProps) {
   const routerState = useRouterState();
   const fullPath = `/projects/${projectId}/${to}`;
   const isActive = routerState.location.pathname.startsWith(fullPath);
@@ -358,6 +374,7 @@ function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: Proj
         collapsed && 'justify-center',
         isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-predicate/20 text-foreground'
       )}
+      data-tour={dataTour}
     >
       <Icon className="size-5" />
       {!collapsed && <span className="text-sm font-medium">{children}</span>}
@@ -531,7 +548,7 @@ function MobileNavItem({ to, icon: Icon, children, onClick }: MobileNavItemProps
   );
 }
 
-const RECENT_PROJECTS_KEY = 'realm-sync:recent-projects';
+const RECENT_PROJECTS_KEY_PREFIX = 'realm-sync:recent-projects:';
 const MAX_RECENT_PROJECTS = 5;
 
 type RecentProject = {
@@ -540,22 +557,38 @@ type RecentProject = {
   visitedAt: number;
 };
 
-function getRecentProjects(): RecentProject[] {
-  if (typeof window === 'undefined') return [];
+function getRecentProjectsKey(userId: string): string {
+  return `${RECENT_PROJECTS_KEY_PREFIX}${userId}`;
+}
+
+function getRecentProjects(userId: string | undefined): RecentProject[] {
+  if (typeof window === 'undefined' || !userId) return [];
   try {
-    const stored = localStorage.getItem(RECENT_PROJECTS_KEY);
+    const stored = localStorage.getItem(getRecentProjectsKey(userId));
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
   }
 }
 
-export function addRecentProject(id: string, name: string) {
-  if (typeof window === 'undefined') return;
+export function addRecentProject(id: string, name: string, userId: string | undefined) {
+  if (typeof window === 'undefined' || !userId) return;
   try {
-    const recent = getRecentProjects().filter((p) => p.id !== id);
+    const key = getRecentProjectsKey(userId);
+    const recent = getRecentProjects(userId).filter((p) => p.id !== id);
     recent.unshift({ id, name, visitedAt: Date.now() });
-    localStorage.setItem(RECENT_PROJECTS_KEY, JSON.stringify(recent.slice(0, MAX_RECENT_PROJECTS)));
+    localStorage.setItem(key, JSON.stringify(recent.slice(0, MAX_RECENT_PROJECTS)));
+  } catch {
+    /* empty */
+  }
+}
+
+export function removeRecentProject(projectId: string, userId: string | undefined) {
+  if (typeof window === 'undefined' || !userId) return;
+  try {
+    const key = getRecentProjectsKey(userId);
+    const recent = getRecentProjects(userId).filter((p) => p.id !== projectId);
+    localStorage.setItem(key, JSON.stringify(recent));
   } catch {
     /* empty */
   }
@@ -564,19 +597,33 @@ export function addRecentProject(id: string, name: string) {
 function RecentProjects({ collapsed }: { collapsed: boolean }) {
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
   const { isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.users.viewer);
+  const projects = useQuery(api.projects.list, isAuthenticated ? {} : 'skip');
+
+  const userId = user?._id;
 
   useEffect(() => {
-    setRecentProjects(getRecentProjects());
-
-    function handleStorage(e: StorageEvent) {
-      if (e.key === RECENT_PROJECTS_KEY) {
-        setRecentProjects(getRecentProjects());
-      }
+    if (!userId) {
+      setRecentProjects([]);
+      return;
     }
 
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+    const stored = getRecentProjects(userId);
+
+    if (projects) {
+      const validProjectIds = new Set(projects.map((p) => p._id));
+      const validRecent = stored.filter((r) => validProjectIds.has(r.id as never));
+
+      if (validRecent.length !== stored.length) {
+        const key = getRecentProjectsKey(userId);
+        localStorage.setItem(key, JSON.stringify(validRecent));
+      }
+
+      setRecentProjects(validRecent);
+    } else {
+      setRecentProjects(stored);
+    }
+  }, [userId, projects]);
 
   if (!isAuthenticated || recentProjects.length === 0) return null;
 

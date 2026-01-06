@@ -22,7 +22,7 @@ Phase 6 transforms Realm Sync from a tool into an experience. The Vellum moth ma
 | Tour Library Setup | Pending | react-joyride or custom tooltips |
 | Tour Step Definitions | Pending | Define steps for each feature |
 | Project Sharing | Pending | DM/Player collaboration with roles |
-| Polar.sh Integration | Pending | Sponsorship, funding, premium features |
+| Polar.sh Integration | Pending | Subscription tiers, premium features |
 
 ---
 
@@ -279,73 +279,223 @@ projectShares: defineTable({
 
 ---
 
-## 4. Polar.sh Monetization
+## 4. Polar.sh Subscription Service
 
-Integrate [Polar.sh](https://polar.sh) for sustainable open-source funding.
+Integrate [Polar.sh](https://polar.sh) for subscription-based monetization.
 
 ### Why Polar.sh
 
 - **GitHub-native:** Seamless integration with existing workflow
-- **Flexible:** Sponsorships, subscriptions, and one-time payments
+- **Subscription-first:** Built for recurring revenue with usage-based options
 - **Transparent:** Open-source friendly, community-focused
-- **Low friction:** Users can sponsor directly from GitHub
+- **Low friction:** Users can subscribe directly from GitHub
 
-### Integration Points
+### Subscription Model
 
-#### 4.1 Sponsorship Tiers
+|                           | Free | Pro ($5/mo) |
+| ------------------------- | ---- | ----------- |
+| **Projects**              | 2    | Unlimited   |
+| **Documents per project** | 10   | Unlimited   |
+| **Vellum messages/month** | 25   | 500         |
+| **Entity extraction**     | ✓    | ✓           |
+| **Continuity checking**   | ✓    | ✓           |
+| **Markdown export**       | ✓    | ✓           |
+| **PDF export**            | -    | ✓           |
+| **Project sharing**       | -    | ✓           |
+| **Priority extraction**   | -    | ✓           |
+| **Custom themes**         | -    | ✓           |
 
-| Tier           | Price  | Benefits                               |
-| -------------- | ------ | -------------------------------------- |
-| **Supporter**  | $5/mo  | Early access to features, Discord role |
-| **Patron**     | $15/mo | Priority bug fixes, vote on roadmap    |
-| **Benefactor** | $50/mo | Direct feature requests, 1:1 support   |
+### Implementation
 
-#### 4.2 Premium Features (Future)
-
-Potential sponsor-only features:
-
-- **Extended AI chat:** More Vellum conversations per month
-- **Advanced exports:** PDF world bibles, player handouts
-- **Team workspaces:** Shared projects with role management
-- **Custom themes:** Beyond the 3 default themes
-- **Priority extraction:** Faster AI processing queue
-
-#### 4.3 Implementation
+#### 4.1 Schema Changes
 
 ```typescript
-// src/routes/sponsors.tsx
-export function SponsorsPage() {
+// convex/schema.ts - extend users table
+users: defineTable({
+  // ... existing fields
+  subscription: v.optional(
+    v.object({
+      tier: v.union(v.literal('free'), v.literal('pro')),
+      polarCustomerId: v.optional(v.string()),
+      polarSubscriptionId: v.optional(v.string()),
+      currentPeriodEnd: v.optional(v.number()),
+      vellumMessagesUsed: v.number(),
+      vellumMessagesResetAt: v.number(),
+    })
+  ),
+});
+```
+
+#### 4.2 Limit Enforcement
+
+```typescript
+// convex/lib/limits.ts
+export const TIER_LIMITS = {
+  free: { projects: 2, documentsPerProject: 10, vellumMessages: 25 },
+  pro: {
+    projects: Infinity,
+    documentsPerProject: Infinity,
+    vellumMessages: 500,
+  },
+} as const;
+
+export async function checkProjectLimit(ctx: QueryCtx, userId: Id<'users'>) {
+  const user = await ctx.db.get(userId);
+  const tier = user?.subscription?.tier ?? 'free';
+  const limit = TIER_LIMITS[tier].projects;
+
+  const projectCount = await ctx.db
+    .query('projects')
+    .withIndex('by_user', (q) => q.eq('userId', userId))
+    .collect()
+    .then((p) => p.length);
+
+  return { allowed: projectCount < limit, current: projectCount, limit };
+}
+```
+
+#### 4.3 Webhook Handler
+
+```typescript
+// convex/http.ts - add Polar webhook route
+http.route({
+  path: '/webhooks/polar',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    const signature = request.headers.get('polar-signature');
+    const body = await request.text();
+
+    // Verify webhook signature
+    // Update user subscription status
+    // Handle: subscription.created, subscription.updated, subscription.canceled
+
+    return new Response('OK', { status: 200 });
+  }),
+});
+```
+
+#### 4.4 Pricing Page
+
+```typescript
+// src/routes/pricing.tsx
+export function PricingPage() {
   return (
     <div className="container py-12">
-      <h1>Support Realm Sync</h1>
-      <p>Help keep the archives open for all worldbuilders.</p>
+      <h1>Upgrade to Pro</h1>
+      <p>Unlock unlimited projects, documents, and more Vellum conversations.</p>
 
-      {/* Polar.sh embed or link */}
-      <a
-        href="https://polar.sh/realm-sync"
-        className={buttonVariants({ variant: 'default' })}
-      >
-        Become a Sponsor
+      <PricingComparison />
+
+      {/* Polar.sh checkout integration */}
+      <a href="https://polar.sh/realm-sync/subscriptions">
+        Subscribe for $5/month
       </a>
-
-      {/* Sponsor wall */}
-      <SponsorWall />
     </div>
   );
 }
 ```
 
-#### 4.4 Sponsor Recognition
+### Subscriber Recognition
 
-- **In-app badge:** Sponsors get a visual indicator on their profile
-- **Sponsor wall:** Public recognition page listing all sponsors
-- **Release notes:** Sponsors mentioned in changelogs
-- **Vellum's gratitude:** Special Vellum message for sponsors
+- **In-app badge:** Pro users get a subtle wing icon next to their name
+- **Vellum's gratitude:** Pro-specific Vellum greeting
 
 ```typescript
-// Vellum greeting for sponsors
-const SPONSOR_GREETING =
-  'Ah, a patron of the archives! Your support keeps these old wings fluttering. How may I assist you today?';
+const TIER_GREETINGS = {
+  free: 'Welcome to the archives! How may I assist you today?',
+  pro: 'Ah, a patron of the archives! Your support keeps these old wings fluttering. How may I help?',
+};
+```
+
+#### 4.2 Limit Enforcement
+
+```typescript
+// convex/lib/limits.ts
+export const TIER_LIMITS = {
+  free: { projects: 1, documentsPerProject: 5, vellumMessages: 50 },
+  creator: { projects: 5, documentsPerProject: 50, vellumMessages: 500 },
+  worldbuilder: {
+    projects: Infinity,
+    documentsPerProject: Infinity,
+    vellumMessages: 2000,
+  },
+  studio: {
+    projects: Infinity,
+    documentsPerProject: Infinity,
+    vellumMessages: Infinity,
+  },
+} as const;
+
+export async function checkProjectLimit(ctx: QueryCtx, userId: Id<'users'>) {
+  const user = await ctx.db.get(userId);
+  const tier = user?.subscription?.tier ?? 'free';
+  const limit = TIER_LIMITS[tier].projects;
+
+  const projectCount = await ctx.db
+    .query('projects')
+    .withIndex('by_user', (q) => q.eq('userId', userId))
+    .collect()
+    .then((p) => p.length);
+
+  return { allowed: projectCount < limit, current: projectCount, limit };
+}
+```
+
+#### 4.3 Webhook Handler
+
+```typescript
+// convex/http.ts - add Polar webhook route
+http.route({
+  path: '/webhooks/polar',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    const signature = request.headers.get('polar-signature');
+    const body = await request.text();
+
+    // Verify webhook signature
+    // Update user subscription status
+    // Handle: subscription.created, subscription.updated, subscription.canceled
+
+    return new Response('OK', { status: 200 });
+  }),
+});
+```
+
+#### 4.4 Pricing Page
+
+```typescript
+// src/routes/pricing.tsx
+export function PricingPage() {
+  return (
+    <div className="container py-12">
+      <h1>Choose Your Plan</h1>
+      <PricingTiers />
+
+      {/* Polar.sh checkout integration */}
+      <a href="https://polar.sh/realm-sync/subscriptions">
+        Subscribe via Polar
+      </a>
+    </div>
+  );
+}
+```
+
+### Subscriber Recognition
+
+- **In-app badge:** Paid tiers get visual indicator (moth wing variants)
+- **Vellum's gratitude:** Tier-specific Vellum greetings
+- **Priority support:** Worldbuilder+ get faster response times
+
+```typescript
+const TIER_GREETINGS = {
+  free: 'Welcome to the archives! How may I assist you today?',
+  creator:
+    'Ah, a creator of worlds! Your support keeps these archives growing. How may I help?',
+  worldbuilder:
+    'A true worldbuilder! Your dedication to the craft is admirable. What shall we explore?',
+  studio:
+    'Welcome, master archivist! The full power of the archives is at your command.',
+};
 ```
 
 ---

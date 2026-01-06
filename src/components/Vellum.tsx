@@ -58,6 +58,7 @@ export function VellumButton({ collapsed }: VellumButtonProps) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
+          data-tour="vellum"
           className={cn(
             buttonVariants({ variant: 'ghost', size: 'sm' }),
             'w-full cursor-pointer',

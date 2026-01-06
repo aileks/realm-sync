@@ -14,6 +14,14 @@ export default defineSchema({
     isAnonymous: v.optional(v.boolean()),
     createdAt: v.number(),
     onboardingCompleted: v.optional(v.boolean()),
+    tourState: v.optional(
+      v.object({
+        currentStepIndex: v.number(),
+        completed: v.boolean(),
+        startedAt: v.optional(v.number()),
+        completedAt: v.optional(v.number()),
+      })
+    ),
     settings: v.optional(
       v.object({
         theme: v.optional(v.string()),
