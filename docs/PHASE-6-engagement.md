@@ -523,13 +523,18 @@ Users can update their preferences anytime in `/settings`.
 
 #### TTRPG Entity List
 
-For TTRPG projects, entity rows show reveal status:
+For TTRPG projects, entity rows show a visual reveal badge:
 
-| Entity            | Type      | Status    | Visible to Players |
-| ----------------- | --------- | --------- | ------------------ |
-| Dragon of Ashfall | character | confirmed | 🔒 Hidden          |
-| Thornhaven        | location  | confirmed | 👁 Revealed        |
-| The Emerald Crown | item      | pending   | —                  |
+| Entity            | Type      | Status    |             |
+| ----------------- | --------- | --------- | ----------- |
+| Dragon of Ashfall | character | confirmed | 🔒 Hidden   |
+| Thornhaven        | location  | confirmed | 👁 Revealed |
+| The Emerald Crown | item      | pending   |             |
+
+- Badge derived from `revealedToViewers` field (no separate tag field)
+- Hidden = `revealedToViewers` is `false` or `undefined`
+- Revealed = `revealedToViewers` is `true`
+- Pending entities don't show badge (not yet in canon)
 
 Toggle via row action menu: "Reveal to Players" / "Hide from Players"
 
