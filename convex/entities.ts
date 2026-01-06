@@ -609,6 +609,9 @@ export const findSimilar = query({
       allEntities = allEntities.filter((e) => e.status === 'confirmed');
     }
 
+    // Filter for TTRPG viewers - only show revealed entities
+    allEntities = filterForTtrpgViewer(allEntities, access.isTtrpgViewer);
+
     const normalizedName = name.toLowerCase().trim();
 
     return allEntities.filter((entity) => {
@@ -662,6 +665,7 @@ export const search = query({
     for (const entity of [...nameResults, ...descriptionResults]) {
       if (!seen.has(entity._id)) {
         if (access.isViewer && entity.status !== 'confirmed') continue;
+        if (access.isTtrpgViewer && entity.revealedToViewers !== true) continue;
         seen.add(entity._id);
         combined.push(entity);
       }
@@ -693,7 +697,11 @@ export const getWithDetails = query({
       facts = facts.filter((f) => f.status === 'confirmed');
     }
 
-    const documentIds = [...new Set(facts.map((f) => f.documentId))];
+    const documentIds = [
+      ...new Set(
+        facts.map((f) => f.documentId).filter((id): id is Id<'documents'> => id !== undefined)
+      ),
+    ];
     const documents = await Promise.all(documentIds.map((docId) => ctx.db.get(docId)));
     const appearances = documents
       .filter((doc): doc is Doc<'documents'> => doc !== null)
@@ -953,6 +961,7 @@ export const getRelationshipGraph = query({
     const connectedEntityIds = new Set<Id<'entities'>>();
 
     for (const fact of allFacts) {
+      if (!fact.entityId) continue;
       const sourceEntity = allEntities.find((e) => e._id === fact.entityId);
       if (!sourceEntity) continue;
 

@@ -1,15 +1,22 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, usePaginatedQuery } from 'convex/react';
 import { useState, useMemo } from 'react';
-import { Lightbulb, Search, ArrowLeft, Filter } from 'lucide-react';
+import { Lightbulb, Search, ArrowLeft, Filter, Plus } from 'lucide-react';
 import { api } from '../../../../convex/_generated/api';
 import type { Id, Doc } from '../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FactCard } from '@/components/FactCard';
+import { FactForm } from '@/components/FactForm';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 import { PaginatedGrid } from '@/components/PaginatedGrid';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -33,6 +40,7 @@ function FactsPage() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const confirmFact = useMutation(api.facts.confirm);
   const rejectFact = useMutation(api.facts.reject);
@@ -91,12 +99,18 @@ function FactsPage() {
         </Button>
         <div className="flex items-center justify-between">
           <h1 className="font-serif text-3xl font-bold">Facts</h1>
-          {status !== 'LoadingFirstPage' && (
-            <div className="text-muted-foreground text-sm">
-              {filteredResults.length} loaded
-              {status !== 'Exhausted' && '+'}
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {status !== 'LoadingFirstPage' && (
+              <div className="text-muted-foreground text-sm">
+                {filteredResults.length} loaded
+                {status !== 'Exhausted' && '+'}
+              </div>
+            )}
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="mr-2 size-4" />
+              Add Fact
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -154,6 +168,19 @@ function FactsPage() {
           />
         )}
       />
+
+      <AlertDialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Add Fact</AlertDialogTitle>
+          </AlertDialogHeader>
+          <FactForm
+            projectId={projectId as Id<'projects'>}
+            onSuccess={() => setShowCreateModal(false)}
+            onCancel={() => setShowCreateModal(false)}
+          />
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

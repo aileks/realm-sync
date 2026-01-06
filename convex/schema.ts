@@ -129,13 +129,13 @@ export default defineSchema({
   // Facts
   facts: defineTable({
     projectId: v.id('projects'),
-    entityId: v.id('entities'),
-    documentId: v.id('documents'),
+    entityId: v.optional(v.id('entities')),
+    documentId: v.optional(v.id('documents')),
     subject: v.string(),
     predicate: v.string(),
     object: v.string(),
     confidence: v.number(),
-    evidenceSnippet: v.string(),
+    evidenceSnippet: v.optional(v.string()),
     evidencePosition: v.optional(
       v.object({
         start: v.number(),
