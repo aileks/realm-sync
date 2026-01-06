@@ -2,9 +2,9 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DocumentForm } from '@/components/DocumentForm';
-import type { Id } from '../../convex/_generated/dataModel';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 
-export const Route = createFileRoute('/projects_/$projectId_/documents/new')({
+export const Route = createFileRoute('/projects/$projectId/documents/new')({
   component: NewDocumentPage,
 });
 

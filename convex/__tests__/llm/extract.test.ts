@@ -18,7 +18,7 @@ async function setupProjectWithDocument(t: ReturnType<typeof convexTest>) {
       name: 'Test Project',
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      stats: { documentCount: 1, entityCount: 0, factCount: 0, alertCount: 0 },
+      stats: { documentCount: 1, entityCount: 0, factCount: 0, alertCount: 0, noteCount: 0 },
     });
 
     const documentId = await ctx.db.insert('documents', {

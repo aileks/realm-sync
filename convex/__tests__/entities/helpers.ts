@@ -11,6 +11,7 @@ export const defaultStats = () => ({
   entityCount: 0,
   factCount: 0,
   alertCount: 0,
+  noteCount: 0,
 });
 
 export function createTestContext() {
@@ -43,7 +44,13 @@ export async function setupOtherUser(t: TestContext) {
 type ProjectOverrides = {
   name?: string;
   withStats?: boolean;
-  stats?: { documentCount: number; entityCount: number; factCount: number; alertCount: number };
+  stats?: {
+    documentCount: number;
+    entityCount: number;
+    factCount: number;
+    alertCount: number;
+    noteCount: number;
+  };
 };
 
 export async function setupProject(

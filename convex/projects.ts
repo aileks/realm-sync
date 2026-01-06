@@ -95,6 +95,7 @@ export const create = mutation({
         entityCount: 0,
         factCount: 0,
         alertCount: 0,
+        noteCount: 0,
       },
     });
   },
@@ -186,6 +187,7 @@ export const updateStats = mutation({
       entityCount: v.optional(v.number()),
       factCount: v.optional(v.number()),
       alertCount: v.optional(v.number()),
+      noteCount: v.optional(v.number()),
     }),
   },
   handler: async (ctx, { id, stats }) => {
@@ -197,6 +199,7 @@ export const updateStats = mutation({
       entityCount: 0,
       factCount: 0,
       alertCount: 0,
+      noteCount: 0,
     };
 
     await ctx.db.patch(id, {
@@ -206,6 +209,7 @@ export const updateStats = mutation({
         entityCount: stats.entityCount ?? currentStats.entityCount,
         factCount: stats.factCount ?? currentStats.factCount,
         alertCount: stats.alertCount ?? currentStats.alertCount,
+        noteCount: stats.noteCount ?? currentStats.noteCount,
       },
     });
   },

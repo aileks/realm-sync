@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, usePaginatedQuery } from 'convex/react';
 import { useState, useMemo } from 'react';
 import { Users, Search, ArrowLeft, Filter } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id, Doc } from '../../convex/_generated/dataModel';
+import { api } from '../../../../convex/_generated/api';
+import type { Id, Doc } from '../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { EntityCard } from '@/components/EntityCard';
@@ -23,7 +23,7 @@ const PAGE_SIZE = 24;
 type EntityType = 'character' | 'location' | 'item' | 'concept' | 'event';
 type EntityStatus = 'pending' | 'confirmed';
 
-export const Route = createFileRoute('/projects_/$projectId_/entities')({
+export const Route = createFileRoute('/projects/$projectId/entities')({
   component: EntitiesPage,
 });
 
@@ -162,11 +162,30 @@ function EntitiesPage() {
             />
         }
         renderItem={(entity: Doc<'entities'>) => (
-          <EntityCard
-            entity={entity}
-            onConfirm={entity.status === 'pending' ? (id) => confirmEntity({ id }) : undefined}
-            onReject={entity.status === 'pending' ? (id) => rejectEntity({ id }) : undefined}
-          />
+          <Link
+            to="/entities/$entityId"
+            params={{ entityId: entity._id }}
+            search={{ project: projectId }}
+            className="block"
+          >
+            <EntityCard
+              entity={entity}
+              onConfirm={
+                entity.status === 'pending' ?
+                  (id) => {
+                    confirmEntity({ id });
+                  }
+                : undefined
+              }
+              onReject={
+                entity.status === 'pending' ?
+                  (id) => {
+                    rejectEntity({ id });
+                  }
+                : undefined
+              }
+            />
+          </Link>
         )}
       />
     </div>

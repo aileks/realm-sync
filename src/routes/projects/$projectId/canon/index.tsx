@@ -2,8 +2,8 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { useState } from 'react';
 import { LayoutGrid, List, ArrowUpDown } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { EntityCard } from '@/components/EntityCard';
 import { EntityTypeFilter } from '@/components/EntityTypeFilter';
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-export const Route = createFileRoute('/projects_/$projectId_/canon/')({
+export const Route = createFileRoute('/projects/$projectId/canon/')({
   component: CanonBrowserIndex,
 });
 

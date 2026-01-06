@@ -2,17 +2,17 @@ import { createFileRoute, Outlet, useMatches, useNavigate } from '@tanstack/reac
 import { useQuery, useMutation } from 'convex/react';
 import { useState, useMemo } from 'react';
 import { AlertTriangle, ArrowLeft, CheckCheck, XCircle } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 import { AlertCard } from '@/components/AlertCard';
 import { AlertFilters } from '@/components/AlertFilters';
 
-const ALERT_DETAIL_ROUTE_ID = '/projects_/$projectId_/alerts/$alertId';
+const ALERT_DETAIL_ROUTE_ID = '/projects/$projectId/alerts/$alertId';
 
-export const Route = createFileRoute('/projects_/$projectId_/alerts')({
+export const Route = createFileRoute('/projects/$projectId/alerts')({
   component: AlertsRoute,
 });
 

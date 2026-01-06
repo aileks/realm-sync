@@ -37,6 +37,7 @@ describe('seed.seedDemoData internal mutation', () => {
       entityCount: 12,
       factCount: 8,
       alertCount: 0,
+      noteCount: 0,
     });
   });
 

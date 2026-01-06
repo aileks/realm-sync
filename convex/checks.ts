@@ -490,6 +490,7 @@ export const createAlerts = internalMutation({
           entityCount: 0,
           factCount: 0,
           alertCount: 0,
+          noteCount: 0,
         };
         await ctx.db.patch(projectId, {
           updatedAt: now,

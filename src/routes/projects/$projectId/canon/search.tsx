@@ -2,8 +2,8 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { useState, useEffect, useRef } from 'react';
 import { Search, User, MapPin, Package, Lightbulb, Calendar, HelpCircle, X } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Doc, Id } from '../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Doc, Id } from '../../../../../convex/_generated/dataModel';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 import { cn } from '@/lib/utils';
 
-export const Route = createFileRoute('/projects_/$projectId_/canon/search')({
+export const Route = createFileRoute('/projects/$projectId/canon/search')({
   component: CanonSearch,
   validateSearch: (search: Record<string, unknown>) => ({
     q: typeof search.q === 'string' ? search.q : '',

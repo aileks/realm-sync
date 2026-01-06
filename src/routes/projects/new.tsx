@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ProjectForm } from '@/components/ProjectForm';
 
-export const Route = createFileRoute('/projects_/new')({
+export const Route = createFileRoute('/projects/new')({
   component: NewProjectPage,
 });
 

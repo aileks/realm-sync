@@ -1,14 +1,14 @@
 import { createFileRoute, Outlet, Link, useNavigate } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { ArrowLeft, Search, BookOpen, Clock, GitFork } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/LoadingState';
 import { QuickStats } from '@/components/QuickStats';
 import { cn } from '@/lib/utils';
 
-export const Route = createFileRoute('/projects_/$projectId_/canon')({
+export const Route = createFileRoute('/projects/$projectId/canon')({
   component: CanonLayout,
 });
 

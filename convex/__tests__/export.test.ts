@@ -29,7 +29,7 @@ async function createProjectWithData(
       description: 'A fantasy setting',
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      stats: { documentCount: 1, entityCount: 2, factCount: 1, alertCount: 0 },
+      stats: { documentCount: 1, entityCount: 2, factCount: 1, alertCount: 0, noteCount: 0 },
     });
 
     const docId = await ctx.db.insert('documents', {

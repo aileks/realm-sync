@@ -47,6 +47,7 @@ async function createProject(t: ReturnType<typeof convexTest>, userId: Id<'users
         entityCount: 0,
         factCount: 0,
         alertCount: 0,
+        noteCount: 0,
       },
     });
   });

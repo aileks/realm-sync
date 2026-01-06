@@ -2,8 +2,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { useState } from 'react';
 import { Users, AlertTriangle, User, MapPin, Package, Lightbulb, Calendar } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import {
   Select,
   SelectContent,
@@ -23,7 +23,7 @@ const entityTypeColors = [
   { type: 'Event', color: 'bg-entity-event', icon: Calendar },
 ];
 
-export const Route = createFileRoute('/projects_/$projectId_/canon/connections')({
+export const Route = createFileRoute('/projects/$projectId/canon/connections')({
   component: CanonConnections,
 });
 

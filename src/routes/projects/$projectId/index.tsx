@@ -2,9 +2,18 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useState, useEffect } from 'react';
 import { addRecentProject } from '@/components/RecentProjects';
-import { FileText, Users, Lightbulb, Plus, Settings, ArrowLeft, BookOpen } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import {
+  FileText,
+  Users,
+  Lightbulb,
+  Plus,
+  Settings,
+  ArrowLeft,
+  BookOpen,
+  StickyNote,
+} from 'lucide-react';
+import { api } from '../../../../convex/_generated/api';
+import type { Id } from '../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +32,7 @@ import { LoadingState } from '@/components/LoadingState';
 import { ExportButton } from '@/components/ExportButton';
 import { cn } from '@/lib/utils';
 
-export const Route = createFileRoute('/projects_/$projectId')({
+export const Route = createFileRoute('/projects/$projectId/')({
   component: ProjectDashboard,
 });
 
@@ -64,6 +73,7 @@ function ProjectDashboard() {
     entityCount: 0,
     factCount: 0,
     alertCount: 0,
+    noteCount: 0,
   };
 
   async function handleDelete() {
@@ -111,7 +121,7 @@ function ProjectDashboard() {
         </div>
       </div>
 
-      <div className="mb-8 grid gap-4 md:grid-cols-3" data-tour="project-overview">
+      <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4" data-tour="project-overview">
         <StatCard
           icon={FileText}
           label="Documents"
@@ -132,6 +142,12 @@ function ProjectDashboard() {
           value={stats.factCount}
           variant="entity-concept"
           onClick={() => navigate({ to: '/projects/$projectId/facts', params: { projectId } })}
+        />
+        <StatCard
+          icon={StickyNote}
+          label="Notes"
+          value={stats.noteCount ?? 0}
+          onClick={() => navigate({ to: '/projects/$projectId/notes', params: { projectId } })}
         />
       </div>
 

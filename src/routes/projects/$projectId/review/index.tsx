@@ -1,15 +1,15 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { Sparkles, FileText, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 
-export const Route = createFileRoute('/projects_/$projectId_/review/')({
+export const Route = createFileRoute('/projects/$projectId/review/')({
   component: ReviewQueuePage,
 });
 

@@ -47,9 +47,9 @@ Phase 6 transforms Realm Sync from a tool into an experience. The Vellum moth ma
 | Keyboard Shortcuts | Complete | Global shortcuts with chord support |
 | Onboarding Modal | Complete | New user welcome flow |
 | Project Sharing (Backend) | Complete | `projectShares.ts`, `projectAccess.ts`, role-based access |
-| Project Sharing (UI) | Pending | ShareProjectDialog, shared projects list |
+| Project Sharing (UI) | Deferred | ShareProjectDialog, shared projects list |
 | Project Categories | Pending | TTRPG/Fiction/Game Design/General modes + reveal mechanics |
-| Notes | Pending | Project-level and entity-level private notes |
+| Notes | In Progress | Project notes complete; entity notes backend + UI complete |
 | User Profiles | Pending | Email/password change, bio, avatar uploads via Convex storage |
 | Polar.sh Integration | Pending | Sponsorship, funding, premium features |
 
@@ -1664,3 +1664,4 @@ const SPONSOR_GREETING =
 - **Export for Players:** Generate player-facing PDF/markdown handouts
 - **Achievement System:** Reward users for completing milestones
 - **A/B Testing:** Track engagement and optimize experience
+- **Route Flattening:** Deeply nested routes (e.g., `projects_.$projectId_.documents.tsx`) should be migrated to folder-based structure for maintainability

@@ -26,7 +26,7 @@ async function setupProjectWithAlert(t: ReturnType<typeof convexTest>, userId: I
       name: 'Test Project',
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 1 },
+      stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 1, noteCount: 0 },
     });
 
     const documentId = await ctx.db.insert('documents', {
@@ -492,7 +492,7 @@ describe('alerts', () => {
         const project = await ctx.db.get(projectId);
         if (project) {
           await ctx.db.patch(projectId, {
-            stats: { ...project.stats!, alertCount: 0 },
+            stats: { ...project.stats!, alertCount: 0, noteCount: 0 },
           });
         }
       });
@@ -589,7 +589,7 @@ describe('alerts', () => {
         const project = await ctx.db.get(projectId);
         if (project) {
           await ctx.db.patch(projectId, {
-            stats: { ...project.stats!, alertCount: 0 },
+            stats: { ...project.stats!, alertCount: 0, noteCount: 0 },
           });
         }
       });
@@ -633,7 +633,9 @@ describe('alerts', () => {
         await ctx.db.patch(alertId, { status: 'resolved' });
         const project = await ctx.db.get(projectId);
         if (project) {
-          await ctx.db.patch(projectId, { stats: { ...project.stats!, alertCount: 0 } });
+          await ctx.db.patch(projectId, {
+            stats: { ...project.stats!, alertCount: 0, noteCount: 0 },
+          });
         }
       });
 

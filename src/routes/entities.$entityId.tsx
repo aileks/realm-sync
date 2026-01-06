@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/select';
 import { LoadingState } from '@/components/LoadingState';
 import { EmptyState } from '@/components/EmptyState';
+import { EntityNotesPanel } from '@/components/EntityNotesPanel';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/entities/$entityId')({
@@ -196,10 +197,13 @@ function EntityHeader({ entity, config, onEdit }: EntityHeaderProps) {
           )}
         </div>
       </div>
-      <Button variant="outline" onClick={onEdit}>
-        <Pencil className="mr-2 size-4" />
-        Edit
-      </Button>
+      <div className="flex gap-2">
+        <EntityNotesPanel entityId={entity._id} />
+        <Button variant="outline" onClick={onEdit}>
+          <Pencil className="mr-2 size-4" />
+          Edit
+        </Button>
+      </div>
     </div>
   );
 }

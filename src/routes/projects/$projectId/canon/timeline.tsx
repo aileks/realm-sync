@@ -13,8 +13,8 @@ import {
   Sparkles,
   ExternalLink,
 } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 import { cn } from '@/lib/utils';
 
-export const Route = createFileRoute('/projects_/$projectId_/canon/timeline')({
+export const Route = createFileRoute('/projects/$projectId/canon/timeline')({
   component: CanonTimeline,
 });
 

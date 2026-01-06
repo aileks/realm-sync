@@ -136,7 +136,11 @@ export function EntityCard({
                   size="sm"
                   variant="ghost"
                   className="text-muted-foreground size-8 p-0 hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400"
-                  onClick={() => onConfirm(entity._id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onConfirm(entity._id);
+                  }}
                 >
                   <Check className="size-4" />
                 </Button>
@@ -146,7 +150,11 @@ export function EntityCard({
                   size="sm"
                   variant="ghost"
                   className="text-muted-foreground hover:bg-primary/10 hover:text-primary size-8 p-0"
-                  onClick={() => onEdit(entity)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onEdit(entity);
+                  }}
                 >
                   <Pencil className="size-4" />
                 </Button>
@@ -156,7 +164,11 @@ export function EntityCard({
                   size="sm"
                   variant="ghost"
                   className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-8 p-0"
-                  onClick={() => onReject(entity._id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onReject(entity._id);
+                  }}
                 >
                   <X className="size-4" />
                 </Button>
@@ -179,7 +191,11 @@ export function EntityCard({
                   size="sm"
                   variant="outline"
                   className="bg-background/50 h-8 border-amber-500/30 text-xs text-amber-800 hover:border-amber-500/50 hover:bg-amber-500/20 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-200"
-                  onClick={() => onMerge(entity._id, similar._id)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onMerge(entity._id, similar._id);
+                  }}
                 >
                   Merge with "{similar.name}"
                 </Button>
