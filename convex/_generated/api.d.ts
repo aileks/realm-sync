@@ -12,6 +12,7 @@ import type * as __tests___entities_helpers from "../__tests__/entities/helpers.
 import type * as alerts from "../alerts.js";
 import type * as auth from "../auth.js";
 import type * as chat from "../chat.js";
+import type * as chatHistory from "../chatHistory.js";
 import type * as checks from "../checks.js";
 import type * as cleanup from "../cleanup.js";
 import type * as crons from "../crons.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   alerts: typeof alerts;
   auth: typeof auth;
   chat: typeof chat;
+  chatHistory: typeof chatHistory;
   checks: typeof checks;
   cleanup: typeof cleanup;
   crons: typeof crons;

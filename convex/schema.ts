@@ -150,6 +150,14 @@ export default defineSchema({
     .index('by_project', ['projectId', 'status'])
     .index('by_document', ['documentId']),
 
+  // Chat Messages (Vellum conversation history)
+  chatMessages: defineTable({
+    userId: v.id('users'),
+    role: v.union(v.literal('user'), v.literal('assistant')),
+    content: v.string(),
+    createdAt: v.number(),
+  }).index('by_user', ['userId', 'createdAt']),
+
   // LLM Cache
   llmCache: defineTable({
     inputHash: v.string(),

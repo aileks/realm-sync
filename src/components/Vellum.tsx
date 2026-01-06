@@ -1,8 +1,18 @@
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
+import { MothIcon } from '@/components/ui/moth-icon';
+import { AlertTriangle, MessageCircle } from 'lucide-react';
 
 export type VellumMood = 'neutral' | 'alert' | 'success' | 'thinking';
 
@@ -33,47 +43,67 @@ type VellumButtonProps = {
 
 export function VellumButton({ collapsed }: VellumButtonProps) {
   const [tip] = useState(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const button = (
-    <SheetTrigger
-      className={cn(
-        buttonVariants({ variant: 'ghost', size: 'sm' }),
-        'w-full cursor-pointer',
-        collapsed ? 'justify-center px-0' : 'justify-start'
-      )}
-    >
-      <MothIcon className="size-4" />
-      {!collapsed && <span className="ml-2">Vellum</span>}
-    </SheetTrigger>
-  );
+  const handleChatClick = () => {
+    void navigate({ to: '/vellum/chat' });
+  };
+
+  const handleAlertsClick = () => {
+    setSheetOpen(true);
+  };
 
   return (
-    <Sheet>
-      {collapsed ?
-        <Tooltip>
-          <TooltipTrigger render={button} />
-          <TooltipContent side="right">Vellum</TooltipContent>
-        </Tooltip>
-      : button}
-      <SheetContent side="left" className="w-80 sm:max-w-80">
-        <SheetHeader className="border-b pb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/30 ring-1 ring-amber-500/30">
-              <MothIcon className="size-6 text-amber-400" />
-            </div>
-            <div>
-              <SheetTitle className="font-serif">Vellum</SheetTitle>
-              <p className="text-muted-foreground text-xs">Your Archive Assistant</p>
-            </div>
-          </div>
-        </SheetHeader>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className={cn(
+            buttonVariants({ variant: 'ghost', size: 'sm' }),
+            'w-full cursor-pointer',
+            collapsed ? 'justify-center px-0' : 'justify-start'
+          )}
+        >
+          <MothIcon className="size-4" />
+          {!collapsed && <span className="ml-2">Vellum</span>}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="top" sideOffset={8}>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Archive Assistant</DropdownMenuLabel>
+            <DropdownMenuItem onClick={handleChatClick}>
+              <MessageCircle className="mr-2 size-4" />
+              Chat with Vellum
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleAlertsClick}>
+              <AlertTriangle className="mr-2 size-4" />
+              Alerts & Tips
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-          <MessageBubble>{VELLUM_MESSAGES.welcome}</MessageBubble>
-          <MessageBubble variant="tip">{tip}</MessageBubble>
-        </div>
-      </SheetContent>
-    </Sheet>
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetTrigger className="hidden" />
+        <SheetContent side="left" className="w-80 sm:max-w-80">
+          <SheetHeader className="border-b pb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/30 ring-1 ring-amber-500/30">
+                <MothIcon className="size-6 text-amber-400" />
+              </div>
+              <div>
+                <SheetTitle className="font-serif">Vellum</SheetTitle>
+                <p className="text-muted-foreground text-xs">Your Archive Assistant</p>
+              </div>
+            </div>
+          </SheetHeader>
+
+          <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+            <MessageBubble>{VELLUM_MESSAGES.welcome}</MessageBubble>
+            <MessageBubble variant="tip">{tip}</MessageBubble>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
 
@@ -98,43 +128,6 @@ function MessageBubble({ children, variant = 'default' }: MessageBubbleProps) {
       )}
       {children}
     </div>
-  );
-}
-
-type MothIconProps = {
-  className?: string;
-};
-
-function MothIcon({ className }: MothIconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className={cn('text-amber-400', className)}>
-      <g className="origin-center">
-        <path
-          d="M12 4C10 4 8.5 6 8 8C7 9.5 4 10 3 12C4 14 7 14.5 8 16C8.5 18 10 20 12 20C14 20 15.5 18 16 16C17 14.5 20 14 21 12C20 10 17 9.5 16 8C15.5 6 14 4 12 4Z"
-          fill="currentColor"
-          fillOpacity="0.3"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M12 6C11 6 10 7.5 9.5 9C9 10 7 10.5 6 12C7 13.5 9 14 9.5 15C10 16.5 11 18 12 18C13 18 14 16.5 14.5 15C15 14 17 13.5 18 12C17 10.5 15 10 14.5 9C14 7.5 13 6 12 6Z"
-          fill="currentColor"
-          fillOpacity="0.5"
-        />
-        <circle cx="10" cy="11" r="1" fill="currentColor" />
-        <circle cx="14" cy="11" r="1" fill="currentColor" />
-        <path d="M10 7C9 5 8 4 7 3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-        <path
-          d="M14 7C15 5 16 4 17 3"
-          stroke="currentColor"
-          strokeWidth="1"
-          strokeLinecap="round"
-        />
-        <ellipse cx="12" cy="12" rx="2" ry="4" fill="currentColor" fillOpacity="0.7" />
-      </g>
-    </svg>
   );
 }
 

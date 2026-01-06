@@ -2,16 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useState, useEffect } from 'react';
 import { addRecentProject } from '@/components/AppSidebar';
-import {
-  FileText,
-  Users,
-  Lightbulb,
-  AlertTriangle,
-  Plus,
-  Settings,
-  ArrowLeft,
-  BookOpen,
-} from 'lucide-react';
+import { FileText, Users, Lightbulb, Plus, Settings, ArrowLeft, BookOpen } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
@@ -120,7 +111,7 @@ function ProjectDashboard() {
         </div>
       </div>
 
-      <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-8 grid gap-4 md:grid-cols-3">
         <StatCard
           icon={FileText}
           label="Documents"
@@ -140,13 +131,6 @@ function ProjectDashboard() {
           value={stats.factCount}
           variant="entity-concept"
           onClick={() => navigate({ to: '/projects/$projectId/facts', params: { projectId } })}
-        />
-        <StatCard
-          icon={AlertTriangle}
-          label="Alerts"
-          value={stats.alertCount}
-          variant={stats.alertCount > 0 ? 'destructive' : undefined}
-          onClick={() => navigate({ to: '/projects/$projectId/alerts', params: { projectId } })}
         />
       </div>
 

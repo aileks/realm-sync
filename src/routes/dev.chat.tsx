@@ -13,30 +13,10 @@ function MarkdownContent({ children }: { children: string }) {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { MothIcon } from '@/components/ui/moth-icon';
 import { cn } from '@/lib/utils';
 import { Send, User, Loader2 } from 'lucide-react';
 import { env } from '@/env';
-
-function MothIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M12 3c-1.5 2-3 4-3 6s1.5 3 3 3 3-1 3-3-1.5-4-3-6z" />
-      <path d="M12 12v9" />
-      <path d="M9 18c-3-1-5-4-5-7 0-2 1-4 3-5" />
-      <path d="M15 18c3-1 5-4 5-7 0-2-1-4-3-5" />
-      <circle cx="10" cy="7" r="1" />
-      <circle cx="14" cy="7" r="1" />
-    </svg>
-  );
-}
 
 export const Route = createFileRoute('/dev/chat')({
   component: DevChat,
