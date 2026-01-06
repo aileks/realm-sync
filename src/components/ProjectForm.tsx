@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react';
 import { useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { Loader2 } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,14 @@ type Project = Doc<'projects'>;
 
 type ProjectType = 'ttrpg' | 'original-fiction' | 'fanfiction' | 'game-design' | 'general';
 
+const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
+  ttrpg: 'TTRPG Campaign',
+  'original-fiction': 'Original Fiction',
+  fanfiction: 'Fanfiction',
+  'game-design': 'Game Design',
+  general: 'General Worldbuilding',
+};
+
 type ProjectFormProps = {
   project?: Project;
   onSuccess?: (projectId: Id<'projects'>) => void;
@@ -28,6 +36,7 @@ type ProjectFormProps = {
 };
 
 export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) {
+  const user = useQuery(api.users.viewer);
   const [name, setName] = useState(project?.name ?? '');
   const [projectType, setProjectType] = useState<ProjectType>(
     (project?.projectType as ProjectType) ?? 'general'
@@ -40,6 +49,13 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
   const updateProject = useMutation(api.projects.update);
 
   const isEditing = !!project;
+
+  // Filter types based on user's onboarding preferences; general always available
+  const userModes = user?.settings?.projectModes as ProjectType[] | undefined;
+  const availableTypes: ProjectType[] =
+    userModes && userModes.length > 0 ?
+      ([...new Set([...userModes, 'general' as const])] as ProjectType[])
+    : ['ttrpg', 'original-fiction', 'fanfiction', 'game-design', 'general'];
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -99,11 +115,11 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
             <SelectValue>Select project type</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ttrpg">TTRPG Campaign</SelectItem>
-            <SelectItem value="original-fiction">Original Fiction</SelectItem>
-            <SelectItem value="fanfiction">Fanfiction</SelectItem>
-            <SelectItem value="game-design">Game Design</SelectItem>
-            <SelectItem value="general">General Worldbuilding</SelectItem>
+            {availableTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {PROJECT_TYPE_LABELS[type]}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

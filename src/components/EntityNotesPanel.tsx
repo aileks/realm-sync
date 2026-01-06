@@ -111,7 +111,6 @@ function EntityNotesContent({ entityId }: EntityNotesContentProps) {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={3}
-              
             />
             <div className="flex justify-end gap-2">
               <Button

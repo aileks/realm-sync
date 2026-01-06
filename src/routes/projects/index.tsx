@@ -31,6 +31,7 @@ function ProjectsPage() {
   const projects = useQuery(api.projects.list);
   const deleteProject = useMutation(api.projects.remove);
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingProject, setEditingProject] = useState<
     Parameters<typeof ProjectForm>[0]['project'] | null
   >(null);
@@ -66,7 +67,7 @@ function ProjectsPage() {
             Manage your world-building projects and track canon
           </p>
         </div>
-        <Button onClick={() => navigate({ to: '/projects/new' })}>
+        <Button onClick={() => setShowCreateModal(true)}>
           <Plus className="mr-2 size-4" />
           New Project
         </Button>
@@ -78,7 +79,7 @@ function ProjectsPage() {
           title="No projects yet"
           description="Create your first project to start tracking your world's canon."
           action={
-            <Button onClick={() => navigate({ to: '/projects/new' })}>
+            <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="mr-2 size-4" />
               Create Project
             </Button>
@@ -98,6 +99,21 @@ function ProjectsPage() {
           ))}
         </div>
       }
+
+      <AlertDialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Create New Project</AlertDialogTitle>
+          </AlertDialogHeader>
+          <ProjectForm
+            onSuccess={(projectId) => {
+              setShowCreateModal(false);
+              void navigate({ to: '/projects/$projectId', params: { projectId } });
+            }}
+            onCancel={() => setShowCreateModal(false)}
+          />
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         open={!!editingProject}

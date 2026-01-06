@@ -32,8 +32,7 @@ export default defineSchema({
               v.literal('ttrpg'),
               v.literal('original-fiction'),
               v.literal('fanfiction'),
-              v.literal('game-design'),
-              v.literal('general')
+              v.literal('game-design')
             )
           )
         ),

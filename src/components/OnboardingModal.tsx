@@ -30,7 +30,6 @@ const PROJECT_MODES = [
   { id: 'original-fiction', label: 'Original Fiction', description: 'Novels, short stories' },
   { id: 'fanfiction', label: 'Fanfiction', description: 'Stories in existing universes' },
   { id: 'game-design', label: 'Game Design', description: 'Video games, board games' },
-  { id: 'general', label: 'General Worldbuilding', description: 'Wiki-style, collaborative' },
 ] as const;
 
 type ProjectMode = (typeof PROJECT_MODES)[number]['id'];
@@ -200,13 +199,15 @@ export function OnboardingModal() {
               >
                 <div
                   className={cn(
-                    'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-sm border transition-colors',
+                    'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded border transition-colors',
                     selectedModes.includes(mode.id) ?
                       'border-primary bg-primary text-primary-foreground'
                     : 'border-muted-foreground/50'
                   )}
                 >
-                  {selectedModes.includes(mode.id) && <Check className="size-3" />}
+                  {selectedModes.includes(mode.id) && (
+                    <Check className="size-3.5" strokeWidth={3} />
+                  )}
                 </div>
                 <div className="grid gap-0.5">
                   <span className="text-sm leading-none font-medium">{mode.label}</span>

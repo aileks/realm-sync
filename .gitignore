@@ -17,3 +17,4 @@ todos.json
 .vscode/*
 !.vscode/settings.json
 coverage/
+.vercel

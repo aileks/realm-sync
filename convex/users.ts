@@ -97,8 +97,7 @@ const projectModeValidator = v.union(
   v.literal('ttrpg'),
   v.literal('original-fiction'),
   v.literal('fanfiction'),
-  v.literal('game-design'),
-  v.literal('general')
+  v.literal('game-design')
 );
 
 export const updateProjectModes = mutation({
