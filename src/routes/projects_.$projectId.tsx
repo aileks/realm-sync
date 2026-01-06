@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useState, useEffect } from 'react';
-import { addRecentProject } from '@/components/AppSidebar';
+import { addRecentProject } from '@/components/RecentProjects';
 import { FileText, Users, Lightbulb, Plus, Settings, ArrowLeft, BookOpen } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
@@ -21,7 +21,6 @@ import {
 import { ProjectForm } from '@/components/ProjectForm';
 import { LoadingState } from '@/components/LoadingState';
 import { ExportButton } from '@/components/ExportButton';
-import { TutorialTour } from '@/components/TutorialTour';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/projects_/$projectId')({
@@ -40,7 +39,7 @@ function ProjectDashboard() {
 
   useEffect(() => {
     if (project) {
-      addRecentProject(projectId, project.name);
+      addRecentProject(project.userId, projectId, project.name);
     }
   }, [project, projectId]);
 
@@ -230,8 +229,6 @@ function ProjectDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <TutorialTour isTutorialProject={project.isTutorial === true} />
     </div>
   );
 }

@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useRouterState } from '@tanstack/react-router';
-import { useConvexAuth } from 'convex/react';
+import { useNavigate, useRouterState, useParams, useSearch } from '@tanstack/react-router';
+import { useConvexAuth, useQuery } from 'convex/react';
 import { Menu } from 'lucide-react';
 import { AppSidebar, MobileSidebarContent } from './AppSidebar';
 import { OnboardingModal } from './OnboardingModal';
+import { TutorialTour } from './TutorialTour';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
@@ -14,9 +17,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const routerState = useRouterState();
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const params = useParams({ strict: false });
+  const search = useSearch({ strict: false });
   const [collapsed, setCollapsed] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const projectId = params.projectId ?? search.project;
+  const project = useQuery(
+    api.projects.get,
+    projectId ? { id: projectId as Id<'projects'> } : 'skip'
+  );
 
   useEffect(() => {
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
@@ -85,6 +96,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
 
       {isAuthenticated && <OnboardingModal />}
+      {isAuthenticated && <TutorialTour isTutorialProject={project?.isTutorial === true} />}
     </div>
   );
 }

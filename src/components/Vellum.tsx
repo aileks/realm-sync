@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { useQuery } from 'convex/react';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   DropdownMenu,
@@ -13,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MothIcon } from '@/components/ui/moth-icon';
 import { AlertTriangle, MessageCircle } from 'lucide-react';
+import { api } from '../../convex/_generated/api';
 
 export type VellumMood = 'neutral' | 'alert' | 'success' | 'thinking';
 
@@ -45,6 +48,11 @@ export function VellumButton({ collapsed }: VellumButtonProps) {
   const [tip] = useState(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
   const [sheetOpen, setSheetOpen] = useState(false);
   const navigate = useNavigate();
+  const alertSummary = useQuery(api.alerts.listOpenByUser, { limit: 3 });
+
+  const openCount = alertSummary?.total ?? 0;
+  const openAlerts = alertSummary?.alerts ?? [];
+  const showAlertCount = alertSummary !== undefined;
 
   const handleChatClick = () => {
     void navigate({ to: '/vellum/chat' });
@@ -61,11 +69,18 @@ export function VellumButton({ collapsed }: VellumButtonProps) {
           className={cn(
             buttonVariants({ variant: 'ghost', size: 'sm' }),
             'w-full cursor-pointer',
-            collapsed ? 'justify-center px-0' : 'justify-start'
+            collapsed ? 'justify-center px-0' : 'justify-between'
           )}
         >
-          <MothIcon className="size-4" />
-          {!collapsed && <span className="ml-2">Vellum</span>}
+          <span className={cn('flex items-center', collapsed ? 'justify-center' : 'gap-2')}>
+            <MothIcon className="size-4" />
+            {!collapsed && <span>Vellum</span>}
+          </span>
+          {!collapsed && showAlertCount && (
+            <Badge variant="outline" className="text-xs">
+              {openCount}
+            </Badge>
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" side="top" sideOffset={8}>
           <DropdownMenuGroup>
@@ -100,6 +115,46 @@ export function VellumButton({ collapsed }: VellumButtonProps) {
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
             <MessageBubble>{VELLUM_MESSAGES.welcome}</MessageBubble>
             <MessageBubble variant="tip">{tip}</MessageBubble>
+
+            <div className="border-border/60 bg-muted/20 space-y-3 rounded-xl border p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-foreground/80 text-xs font-semibold tracking-[0.2em] uppercase">
+                  Open Alerts
+                </p>
+                <Badge variant="outline" className="text-xs">
+                  {openCount}
+                </Badge>
+              </div>
+              {openCount === 0 ?
+                <p className="text-muted-foreground text-xs">
+                  No open alerts. Your canon is consistent.
+                </p>
+              : <div className="space-y-2">
+                  {openAlerts.map(({ alert, projectName }) => (
+                    <Link
+                      key={alert._id}
+                      to="/projects/$projectId/alerts/$alertId"
+                      params={{ projectId: alert.projectId, alertId: alert._id }}
+                      onClick={() => setSheetOpen(false)}
+                      className="hover:bg-muted/60 block w-full rounded-lg border border-transparent px-2 py-2 text-left text-xs transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{alert.title}</span>
+                        <Badge variant="outline" className="text-[10px] capitalize">
+                          {alert.severity}
+                        </Badge>
+                      </div>
+                      <p className="text-muted-foreground mt-1 line-clamp-2 text-[10px]">
+                        {alert.description}
+                      </p>
+                      <p className="text-muted-foreground/80 mt-1 text-[10px] tracking-[0.2em] uppercase">
+                        {projectName}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              }
+            </div>
           </div>
         </SheetContent>
       </Sheet>

@@ -86,6 +86,42 @@ export const listByProject = query({
   },
 });
 
+export const listOpenByUser = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, { limit }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return { total: 0, alerts: [] };
+
+    const projects = await ctx.db
+      .query('projects')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .collect();
+
+    const projectNames = new Map(projects.map((project) => [project._id, project.name]));
+    const openAlerts: Doc<'alerts'>[] = [];
+
+    for (const project of projects) {
+      const alerts = await ctx.db
+        .query('alerts')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id).eq('status', 'open'))
+        .collect();
+      openAlerts.push(...alerts);
+    }
+
+    const sortedAlerts = openAlerts.toSorted((a, b) => b.createdAt - a.createdAt);
+    const total = sortedAlerts.length;
+    const limited = limit ? sortedAlerts.slice(0, limit) : sortedAlerts;
+
+    return {
+      total,
+      alerts: limited.map((alert) => ({
+        alert,
+        projectName: projectNames.get(alert.projectId) ?? 'Untitled Project',
+      })),
+    };
+  },
+});
+
 export const listByDocument = query({
   args: {
     documentId: v.id('documents'),

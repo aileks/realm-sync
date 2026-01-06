@@ -5,7 +5,6 @@ import { api } from '../../convex/_generated/api';
 import { useConvexAuth } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import {
-  FolderOpen,
   BookOpen,
   ChevronLeft,
   ChevronRight,
@@ -18,13 +17,14 @@ import {
   User,
   Check,
   FileText,
+  FolderOpen,
   Users,
   ScrollText,
   AlertTriangle,
-  History,
   Home,
 } from 'lucide-react';
 import { VellumButton } from '@/components/Vellum';
+import { RecentProjects } from '@/components/RecentProjects';
 import { cn } from '@/lib/utils';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -133,7 +133,11 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           </NavItem>
         )}
 
-        <RecentProjects collapsed={collapsed} />
+        <RecentProjects
+          collapsed={collapsed}
+          isAuthenticated={isAuthenticated}
+          userId={user?._id}
+        />
 
         {isAuthenticated && projectId && (
           <>
@@ -178,6 +182,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               to="alerts"
               icon={AlertTriangle}
               collapsed={collapsed}
+              dataTour="alerts-nav"
             >
               Alerts
             </ProjectNavItem>
@@ -335,6 +340,7 @@ type ProjectNavItemProps = {
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
+  dataTour?: string;
 };
 
 const projectRoutes = {
@@ -346,7 +352,14 @@ const projectRoutes = {
   review: '/projects/$projectId/review',
 } as const;
 
-function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: ProjectNavItemProps) {
+function ProjectNavItem({
+  projectId,
+  to,
+  icon: Icon,
+  children,
+  collapsed,
+  dataTour,
+}: ProjectNavItemProps) {
   const routerState = useRouterState();
   const fullPath = `/projects/${projectId}/${to}`;
   const isActive = routerState.location.pathname.startsWith(fullPath);
@@ -355,6 +368,7 @@ function ProjectNavItem({ projectId, to, icon: Icon, children, collapsed }: Proj
     <Link
       to={projectRoutes[to]}
       params={{ projectId }}
+      data-tour={dataTour}
       className={cn(
         'my-1 flex items-center gap-3 rounded-lg p-3 transition-colors',
         collapsed && 'justify-center',
@@ -530,99 +544,5 @@ function MobileNavItem({ to, icon: Icon, children, onClick }: MobileNavItemProps
       <Icon className="size-5" />
       <span className="text-sm font-medium">{children}</span>
     </Link>
-  );
-}
-
-const RECENT_PROJECTS_KEY = 'realm-sync:recent-projects';
-const MAX_RECENT_PROJECTS = 5;
-
-type RecentProject = {
-  id: string;
-  name: string;
-  visitedAt: number;
-};
-
-function getRecentProjects(): RecentProject[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const stored = localStorage.getItem(RECENT_PROJECTS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function addRecentProject(id: string, name: string) {
-  if (typeof window === 'undefined') return;
-  try {
-    const recent = getRecentProjects().filter((p) => p.id !== id);
-    recent.unshift({ id, name, visitedAt: Date.now() });
-    localStorage.setItem(RECENT_PROJECTS_KEY, JSON.stringify(recent.slice(0, MAX_RECENT_PROJECTS)));
-  } catch {
-    /* empty */
-  }
-}
-
-function RecentProjects({ collapsed }: { collapsed: boolean }) {
-  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
-  const { isAuthenticated } = useConvexAuth();
-
-  useEffect(() => {
-    setRecentProjects(getRecentProjects());
-
-    function handleStorage(e: StorageEvent) {
-      if (e.key === RECENT_PROJECTS_KEY) {
-        setRecentProjects(getRecentProjects());
-      }
-    }
-
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
-
-  if (!isAuthenticated || recentProjects.length === 0) return null;
-
-  return (
-    <>
-      <div className="my-4 px-2">
-        <div className="border-sidebar-border border-t" />
-      </div>
-
-      {!collapsed && (
-        <p className="text-muted-foreground mb-2 px-3 font-mono text-[10px] tracking-widest uppercase">
-          <History className="mr-1 inline size-3" />
-          Recent
-        </p>
-      )}
-
-      {recentProjects.slice(0, collapsed ? 3 : 5).map((project) => {
-        const content = (
-          <Link
-            key={project.id}
-            to="/projects/$projectId"
-            params={{ projectId: project.id }}
-            className={cn(
-              'flex items-center gap-3 rounded-lg p-2 transition-colors',
-              collapsed && 'justify-center',
-              'hover:bg-sidebar-accent text-foreground text-sm'
-            )}
-          >
-            <FolderOpen className="size-4 opacity-60" />
-            {!collapsed && <span className="truncate text-xs">{project.name}</span>}
-          </Link>
-        );
-
-        if (collapsed) {
-          return (
-            <Tooltip key={project.id}>
-              <TooltipTrigger render={content} />
-              <TooltipContent side="right">{project.name}</TooltipContent>
-            </Tooltip>
-          );
-        }
-
-        return content;
-      })}
-    </>
   );
 }

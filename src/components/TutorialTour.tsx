@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams, useRouterState, useSearch } from '@tanstack/react-router';
 import { useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,8 @@ type TourStep = {
   target: string;
   title: string;
   content: string;
+  route?: string;
+  match?: 'exact' | 'prefix';
 };
 
 const EMPTY_STEPS: string[] = [];
@@ -21,12 +24,16 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Welcome to Your Project',
     content:
       'This is your project dashboard. Here you can see all your documents, entities, and alerts.',
+    route: '/projects/$projectId',
+    match: 'exact',
   },
   {
     id: 'documents-list',
     target: '[data-tour="documents-list"]',
     title: 'Your Documents',
     content: 'Documents are the source material for your world. Add chapters, notes, or text.',
+    route: '/projects/$projectId',
+    match: 'exact',
   },
   {
     id: 'entities-section',
@@ -34,6 +41,32 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Canon Entities',
     content:
       'Entities are the characters, locations, items, and concepts. Vellum extracts these automatically.',
+    route: '/projects/$projectId',
+    match: 'exact',
+  },
+  {
+    id: 'alerts-nav',
+    target: '[data-tour="alerts-nav"]',
+    title: 'Continuity Alerts',
+    content: 'Alerts surface contradictions or timeline issues. Click Alerts to see how they work.',
+  },
+  {
+    id: 'alerts-list',
+    target: '[data-tour="alerts-list"]',
+    title: 'Review an Alert',
+    content:
+      'Each alert explains the conflict and shows evidence. Use the filters to focus on errors.',
+    route: '/projects/$projectId/alerts',
+    match: 'exact',
+  },
+  {
+    id: 'alert-actions',
+    target: '[data-tour="alert-actions"]',
+    title: 'Fix or Dismiss',
+    content:
+      'Resolve an alert after fixing the document, or dismiss it if the conflict is intentional.',
+    route: '/projects/$projectId/alerts',
+    match: 'exact',
   },
   {
     id: 'vellum-mascot',
@@ -81,6 +114,10 @@ type TutorialTourProps = {
 };
 
 export function TutorialTour({ isTutorialProject }: TutorialTourProps) {
+  const navigate = useNavigate();
+  const routerState = useRouterState();
+  const params = useParams({ strict: false });
+  const search = useSearch({ strict: false });
   const user = useQuery(api.users.viewer);
   const startTutorialTour = useMutation(api.users.startTutorialTour);
   const recordTutorialStep = useMutation(api.users.recordTutorialStep);
@@ -98,8 +135,35 @@ export function TutorialTour({ isTutorialProject }: TutorialTourProps) {
   const [localCompletedSteps, setLocalCompletedSteps] = useState<string[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
 
+  const projectId = params.projectId ?? search.project;
   const completedSteps = user?.tutorialState?.completedSteps ?? EMPTY_STEPS;
   const hasSeenTour = user?.tutorialState?.hasSeenTour ?? false;
+  const currentPath = routerState.location.pathname;
+
+  const resolveRoute = useCallback(
+    (route?: string) => {
+      if (!route || !projectId) return null;
+      return route.replace('$projectId', projectId);
+    },
+    [projectId]
+  );
+
+  const isRouteActive = useCallback(
+    (route?: string, match: TourStep['match'] = 'prefix') => {
+      const resolved = resolveRoute(route);
+      if (!resolved) return true;
+      return match === 'exact' ? currentPath === resolved : currentPath.startsWith(resolved);
+    },
+    [currentPath, resolveRoute]
+  );
+
+  const navigateToRoute = useCallback(
+    (route?: string) => {
+      if (!route || !projectId) return;
+      void navigate({ to: route, params: { projectId } });
+    },
+    [navigate, projectId]
+  );
 
   const nextStepIndex = useMemo(
     () => getNextStepIndex(TOUR_STEPS, completedSteps),
@@ -143,6 +207,15 @@ export function TutorialTour({ isTutorialProject }: TutorialTourProps) {
   }, [isOpen, shouldStart]);
 
   useEffect(() => {
+    if (!isOpen) return;
+    const step = TOUR_STEPS[stepIndex];
+    if (!step || !step.route) return;
+    if (!isRouteActive(step.route, step.match)) {
+      navigateToRoute(step.route);
+    }
+  }, [currentPath, isOpen, isRouteActive, navigateToRoute, stepIndex]);
+
+  useEffect(() => {
     if (!isOpen || typeof window === 'undefined') return;
     const step = TOUR_STEPS[stepIndex];
     if (!step) return;
@@ -166,7 +239,7 @@ export function TutorialTour({ isTutorialProject }: TutorialTourProps) {
       window.removeEventListener('resize', update);
       window.removeEventListener('scroll', update, true);
     };
-  }, [isOpen, stepIndex]);
+  }, [currentPath, isOpen, stepIndex]);
 
   useEffect(() => {
     if (!isOpen || typeof window === 'undefined') return;
@@ -205,7 +278,14 @@ export function TutorialTour({ isTutorialProject }: TutorialTourProps) {
   const tooltipStyle = tooltipPosition ?? { top: 24, left: 24 };
 
   function handleBack() {
-    setStepIndex((prev) => Math.max(0, prev - 1));
+    setStepIndex((prev) => {
+      const nextIndex = Math.max(0, prev - 1);
+      const nextStep = TOUR_STEPS[nextIndex];
+      if (nextStep && !isRouteActive(nextStep.route, nextStep.match)) {
+        navigateToRoute(nextStep.route);
+      }
+      return nextIndex;
+    });
   }
 
   function handleSkip() {
@@ -223,7 +303,14 @@ export function TutorialTour({ isTutorialProject }: TutorialTourProps) {
       return;
     }
 
-    setStepIndex((prev) => Math.min(TOUR_STEPS.length - 1, prev + 1));
+    setStepIndex((prev) => {
+      const nextIndex = Math.min(TOUR_STEPS.length - 1, prev + 1);
+      const nextStep = TOUR_STEPS[nextIndex];
+      if (nextStep && !isRouteActive(nextStep.route, nextStep.match)) {
+        navigateToRoute(nextStep.route);
+      }
+      return nextIndex;
+    });
   }
 
   return (
