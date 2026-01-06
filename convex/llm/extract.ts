@@ -176,7 +176,7 @@ const VALID_ENTITY_TYPES: Set<string> = new Set([
 
 // Map invalid LLM entity types to valid ones
 function normalizeEntityType(rawType: unknown): EntityType {
-  const type = String(rawType ?? '').toLowerCase();
+  const type = (typeof rawType === 'string' ? rawType : '').toLowerCase();
   if (VALID_ENTITY_TYPES.has(type)) {
     return type as EntityType;
   }
