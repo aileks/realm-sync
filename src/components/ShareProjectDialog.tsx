@@ -49,7 +49,8 @@ export function ShareProjectDialog({
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !email.includes('@')) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
       toast.error('Please enter a valid email address');
       return;
     }
@@ -112,7 +113,14 @@ export function ShareProjectDialog({
 
               <Field className="w-[110px]">
                 <FieldLabel>Role</FieldLabel>
-                <Select value={role} onValueChange={(val) => setRole(val as 'editor' | 'viewer')}>
+                <Select
+                  value={role}
+                  onValueChange={(val) => {
+                    if (val === 'editor' || val === 'viewer') {
+                      setRole(val);
+                    }
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

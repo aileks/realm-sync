@@ -164,6 +164,15 @@ export const remove = mutation({
       await ctx.db.delete(alert._id);
     }
 
+    const shares = await ctx.db
+      .query('projectShares')
+      .withIndex('by_project', (q) => q.eq('projectId', id))
+      .collect();
+
+    for (const share of shares) {
+      await ctx.db.delete(share._id);
+    }
+
     await ctx.db.delete(id);
     return id;
   },

@@ -20,7 +20,7 @@ const temporalBoundValidator = v.object({
   value: v.string(),
 });
 
-async function verifyProjectOwnership(
+async function getProjectAccess(
   ctx: QueryCtx | MutationCtx,
   projectId: Id<'projects'>
 ): Promise<{ canRead: boolean; canEdit: boolean; isViewer: boolean }> {
@@ -199,7 +199,7 @@ export const listByEntity = query({
     const entity = await ctx.db.get(entityId);
     if (!entity) return [];
 
-    const access = await verifyProjectOwnership(ctx, entity.projectId);
+    const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return [];
 
     // Viewers only see confirmed facts
@@ -227,7 +227,7 @@ export const listByEntity = query({
 export const listPending = query({
   args: { projectId: v.id('projects') },
   handler: async (ctx, { projectId }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canEdit) return [];
 
     return await ctx.db
@@ -243,7 +243,7 @@ export const listByDocument = query({
     const doc = await ctx.db.get(documentId);
     if (!doc) return [];
 
-    const access = await verifyProjectOwnership(ctx, doc.projectId);
+    const access = await getProjectAccess(ctx, doc.projectId);
     if (!access.canRead) return [];
 
     let facts = await ctx.db
@@ -265,7 +265,7 @@ export const listByProject = query({
     status: v.optional(factStatusValidator),
   },
   handler: async (ctx, { projectId, status }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
     // Viewers forced to confirmed only
@@ -297,7 +297,7 @@ export const listByProjectPaginated = query({
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, { projectId, status, paginationOpts }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) {
       return { page: [], isDone: true, continueCursor: '' };
     }
@@ -324,7 +324,7 @@ export const get = query({
     const fact = await ctx.db.get(id);
     if (!fact) return null;
 
-    const access = await verifyProjectOwnership(ctx, fact.projectId);
+    const access = await getProjectAccess(ctx, fact.projectId);
     if (!access.canRead) return null;
 
     if (access.isViewer && fact.status !== 'confirmed') return null;

@@ -19,7 +19,7 @@ const entityTypeValidator = v.union(
 
 const entityStatusValidator = v.union(v.literal('pending'), v.literal('confirmed'));
 
-async function verifyProjectOwnership(
+async function getProjectAccess(
   ctx: QueryCtx | MutationCtx,
   projectId: Id<'projects'>
 ): Promise<{ canRead: boolean; canEdit: boolean; isViewer: boolean }> {
@@ -187,7 +187,7 @@ export const listByProject = query({
     status: v.optional(entityStatusValidator),
   },
   handler: async (ctx, { projectId, type, status }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
     const effectiveStatus = access.isViewer ? 'confirmed' : status;
@@ -240,7 +240,7 @@ export const listByProjectWithStats = query({
     sortBy: v.optional(sortByValidator),
   },
   handler: async (ctx, { projectId, type, status, sortBy = 'name' }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
     const effectiveStatus = access.isViewer ? 'confirmed' : status;
@@ -314,7 +314,7 @@ export const getWithFacts = query({
     const entity = await ctx.db.get(id);
     if (!entity) return null;
 
-    const access = await verifyProjectOwnership(ctx, entity.projectId);
+    const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return null;
     if (access.isViewer && entity.status !== 'confirmed') return null;
 
@@ -375,7 +375,7 @@ export const get = query({
     const entity = await ctx.db.get(id);
     if (!entity) return null;
 
-    const access = await verifyProjectOwnership(ctx, entity.projectId);
+    const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return null;
     if (access.isViewer && entity.status !== 'confirmed') return null;
 
@@ -389,7 +389,7 @@ export const findByName = query({
     name: v.string(),
   },
   handler: async (ctx, { projectId, name }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return null;
 
     const entity = await ctx.db
@@ -461,7 +461,7 @@ export const reject = mutation({
 export const listPending = query({
   args: { projectId: v.id('projects') },
   handler: async (ctx, { projectId }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canEdit) return [];
 
     return await ctx.db
@@ -479,7 +479,7 @@ export const listByProjectPaginated = query({
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, { projectId, type, status, paginationOpts }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) {
       return { page: [], isDone: true, continueCursor: '' };
     }
@@ -539,7 +539,7 @@ export const findSimilar = query({
     excludeId: v.optional(v.id('entities')),
   },
   handler: async (ctx, { projectId, name, excludeId }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
     let allEntities = await ctx.db
@@ -580,7 +580,7 @@ export const search = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, { projectId, query, limit = 20 }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
     if (!query.trim()) return [];
@@ -620,7 +620,7 @@ export const getWithDetails = query({
     const entity = await ctx.db.get(id);
     if (!entity) return null;
 
-    const access = await verifyProjectOwnership(ctx, entity.projectId);
+    const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return null;
     if (access.isViewer && entity.status !== 'confirmed') return null;
 
@@ -692,7 +692,7 @@ export const listEvents = query({
     projectId: v.id('projects'),
   },
   handler: async (ctx, { projectId }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
     const events = await ctx.db
@@ -729,7 +729,7 @@ export const getTimeline = query({
     includeAppearances: v.optional(v.boolean()),
   },
   handler: async (ctx, { projectId, entityFilter, includeAppearances = false }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return { events: [], appearances: [], entities: [] };
 
     const allEntities = await ctx.db
@@ -858,7 +858,7 @@ export const getRelationshipGraph = query({
     entityFilter: v.optional(v.id('entities')),
   },
   handler: async (ctx, { projectId, entityFilter }) => {
-    const access = await verifyProjectOwnership(ctx, projectId);
+    const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return { nodes: [], edges: [] };
 
     const allEntities = await ctx.db

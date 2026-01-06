@@ -60,11 +60,26 @@ export async function getProjectWithRole(
   ctx: QueryCtx | MutationCtx,
   projectId: Id<'projects'>
 ): Promise<{ project: Doc<'projects'>; role: ProjectRole } | null> {
-  const role = await getProjectRole(ctx, projectId);
-  if (!role) return null;
+  const userId = await getAuthUserId(ctx);
+  if (!userId) return null;
 
   const project = await ctx.db.get(projectId);
   if (!project) return null;
 
-  return { project, role };
+  if (project.userId === userId) {
+    return { project, role: 'owner' };
+  }
+
+  const share = await ctx.db
+    .query('projectShares')
+    .withIndex('by_user', (q) => q.eq('sharedWithUserId', userId))
+    .filter((q) => q.eq(q.field('projectId'), projectId))
+    .filter((q) => q.neq(q.field('acceptedAt'), undefined))
+    .first();
+
+  if (share) {
+    return { project, role: share.role };
+  }
+
+  return null;
 }

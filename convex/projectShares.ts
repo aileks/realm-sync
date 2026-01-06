@@ -153,12 +153,16 @@ export const getRole = query({
 export const pendingInvites = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requireAuthUser(ctx);
-    if (!user.email) return [];
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const user = await ctx.db.get(userId);
+    const email = user?.email;
+    if (!email) return [];
 
     return await ctx.db
       .query('projectShares')
-      .withIndex('by_email', (q) => q.eq('sharedWithEmail', user.email!))
+      .withIndex('by_email', (q) => q.eq('sharedWithEmail', email))
       .filter((q) => q.eq(q.field('acceptedAt'), undefined))
       .collect();
   },

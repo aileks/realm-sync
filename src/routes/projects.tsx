@@ -31,7 +31,6 @@ function ProjectsPage() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const projects = useQuery(api.projects.list);
-  const sharedProjects = useQuery(api.projects.listSharedWithMe);
   const deleteProject = useMutation(api.projects.remove);
 
   const [editingProject, setEditingProject] = useState<
@@ -50,7 +49,7 @@ function ProjectsPage() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  if (authLoading || projects === undefined || sharedProjects === undefined) {
+  if (authLoading || projects === undefined) {
     return <LoadingState message="Loading projects..." />;
   }
 
