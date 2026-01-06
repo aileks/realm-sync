@@ -3,6 +3,7 @@ import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
 import { Menu } from 'lucide-react';
 import { AppSidebar, MobileSidebarContent } from './AppSidebar';
+import { OnboardingModal } from './OnboardingModal';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -82,6 +83,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
         <main className="flex-1">{children}</main>
       </div>
+
+      {isAuthenticated && <OnboardingModal />}
     </div>
   );
 }

@@ -31,6 +31,7 @@ import type * as llm_utils from "../llm/utils.js";
 import type * as projects from "../projects.js";
 import type * as seed from "../seed.js";
 import type * as storage from "../storage.js";
+import type * as tutorial from "../tutorial.js";
 import type * as users from "../users.js";
 
 import type {
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   projects: typeof projects;
   seed: typeof seed;
   storage: typeof storage;
+  tutorial: typeof tutorial;
   users: typeof users;
 }>;
 

@@ -15,14 +15,14 @@ Phase 6 transforms Realm Sync from a tool into an experience. The Vellum moth ma
 
 ## Implementation Progress
 
-| Sub-Phase             | Status  | Notes                                  |
-| --------------------- | ------- | -------------------------------------- |
-| Vellum AI Assistant   | Pending | Contextual AI chat, tips, guided help  |
-| Demo Project Seeding  | Pending | Seed fantasy world with entities/facts |
-| Tour Library Setup    | Pending | react-joyride or custom tooltips       |
-| Tour Step Definitions | Pending | Define steps for each feature          |
-| Project Sharing       | Pending | DM/Player collaboration with roles     |
-| Polar.sh Integration  | Pending | Sponsorship, funding, premium features |
+| Sub-Phase | Status | Notes |
+| --- | --- | --- |
+| Vellum AI Assistant | Complete | Streaming chat with personality (PR #35) |
+| Demo Project Seeding | Complete | "The Verdant Realm" with 3 docs, 12 entities, 10 facts, 2 alerts |
+| Tour Library Setup | Pending | react-joyride or custom tooltips |
+| Tour Step Definitions | Pending | Define steps for each feature |
+| Project Sharing | Pending | DM/Player collaboration with roles |
+| Polar.sh Integration | Pending | Sponsorship, funding, premium features |
 
 ---
 
@@ -151,56 +151,46 @@ Example responses:
 
 ### Demo Project
 
-A pre-built "The Verdant Realm" project demonstrating all features.
+A pre-built "The Verdant Realm" project demonstrating all features. Created via `seedTutorialProject` mutation in `convex/tutorial.ts`.
+
+**Implementation Details:**
+
+- **Schema:** Added `isTutorial: v.optional(v.boolean())` to projects table
+- **Mutation:** `seedTutorialProject` creates complete tutorial project
+- **OnboardingModal:** "Let's Begin" seeds project and navigates to it; "Skip" only marks onboarding complete
+- **Idempotency:** Returns existing tutorial project if user already has one
+
+**Content Created:**
+
+| Type | Count | Examples |
+| --- | --- | --- |
+| Documents | 3 | Chapter 1: The Beginning, Chapter 2: The Conflict, Chapter 3: The Discovery |
+| Entities | 12 | Sir Aldric, Lady Mira, Dragon of Ashfall, Thornhaven, The Emerald Crown, etc. |
+| Facts | 10 | "commands", "daughter of", "guards", "forged by", "located in", etc. |
+| Alerts | 2 | Age contradiction (error), Crown origin conflict (warning) |
+
+**Entity Type Coverage:**
+
+- Characters: Sir Aldric, Lady Mira, Dragon of Ashfall, Forest Spirit, Elara the First Queen
+- Locations: Thornhaven, Thornwood Forest, The Ashen Peaks
+- Items: The Emerald Crown
+- Concepts: The Shadowbane, The Verdant Blessing
+- Events: Festival of Green Leaves
+
+**Alert Demonstrations:**
+
+1. **Error - Age Contradiction:** Sir Aldric described as "60 winters old" in Chapter 1 but "50 winters old" in Chapter 2
+2. **Warning - Origin Conflict:** The Emerald Crown described as "forged by ancient smiths" but also "gifted from Forest Spirit"
 
 ```typescript
-const TUTORIAL_PROJECT = {
-  name: 'The Verdant Realm',
-  description: "A sample fantasy world to explore Realm Sync's features.",
-  documents: [
-    {
-      title: 'Chapter 1: The Beginning',
-      content: `In the northern reaches of the Verdant Realm, the city of Thornhaven 
-stands as a beacon of civilization. Sir Aldric, the aging knight commander, 
-watches over its walls with unwavering vigilance.`,
-    },
-    {
-      title: 'Chapter 2: The Conflict',
-      content: `The Dragon of Ashfall descends upon Thornhaven. Sir Aldric, now 
-leading the defense, realizes the creature is not attacking but fleeing 
-something far worse in the mountains.`,
-    },
-  ],
-  entities: [
-    {
-      name: 'Sir Aldric',
-      type: 'character',
-      description: 'Knight commander of Thornhaven',
-    },
-    {
-      name: 'Thornhaven',
-      type: 'location',
-      description: 'Northern city in the Verdant Realm',
-    },
-    {
-      name: 'Dragon of Ashfall',
-      type: 'character',
-      description: 'Ancient dragon, not hostile',
-    },
-  ],
-  facts: [
-    {
-      subject: 'Sir Aldric',
-      predicate: 'commands',
-      object: "Thornhaven's defenses",
-    },
-    {
-      subject: 'Dragon of Ashfall',
-      predicate: 'flees from',
-      object: 'something in the mountains',
-    },
-  ],
-};
+// convex/tutorial.ts - Key exports
+export const seedTutorialProject = mutation({...}); // Creates complete tutorial
+export const hasTutorialProject = mutation({...});  // Checks if user has one
+
+// Usage in OnboardingModal
+const { projectId } = await seedTutorialProject();
+await completeOnboarding();
+navigate({ to: '/projects/$projectId', params: { projectId } });
 ```
 
 ### Tour Steps

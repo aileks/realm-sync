@@ -27,6 +27,7 @@ export default defineSchema({
     userId: v.id('users'),
     name: v.string(),
     description: v.optional(v.string()),
+    isTutorial: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
     stats: v.optional(
