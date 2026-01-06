@@ -1,7 +1,17 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { useNavigate } from '@tanstack/react-router';
-import { BookOpen, FileText, Sparkles, Search, Shield, ArrowRight, X } from 'lucide-react';
+import {
+  BookOpen,
+  FileText,
+  Sparkles,
+  Search,
+  Shield,
+  ArrowRight,
+  X,
+  Layers,
+  Check,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
@@ -15,6 +25,16 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 
+const PROJECT_MODES = [
+  { id: 'ttrpg', label: 'TTRPG Campaigns', description: 'D&D, Pathfinder, etc.' },
+  { id: 'original-fiction', label: 'Original Fiction', description: 'Novels, short stories' },
+  { id: 'fanfiction', label: 'Fanfiction', description: 'Stories in existing universes' },
+  { id: 'game-design', label: 'Game Design', description: 'Video games, board games' },
+  { id: 'general', label: 'General Worldbuilding', description: 'Wiki-style, collaborative' },
+] as const;
+
+type ProjectMode = (typeof PROJECT_MODES)[number]['id'];
+
 const STEPS = [
   {
     id: 'welcome',
@@ -22,6 +42,12 @@ const STEPS = [
     description:
       "I'm Vellum, the Archivist Moth. I'll help you track your world's canon and catch contradictions before they become plot holes.",
     icon: BookOpen,
+  },
+  {
+    id: 'project-modes',
+    title: 'What are you building?',
+    description: 'Select all that apply - this helps us tailor your experience.',
+    icon: Layers,
   },
   {
     id: 'documents',
@@ -58,10 +84,12 @@ export function OnboardingModal() {
   const user = useQuery(api.users.viewer);
   const completeOnboarding = useMutation(api.users.completeOnboarding);
   const seedTutorialProject = useMutation(api.tutorial.seedTutorialProject);
+  const updateProjectModes = useMutation(api.users.updateProjectModes);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isOpen, setIsOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedModes, setSelectedModes] = useState<ProjectMode[]>([]);
 
   const showOnboarding = user && !user.onboardingCompleted && isOpen;
 
@@ -74,6 +102,9 @@ export function OnboardingModal() {
     if (isLastStep) {
       setIsLoading(true);
       try {
+        if (selectedModes.length > 0) {
+          await updateProjectModes({ projectModes: selectedModes });
+        }
         const { projectId } = await seedTutorialProject();
         await completeOnboarding();
         setIsOpen(false);
@@ -137,6 +168,54 @@ export function OnboardingModal() {
             {step.description}
           </AlertDialogDescription>
         </AlertDialogHeader>
+
+        {step.id === 'project-modes' && (
+          <div className="grid max-h-[60vh] grid-cols-1 gap-2 overflow-y-auto py-2">
+            {PROJECT_MODES.map((mode) => (
+              <div
+                key={mode.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  setSelectedModes((prev) =>
+                    prev.includes(mode.id) ?
+                      prev.filter((id) => id !== mode.id)
+                    : [...prev, mode.id]
+                  );
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedModes((prev) =>
+                      prev.includes(mode.id) ?
+                        prev.filter((id) => id !== mode.id)
+                      : [...prev, mode.id]
+                    );
+                  }
+                }}
+                className={cn(
+                  'hover:bg-accent flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-all',
+                  selectedModes.includes(mode.id) ? 'border-primary bg-primary/5' : 'border-border'
+                )}
+              >
+                <div
+                  className={cn(
+                    'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-sm border transition-colors',
+                    selectedModes.includes(mode.id) ?
+                      'border-primary bg-primary text-primary-foreground'
+                    : 'border-muted-foreground/50'
+                  )}
+                >
+                  {selectedModes.includes(mode.id) && <Check className="size-3" />}
+                </div>
+                <div className="grid gap-0.5">
+                  <span className="text-sm leading-none font-medium">{mode.label}</span>
+                  <span className="text-muted-foreground text-xs">{mode.description}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
           <Button onClick={handleNext} className="w-full" disabled={isLoading}>

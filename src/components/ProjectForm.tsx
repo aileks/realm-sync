@@ -5,12 +5,21 @@ import { Loader2 } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import type { Doc, Id } from '../../convex/_generated/dataModel';
 import { formatError } from '@/lib/utils';
 
 type Project = Doc<'projects'>;
+
+type ProjectType = 'ttrpg' | 'original-fiction' | 'fanfiction' | 'game-design' | 'general';
 
 type ProjectFormProps = {
   project?: Project;
@@ -20,6 +29,9 @@ type ProjectFormProps = {
 
 export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) {
   const [name, setName] = useState(project?.name ?? '');
+  const [projectType, setProjectType] = useState<ProjectType>(
+    (project?.projectType as ProjectType) ?? 'general'
+  );
   const [description, setDescription] = useState(project?.description ?? '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,12 +52,14 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
           id: project._id,
           name: name.trim(),
           description: description.trim() || undefined,
+          projectType,
         });
         onSuccess?.(project._id);
       } else {
         const projectId = await createProject({
           name: name.trim(),
           description: description.trim() || undefined,
+          projectType,
         });
         onSuccess?.(projectId);
       }
@@ -72,6 +86,26 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
           required
           disabled={isLoading}
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="projectType">Project Type</Label>
+        <Select
+          value={projectType}
+          onValueChange={(val) => setProjectType(val as ProjectType)}
+          disabled={isLoading}
+        >
+          <SelectTrigger id="projectType">
+            <SelectValue>Select project type</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ttrpg">TTRPG Campaign</SelectItem>
+            <SelectItem value="original-fiction">Original Fiction</SelectItem>
+            <SelectItem value="fanfiction">Fanfiction</SelectItem>
+            <SelectItem value="game-design">Game Design</SelectItem>
+            <SelectItem value="general">General Worldbuilding</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">

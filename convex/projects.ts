@@ -75,19 +75,38 @@ export const get = query({
   },
 });
 
+const projectTypeValidator = v.optional(
+  v.union(
+    v.literal('ttrpg'),
+    v.literal('original-fiction'),
+    v.literal('fanfiction'),
+    v.literal('game-design'),
+    v.literal('general')
+  )
+);
+
 export const create = mutation({
   args: {
     name: v.string(),
     description: v.optional(v.string()),
+    projectType: projectTypeValidator,
   },
-  handler: async (ctx, { name, description }) => {
+  handler: async (ctx, { name, description, projectType }) => {
     const userId = await requireAuth(ctx);
     const now = Date.now();
+
+    let effectiveProjectType = projectType;
+    if (!effectiveProjectType) {
+      const user = await ctx.db.get(userId);
+      const userModes = user?.settings?.projectModes;
+      effectiveProjectType = userModes?.[0] ?? 'general';
+    }
 
     return await ctx.db.insert('projects', {
       userId,
       name,
       description,
+      projectType: effectiveProjectType,
       createdAt: now,
       updatedAt: now,
       stats: {
@@ -106,14 +125,16 @@ export const update = mutation({
     id: v.id('projects'),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
+    projectType: projectTypeValidator,
   },
-  handler: async (ctx, { id, name, description }) => {
+  handler: async (ctx, { id, name, description, projectType }) => {
     const userId = await requireAuth(ctx);
     const project = unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
 
     const updates: Partial<typeof project> = { updatedAt: Date.now() };
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
+    if (projectType !== undefined) updates.projectType = projectType;
 
     await ctx.db.patch(id, updates);
     return id;

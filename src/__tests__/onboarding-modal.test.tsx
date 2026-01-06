@@ -8,6 +8,7 @@ vi.mock('@tanstack/react-router', () => ({
 
 const mockCompleteOnboarding = vi.fn();
 const mockSeedTutorialProject = vi.fn();
+const mockUpdateProjectModes = vi.fn();
 const mockUser = vi.fn();
 
 vi.mock('convex/react', () => ({
@@ -15,6 +16,7 @@ vi.mock('convex/react', () => ({
   useMutation: (mutationRef: string) => {
     if (mutationRef === 'users.completeOnboarding') return mockCompleteOnboarding;
     if (mutationRef === 'tutorial.seedTutorialProject') return mockSeedTutorialProject;
+    if (mutationRef === 'users.updateProjectModes') return mockUpdateProjectModes;
     return vi.fn();
   },
 }));
@@ -24,6 +26,7 @@ vi.mock('../../convex/_generated/api', () => ({
     users: {
       viewer: 'users.viewer',
       completeOnboarding: 'users.completeOnboarding',
+      updateProjectModes: 'users.updateProjectModes',
     },
     tutorial: {
       seedTutorialProject: 'tutorial.seedTutorialProject',
@@ -44,6 +47,7 @@ describe('OnboardingModal', () => {
     vi.clearAllMocks();
     mockUser.mockReturnValue({ onboardingCompleted: false });
     mockCompleteOnboarding.mockResolvedValue(undefined);
+    mockUpdateProjectModes.mockResolvedValue(undefined);
     mockSeedTutorialProject.mockResolvedValue({
       projectId: 'test-project-id',
       alreadyExists: false,
@@ -57,7 +61,7 @@ describe('OnboardingModal', () => {
 
       render(<OnboardingModal />);
 
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 5; i++) {
         const nextButton = screen.getByRole('button', { name: /next/i });
         fireEvent.click(nextButton);
       }
@@ -74,7 +78,7 @@ describe('OnboardingModal', () => {
     });
 
     it('shows error toast when completeOnboarding fails on skip', async () => {
-      mockCompleteOnboarding.mockRejectedValueOnce(new Error('Server error'));
+      mockCompleteOnboarding.mockRejectedValueOnce(new Error('Network error'));
       mockUser.mockReturnValue({ onboardingCompleted: false });
 
       render(<OnboardingModal />);
@@ -85,7 +89,7 @@ describe('OnboardingModal', () => {
       await waitFor(() => {
         expect(toast.error).toHaveBeenCalledWith(
           'Failed to skip onboarding',
-          expect.objectContaining({ description: 'Server error' })
+          expect.objectContaining({ description: 'Network error' })
         );
       });
     });

@@ -342,4 +342,107 @@ describe('entities mutations', () => {
       expect(project?.stats?.factCount).toBe(0);
     });
   });
+
+  describe('revealToPlayers', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+    });
+
+    it('reveals entity to players in TTRPG project', async () => {
+      const projectId = await setupProject(t, userId, { projectType: 'ttrpg' });
+      const entityId = await setupEntity(t, projectId, { status: 'confirmed' });
+
+      await asUser.mutation(api.entities.revealToPlayers, { entityId });
+
+      const entity = await t.run(async (ctx) => ctx.db.get(entityId));
+      expect(entity?.revealedToViewers).toBe(true);
+      expect(entity?.revealedAt).toBeDefined();
+    });
+
+    it('throws when project is not TTRPG', async () => {
+      const projectId = await setupProject(t, userId, { projectType: 'general' });
+      const entityId = await setupEntity(t, projectId, { status: 'confirmed' });
+
+      await expect(asUser.mutation(api.entities.revealToPlayers, { entityId })).rejects.toThrow(
+        /ttrpg/i
+      );
+    });
+
+    it('throws when not project owner', async () => {
+      const otherUserId = await setupOtherUser(t);
+      const projectId = await setupProject(t, otherUserId, { projectType: 'ttrpg' });
+      const entityId = await setupEntity(t, projectId, { status: 'confirmed' });
+
+      await expect(asUser.mutation(api.entities.revealToPlayers, { entityId })).rejects.toThrow(
+        /not authorized/i
+      );
+    });
+
+    it('throws when not authenticated', async () => {
+      const projectId = await setupProject(t, userId, { projectType: 'ttrpg' });
+      const entityId = await setupEntity(t, projectId, { status: 'confirmed' });
+
+      await expect(t.mutation(api.entities.revealToPlayers, { entityId })).rejects.toThrow(
+        /unauthorized/i
+      );
+    });
+  });
+
+  describe('hideFromPlayers', () => {
+    let t: TestContext;
+    let userId: Id<'users'>;
+    let asUser: ReturnType<TestContext['withIdentity']>;
+
+    beforeEach(async () => {
+      t = createTestContext();
+      const auth = await setupAuthenticatedUser(t);
+      userId = auth.userId;
+      asUser = auth.asUser;
+    });
+
+    it('hides entity from players in TTRPG project', async () => {
+      const projectId = await setupProject(t, userId, { projectType: 'ttrpg' });
+      const entityId = await setupEntity(t, projectId, {
+        status: 'confirmed',
+        revealedToViewers: true,
+      });
+
+      await asUser.mutation(api.entities.hideFromPlayers, { entityId });
+
+      const entity = await t.run(async (ctx) => ctx.db.get(entityId));
+      expect(entity?.revealedToViewers).toBe(false);
+    });
+
+    it('throws when project is not TTRPG', async () => {
+      const projectId = await setupProject(t, userId, { projectType: 'general' });
+      const entityId = await setupEntity(t, projectId, {
+        status: 'confirmed',
+        revealedToViewers: true,
+      });
+
+      await expect(asUser.mutation(api.entities.hideFromPlayers, { entityId })).rejects.toThrow(
+        /ttrpg/i
+      );
+    });
+
+    it('throws when not project owner', async () => {
+      const otherUserId = await setupOtherUser(t);
+      const projectId = await setupProject(t, otherUserId, { projectType: 'ttrpg' });
+      const entityId = await setupEntity(t, projectId, {
+        status: 'confirmed',
+        revealedToViewers: true,
+      });
+
+      await expect(asUser.mutation(api.entities.hideFromPlayers, { entityId })).rejects.toThrow(
+        /not authorized/i
+      );
+    });
+  });
 });

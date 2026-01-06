@@ -17,6 +17,9 @@ import {
   Plus,
   Loader2,
   HelpCircle,
+  Eye,
+  EyeOff,
+  Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
@@ -90,6 +93,13 @@ function EntityDetailPage() {
     id: entityId as Id<'entities'>,
   });
 
+  const entityProjectId = data?.entity.projectId;
+  const project = useQuery(api.projects.get, entityProjectId ? { id: entityProjectId } : 'skip');
+  const isTtrpgProject = project?.projectType === 'ttrpg';
+
+  const revealEntity = useMutation(api.entities.revealToPlayers);
+  const hideEntity = useMutation(api.entities.hideFromPlayers);
+
   if (data === undefined) {
     return <LoadingState message="Loading entity..." />;
   }
@@ -133,7 +143,14 @@ function EntityDetailPage() {
           onSave={() => setIsEditing(false)}
         />
       : <>
-          <EntityHeader entity={entity} config={config} onEdit={() => setIsEditing(true)} />
+          <EntityHeader
+            entity={entity}
+            config={config}
+            onEdit={() => setIsEditing(true)}
+            isTtrpgProject={isTtrpgProject}
+            onReveal={() => revealEntity({ entityId: entity._id })}
+            onHide={() => hideEntity({ entityId: entity._id })}
+          />
 
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
@@ -161,9 +178,19 @@ type EntityHeaderProps = {
   entity: Doc<'entities'>;
   config: (typeof typeConfig)[EntityType];
   onEdit: () => void;
+  isTtrpgProject?: boolean;
+  onReveal?: () => void;
+  onHide?: () => void;
 };
 
-function EntityHeader({ entity, config, onEdit }: EntityHeaderProps) {
+function EntityHeader({
+  entity,
+  config,
+  onEdit,
+  isTtrpgProject,
+  onReveal,
+  onHide,
+}: EntityHeaderProps) {
   const Icon = config.icon;
 
   return (
@@ -181,6 +208,28 @@ function EntityHeader({ entity, config, onEdit }: EntityHeaderProps) {
           <div className="flex items-center gap-3">
             <h1 className="font-serif text-3xl font-bold">{entity.name}</h1>
             <Badge className={cn('capitalize', config.colorClass)}>{config.label}</Badge>
+            {isTtrpgProject && entity.status === 'confirmed' && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  'gap-1',
+                  entity.revealedToViewers ?
+                    'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400'
+                  : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                )}
+              >
+                {entity.revealedToViewers ?
+                  <>
+                    <Eye className="size-3" />
+                    Revealed to Players
+                  </>
+                : <>
+                    <Lock className="size-3" />
+                    Hidden from Players
+                  </>
+                }
+              </Badge>
+            )}
           </div>
           {entity.description && (
             <p className="text-muted-foreground max-w-2xl">{entity.description}</p>
@@ -198,6 +247,17 @@ function EntityHeader({ entity, config, onEdit }: EntityHeaderProps) {
         </div>
       </div>
       <div className="flex gap-2">
+        {isTtrpgProject &&
+          entity.status === 'confirmed' &&
+          (entity.revealedToViewers ?
+            <Button variant="outline" onClick={onHide}>
+              <EyeOff className="mr-2 size-4" />
+              Hide from Players
+            </Button>
+          : <Button variant="outline" onClick={onReveal}>
+              <Eye className="mr-2 size-4" />
+              Reveal to Players
+            </Button>)}
         <EntityNotesPanel entityId={entity._id} />
         <Button variant="outline" onClick={onEdit}>
           <Pencil className="mr-2 size-4" />

@@ -51,6 +51,7 @@ type ProjectOverrides = {
     alertCount: number;
     noteCount: number;
   };
+  projectType?: 'general' | 'fiction' | 'ttrpg' | 'worldbuilding' | 'game_dev' | 'screenplay';
 };
 
 export async function setupProject(
@@ -58,7 +59,7 @@ export async function setupProject(
   userId: Id<'users'>,
   overrides: ProjectOverrides = {}
 ) {
-  const { name = 'Test Project', withStats = true, stats } = overrides;
+  const { name = 'Test Project', withStats = true, stats, projectType } = overrides;
 
   return await t.run(async (ctx) => {
     return await ctx.db.insert('projects', {
@@ -67,6 +68,7 @@ export async function setupProject(
       createdAt: Date.now(),
       updatedAt: Date.now(),
       ...(withStats && { stats: stats ?? defaultStats() }),
+      ...(projectType && { projectType }),
     });
   });
 }
@@ -110,6 +112,7 @@ type EntityOverrides = {
   aliases?: string[];
   status?: 'pending' | 'confirmed';
   firstMentionedIn?: Id<'documents'>;
+  revealedToViewers?: boolean;
 };
 
 export async function setupEntity(
@@ -124,6 +127,7 @@ export async function setupEntity(
     aliases = [],
     status = 'pending',
     firstMentionedIn,
+    revealedToViewers,
   } = overrides;
 
   return await t.run(async (ctx) => {
@@ -135,6 +139,7 @@ export async function setupEntity(
       aliases,
       status,
       ...(firstMentionedIn && { firstMentionedIn }),
+      ...(revealedToViewers !== undefined && { revealedToViewers }),
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });

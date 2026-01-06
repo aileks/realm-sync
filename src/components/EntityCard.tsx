@@ -8,6 +8,9 @@ import {
   X,
   Pencil,
   HelpCircle,
+  Eye,
+  EyeOff,
+  Lock,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardAction } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +29,9 @@ type EntityCardProps = {
   similarEntities?: Entity[];
   onMerge?: (sourceId: Id<'entities'>, targetId: Id<'entities'>) => void;
   className?: string;
+  isTtrpgProject?: boolean;
+  onReveal?: (id: Id<'entities'>) => void;
+  onHide?: (id: Id<'entities'>) => void;
 };
 
 const defaultConfig = {
@@ -61,6 +67,9 @@ export function EntityCard({
   similarEntities,
   onMerge,
   className,
+  isTtrpgProject,
+  onReveal,
+  onHide,
 }: EntityCardProps) {
   const config = entityTypeConfig[entity.type] ?? defaultConfig;
   const Icon = config.icon;
@@ -108,6 +117,28 @@ export function EntityCard({
                 >
                   {entity.status}
                 </Badge>
+                {isTtrpgProject && entity.status === 'confirmed' && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'h-5 gap-1 px-1.5 py-0 text-xs font-normal capitalize',
+                      entity.revealedToViewers ?
+                        'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400'
+                      : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    )}
+                  >
+                    {entity.revealedToViewers ?
+                      <>
+                        <Eye className="size-3" />
+                        Revealed
+                      </>
+                    : <>
+                        <Lock className="size-3" />
+                        Hidden
+                      </>
+                    }
+                  </Badge>
+                )}
               </div>
               {entity.description && (
                 <CardDescription className="line-clamp-2 text-xs leading-relaxed">
@@ -129,7 +160,10 @@ export function EntityCard({
               )}
             </div>
           </div>
-          {(onConfirm || onEdit || onReject) && (
+          {(onConfirm ||
+            onEdit ||
+            onReject ||
+            (isTtrpgProject && entity.status === 'confirmed')) && (
             <CardAction className="flex shrink-0 gap-1">
               {onConfirm && (
                 <Button
@@ -157,6 +191,31 @@ export function EntityCard({
                   }}
                 >
                   <Pencil className="size-4" />
+                </Button>
+              )}
+              {isTtrpgProject && entity.status === 'confirmed' && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={cn(
+                    'text-muted-foreground size-8 p-0',
+                    entity.revealedToViewers ?
+                      'hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400'
+                    : 'hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400'
+                  )}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (entity.revealedToViewers && onHide) {
+                      onHide(entity._id);
+                    } else if (!entity.revealedToViewers && onReveal) {
+                      onReveal(entity._id);
+                    }
+                  }}
+                >
+                  {entity.revealedToViewers ?
+                    <Eye className="size-4" />
+                  : <EyeOff className="size-4" />}
                 </Button>
               )}
               {onReject && (

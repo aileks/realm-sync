@@ -38,6 +38,10 @@ function EntitiesPage() {
 
   const confirmEntity = useMutation(api.entities.confirm);
   const rejectEntity = useMutation(api.entities.reject);
+  const revealEntity = useMutation(api.entities.revealToPlayers);
+  const hideEntity = useMutation(api.entities.hideFromPlayers);
+
+  const isTtrpgProject = project?.projectType === 'ttrpg';
 
   const paginatedArgs = useMemo(
     () => ({
@@ -170,17 +174,32 @@ function EntitiesPage() {
           >
             <EntityCard
               entity={entity}
+              isTtrpgProject={isTtrpgProject}
               onConfirm={
                 entity.status === 'pending' ?
                   (id) => {
-                    confirmEntity({ id });
+                    void confirmEntity({ id });
                   }
                 : undefined
               }
               onReject={
                 entity.status === 'pending' ?
                   (id) => {
-                    rejectEntity({ id });
+                    void rejectEntity({ id });
+                  }
+                : undefined
+              }
+              onReveal={
+                isTtrpgProject ?
+                  (id) => {
+                    void revealEntity({ entityId: id });
+                  }
+                : undefined
+              }
+              onHide={
+                isTtrpgProject ?
+                  (id) => {
+                    void hideEntity({ entityId: id });
                   }
                 : undefined
               }

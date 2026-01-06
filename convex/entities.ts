@@ -22,13 +22,35 @@ const entityStatusValidator = v.union(v.literal('pending'), v.literal('confirmed
 async function getProjectAccess(
   ctx: QueryCtx | MutationCtx,
   projectId: Id<'projects'>
-): Promise<{ canRead: boolean; canEdit: boolean; isViewer: boolean }> {
+): Promise<{
+  canRead: boolean;
+  canEdit: boolean;
+  isViewer: boolean;
+  isTtrpgViewer: boolean;
+}> {
   const role = await getProjectRole(ctx, projectId);
+  const isViewer = role === 'viewer';
+
+  let isTtrpgViewer = false;
+  if (isViewer) {
+    const project = await ctx.db.get(projectId);
+    isTtrpgViewer = project?.projectType === 'ttrpg';
+  }
+
   return {
     canRead: role !== null,
     canEdit: role === 'owner' || role === 'editor',
-    isViewer: role === 'viewer',
+    isViewer,
+    isTtrpgViewer,
   };
+}
+
+function filterForTtrpgViewer(
+  entities: Doc<'entities'>[],
+  isTtrpgViewer: boolean
+): Doc<'entities'>[] {
+  if (!isTtrpgViewer) return entities;
+  return entities.filter((e) => e.revealedToViewers === true);
 }
 
 async function verifyProjectAccess(
@@ -491,28 +513,51 @@ export const listByProjectPaginated = query({
     const effectiveStatus = access.isViewer ? 'confirmed' : status;
 
     if (type && effectiveStatus) {
-      return await ctx.db
+      const result = await ctx.db
         .query('entities')
         .withIndex('by_project_status', (q) =>
           q.eq('projectId', projectId).eq('status', effectiveStatus)
         )
-        .filter((q) => q.eq(q.field('type'), type))
+        .filter((q) => {
+          const typeMatch = q.eq(q.field('type'), type);
+          if (access.isTtrpgViewer) {
+            return q.and(typeMatch, q.eq(q.field('revealedToViewers'), true));
+          }
+          return typeMatch;
+        })
         .paginate(paginationOpts);
+      return result;
     } else if (type) {
       if (access.isViewer) {
-        return await ctx.db
+        const result = await ctx.db
           .query('entities')
           .withIndex('by_project_status', (q) =>
             q.eq('projectId', projectId).eq('status', 'confirmed')
           )
-          .filter((q) => q.eq(q.field('type'), type))
+          .filter((q) => {
+            const typeMatch = q.eq(q.field('type'), type);
+            if (access.isTtrpgViewer) {
+              return q.and(typeMatch, q.eq(q.field('revealedToViewers'), true));
+            }
+            return typeMatch;
+          })
           .paginate(paginationOpts);
+        return result;
       }
       return await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', type))
         .paginate(paginationOpts);
     } else if (effectiveStatus) {
+      if (access.isTtrpgViewer) {
+        return await ctx.db
+          .query('entities')
+          .withIndex('by_project_status', (q) =>
+            q.eq('projectId', projectId).eq('status', effectiveStatus)
+          )
+          .filter((q) => q.eq(q.field('revealedToViewers'), true))
+          .paginate(paginationOpts);
+      }
       return await ctx.db
         .query('entities')
         .withIndex('by_project_status', (q) =>
@@ -521,6 +566,15 @@ export const listByProjectPaginated = query({
         .paginate(paginationOpts);
     } else {
       if (access.isViewer) {
+        if (access.isTtrpgViewer) {
+          return await ctx.db
+            .query('entities')
+            .withIndex('by_project_status', (q) =>
+              q.eq('projectId', projectId).eq('status', 'confirmed')
+            )
+            .filter((q) => q.eq(q.field('revealedToViewers'), true))
+            .paginate(paginationOpts);
+        }
         return await ctx.db
           .query('entities')
           .withIndex('by_project_status', (q) =>
@@ -627,6 +681,7 @@ export const getWithDetails = query({
     const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return null;
     if (access.isViewer && entity.status !== 'confirmed') return null;
+    if (access.isTtrpgViewer && entity.revealedToViewers !== true) return null;
 
     let facts = await ctx.db
       .query('facts')
@@ -699,11 +754,13 @@ export const listEvents = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
-    const events = await ctx.db
+    let events = await ctx.db
       .query('entities')
       .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', 'event'))
       .filter((q) => q.eq(q.field('status'), 'confirmed'))
       .collect();
+
+    events = filterForTtrpgViewer(events, access.isTtrpgViewer);
 
     const eventsWithDocs = await Promise.all(
       events.map(async (event) => {
@@ -736,11 +793,13 @@ export const getTimeline = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return { events: [], appearances: [], entities: [] };
 
-    const allEntities = await ctx.db
+    let allEntities = await ctx.db
       .query('entities')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .filter((q) => q.eq(q.field('status'), 'confirmed'))
       .collect();
+
+    allEntities = filterForTtrpgViewer(allEntities, access.isTtrpgViewer);
 
     const events = allEntities.filter((e) => e.type === 'event');
 
@@ -865,11 +924,13 @@ export const getRelationshipGraph = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return { nodes: [], edges: [] };
 
-    const allEntities = await ctx.db
+    let allEntities = await ctx.db
       .query('entities')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .filter((q) => q.eq(q.field('status'), 'confirmed'))
       .collect();
+
+    allEntities = filterForTtrpgViewer(allEntities, access.isTtrpgViewer);
 
     let allFacts = await ctx.db
       .query('facts')
@@ -950,5 +1011,59 @@ export const getRelationshipGraph = query({
       }));
 
     return { nodes, edges: filteredEdges };
+  },
+});
+
+export const revealToPlayers = mutation({
+  args: {
+    entityId: v.id('entities'),
+  },
+  handler: async (ctx, { entityId }) => {
+    const userId = await requireAuth(ctx);
+    const entity = await ctx.db.get(entityId);
+    if (!entity) throw new Error('Entity not found');
+
+    const project = await ctx.db.get(entity.projectId);
+    if (!project || project.userId !== userId) {
+      throw new Error('Not authorized');
+    }
+
+    if (project.projectType !== 'ttrpg') {
+      throw new Error('Reveal is only available for TTRPG projects');
+    }
+
+    await ctx.db.patch(entityId, {
+      revealedToViewers: true,
+      revealedAt: Date.now(),
+    });
+
+    return entityId;
+  },
+});
+
+export const hideFromPlayers = mutation({
+  args: {
+    entityId: v.id('entities'),
+  },
+  handler: async (ctx, { entityId }) => {
+    const userId = await requireAuth(ctx);
+    const entity = await ctx.db.get(entityId);
+    if (!entity) throw new Error('Entity not found');
+
+    const project = await ctx.db.get(entity.projectId);
+    if (!project || project.userId !== userId) {
+      throw new Error('Not authorized');
+    }
+
+    if (project.projectType !== 'ttrpg') {
+      throw new Error('Hide is only available for TTRPG projects');
+    }
+
+    await ctx.db.patch(entityId, {
+      revealedToViewers: false,
+      revealedAt: undefined,
+    });
+
+    return entityId;
   },
 });
