@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useQuery, useMutation, usePaginatedQuery } from 'convex/react';
 import { useState, useMemo } from 'react';
 import { Users, Search, ArrowLeft, Filter } from 'lucide-react';
@@ -162,11 +162,30 @@ function EntitiesPage() {
             />
         }
         renderItem={(entity: Doc<'entities'>) => (
-          <EntityCard
-            entity={entity}
-            onConfirm={entity.status === 'pending' ? (id) => confirmEntity({ id }) : undefined}
-            onReject={entity.status === 'pending' ? (id) => rejectEntity({ id }) : undefined}
-          />
+          <Link
+            to="/entities/$entityId"
+            params={{ entityId: entity._id }}
+            search={{ project: projectId }}
+            className="block"
+          >
+            <EntityCard
+              entity={entity}
+              onConfirm={
+                entity.status === 'pending' ?
+                  (id) => {
+                    confirmEntity({ id });
+                  }
+                : undefined
+              }
+              onReject={
+                entity.status === 'pending' ?
+                  (id) => {
+                    rejectEntity({ id });
+                  }
+                : undefined
+              }
+            />
+          </Link>
         )}
       />
     </div>
