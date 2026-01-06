@@ -1,6 +1,6 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
-import { getAuthUserId } from './lib/auth';
+import { getAuthUserId, requireAuth } from './lib/auth';
 
 export const list = query({
   args: {
@@ -24,8 +24,7 @@ export const send = mutation({
     content: v.string(),
   },
   handler: async (ctx, { role, content }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error('Not authenticated');
+    const userId = await requireAuth(ctx);
 
     return await ctx.db.insert('chatMessages', {
       userId,
@@ -39,8 +38,7 @@ export const send = mutation({
 export const clear = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error('Not authenticated');
+    const userId = await requireAuth(ctx);
 
     const messages = await ctx.db
       .query('chatMessages')
