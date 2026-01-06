@@ -867,11 +867,15 @@ export const getRelationshipGraph = query({
       .filter((q) => q.eq(q.field('status'), 'confirmed'))
       .collect();
 
-    const allFacts = await ctx.db
+    let allFacts = await ctx.db
       .query('facts')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .filter((q) => q.neq(q.field('status'), 'rejected'))
       .collect();
+
+    if (access.isViewer) {
+      allFacts = allFacts.filter((f) => f.status === 'confirmed');
+    }
 
     type Edge = {
       source: Id<'entities'>;
