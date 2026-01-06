@@ -190,7 +190,9 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
       </nav>
 
       <div className="border-sidebar-border flex flex-col gap-1 border-t p-2">
-        <VellumButton collapsed={collapsed} />
+        <div data-tour="vellum-mascot">
+          <VellumButton collapsed={collapsed} />
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger

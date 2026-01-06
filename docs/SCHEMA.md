@@ -52,6 +52,8 @@ Extended from Convex Auth. Stores user accounts and global preferences.
 | `image` | `v.optional(v.string())` | URL to user's avatar. |
 | `isAnonymous` | `v.optional(v.boolean())` | Guest user flag. |
 | `createdAt` | `v.number()` | Account creation timestamp. |
+| `onboardingCompleted` | `v.optional(v.boolean())` | Whether onboarding has been completed. |
+| `tutorialState` | `v.optional(v.object({...}))` | Tour state (seen/completed steps/timestamps). |
 | `settings` | `v.optional(v.object({...}))` | Theme and notification preferences. |
 
 **Indexes:**
