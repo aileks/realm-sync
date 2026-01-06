@@ -164,6 +164,45 @@ async function callLLM(content: string, apiKey: string, model: string): Promise<
   return normalizeExtractionResult(parsed);
 }
 
+type EntityType = 'character' | 'location' | 'item' | 'concept' | 'event';
+
+const VALID_ENTITY_TYPES: Set<string> = new Set([
+  'character',
+  'location',
+  'item',
+  'concept',
+  'event',
+]);
+
+// Map invalid LLM entity types to valid ones
+function normalizeEntityType(rawType: unknown): EntityType {
+  const type = String(rawType ?? '').toLowerCase();
+  if (VALID_ENTITY_TYPES.has(type)) {
+    return type as EntityType;
+  }
+  // Map common LLM hallucinations to valid types
+  const typeMap: Record<string, EntityType> = {
+    group: 'concept',
+    organization: 'concept',
+    faction: 'concept',
+    creature: 'character',
+    animal: 'character',
+    person: 'character',
+    place: 'location',
+    area: 'location',
+    region: 'location',
+    object: 'item',
+    artifact: 'item',
+    weapon: 'item',
+    tool: 'item',
+    idea: 'concept',
+    theme: 'concept',
+    occurrence: 'event',
+    incident: 'event',
+  };
+  return typeMap[type] ?? 'concept';
+}
+
 function normalizeExtractionResult(raw: unknown): ExtractionResult {
   const result = raw as Record<string, unknown>;
 
@@ -178,7 +217,7 @@ function normalizeExtractionResult(raw: unknown): ExtractionResult {
       for (const e of result.entities as Array<Record<string, unknown>>) {
         entities.push({
           name: e.name as string,
-          type: (e.type as ExtractionResult['entities'][0]['type']) ?? 'concept',
+          type: normalizeEntityType(e.type),
           description: e.description as string | undefined,
           aliases: e.aliases as string[] | undefined,
         });
@@ -188,7 +227,7 @@ function normalizeExtractionResult(raw: unknown): ExtractionResult {
         const entityData = data as Record<string, unknown>;
         entities.push({
           name,
-          type: (entityData.type as ExtractionResult['entities'][0]['type']) ?? 'concept',
+          type: normalizeEntityType(entityData.type),
           description: entityData.description as string | undefined,
           aliases: entityData.aliases as string[] | undefined,
         });

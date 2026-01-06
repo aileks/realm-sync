@@ -81,7 +81,7 @@ export function RecentProjects({ collapsed, isAuthenticated, userId }: RecentPro
             className={cn(
               'flex items-center gap-3 rounded-lg p-2 transition-colors',
               collapsed && 'justify-center',
-              'hover:bg-sidebar-accent text-foreground text-sm'
+              'hover:bg-predicate/20 text-foreground text-sm'
             )}
           >
             <FolderOpen className="size-4 opacity-60" />

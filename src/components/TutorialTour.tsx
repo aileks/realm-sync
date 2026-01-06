@@ -125,6 +125,7 @@ export function TutorialTour({ isTutorialProject }: TutorialTourProps) {
 
   const tooltipRef = useRef<HTMLDivElement>(null);
   const hasStartedRef = useRef(false);
+  const hasCompletedRef = useRef(false);
 
   const [isOpen, setIsOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
@@ -185,8 +186,9 @@ export function TutorialTour({ isTutorialProject }: TutorialTourProps) {
   }, []);
 
   useEffect(() => {
-    if (!user || !isTutorialProject) return;
+    if (!user || !isTutorialProject || hasCompletedRef.current) return;
     if (!hasSeenTour && nextStepIndex === -1) {
+      hasCompletedRef.current = true;
       void completeTutorialTour({ completedSteps });
     }
   }, [completedSteps, completeTutorialTour, hasSeenTour, isTutorialProject, nextStepIndex, user]);
@@ -298,7 +300,10 @@ export function TutorialTour({ isTutorialProject }: TutorialTourProps) {
     void recordTutorialStep({ stepId: step.id });
 
     if (isLastStep) {
-      void completeTutorialTour({ completedSteps: nextCompletedSteps });
+      if (!hasCompletedRef.current) {
+        hasCompletedRef.current = true;
+        void completeTutorialTour({ completedSteps: nextCompletedSteps });
+      }
       setIsOpen(false);
       return;
     }

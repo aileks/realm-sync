@@ -288,8 +288,12 @@ export const runCheck = internalAction({
   args: { documentId: v.id('documents') },
   handler: async (ctx, { documentId }): Promise<CheckResult> => {
     const doc = await ctx.runQuery(api.documents.get, { id: documentId });
+    // Gracefully handle deleted/empty documents (may have been deleted after scheduling)
     if (!doc || !doc.content) {
-      throw new Error('Document not found or empty');
+      return {
+        alerts: [],
+        summary: { totalIssues: 0, errors: 0, warnings: 0, checkedEntities: [] },
+      };
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;

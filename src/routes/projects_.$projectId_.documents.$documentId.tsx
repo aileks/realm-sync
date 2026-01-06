@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useAction } from 'convex/react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ArrowLeft,
   Save,
@@ -58,6 +58,7 @@ function DocumentEditorPage() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const hasShownExtractPrompt = useRef(false);
 
   const isStuck =
     document?.processingStatus === 'processing' && document.updatedAt < Date.now() - 2 * 60 * 1000;
@@ -114,6 +115,20 @@ function DocumentEditorPage() {
       const result = await chunkAndExtract({ documentId: document._id });
       toast.success('Extraction complete', {
         description: `Found ${result.entitiesCreated} entities and ${result.factsCreated} facts.`,
+        action: (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              navigate({
+                to: '/projects/$projectId/review/$documentId',
+                params: { projectId, documentId: document._id },
+              })
+            }
+          >
+            Review
+          </Button>
+        ),
       });
     } catch (error) {
       console.error('Extraction failed:', error);
@@ -123,7 +138,28 @@ function DocumentEditorPage() {
     } finally {
       setIsExtracting(false);
     }
-  }, [document, chunkAndExtract]);
+  }, [document, chunkAndExtract, navigate, projectId]);
+
+  useEffect(() => {
+    if (
+      document &&
+      document.content &&
+      document.processingStatus === 'pending' &&
+      !hasShownExtractPrompt.current &&
+      !isExtracting
+    ) {
+      hasShownExtractPrompt.current = true;
+      toast.info('Ready to extract', {
+        description: 'Extract entities and facts from this document.',
+        action: (
+          <Button size="sm" variant="outline" onClick={() => void handleExtract()}>
+            Extract
+          </Button>
+        ),
+        duration: 8000,
+      });
+    }
+  }, [document, isExtracting, handleExtract]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
