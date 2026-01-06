@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { useStream } from '@convex-dev/persistent-text-streaming/react';
 import type { StreamId } from '@convex-dev/persistent-text-streaming';
 import { marked } from 'marked';
@@ -8,7 +8,7 @@ import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { Send, User, Loader2, AlertCircle } from 'lucide-react';
+import { Send, User, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 import { env } from '@/env';
 
 type Message = {
@@ -66,10 +66,12 @@ function MothIcon({ className }: { className?: string }) {
 type StreamingMessageProps = {
   streamId: string;
   siteUrl: string;
+  onComplete?: (content: string) => void;
 };
 
-function StreamingMessage({ streamId, siteUrl }: StreamingMessageProps) {
+function StreamingMessage({ streamId, siteUrl, onComplete }: StreamingMessageProps) {
   const streamUrl = new URL(`${siteUrl}/chat-stream`);
+  const hasCalledComplete = useRef(false);
 
   const { text, status } = useStream(
     api.chat.getStreamBody,
@@ -77,6 +79,13 @@ function StreamingMessage({ streamId, siteUrl }: StreamingMessageProps) {
     false,
     streamId as StreamId
   );
+
+  useEffect(() => {
+    if (status === 'done' && text && onComplete && !hasCalledComplete.current) {
+      hasCalledComplete.current = true;
+      onComplete(text);
+    }
+  }, [status, text, onComplete]);
 
   if (status === 'pending' || (!text && status === 'streaming')) {
     return (
@@ -132,48 +141,84 @@ function ThinkingIndicator() {
 }
 
 export function VellumChat() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentStreamId, setCurrentStreamId] = useState<string | null>(null);
+  const [pendingAssistantId, setPendingAssistantId] = useState<string | null>(null);
 
+  const savedMessages = useQuery(api.chatHistory.list, { limit: 100 });
+  const sendMessage = useMutation(api.chatHistory.send);
+  const clearHistory = useMutation(api.chatHistory.clear);
   const createStreamingChat = useMutation(api.chat.createStreamingChat);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const dbMessages: Message[] =
+    savedMessages?.map((m) => ({
+      id: m._id,
+      role: m.role,
+      content: m.content,
+    })) ?? [];
+
+  const allMessages = [...dbMessages, ...localMessages];
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isLoading, currentStreamId]);
+  }, [allMessages, isLoading, currentStreamId]);
+
+  const handleStreamComplete = async (content: string) => {
+    if (!pendingAssistantId) return;
+
+    await sendMessage({ role: 'assistant', content });
+    setLocalMessages((prev) => prev.filter((m) => m.id !== pendingAssistantId));
+    setPendingAssistantId(null);
+    setCurrentStreamId(null);
+  };
+
+  const handleClearHistory = async () => {
+    await clearHistory({});
+    setLocalMessages([]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
 
     setError(null);
-    const userMessage: Message = { id: generateId(), role: 'user', content: inputValue.trim() };
-    const newMessages: Message[] = [...messages, userMessage];
+    const userContent = inputValue.trim();
+    const userMessageId = generateId();
+    const userMessage: Message = { id: userMessageId, role: 'user', content: userContent };
 
-    setMessages(newMessages);
+    setLocalMessages((prev) => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
 
     try {
-      const cleanMessages = newMessages.map(({ role, content }) => ({ role, content }));
+      await sendMessage({ role: 'user', content: userContent });
+      setLocalMessages((prev) => prev.filter((m) => m.id !== userMessageId));
+
+      const messagesForApi = [...dbMessages, { role: 'user' as const, content: userContent }].map(
+        ({ role, content }) => ({ role, content })
+      );
 
       const { streamId, messages: chatMessages } = await createStreamingChat({
-        messages: cleanMessages,
+        messages: messagesForApi,
       });
 
+      const assistantId = generateId();
       const assistantMessage: Message = {
-        id: generateId(),
+        id: assistantId,
         role: 'assistant',
         content: '',
         streamId,
       };
+
+      setPendingAssistantId(assistantId);
       setCurrentStreamId(streamId);
-      setMessages([...newMessages, assistantMessage]);
+      setLocalMessages((prev) => [...prev, assistantMessage]);
 
       const response = await fetch(`${CONVEX_SITE_URL}/chat-stream`, {
         method: 'POST',
@@ -192,15 +237,14 @@ export function VellumChat() {
           if (done) break;
         }
       }
-
-      setCurrentStreamId(null);
     } catch (err) {
       console.error('Failed to send message:', err);
       setError('Failed to get response. Please try again.');
-      setMessages((prev) =>
+      setLocalMessages((prev) =>
         prev.filter((msg) => !msg.streamId || msg.streamId !== currentStreamId)
       );
       setCurrentStreamId(null);
+      setPendingAssistantId(null);
     } finally {
       setIsLoading(false);
     }
@@ -208,15 +252,15 @@ export function VellumChat() {
 
   return (
     <div className="flex h-full flex-col">
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
-        {messages.length === 0 && (
+      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4 px-6">
+        {allMessages.length === 0 && (
           <div className="text-muted-foreground py-8 text-center">
             <p className="mb-1 font-serif text-sm">The archives are open.</p>
             <p className="text-xs">Ask me anything about your world.</p>
           </div>
         )}
 
-        {messages.map((msg) => (
+        {allMessages.map((msg) => (
           <div
             key={msg.id}
             className={cn('flex items-start gap-2', msg.role === 'user' && 'flex-row-reverse')}
@@ -244,7 +288,11 @@ export function VellumChat() {
               {msg.role === 'user' ?
                 msg.content
               : msg.streamId ?
-                <StreamingMessage streamId={msg.streamId} siteUrl={CONVEX_SITE_URL} />
+                <StreamingMessage
+                  streamId={msg.streamId}
+                  siteUrl={CONVEX_SITE_URL}
+                  onComplete={handleStreamComplete}
+                />
               : <MarkdownContent>{msg.content}</MarkdownContent>}
             </div>
           </div>
@@ -254,7 +302,7 @@ export function VellumChat() {
       </div>
 
       {error && (
-        <div className="mx-4 mb-2 flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+        <div className="mx-6 mb-2 flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
           <AlertCircle className="size-3" />
           <span>{error}</span>
           <button
@@ -267,7 +315,7 @@ export function VellumChat() {
         </div>
       )}
 
-      <div className="border-t p-3">
+      <div className="border-t px-6 py-3">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             value={inputValue}
@@ -281,6 +329,18 @@ export function VellumChat() {
               <Loader2 className="size-4 animate-spin" />
             : <Send className="size-4" />}
           </Button>
+          {allMessages.length > 0 && (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={handleClearHistory}
+              disabled={isLoading}
+              title="Clear chat history"
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          )}
         </form>
       </div>
     </div>
