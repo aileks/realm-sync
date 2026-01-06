@@ -25,11 +25,13 @@ The following diagram illustrates the primary relationships between tables in th
 erDiagram
     users ||--o{ projects : owns
     users ||--o{ chatMessages : sends
+    users ||--o{ projectShares : "invited to"
     projects ||--o{ documents : contains
     projects ||--o{ entities : tracks
     projects ||--o{ facts : contains
     projects ||--o{ alerts : generates
     projects ||--o{ notes : contains
+    projects ||--o{ projectShares : "shared via"
     documents ||--o{ facts : sources
     documents ||--o{ alerts : triggers
     entities ||--o{ facts : subject
@@ -254,6 +256,36 @@ Vellum AI chat message history for each user.
 **Indexes:**
 
 - `by_user`: `["userId", "createdAt"]` (Ordered message history per user)
+
+---
+
+### `projectShares`
+
+Project sharing invitations and permissions for collaboration.
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| `projectId` | `v.id("projects")` | Reference to the shared project. |
+| `sharedWithEmail` | `v.string()` | Email address of the invited user. |
+| `sharedWithUserId` | `v.optional(v.id("users"))` | User ID (set when invite is accepted). |
+| `role` | `v.union(...)` | `"editor"` or `"viewer"`. |
+| `invitedBy` | `v.id("users")` | Reference to the user who sent the invite. |
+| `acceptedAt` | `v.optional(v.number())` | Timestamp when invite was accepted. |
+| `createdAt` | `v.number()` | Invite creation timestamp. |
+
+**Indexes:**
+
+- `by_project`: `["projectId"]` (List shares for a project)
+- `by_email`: `["sharedWithEmail"]` (Find invites by email)
+- `by_user`: `["sharedWithUserId"]` (List accepted shares for a user)
+
+**Permission Model:**
+
+| Role   | Read           | Write | Delete | Share |
+| :----- | :------------- | :---- | :----- | :---- |
+| Owner  | All            | All   | All    | Yes   |
+| Editor | All            | Yes   | No     | No    |
+| Viewer | Confirmed only | No    | No     | No    |
 
 ---
 

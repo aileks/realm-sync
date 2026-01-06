@@ -32,9 +32,10 @@ type ProjectCardProps = {
   project: Project;
   onEdit?: (project: Project) => void;
   onDelete?: (project: Project) => void;
+  onShare?: (project: Project) => void;
 };
 
-export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
+export function ProjectCard({ project, onEdit, onDelete, onShare: _onShare }: ProjectCardProps) {
   const stats = project.stats ?? {
     documentCount: 0,
     entityCount: 0,
@@ -70,6 +71,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
                   <Pencil className="mr-2 size-4" />
                   Edit
                 </DropdownMenuItem>
+                {/* Share option hidden until MVP - keeping code for post-MVP */}
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.preventDefault();

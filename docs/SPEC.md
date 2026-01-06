@@ -296,6 +296,26 @@ Extended from Convex Auth (custom fields merged automatically).
 
 ---
 
+### Table: `projectShares`
+
+| Field | Type | Description | Validation |
+| --- | --- | --- | --- |
+| `projectId` | id("projects") | Reference to the shared project | `v.id("projects")` |
+| `sharedWithEmail` | string | Email of invited user | `v.string()` |
+| `sharedWithUserId` | optional id("users") | Set when invite accepted | `v.optional(v.id("users"))` |
+| `role` | union | "editor" \| "viewer" | `v.union(v.literal("editor"), v.literal("viewer"))` |
+| `invitedBy` | id("users") | User who sent the invite | `v.id("users")` |
+| `acceptedAt` | optional number | Acceptance timestamp | `v.optional(v.number())` |
+| `createdAt` | number | Invite creation timestamp | `v.number()` |
+
+**Indexes**:
+
+- `by_project`: `["projectId"]` (list shares for a project)
+- `by_email`: `["sharedWithEmail"]` (find invites by email)
+- `by_user`: `["sharedWithUserId"]` (list accepted shares for a user)
+
+---
+
 ## API Specifications
 
 ### Phase 1: Foundation Functions
