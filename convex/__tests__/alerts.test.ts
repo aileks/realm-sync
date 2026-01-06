@@ -223,6 +223,82 @@ describe('alerts', () => {
     });
   });
 
+  describe('listOpenByUser query', () => {
+    it('returns open alerts across projects with totals', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const { projectId } = await setupProjectWithAlert(t, userId);
+
+      const secondProjectId = await t.run(async (ctx) => {
+        const project = await ctx.db.insert('projects', {
+          userId,
+          name: 'Second Project',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+
+        const documentId = await ctx.db.insert('documents', {
+          projectId: project,
+          title: 'Other Document',
+          content: 'Text',
+          contentType: 'text',
+          orderIndex: 0,
+          wordCount: 1,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          processingStatus: 'completed',
+        });
+
+        await ctx.db.insert('alerts', {
+          projectId: project,
+          documentId,
+          factIds: [],
+          entityIds: [],
+          type: 'timeline',
+          severity: 'warning',
+          title: 'Timeline mismatch',
+          description: 'Out of order events',
+          evidence: [],
+          status: 'open',
+          createdAt: Date.now(),
+        });
+
+        await ctx.db.insert('alerts', {
+          projectId: project,
+          documentId,
+          factIds: [],
+          entityIds: [],
+          type: 'ambiguity',
+          severity: 'warning',
+          title: 'Resolved warning',
+          description: 'Ignore',
+          evidence: [],
+          status: 'resolved',
+          createdAt: Date.now(),
+          resolvedAt: Date.now(),
+        });
+
+        return project;
+      });
+
+      const result = await asUser.query(api.alerts.listOpenByUser, { limit: 1 });
+
+      expect(result.total).toBe(2);
+      expect(result.alerts).toHaveLength(1);
+      expect(result.alerts[0].projectName).toBeDefined();
+      expect([projectId, secondProjectId]).toContain(result.alerts[0].alert.projectId);
+    });
+
+    it('returns empty results for unauthenticated users', async () => {
+      const t = convexTest(schema, getModules());
+
+      const result = await t.query(api.alerts.listOpenByUser, {});
+
+      expect(result).toEqual({ total: 0, alerts: [] });
+    });
+  });
+
   describe('listByDocument query', () => {
     it('returns alerts for specific document', async () => {
       const t = convexTest(schema, getModules());
@@ -435,6 +511,30 @@ describe('alerts', () => {
       await expect(t.mutation(api.alerts.resolve, { id: alertId })).rejects.toThrow(
         /unauthorized/i
       );
+    });
+  });
+
+  describe('resolveWithCanonUpdate mutation', () => {
+    it('updates fact and document content', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { alertId, factId, documentId } = await setupProjectWithAlert(t, userId);
+
+      await asUser.mutation(api.alerts.resolveWithCanonUpdate, {
+        id: alertId,
+        factId,
+        newValue: 'brown eyes',
+      });
+
+      const fact = await t.run(async (ctx) => ctx.db.get(factId));
+      const doc = await t.run(async (ctx) => ctx.db.get(documentId));
+      const alert = await t.run(async (ctx) => ctx.db.get(alertId));
+
+      expect(fact?.object).toBe('brown eyes');
+      expect(fact?.evidenceSnippet).toBe('Marcus has brown eyes.');
+      expect(doc?.content).toBe('Marcus has brown eyes.');
+      expect(doc?.processingStatus).toBe('pending');
+      expect(alert?.status).toBe('resolved');
     });
   });
 

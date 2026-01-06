@@ -29,6 +29,7 @@ function Toaster({ ...props }: ToasterProps) {
       toastOptions={{
         classNames: {
           toast: 'cn-toast',
+          description: '!text-white/50',
         },
       }}
       {...props}

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useState, useEffect } from 'react';
-import { addRecentProject } from '@/components/AppSidebar';
+import { addRecentProject } from '@/components/RecentProjects';
 import { FileText, Users, Lightbulb, Plus, Settings, ArrowLeft, BookOpen } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
@@ -39,7 +39,7 @@ function ProjectDashboard() {
 
   useEffect(() => {
     if (project) {
-      addRecentProject(projectId, project.name);
+      addRecentProject(project.userId, projectId, project.name);
     }
   }, [project, projectId]);
 
@@ -111,7 +111,7 @@ function ProjectDashboard() {
         </div>
       </div>
 
-      <div className="mb-8 grid gap-4 md:grid-cols-3">
+      <div className="mb-8 grid gap-4 md:grid-cols-3" data-tour="project-overview">
         <StatCard
           icon={FileText}
           label="Documents"
@@ -123,6 +123,7 @@ function ProjectDashboard() {
           label="Entities"
           value={stats.entityCount}
           variant="entity-character"
+          dataTour="entities-section"
           onClick={() => navigate({ to: '/projects/$projectId/entities', params: { projectId } })}
         />
         <StatCard
@@ -145,63 +146,65 @@ function ProjectDashboard() {
         </Button>
       </div>
 
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="font-serif text-xl font-semibold">Recent Documents</h2>
-        <Button
-          onClick={() =>
-            navigate({ to: '/projects/$projectId/documents/new', params: { projectId } })
-          }
-        >
-          <Plus className="mr-2 size-4" />
-          Add Document
-        </Button>
-      </div>
-
-      {documents === undefined ?
-        <LoadingState message="Loading documents..." />
-      : documents.length === 0 ?
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">
-              No documents yet. Add your first document to get started.
-            </p>
-          </CardContent>
-        </Card>
-      : <div className="space-y-2">
-          {documents.slice(0, 5).map((doc: (typeof documents)[number]) => (
-            <Card
-              key={doc._id}
-              size="sm"
-              className="hover:bg-muted/50 cursor-pointer transition-colors"
-              onClick={() =>
-                navigate({
-                  to: '/projects/$projectId/documents/$documentId',
-                  params: { projectId, documentId: doc._id },
-                })
-              }
-            >
-              <CardHeader className="py-3">
-                <CardTitle className="text-base font-medium">{doc.title}</CardTitle>
-                <div className="flex gap-2">
-                  <Badge variant="secondary">{doc.contentType}</Badge>
-                  <span className="text-muted-foreground text-sm">{doc.wordCount} words</span>
-                </div>
-              </CardHeader>
-            </Card>
-          ))}
-          {documents.length > 5 && (
-            <Button
-              variant="ghost"
-              className="w-full"
-              onClick={() =>
-                navigate({ to: '/projects/$projectId/documents', params: { projectId } })
-              }
-            >
-              View all {documents.length} documents
-            </Button>
-          )}
+      <section className="mb-8" data-tour="documents-list">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-serif text-xl font-semibold">Recent Documents</h2>
+          <Button
+            onClick={() =>
+              navigate({ to: '/projects/$projectId/documents/new', params: { projectId } })
+            }
+          >
+            <Plus className="mr-2 size-4" />
+            Add Document
+          </Button>
         </div>
-      }
+
+        {documents === undefined ?
+          <LoadingState message="Loading documents..." />
+        : documents.length === 0 ?
+          <Card>
+            <CardContent className="py-8 text-center">
+              <p className="text-muted-foreground">
+                No documents yet. Add your first document to get started.
+              </p>
+            </CardContent>
+          </Card>
+        : <div className="space-y-2">
+            {documents.slice(0, 5).map((doc: (typeof documents)[number]) => (
+              <Card
+                key={doc._id}
+                size="sm"
+                className="hover:bg-muted/50 cursor-pointer transition-colors"
+                onClick={() =>
+                  navigate({
+                    to: '/projects/$projectId/documents/$documentId',
+                    params: { projectId, documentId: doc._id },
+                  })
+                }
+              >
+                <CardHeader className="py-3">
+                  <CardTitle className="text-base font-medium">{doc.title}</CardTitle>
+                  <div className="flex gap-2">
+                    <Badge variant="secondary">{doc.contentType}</Badge>
+                    <span className="text-muted-foreground text-sm">{doc.wordCount} words</span>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+            {documents.length > 5 && (
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() =>
+                  navigate({ to: '/projects/$projectId/documents', params: { projectId } })
+                }
+              >
+                View all {documents.length} documents
+              </Button>
+            )}
+          </div>
+        }
+      </section>
 
       <div className="border-border mt-12 border-t pt-6">
         <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
@@ -236,9 +239,10 @@ type StatCardProps = {
   value: number;
   variant?: 'entity-character' | 'entity-concept' | 'destructive';
   onClick?: () => void;
+  dataTour?: string;
 };
 
-function StatCard({ icon: Icon, label, value, variant, onClick }: StatCardProps) {
+function StatCard({ icon: Icon, label, value, variant, onClick, dataTour }: StatCardProps) {
   return (
     <Card
       className={cn(
@@ -246,6 +250,7 @@ function StatCard({ icon: Icon, label, value, variant, onClick }: StatCardProps)
         onClick && 'cursor-pointer'
       )}
       onClick={onClick}
+      data-tour={dataTour}
     >
       <CardContent className="pt-6">
         <div className="flex items-center gap-3">

@@ -14,6 +14,7 @@ type AlertCardProps = {
   onResolve: (id: Id<'alerts'>) => void;
   onDismiss: (id: Id<'alerts'>) => void;
   entityNames?: string[];
+  dataTourAction?: boolean;
 };
 
 const typeConfig = {
@@ -33,7 +34,14 @@ const severityConfig = {
   },
 } as const;
 
-export function AlertCard({ alert, projectId, onResolve, onDismiss, entityNames }: AlertCardProps) {
+export function AlertCard({
+  alert,
+  projectId,
+  onResolve,
+  onDismiss,
+  entityNames,
+  dataTourAction,
+}: AlertCardProps) {
   const TypeIcon = typeConfig[alert.type].icon;
   const severityStyle = severityConfig[alert.severity];
 
@@ -121,7 +129,10 @@ export function AlertCard({ alert, projectId, onResolve, onDismiss, entityNames 
             </div>
 
             {alert.status === 'open' && (
-              <CardAction className="flex shrink-0 gap-1 opacity-80 transition-opacity group-hover:opacity-100">
+              <CardAction
+                className="flex shrink-0 gap-1 opacity-80 transition-opacity group-hover:opacity-100"
+                data-tour={dataTourAction ? 'alert-actions' : undefined}
+              >
                 <Button
                   size="sm"
                   variant="ghost"

@@ -19,8 +19,8 @@ Phase 6 transforms Realm Sync from a tool into an experience. The Vellum moth ma
 | --- | --- | --- |
 | Vellum AI Assistant | Complete | Streaming chat with personality (PR #35) |
 | Demo Project Seeding | Complete | "The Verdant Realm" with 3 docs, 12 entities, 10 facts, 2 alerts |
-| Tour Library Setup | Pending | react-joyride or custom tooltips |
-| Tour Step Definitions | Pending | Define steps for each feature |
+| Tour Library Setup | Complete | Custom overlay tour with data-tour targets |
+| Tour Step Definitions | Complete | Project overview, documents, entities, alerts, Vellum |
 | Project Sharing | Pending | DM/Player collaboration with roles |
 | Polar.sh Integration | Pending | Sponsorship, funding, premium features |
 
@@ -214,6 +214,24 @@ const TOUR_STEPS = [
     title: 'Canon Entities',
     content:
       'Entities are the characters, locations, items, and concepts. Vellum extracts these automatically.',
+  },
+  {
+    target: '[data-tour="alerts-nav"]',
+    title: 'Continuity Alerts',
+    content:
+      'Alerts flag contradictions or timeline issues. Click Alerts to see how they work.',
+  },
+  {
+    target: '[data-tour="alerts-list"]',
+    title: 'Review an Alert',
+    content:
+      'Each alert shows evidence from the canon and the new document for fast review.',
+  },
+  {
+    target: '[data-tour="alert-actions"]',
+    title: 'Fix or Dismiss',
+    content:
+      'Resolve an alert after you fix the document, or dismiss it if the conflict is intentional.',
   },
   {
     target: '[data-tour="vellum-mascot"]',

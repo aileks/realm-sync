@@ -396,7 +396,7 @@ At the Festival of Green Leaves, celebrated on the first full moon of spring, th
         {
           snippet: 'Sir Aldric, the aging knight commander at sixty winters old',
           documentId: doc1Id,
-          documentTitle: 'Chapter 1: The Beginning',
+          documentTitle: 'Canon',
         },
         {
           snippet: 'Sir Aldric, now leading the defense at fifty winters old',
@@ -424,7 +424,7 @@ At the Festival of Green Leaves, celebrated on the first full moon of spring, th
         {
           snippet: 'It was forged in the Year of Falling Stars by the First Queen, Elara the Wise',
           documentId: doc1Id,
-          documentTitle: 'Chapter 1: The Beginning',
+          documentTitle: 'Canon',
         },
         {
           snippet:

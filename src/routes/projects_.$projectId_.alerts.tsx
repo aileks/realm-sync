@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Outlet, useMatches, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useState, useMemo } from 'react';
 import { AlertTriangle, ArrowLeft, CheckCheck, XCircle } from 'lucide-react';
@@ -10,13 +10,26 @@ import { LoadingState } from '@/components/LoadingState';
 import { AlertCard } from '@/components/AlertCard';
 import { AlertFilters } from '@/components/AlertFilters';
 
+const ALERT_DETAIL_ROUTE_ID = '/projects_/$projectId_/alerts/$alertId';
+
 export const Route = createFileRoute('/projects_/$projectId_/alerts')({
-  component: AlertsPage,
+  component: AlertsRoute,
 });
 
 type AlertStatus = 'open' | 'resolved' | 'dismissed';
 type AlertType = 'contradiction' | 'timeline' | 'ambiguity';
 type AlertSeverity = 'error' | 'warning';
+
+function AlertsRoute() {
+  const matches = useMatches();
+  const isDetailView = matches.some((match) => match.routeId === ALERT_DETAIL_ROUTE_ID);
+
+  if (isDetailView) {
+    return <Outlet />;
+  }
+
+  return <AlertsPage />;
+}
 
 function AlertsPage() {
   const navigate = useNavigate();
@@ -48,6 +61,11 @@ function AlertsPage() {
       return matchesStatus && matchesType && matchesSeverity;
     });
   }, [alerts, statusFilter, typeFilter, severityFilter]);
+
+  const highlightAlertId = useMemo(() => {
+    const openAlert = filteredAlerts.find((alert) => alert.status === 'open');
+    return openAlert?._id ?? filteredAlerts[0]?._id;
+  }, [filteredAlerts]);
 
   const counts = useMemo(() => {
     if (!alerts) return undefined;
@@ -107,7 +125,7 @@ function AlertsPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="mb-6">
+      <div className="mb-6 space-y-3">
         <Button
           variant="ghost"
           size="sm"
@@ -117,15 +135,29 @@ function AlertsPage() {
           <ArrowLeft className="mr-1 size-4" />
           {project.name}
         </Button>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-serif text-3xl font-bold">Alerts & Consistency</h1>
-          <div className="text-muted-foreground text-sm">
-            {alerts.length} total • {filteredAlerts.length} visible
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="text-muted-foreground text-sm">
+              {alerts.length} total • {filteredAlerts.length} visible
+            </div>
+            {openCount > 0 && statusFilter === 'open' && (
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={handleResolveAll}>
+                  <CheckCheck className="mr-1.5 size-4" />
+                  Resolve All
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDismissAll}>
+                  <XCircle className="mr-1.5 size-4" />
+                  Dismiss All
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mb-6">
         <AlertFilters
           statusFilter={statusFilter}
           typeFilter={typeFilter}
@@ -135,19 +167,6 @@ function AlertsPage() {
           onSeverityChange={setSeverityFilter}
           counts={counts}
         />
-
-        {openCount > 0 && statusFilter === 'open' && (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleResolveAll}>
-              <CheckCheck className="mr-1.5 size-4" />
-              Resolve All
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleDismissAll}>
-              <XCircle className="mr-1.5 size-4" />
-              Dismiss All
-            </Button>
-          </div>
-        )}
       </div>
 
       {alerts.length === 0 ?
@@ -173,7 +192,7 @@ function AlertsPage() {
             </Button>
           }
         />
-      : <div className="grid gap-4">
+      : <div className="grid gap-4" data-tour="alerts-list">
           {filteredAlerts.map((alert) => (
             <AlertCard
               key={alert._id}
@@ -182,6 +201,7 @@ function AlertsPage() {
               onResolve={handleResolve}
               onDismiss={handleDismiss}
               entityNames={alert.entityIds.map((id) => entityNameMap.get(id) ?? 'Unknown')}
+              dataTourAction={alert._id === highlightAlertId && alert.status === 'open'}
             />
           ))}
         </div>

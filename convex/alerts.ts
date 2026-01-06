@@ -21,6 +21,10 @@ const alertStatusValidator = v.union(
   v.literal('dismissed')
 );
 
+function countWords(text: string): number {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
 async function verifyProjectOwnership(
   ctx: QueryCtx | MutationCtx,
   projectId: Id<'projects'>
@@ -83,6 +87,42 @@ export const listByProject = query({
     }
 
     return alerts.toSorted((a, b) => b.createdAt - a.createdAt);
+  },
+});
+
+export const listOpenByUser = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, { limit }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return { total: 0, alerts: [] };
+
+    const projects = await ctx.db
+      .query('projects')
+      .withIndex('by_user', (q) => q.eq('userId', userId))
+      .collect();
+
+    const projectNames = new Map(projects.map((project) => [project._id, project.name]));
+    const openAlerts: Doc<'alerts'>[] = [];
+
+    for (const project of projects) {
+      const alerts = await ctx.db
+        .query('alerts')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id).eq('status', 'open'))
+        .collect();
+      openAlerts.push(...alerts);
+    }
+
+    const sortedAlerts = openAlerts.toSorted((a, b) => b.createdAt - a.createdAt);
+    const total = sortedAlerts.length;
+    const limited = limit ? sortedAlerts.slice(0, limit) : sortedAlerts;
+
+    return {
+      total,
+      alerts: limited.map((alert) => ({
+        alert,
+        projectName: projectNames.get(alert.projectId) ?? 'Untitled Project',
+      })),
+    };
   },
 });
 
@@ -335,8 +375,60 @@ export const resolveWithCanonUpdate = mutation({
       throw new Error('Fact not associated with this alert');
     }
 
+    const previousObject = fact.object;
+    let updatedEvidenceSnippet: string | undefined;
+    let updatedEvidencePosition = fact.evidencePosition;
+
+    const doc = await ctx.db.get(fact.documentId);
+    if (doc?.content) {
+      const replaceInSnippet = (snippet: string) =>
+        snippet.includes(previousObject) ? snippet.replace(previousObject, newValue) : null;
+      let updatedContent: string | undefined;
+
+      if (fact.evidencePosition) {
+        const { start, end } = fact.evidencePosition;
+        if (start >= 0 && end <= doc.content.length && start < end) {
+          const snippet = doc.content.slice(start, end);
+          const replacement = replaceInSnippet(snippet);
+          if (replacement) {
+            updatedEvidenceSnippet = replacement;
+            updatedEvidencePosition = { start, end: start + replacement.length };
+            updatedContent = doc.content.slice(0, start) + replacement + doc.content.slice(end);
+          }
+        }
+      }
+
+      if (!updatedContent && fact.evidenceSnippet) {
+        const index = doc.content.indexOf(fact.evidenceSnippet);
+        const replacement = replaceInSnippet(fact.evidenceSnippet);
+        if (index !== -1 && replacement) {
+          updatedEvidenceSnippet = replacement;
+          updatedEvidencePosition = { start: index, end: index + replacement.length };
+          updatedContent =
+            doc.content.slice(0, index) +
+            replacement +
+            doc.content.slice(index + fact.evidenceSnippet.length);
+        }
+      }
+
+      if (updatedContent) {
+        await ctx.db.patch(fact.documentId, {
+          content: updatedContent,
+          wordCount: countWords(updatedContent),
+          updatedAt: Date.now(),
+          processingStatus: 'pending',
+        });
+      }
+    }
+
     await ctx.db.patch(factId, {
       object: newValue,
+      ...(updatedEvidenceSnippet ?
+        {
+          evidenceSnippet: updatedEvidenceSnippet,
+          evidencePosition: updatedEvidencePosition,
+        }
+      : {}),
     });
 
     const wasOpen = alert.status === 'open';

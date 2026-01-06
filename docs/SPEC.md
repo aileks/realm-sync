@@ -81,6 +81,8 @@ Extended from Convex Auth (custom fields merged automatically).
 | `email` | optional string | User's email address (unique) | `v.optional(v.string())` |
 | `image` | optional string | URL to user's avatar | `v.optional(v.string())` |
 | `createdAt` | number | Unix timestamp of account creation | `v.number()` |
+| `onboardingCompleted` | optional boolean | Onboarding completion flag | `v.optional(v.boolean())` |
+| `tutorialState` | optional object | Tour state (seen, steps, timestamps) | `v.optional(v.object({...}))` |
 | `settings` | optional object | Theme and notification preferences | `v.optional(v.object({...}))` |
 
 **Indexes**:
