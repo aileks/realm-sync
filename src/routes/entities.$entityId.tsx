@@ -20,6 +20,7 @@ import {
   Eye,
   EyeOff,
   Lock,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
@@ -36,6 +37,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { LoadingState } from '@/components/LoadingState';
 import { EmptyState } from '@/components/EmptyState';
 import { EntityNotesPanel } from '@/components/EntityNotesPanel';
@@ -88,6 +99,7 @@ function EntityDetailPage() {
   const navigate = useNavigate();
   const { entityId } = Route.useParams();
   const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const data = useQuery(api.entities.getWithDetails, {
     id: entityId as Id<'entities'>,
@@ -99,6 +111,22 @@ function EntityDetailPage() {
 
   const revealEntity = useMutation(api.entities.revealToPlayers);
   const hideEntity = useMutation(api.entities.hideFromPlayers);
+  const removeEntity = useMutation(api.entities.remove);
+
+  const isManuallyCreated = data ? !data.entity.firstMentionedIn : false;
+
+  const handleDelete = async () => {
+    if (!data) return;
+    try {
+      await removeEntity({ id: data.entity._id });
+      void navigate({
+        to: '/projects/$projectId/entities',
+        params: { projectId: data.entity.projectId },
+      });
+    } catch {
+      toast.error('Failed to delete entity');
+    }
+  };
 
   if (data === undefined) {
     return <LoadingState message="Loading entity..." />;
@@ -147,6 +175,8 @@ function EntityDetailPage() {
             entity={entity}
             config={config}
             onEdit={() => setIsEditing(true)}
+            onDelete={() => setShowDeleteDialog(true)}
+            isManuallyCreated={isManuallyCreated}
             isTtrpgProject={isTtrpgProject}
             onReveal={() => revealEntity({ entityId: entity._id })}
             onHide={() => hideEntity({ entityId: entity._id })}
@@ -168,6 +198,25 @@ function EntityDetailPage() {
               <RelatedEntitiesCard entities={relatedEntities} projectId={projectId} />
             </div>
           </div>
+
+          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Entity?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Deleting "{entity.name}" may cause continuity inconsistencies in your canon. Facts
+                  linked to this entity will become orphaned. You can restore consistency by running
+                  a new extraction on your documents.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction variant="destructive" onClick={handleDelete}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       }
     </div>
@@ -178,6 +227,8 @@ type EntityHeaderProps = {
   entity: Doc<'entities'>;
   config: (typeof typeConfig)[EntityType];
   onEdit: () => void;
+  onDelete?: () => void;
+  isManuallyCreated?: boolean;
   isTtrpgProject?: boolean;
   onReveal?: () => void;
   onHide?: () => void;
@@ -187,6 +238,8 @@ function EntityHeader({
   entity,
   config,
   onEdit,
+  onDelete,
+  isManuallyCreated,
   isTtrpgProject,
   onReveal,
   onHide,
@@ -263,6 +316,16 @@ function EntityHeader({
           <Pencil className="mr-2 size-4" />
           Edit
         </Button>
+        {isManuallyCreated && onDelete && (
+          <Button
+            variant="outline"
+            onClick={onDelete}
+            className="text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="mr-2 size-4" />
+            Delete
+          </Button>
+        )}
       </div>
     </div>
   );

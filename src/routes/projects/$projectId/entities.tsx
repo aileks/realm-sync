@@ -184,7 +184,7 @@ function EntitiesPage() {
             to="/entities/$entityId"
             params={{ entityId: entity._id }}
             search={{ project: projectId }}
-            className="block"
+            className="block w-full"
           >
             <EntityCard
               entity={entity}

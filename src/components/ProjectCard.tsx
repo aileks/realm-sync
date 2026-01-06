@@ -44,15 +44,15 @@ export function ProjectCard({ project, onEdit, onDelete, onShare: _onShare }: Pr
   };
 
   return (
-    <Link to="/projects/$projectId" params={{ projectId: project._id }} className="block">
-      <Card className="group hover:ring-primary/20 transition-all duration-200 hover:ring-2">
+    <Link to="/projects/$projectId" params={{ projectId: project._id }} className="block h-full">
+      <Card className="group hover:ring-primary/20 flex h-full flex-col transition-all duration-200 hover:ring-2">
         <CardHeader>
           <CardTitle className="group-hover:text-primary font-serif text-lg transition-colors">
             {project.name}
           </CardTitle>
-          {project.description && (
-            <CardDescription className="line-clamp-2">{project.description}</CardDescription>
-          )}
+          <CardDescription className="line-clamp-2 min-h-[2.5rem]">
+            {project.description || '\u00A0'}
+          </CardDescription>
           <CardAction>
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -86,7 +86,7 @@ export function ProjectCard({ project, onEdit, onDelete, onShare: _onShare }: Pr
             </DropdownMenu>
           </CardAction>
         </CardHeader>
-        <CardContent>
+        <CardContent className="mt-auto">
           <div className="flex flex-wrap gap-2">
             <StatBadge icon={FileText} count={stats.documentCount} label="docs" />
             <StatBadge

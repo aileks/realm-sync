@@ -1,4 +1,4 @@
-import { Check, X, Quote, ArrowRight } from 'lucide-react';
+import { Check, X, Quote, ArrowRight, Trash2 } from 'lucide-react';
 import { Card, CardHeader, CardAction } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ type FactCardProps = {
   fact: Fact;
   onConfirm: (id: Id<'facts'>) => void;
   onReject: (id: Id<'facts'>) => void;
+  onDelete?: (id: Id<'facts'>) => void;
   onHighlight?: (position: { start: number; end: number } | undefined) => void;
 };
 
@@ -37,8 +38,9 @@ function getStatusStyle(status: string): string {
   }
 }
 
-export function FactCard({ fact, onConfirm, onReject, onHighlight }: FactCardProps) {
+export function FactCard({ fact, onConfirm, onReject, onDelete, onHighlight }: FactCardProps) {
   const confidencePercent = Math.round(fact.confidence * 100);
+  const isManuallyCreated = !fact.documentId;
 
   return (
     <Card
@@ -98,26 +100,41 @@ export function FactCard({ fact, onConfirm, onReject, onHighlight }: FactCardPro
             </div>
           </div>
 
-          {fact.status === 'pending' && (
+          {(fact.status === 'pending' || (isManuallyCreated && onDelete)) && (
             <CardAction className="flex shrink-0 gap-1 opacity-80 transition-opacity group-hover:opacity-100">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-muted-foreground size-8 p-0 hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400"
-                onClick={() => onConfirm(fact._id)}
-                title="Confirm fact"
-              >
-                <Check className="size-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-8 p-0"
-                onClick={() => onReject(fact._id)}
-                title="Reject fact"
-              >
-                <X className="size-4" />
-              </Button>
+              {fact.status === 'pending' && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground size-8 p-0 hover:bg-green-500/10 hover:text-green-600 dark:hover:text-green-400"
+                    onClick={() => onConfirm(fact._id)}
+                    title="Confirm fact"
+                  >
+                    <Check className="size-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-8 p-0"
+                    onClick={() => onReject(fact._id)}
+                    title="Reject fact"
+                  >
+                    <X className="size-4" />
+                  </Button>
+                </>
+              )}
+              {isManuallyCreated && onDelete && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive size-8 p-0"
+                  onClick={() => onDelete(fact._id)}
+                  title="Delete fact"
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
             </CardAction>
           )}
         </div>

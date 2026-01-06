@@ -28,7 +28,7 @@ export function EntityNotesPanel({ entityId, className }: EntityNotesPanelProps)
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
-          <Button variant="outline" size="sm" className={className}>
+          <Button variant="outline" className={className}>
             <StickyNote className="mr-2 size-4" />
             Notes
           </Button>
