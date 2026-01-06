@@ -533,6 +533,61 @@ For TTRPG projects, entity rows show reveal status:
 
 Toggle via row action menu: "Reveal to Players" / "Hide from Players"
 
+### Export Integration
+
+Add `mode` parameter to project export for player-safe exports:
+
+```typescript
+export const exportProject = action({
+  args: {
+    projectId: v.id('projects'),
+    format: v.union(v.literal('json'), v.literal('markdown')),
+    mode: v.optional(
+      v.union(
+        v.literal('full'), // Everything (default)
+        v.literal('player-safe') // Only revealed entities/facts
+      )
+    ),
+  },
+  handler: async (ctx, { projectId, format, mode = 'full' }) => {
+    const userId = await requireAuth(ctx);
+    await verifyProjectOwnership(ctx, projectId, userId);
+
+    const project = await ctx.db.get(projectId);
+    let entities = await ctx.db
+      .query('entities')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .collect();
+
+    // Filter for player-safe export on TTRPG projects
+    if (mode === 'player-safe' && project?.projectType === 'ttrpg') {
+      entities = entities.filter(
+        (e) => e.status === 'confirmed' && e.revealedToViewers === true
+      );
+    }
+
+    // ... build export
+  },
+});
+```
+
+**UX:** Export dialog shows mode toggle for TTRPG projects:
+
+```
+┌─────────────────────────────────────────────────┐
+│ Export Project                                  │
+├─────────────────────────────────────────────────┤
+│ Format: [JSON ▼]                                │
+│                                                 │
+│ ☐ Player-safe export                           │
+│   Only include revealed entities and facts     │
+│                                                 │
+│                   [Cancel]  [Export]            │
+└─────────────────────────────────────────────────┘
+```
+
+DMs can then share the exported file via email, Discord, etc.
+
 ### Implementation Order
 
 1. **Schema changes** - Add `projectType` to projects, `revealedToViewers` to entities, `projectModes` to user settings
