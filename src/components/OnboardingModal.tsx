@@ -171,26 +171,15 @@ export function OnboardingModal() {
         {step.id === 'project-modes' && (
           <div className="grid max-h-[60vh] grid-cols-1 gap-2 overflow-y-auto py-2">
             {PROJECT_MODES.map((mode) => (
-              <div
+              <button
+                type="button"
                 key={mode.id}
-                role="button"
-                tabIndex={0}
                 onClick={() => {
                   setSelectedModes((prev) =>
                     prev.includes(mode.id) ?
                       prev.filter((id) => id !== mode.id)
                     : [...prev, mode.id]
                   );
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setSelectedModes((prev) =>
-                      prev.includes(mode.id) ?
-                        prev.filter((id) => id !== mode.id)
-                      : [...prev, mode.id]
-                    );
-                  }
                 }}
                 className={cn(
                   'hover:bg-accent flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-all',
@@ -213,7 +202,7 @@ export function OnboardingModal() {
                   <span className="text-sm leading-none font-medium">{mode.label}</span>
                   <span className="text-muted-foreground text-xs">{mode.description}</span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
