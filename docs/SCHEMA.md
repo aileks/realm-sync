@@ -24,6 +24,7 @@ The following diagram illustrates the primary relationships between tables in th
 ```mermaid
 erDiagram
     users ||--o{ projects : owns
+    users ||--o{ chatMessages : sends
     projects ||--o{ documents : contains
     projects ||--o{ entities : tracks
     projects ||--o{ facts : contains
@@ -73,6 +74,7 @@ World or campaign containers. Each user can manage multiple isolated canons.
 | `description` | `v.optional(v.string())` | Brief overview of the project. |
 | `createdAt` | `v.number()` | Creation timestamp. |
 | `updatedAt` | `v.number()` | Last modification timestamp. |
+| `isTutorial` | `v.optional(v.boolean())` | Marks demo/tutorial projects. |
 | `stats` | `v.optional(v.object({...}))` | Cached counts: `documentCount`, `noteCount`, `entityCount`, `factCount`, `alertCount`. |
 
 **Indexes:**
@@ -235,6 +237,23 @@ Cache for LLM responses to optimize costs and performance.
 **Indexes:**
 
 - `by_hash`: `["inputHash", "promptVersion"]` (Cache lookup)
+
+---
+
+### `chatMessages`
+
+Vellum AI chat message history for each user.
+
+| Field       | Type            | Description                |
+| :---------- | :-------------- | :------------------------- |
+| `userId`    | `v.id("users")` | Reference to the user.     |
+| `role`      | `v.union(...)`  | `"user"` or `"assistant"`. |
+| `content`   | `v.string()`    | Message content.           |
+| `createdAt` | `v.number()`    | Message timestamp.         |
+
+**Indexes:**
+
+- `by_user`: `["userId", "createdAt"]` (Ordered message history per user)
 
 ---
 

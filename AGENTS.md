@@ -4,7 +4,7 @@ read_when: starting any work on this codebase
 
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-01-05 **Commit:** 710a8fd **Branch:** main
+**Generated:** 2026-01-06 **Commit:** bedcb4d **Branch:** main
 
 Be extremely concise. Sacrifice grammar for concision.
 
@@ -66,6 +66,12 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | `AlertFilters` | `src/components/AlertFilters.tsx` | Filter buttons for alerts (status/type/severity) |
 | `runCheck` | `convex/checks.ts` | Continuity check pipeline action |
 | `createAlerts` | `convex/checks.ts` | Batch insert alerts from check results |
+| `TutorialTour` | `src/components/TutorialTour.tsx` | Interactive tutorial overlay with step-by-step guidance |
+| `VellumChat` | `src/components/VellumChat.tsx` | AI chat interface with streaming responses |
+| `CommandPalette` | `src/components/CommandPalette.tsx` | Cmd+K command palette for navigation |
+| `KeyboardShortcutsProvider` | `src/components/KeyboardShortcuts.tsx` | Global keyboard shortcut handling |
+| `OnboardingModal` | `src/components/OnboardingModal.tsx` | New user onboarding modal |
+| `seedTutorialProject` | `convex/tutorial.ts` | Creates demo "The Verdant Realm" project |
 
 ## CONVENTIONS
 
@@ -108,7 +114,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 pnpm dev              # Dev server (port 3000, Sentry injected)
 pnpm run build        # Production build
 pnpm run start        # Production server
-pnpm test             # Vitest (242 tests)
+pnpm test             # Vitest (243 tests)
 pnpm run lint         # Oxlint with --fix, --type-aware
 pnpm run typecheck    # tsc --noEmit
 pnpm run format       # Prettier (with Tailwind plugin)
@@ -131,7 +137,7 @@ pnpm docs:list        # List docs with front-matter check
 | Core routing  | Working | TanStack Start file-based + SSR               |
 | Backend       | Working | Convex schema, auth, CRUD                     |
 | UI components | Ready   | 17 Shadcn/Base UI primitives                  |
-| Testing       | Working | Vitest + convex-test, 242 passing             |
+| Testing       | Working | Vitest + convex-test, 243 passing             |
 | CI/CD         | Working | 4 parallel jobs: lint, typecheck, test, build |
 | Auth          | Working | Google OAuth + Password                       |
 | Themes        | Ready   | 3 OKLCH themes in styles.css                  |

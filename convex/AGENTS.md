@@ -30,6 +30,7 @@ convex/
 ├── entities.ts      # Entity CRUD + merge + timeline + relationship graph (844 lines)
 ├── facts.ts         # Fact CRUD + confirm/reject
 ├── chat.ts          # Vellum streaming chat (sendMessage, streamChat httpAction)
+├── chatHistory.ts   # Chat message persistence (list, send, clear)
 ├── http.ts          # HTTP router for auth + chat endpoints
 ├── cleanup.ts       # Scheduled cleanup jobs
 ├── crons.ts         # Cron job definitions
@@ -37,6 +38,7 @@ convex/
 ├── schema.ts        # Table definitions (defineSchema, defineTable)
 ├── seed.ts          # Demo data seeding (seedDemoData, clearSeedData) - 811 lines
 ├── storage.ts       # File upload/download
+├── tutorial.ts      # Tutorial project seeding (seedTutorialProject, hasTutorialProject)
 ├── users.ts         # User query (viewer)
 └── tsconfig.json    # Convex-specific TS config
 ```
@@ -59,11 +61,12 @@ convex/
 | Table | Key Fields | Notes |
 | --- | --- | --- |
 | `users` | name, email, settings | Extended from Convex Auth |
-| `projects` | userId, name, stats | User-owned projects |
+| `projects` | userId, name, stats, isTutorial | User-owned projects |
 | `documents` | projectId, title, content, processingStatus | Document storage |
 | `entities` | projectId, name, type, aliases, status | Canon entities (pending/confirmed) |
 | `facts` | projectId, entityId, subject, predicate, object, status | Canon facts (pending/confirmed/rejected) |
-| `alerts` | projectId, type, severity, status | Phase 4 placeholder |
+| `alerts` | projectId, type, severity, status | Continuity alerts (open/resolved/dismissed) |
+| `chatMessages` | userId, role, content | Vellum conversation history |
 | `llmCache` | inputHash, promptVersion, response | LLM response caching (7-day TTL) |
 
 ## AUTH PATTERNS
