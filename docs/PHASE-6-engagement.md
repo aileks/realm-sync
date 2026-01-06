@@ -1,5 +1,5 @@
 ---
-summary: User engagement features including Vellum AI assistant, interactive tutorials, project sharing, project categories, user profiles, and monetization.
+summary: User engagement features including Vellum AI assistant, interactive tutorials, project sharing, project categories, notes, user profiles, and monetization.
 read_when:
   [
     engagement,
@@ -19,6 +19,8 @@ read_when:
     fiction,
     fanfic,
     reveal,
+    notes,
+    annotations,
   ]
 ---
 
@@ -47,6 +49,7 @@ Phase 6 transforms Realm Sync from a tool into an experience. The Vellum moth ma
 | Project Sharing (Backend) | Complete | `projectShares.ts`, `projectAccess.ts`, role-based access |
 | Project Sharing (UI) | Pending | ShareProjectDialog, shared projects list |
 | Project Categories | Pending | TTRPG/Fiction/Game Design/General modes + reveal mechanics |
+| Notes | Pending | Project-level and entity-level private notes |
 | User Profiles | Pending | Email/password change, bio, avatar uploads via Convex storage |
 | Polar.sh Integration | Pending | Sponsorship, funding, premium features |
 
@@ -557,7 +560,332 @@ Toggle via row action menu: "Reveal to Players" / "Hide from Players"
 
 ---
 
-## 5. User Profiles
+## 5. Notes
+
+Private notes for project-level and entity-level annotations. Owner-only visibility.
+
+### Use Cases
+
+| Use Case           | Example                                                 |
+| ------------------ | ------------------------------------------------------- |
+| Session notes      | DM session prep, post-session recap                     |
+| Writing notes      | Plot outlines, character backstory drafts               |
+| World notes        | Lore ideas not ready for documents                      |
+| Entity annotations | Private notes attached to specific characters/locations |
+
+### Data Model
+
+#### Project Notes
+
+General notes within a project:
+
+```typescript
+notes: defineTable({
+  projectId: v.id('projects'),
+  userId: v.id('users'),
+  title: v.string(),
+  content: v.string(),
+  tags: v.optional(v.array(v.string())),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index('by_project', ['projectId', 'updatedAt'])
+  .index('by_user', ['userId'])
+  .searchIndex('search_content', {
+    searchField: 'content',
+    filterFields: ['projectId'],
+  });
+```
+
+#### Entity Notes
+
+Annotations attached to specific entities:
+
+```typescript
+entityNotes: defineTable({
+  entityId: v.id('entities'),
+  projectId: v.id('projects'),
+  userId: v.id('users'),
+  content: v.string(),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+})
+  .index('by_entity', ['entityId', 'updatedAt'])
+  .index('by_project', ['projectId']);
+```
+
+### Backend Functions
+
+#### Project Notes
+
+```typescript
+// convex/notes.ts
+export const list = query({
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }) => {
+    const userId = await requireAuth(ctx);
+    await verifyProjectOwnership(ctx, projectId, userId);
+
+    return ctx.db
+      .query('notes')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .order('desc')
+      .collect();
+  },
+});
+
+export const create = mutation({
+  args: {
+    projectId: v.id('projects'),
+    title: v.string(),
+    content: v.string(),
+    tags: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    await verifyProjectOwnership(ctx, args.projectId, userId);
+
+    return ctx.db.insert('notes', {
+      ...args,
+      userId,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id('notes'),
+    title: v.optional(v.string()),
+    content: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, { id, ...updates }) => {
+    const userId = await requireAuth(ctx);
+    const note = await ctx.db.get(id);
+    if (!note || note.userId !== userId) {
+      throw new Error('Note not found');
+    }
+
+    await ctx.db.patch(id, { ...updates, updatedAt: Date.now() });
+  },
+});
+
+export const remove = mutation({
+  args: { id: v.id('notes') },
+  handler: async (ctx, { id }) => {
+    const userId = await requireAuth(ctx);
+    const note = await ctx.db.get(id);
+    if (!note || note.userId !== userId) {
+      throw new Error('Note not found');
+    }
+
+    await ctx.db.delete(id);
+  },
+});
+
+export const search = query({
+  args: {
+    projectId: v.id('projects'),
+    query: v.string(),
+  },
+  handler: async (ctx, { projectId, query }) => {
+    const userId = await requireAuth(ctx);
+    await verifyProjectOwnership(ctx, projectId, userId);
+
+    return ctx.db
+      .query('notes')
+      .withSearchIndex('search_content', (q) =>
+        q.search('content', query).eq('projectId', projectId)
+      )
+      .take(20);
+  },
+});
+```
+
+#### Entity Notes
+
+```typescript
+// convex/entityNotes.ts
+export const list = query({
+  args: { entityId: v.id('entities') },
+  handler: async (ctx, { entityId }) => {
+    const userId = await requireAuth(ctx);
+    const entity = await ctx.db.get(entityId);
+    if (!entity) return [];
+
+    await verifyProjectOwnership(ctx, entity.projectId, userId);
+
+    return ctx.db
+      .query('entityNotes')
+      .withIndex('by_entity', (q) => q.eq('entityId', entityId))
+      .order('desc')
+      .collect();
+  },
+});
+
+export const create = mutation({
+  args: {
+    entityId: v.id('entities'),
+    content: v.string(),
+  },
+  handler: async (ctx, { entityId, content }) => {
+    const userId = await requireAuth(ctx);
+    const entity = await ctx.db.get(entityId);
+    if (!entity) throw new Error('Entity not found');
+
+    await verifyProjectOwnership(ctx, entity.projectId, userId);
+
+    return ctx.db.insert('entityNotes', {
+      entityId,
+      projectId: entity.projectId,
+      userId,
+      content,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id('entityNotes'),
+    content: v.string(),
+  },
+  handler: async (ctx, { id, content }) => {
+    const userId = await requireAuth(ctx);
+    const note = await ctx.db.get(id);
+    if (!note || note.userId !== userId) {
+      throw new Error('Note not found');
+    }
+
+    await ctx.db.patch(id, { content, updatedAt: Date.now() });
+  },
+});
+
+export const remove = mutation({
+  args: { id: v.id('entityNotes') },
+  handler: async (ctx, { id }) => {
+    const userId = await requireAuth(ctx);
+    const note = await ctx.db.get(id);
+    if (!note || note.userId !== userId) {
+      throw new Error('Note not found');
+    }
+
+    await ctx.db.delete(id);
+  },
+});
+```
+
+### Frontend Components
+
+#### Routes
+
+```
+src/routes/
+├── projects_.$projectId_.notes.tsx        # Notes list
+├── projects_.$projectId_.notes.$noteId.tsx # Note detail/edit
+└── projects_.$projectId_.notes.new.tsx     # New note
+```
+
+#### Components
+
+```
+src/components/
+├── NoteCard.tsx          # Note preview card
+├── NoteEditor.tsx        # Markdown editor for notes
+├── NotesList.tsx         # Paginated notes list with search
+├── EntityNotesPanel.tsx  # Collapsible panel on entity detail page
+└── TagFilter.tsx         # Filter notes by tags
+```
+
+#### Entity Detail Integration
+
+Add notes panel to entity detail page (`entities.$entityId.tsx`):
+
+```typescript
+function EntityDetail() {
+  // ... existing code
+
+  return (
+    <div>
+      {/* Existing entity info */}
+      <EntityInfo entity={entity} />
+
+      {/* Notes panel */}
+      <EntityNotesPanel entityId={entity._id} />
+    </div>
+  );
+}
+```
+
+### UX Design
+
+#### Project Notes List
+
+```
+┌─────────────────────────────────────────────────┐
+│ Notes                              [+ New Note] │
+├─────────────────────────────────────────────────┤
+│ 🔍 Search notes...          [session] [plot] ▼ │
+├─────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────────┐ │
+│ │ Session 5 Prep                              │ │
+│ │ Dragon encounter, reveal crown location... │ │
+│ │ #session #prep         Updated 2 hours ago │ │
+│ └─────────────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────────────┐ │
+│ │ Aldric Backstory Draft                      │ │
+│ │ Born in the eastern provinces, trained...  │ │
+│ │ #character #backstory   Updated yesterday  │ │
+│ └─────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────┘
+```
+
+#### Entity Notes Panel
+
+Collapsible section on entity detail:
+
+```
+┌─────────────────────────────────────────────────┐
+│ ▼ Notes (2)                         [+ Add]    │
+├─────────────────────────────────────────────────┤
+│ "Remember to foreshadow his betrayal in Ch 4"  │
+│                              — Jan 5, 2026     │
+│ ─────────────────────────────────────────────── │
+│ "Voice: gruff, formal, slight accent"          │
+│                              — Jan 3, 2026     │
+└─────────────────────────────────────────────────┘
+```
+
+### Implementation Order
+
+1. **Schema** - Add `notes` and `entityNotes` tables
+2. **Backend** - CRUD mutations for both note types
+3. **Project notes UI** - List, create, edit, delete, search
+4. **Entity notes UI** - Panel on entity detail page
+5. **Navigation** - Add Notes to project sidebar
+
+### Testing Strategy
+
+**Backend:**
+
+- Only project owner can CRUD notes
+- Notes cascade delete when project deleted
+- Entity notes cascade delete when entity deleted
+- Search returns matching notes
+
+**Frontend:**
+
+- Notes list renders with search/filter
+- Create/edit form saves correctly
+- Entity notes panel shows on entity detail
+- Tags filter works
+
+---
+
+## 6. User Profiles
 
 Enable users to manage their account settings, profile information, and security credentials. This feature allows users to update their email, password, display name, bio, and profile picture using Convex's built-in file storage.
 
@@ -1186,7 +1514,7 @@ export function AvatarPicker() {
 
 ---
 
-## 5. Polar.sh Monetization
+## 7. Polar.sh Monetization
 
 Integrate [Polar.sh](https://polar.sh) for sustainable open-source funding.
 
@@ -1257,7 +1585,7 @@ const SPONSOR_GREETING =
 
 ---
 
-## 6. Testing & QA
+## 8. Testing & QA
 
 - **Vellum Chat:** Test context loading, response quality, error handling
 - **Tour Flow:** Verify all steps highlight correct elements
@@ -1268,7 +1596,7 @@ const SPONSOR_GREETING =
 
 ---
 
-## 7. Future Enhancements
+## 9. Future Enhancements
 
 - **Vellum Voice:** Text-to-speech for Vellum's responses
 - **Vellum Proactive:** Vellum suggests actions based on project state
