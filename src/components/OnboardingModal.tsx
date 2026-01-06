@@ -57,9 +57,11 @@ export function OnboardingModal() {
   const navigate = useNavigate();
   const user = useQuery(api.users.viewer);
   const completeOnboarding = useMutation(api.users.completeOnboarding);
+  const seedTutorialProject = useMutation(api.tutorial.seedTutorialProject);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isOpen, setIsOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const showOnboarding = user && !user.onboardingCompleted && isOpen;
 
@@ -70,14 +72,18 @@ export function OnboardingModal() {
 
   async function handleNext() {
     if (isLastStep) {
+      setIsLoading(true);
       try {
+        const { projectId } = await seedTutorialProject();
         await completeOnboarding();
         setIsOpen(false);
-        void navigate({ to: '/projects' });
+        void navigate({ to: '/projects/$projectId', params: { projectId } });
       } catch (error) {
         toast.error('Failed to complete onboarding', {
           description: error instanceof Error ? error.message : 'Please try again.',
         });
+      } finally {
+        setIsLoading(false);
       }
     } else {
       setCurrentStep((prev) => prev + 1);
@@ -85,13 +91,17 @@ export function OnboardingModal() {
   }
 
   async function handleSkip() {
+    setIsLoading(true);
     try {
       await completeOnboarding();
       setIsOpen(false);
+      void navigate({ to: '/projects' });
     } catch (error) {
       toast.error('Failed to skip onboarding', {
         description: error instanceof Error ? error.message : 'Please try again.',
       });
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -129,14 +139,19 @@ export function OnboardingModal() {
         </AlertDialogHeader>
 
         <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button onClick={handleNext} className="w-full">
-            {isLastStep ? "Let's Begin" : 'Next'}
-            <ArrowRight className="ml-2 size-4" />
+          <Button onClick={handleNext} className="w-full" disabled={isLoading}>
+            {isLoading ?
+              'Setting up...'
+            : isLastStep ?
+              "Let's Begin"
+            : 'Next'}
+            {!isLoading && <ArrowRight className="ml-2 size-4" />}
           </Button>
           {!isLastStep && (
             <button
               onClick={handleSkip}
-              className="text-muted-foreground hover:text-foreground text-sm"
+              disabled={isLoading}
+              className="text-muted-foreground hover:text-foreground text-sm disabled:opacity-50"
             >
               Skip introduction
             </button>

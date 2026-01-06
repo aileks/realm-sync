@@ -7,11 +7,16 @@ vi.mock('@tanstack/react-router', () => ({
 }));
 
 const mockCompleteOnboarding = vi.fn();
+const mockSeedTutorialProject = vi.fn();
 const mockUser = vi.fn();
 
 vi.mock('convex/react', () => ({
   useQuery: () => mockUser(),
-  useMutation: () => mockCompleteOnboarding,
+  useMutation: (mutationRef: string) => {
+    if (mutationRef === 'users.completeOnboarding') return mockCompleteOnboarding;
+    if (mutationRef === 'tutorial.seedTutorialProject') return mockSeedTutorialProject;
+    return vi.fn();
+  },
 }));
 
 vi.mock('../../convex/_generated/api', () => ({
@@ -19,6 +24,9 @@ vi.mock('../../convex/_generated/api', () => ({
     users: {
       viewer: 'users.viewer',
       completeOnboarding: 'users.completeOnboarding',
+    },
+    tutorial: {
+      seedTutorialProject: 'tutorial.seedTutorialProject',
     },
   },
 }));
@@ -36,6 +44,10 @@ describe('OnboardingModal', () => {
     vi.clearAllMocks();
     mockUser.mockReturnValue({ onboardingCompleted: false });
     mockCompleteOnboarding.mockResolvedValue(undefined);
+    mockSeedTutorialProject.mockResolvedValue({
+      projectId: 'test-project-id',
+      alreadyExists: false,
+    });
   });
 
   describe('error handling', () => {

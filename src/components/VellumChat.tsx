@@ -135,7 +135,7 @@ export function VellumChat() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [allMessages, isLoading, currentStreamId]);
+  }, [dbMessages.length, localMessages.length, isLoading, currentStreamId]);
 
   const handleStreamComplete = async (content: string) => {
     if (!pendingAssistantId) return;
