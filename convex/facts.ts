@@ -3,7 +3,8 @@ import { paginationOptsValidator } from 'convex/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
-import { getAuthUserId, requireAuth } from './lib/auth';
+import { requireAuth } from './lib/auth';
+import { getProjectRole } from './lib/projectAccess';
 import { ok, err, authError, notFoundError } from './lib/errors';
 import type { AppError, Result } from './lib/errors';
 import { unwrapOrThrow } from './lib/result';
@@ -22,14 +23,13 @@ const temporalBoundValidator = v.object({
 async function verifyProjectOwnership(
   ctx: QueryCtx | MutationCtx,
   projectId: Id<'projects'>
-): Promise<boolean> {
-  const userId = await getAuthUserId(ctx);
-  if (!userId) return false;
-
-  const project = await ctx.db.get(projectId);
-  if (!project) return false;
-
-  return project.userId === userId;
+): Promise<{ canRead: boolean; canEdit: boolean; isViewer: boolean }> {
+  const role = await getProjectRole(ctx, projectId);
+  return {
+    canRead: role !== null,
+    canEdit: role === 'owner' || role === 'editor',
+    isViewer: role === 'viewer',
+  };
 }
 
 async function verifyProjectAccess(
@@ -199,8 +199,16 @@ export const listByEntity = query({
     const entity = await ctx.db.get(entityId);
     if (!entity) return [];
 
-    const isOwner = await verifyProjectOwnership(ctx, entity.projectId);
-    if (!isOwner) return [];
+    const access = await verifyProjectOwnership(ctx, entity.projectId);
+    if (!access.canRead) return [];
+
+    // Viewers only see confirmed facts
+    if (access.isViewer) {
+      return await ctx.db
+        .query('facts')
+        .withIndex('by_entity', (q) => q.eq('entityId', entityId).eq('status', 'confirmed'))
+        .collect();
+    }
 
     if (status) {
       return await ctx.db
@@ -219,8 +227,8 @@ export const listByEntity = query({
 export const listPending = query({
   args: { projectId: v.id('projects') },
   handler: async (ctx, { projectId }) => {
-    const isOwner = await verifyProjectOwnership(ctx, projectId);
-    if (!isOwner) return [];
+    const access = await verifyProjectOwnership(ctx, projectId);
+    if (!access.canEdit) return [];
 
     return await ctx.db
       .query('facts')
@@ -235,13 +243,19 @@ export const listByDocument = query({
     const doc = await ctx.db.get(documentId);
     if (!doc) return [];
 
-    const isOwner = await verifyProjectOwnership(ctx, doc.projectId);
-    if (!isOwner) return [];
+    const access = await verifyProjectOwnership(ctx, doc.projectId);
+    if (!access.canRead) return [];
 
-    return await ctx.db
+    let facts = await ctx.db
       .query('facts')
       .withIndex('by_document', (q) => q.eq('documentId', documentId))
       .collect();
+
+    if (access.isViewer) {
+      facts = facts.filter((f) => f.status === 'confirmed');
+    }
+
+    return facts;
   },
 });
 
@@ -251,8 +265,16 @@ export const listByProject = query({
     status: v.optional(factStatusValidator),
   },
   handler: async (ctx, { projectId, status }) => {
-    const isOwner = await verifyProjectOwnership(ctx, projectId);
-    if (!isOwner) return [];
+    const access = await verifyProjectOwnership(ctx, projectId);
+    if (!access.canRead) return [];
+
+    // Viewers forced to confirmed only
+    if (access.isViewer) {
+      return await ctx.db
+        .query('facts')
+        .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('status', 'confirmed'))
+        .collect();
+    }
 
     if (status) {
       return await ctx.db
@@ -275,15 +297,17 @@ export const listByProjectPaginated = query({
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, { projectId, status, paginationOpts }) => {
-    const isOwner = await verifyProjectOwnership(ctx, projectId);
-    if (!isOwner) {
+    const access = await verifyProjectOwnership(ctx, projectId);
+    if (!access.canRead) {
       return { page: [], isDone: true, continueCursor: '' };
     }
 
-    if (status) {
+    const effectiveStatus = access.isViewer ? 'confirmed' : status;
+
+    if (effectiveStatus) {
       return await ctx.db
         .query('facts')
-        .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('status', status))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('status', effectiveStatus))
         .paginate(paginationOpts);
     }
 
@@ -300,8 +324,10 @@ export const get = query({
     const fact = await ctx.db.get(id);
     if (!fact) return null;
 
-    const isOwner = await verifyProjectOwnership(ctx, fact.projectId);
-    if (!isOwner) return null;
+    const access = await verifyProjectOwnership(ctx, fact.projectId);
+    if (!access.canRead) return null;
+
+    if (access.isViewer && fact.status !== 'confirmed') return null;
 
     return fact;
   },

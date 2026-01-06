@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ProjectCard } from '@/components/ProjectCard';
 import { ProjectForm } from '@/components/ProjectForm';
+// ShareProjectDialog hidden until MVP
+// import { ShareProjectDialog } from '@/components/ShareProjectDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 
@@ -29,6 +31,7 @@ function ProjectsPage() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const projects = useQuery(api.projects.list);
+  const sharedProjects = useQuery(api.projects.listSharedWithMe);
   const deleteProject = useMutation(api.projects.remove);
 
   const [editingProject, setEditingProject] = useState<
@@ -38,6 +41,8 @@ function ProjectsPage() {
     _id: Id<'projects'>;
     name: string;
   } | null>(null);
+  // Sharing state kept for post-MVP feature
+  const [_sharingProjectId, _setSharingProjectId] = useState<Id<'projects'> | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -45,7 +50,7 @@ function ProjectsPage() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  if (authLoading || projects === undefined) {
+  if (authLoading || projects === undefined || sharedProjects === undefined) {
     return <LoadingState message="Loading projects..." />;
   }
 
@@ -91,10 +96,27 @@ function ProjectsPage() {
               onDelete={(p: (typeof projects)[number]) =>
                 setDeletingProject({ _id: p._id, name: p.name })
               }
+              onShare={(p: (typeof projects)[number]) => _setSharingProjectId(p._id)}
             />
           ))}
         </div>
       }
+
+      {/* Shared projects section hidden until MVP - keeping code for post-MVP
+      {sharedProjects.length > 0 && (
+        <div className="mt-10">
+          <div className="mb-4 flex items-center gap-2">
+            <Users className="text-muted-foreground size-5" />
+            <h2 className="font-serif text-xl font-semibold">Shared with me</h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {sharedProjects.map((project) => (
+              <ProjectCard key={project._id} project={project} />
+            ))}
+          </div>
+        </div>
+      )}
+      */}
 
       <AlertDialog
         open={!!editingProject}
@@ -134,6 +156,16 @@ function ProjectsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ShareProjectDialog hidden until MVP - keeping code for post-MVP
+      {sharingProjectId && (
+        <ShareProjectDialog
+          projectId={sharingProjectId}
+          open={true}
+          onOpenChange={(isOpen: boolean) => !isOpen && setSharingProjectId(null)}
+        />
+      )}
+      */}
     </div>
   );
 }

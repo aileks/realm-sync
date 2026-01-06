@@ -2,9 +2,10 @@ import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
-import { getAuthUserId, requireAuth } from './lib/auth';
+import { requireAuth } from './lib/auth';
 import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
 import { unwrapOrThrow } from './lib/result';
+import { canReadProject, canEditProject } from './lib/projectAccess';
 
 const contentTypeValidator = v.union(v.literal('text'), v.literal('markdown'), v.literal('file'));
 
@@ -53,11 +54,8 @@ async function verifyDocumentAccess(
 export const list = query({
   args: { projectId: v.id('projects') },
   handler: async (ctx, { projectId }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    const project = await ctx.db.get(projectId);
-    if (!project || project.userId !== userId) return [];
+    const canRead = await canReadProject(ctx, projectId);
+    if (!canRead) return [];
 
     return await ctx.db
       .query('documents')
@@ -72,11 +70,8 @@ export const get = query({
     const doc = await ctx.db.get(id);
     if (!doc) return null;
 
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return null;
-
-    const project = await ctx.db.get(doc.projectId);
-    if (!project || project.userId !== userId) return null;
+    const canRead = await canReadProject(ctx, doc.projectId);
+    if (!canRead) return null;
 
     return doc;
   },
@@ -232,11 +227,8 @@ export const search = query({
     query: v.string(),
   },
   handler: async (ctx, { projectId, query: searchQuery }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    const project = await ctx.db.get(projectId);
-    if (!project || project.userId !== userId) return [];
+    const canRead = await canReadProject(ctx, projectId);
+    if (!canRead) return [];
 
     return await ctx.db
       .query('documents')
@@ -250,11 +242,8 @@ export const search = query({
 export const listNeedingReview = query({
   args: { projectId: v.id('projects') },
   handler: async (ctx, { projectId }) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    const project = await ctx.db.get(projectId);
-    if (!project || project.userId !== userId) return [];
+    const canEdit = await canEditProject(ctx, projectId);
+    if (!canEdit) return [];
 
     const completedDocs = await ctx.db
       .query('documents')

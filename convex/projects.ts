@@ -5,6 +5,7 @@ import { mutation, query } from './_generated/server';
 import { getAuthUserId, requireAuth } from './lib/auth';
 import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
 import { unwrapOrThrow } from './lib/result';
+import { getProjectRole, canReadProject } from './lib/projectAccess';
 
 async function verifyProjectAccess(
   ctx: MutationCtx,
@@ -35,14 +36,40 @@ export const list = query({
   },
 });
 
+export const listSharedWithMe = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const shares = await ctx.db
+      .query('projectShares')
+      .withIndex('by_user', (q) => q.eq('sharedWithUserId', userId))
+      .filter((q) => q.neq(q.field('acceptedAt'), undefined))
+      .collect();
+
+    const projectsWithRole = await Promise.all(
+      shares.map(async (share) => {
+        const project = await ctx.db.get(share.projectId);
+        if (!project) return null;
+        return { ...project, role: share.role };
+      })
+    );
+
+    return projectsWithRole.filter(Boolean) as (Doc<'projects'> & {
+      role: 'editor' | 'viewer';
+    })[];
+  },
+});
+
 export const get = query({
   args: { id: v.id('projects') },
   handler: async (ctx, { id }) => {
     const project = await ctx.db.get(id);
     if (!project) return null;
 
-    const userId = await getAuthUserId(ctx);
-    if (project.userId !== userId) return null;
+    const canRead = await canReadProject(ctx, id);
+    if (!canRead) return null;
 
     return project;
   },
@@ -178,12 +205,11 @@ export const updateStats = mutation({
 export const getCanonStats = query({
   args: { projectId: v.id('projects') },
   handler: async (ctx, { projectId }) => {
-    const userId = await getAuthUserId(ctx);
-    const project = await ctx.db.get(projectId);
+    const role = await getProjectRole(ctx, projectId);
+    if (!role) return null;
 
-    if (!project || project.userId !== userId) {
-      return null;
-    }
+    const project = await ctx.db.get(projectId);
+    if (!project) return null;
 
     const confirmedEntities = await ctx.db
       .query('entities')
