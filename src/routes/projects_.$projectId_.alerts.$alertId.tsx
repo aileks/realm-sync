@@ -47,6 +47,10 @@ const severityConfig: Record<AlertSeverity, { badge: string; label: string }> = 
   },
 };
 
+function formatPredicate(predicate: string): string {
+  return predicate.replace(/_/g, ' ');
+}
+
 function AlertDetailPage() {
   const navigate = useNavigate();
   const { projectId, alertId } = Route.useParams();
@@ -136,7 +140,14 @@ function AlertDetailPage() {
   };
 
   const canonEvidence = alert.evidence.filter((e) => e.documentTitle === 'Canon');
-  const newDocEvidence = alert.evidence.filter((e) => e.documentTitle !== 'Canon');
+  const fallbackCanonEvidence =
+    canonEvidence.length > 0 ?
+      canonEvidence
+    : alert.evidence.filter((e) => e.documentId !== alert.documentId);
+  const newDocEvidence =
+    canonEvidence.length > 0 ?
+      alert.evidence.filter((e) => e.documentTitle !== 'Canon')
+    : alert.evidence.filter((e) => e.documentId === alert.documentId);
 
   return (
     <div className="container mx-auto p-6">
@@ -219,14 +230,19 @@ function AlertDetailPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {canonEvidence.length > 0 ?
-              canonEvidence.map((evidence, idx) => (
+            {fallbackCanonEvidence.length > 0 ?
+              fallbackCanonEvidence.map((evidence, idx) => (
                 <div
                   key={idx}
                   className="border-border/50 bg-muted/30 relative rounded-lg border p-4 pl-10"
                 >
                   <Quote className="text-muted-foreground/50 absolute top-4 left-4 size-4" />
                   <p className="font-mono text-sm leading-relaxed">"{evidence.snippet}"</p>
+                  {evidence.documentTitle !== 'Canon' && (
+                    <p className="text-muted-foreground/70 mt-2 text-xs">
+                      {evidence.documentTitle}
+                    </p>
+                  )}
                 </div>
               ))
             : <p className="text-muted-foreground text-sm italic">No canon evidence recorded.</p>}
@@ -301,7 +317,7 @@ function AlertDetailPage() {
                 {linkedFacts.map((fact) => (
                   <div key={fact._id} className="space-y-2">
                     <p className="text-muted-foreground text-xs">
-                      {fact.subject} {fact.predicate}{' '}
+                      {fact.subject} {formatPredicate(fact.predicate)}{' '}
                       <span className="line-through">{fact.object}</span>
                     </p>
                     <div className="flex gap-2">

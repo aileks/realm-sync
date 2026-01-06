@@ -18,6 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { Doc } from '../../convex/_generated/dataModel';
 
@@ -43,10 +44,23 @@ const statusConfig = {
   failed: { icon: AlertCircle, className: 'text-destructive' },
 };
 
+const statusCopy = {
+  pending: 'Pending extraction',
+  processing: 'Extracting facts...',
+  completed: 'Extraction complete',
+  failed: 'Extraction failed',
+};
+
 export function DocumentCard({ document, onClick, onEdit, onDelete }: DocumentCardProps) {
   const ContentTypeIcon = contentTypeIcons[document.contentType];
   const status = statusConfig[document.processingStatus];
   const StatusIcon = status.icon;
+  const statusMessage = statusCopy[document.processingStatus];
+  const statusIcon = (
+    <span className="inline-flex" tabIndex={0} aria-label={statusMessage}>
+      <StatusIcon className={cn('size-4', status.className)} />
+    </span>
+  );
 
   return (
     <Card
@@ -71,7 +85,10 @@ export function DocumentCard({ document, onClick, onEdit, onDelete }: DocumentCa
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <StatusIcon className={cn('size-4', status.className)} />
+            <Tooltip>
+              <TooltipTrigger render={statusIcon} />
+              <TooltipContent side="left">{statusMessage}</TooltipContent>
+            </Tooltip>
             <CardAction>
               <DropdownMenu>
                 <DropdownMenuTrigger

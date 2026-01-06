@@ -514,6 +514,30 @@ describe('alerts', () => {
     });
   });
 
+  describe('resolveWithCanonUpdate mutation', () => {
+    it('updates fact and document content', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { alertId, factId, documentId } = await setupProjectWithAlert(t, userId);
+
+      await asUser.mutation(api.alerts.resolveWithCanonUpdate, {
+        id: alertId,
+        factId,
+        newValue: 'brown eyes',
+      });
+
+      const fact = await t.run(async (ctx) => ctx.db.get(factId));
+      const doc = await t.run(async (ctx) => ctx.db.get(documentId));
+      const alert = await t.run(async (ctx) => ctx.db.get(alertId));
+
+      expect(fact?.object).toBe('brown eyes');
+      expect(fact?.evidenceSnippet).toBe('Marcus has brown eyes.');
+      expect(doc?.content).toBe('Marcus has brown eyes.');
+      expect(doc?.processingStatus).toBe('pending');
+      expect(alert?.status).toBe('resolved');
+    });
+  });
+
   describe('dismiss mutation', () => {
     it('changes status to dismissed', async () => {
       const t = convexTest(schema, getModules());
