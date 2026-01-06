@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useConvexAuth } from 'convex/react';
 import { useEffect } from 'react';
-import { BookOpen, Sparkles, Shield, Zap } from 'lucide-react';
+import { Sparkles, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/LoadingState';
 
@@ -27,9 +27,7 @@ function LandingPage() {
     <div className="vignette min-h-screen">
       <div className="container mx-auto px-4 py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="bg-primary/10 mx-auto mb-6 flex size-20 items-center justify-center rounded-full">
-            <BookOpen className="text-primary size-10" />
-          </div>
+          <img src="/logo.png" alt="Realm Sync" className="mx-auto size-32 rounded-full" />
 
           <h1 className="font-serif text-5xl font-bold tracking-tight">Realm Sync</h1>
 
