@@ -2,8 +2,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useState } from 'react';
 import { Plus, FileText, ArrowLeft } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -19,7 +19,7 @@ import { DocumentCard } from '@/components/DocumentCard';
 import { EmptyState } from '@/components/EmptyState';
 import { LoadingState } from '@/components/LoadingState';
 
-export const Route = createFileRoute('/projects_/$projectId_/documents/')({
+export const Route = createFileRoute('/projects/$projectId/documents/')({
   component: DocumentsPage,
 });
 

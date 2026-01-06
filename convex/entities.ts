@@ -93,6 +93,7 @@ export const create = mutation({
       entityCount: 0,
       factCount: 0,
       alertCount: 0,
+      noteCount: 0,
     };
     await ctx.db.patch(projectId, {
       updatedAt: now,
@@ -169,6 +170,7 @@ export const merge = mutation({
         entityCount: 0,
         factCount: 0,
         alertCount: 0,
+        noteCount: 0,
       };
       await ctx.db.patch(source.projectId, {
         updatedAt: Date.now(),
@@ -354,6 +356,7 @@ export const remove = mutation({
         entityCount: 0,
         factCount: 0,
         alertCount: 0,
+        noteCount: 0,
       };
       await ctx.db.patch(entity.projectId, {
         updatedAt: Date.now(),
@@ -443,6 +446,7 @@ export const reject = mutation({
         entityCount: 0,
         factCount: 0,
         alertCount: 0,
+        noteCount: 0,
       };
       await ctx.db.patch(entity.projectId, {
         updatedAt: Date.now(),

@@ -41,6 +41,7 @@ describe('tutorial.seedTutorialProject', () => {
       entityCount: 12,
       factCount: 10,
       alertCount: 2,
+      noteCount: 0,
     });
   });
 

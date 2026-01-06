@@ -3,8 +3,8 @@ import { useQuery, useMutation } from 'convex/react';
 import { useState, useMemo } from 'react';
 import { ArrowLeft, FileText, Users, List, CheckCircle2 } from 'lucide-react';
 import { marked } from 'marked';
-import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
+import { api } from '../../../../../convex/_generated/api';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -12,7 +12,7 @@ import { ReviewEntityCard } from '@/components/ReviewEntityCard';
 import { FactCard } from '@/components/FactCard';
 import { LoadingState } from '@/components/LoadingState';
 
-export const Route = createFileRoute('/projects_/$projectId_/review/$documentId')({
+export const Route = createFileRoute('/projects/$projectId/review/$documentId')({
   component: ReviewDocumentPage,
 });
 

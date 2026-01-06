@@ -10,7 +10,7 @@ type AuthError = {
 
 type NotFoundError = {
   type: 'NOT_FOUND';
-  resource: 'project' | 'document' | 'entity' | 'fact' | 'user' | 'alert';
+  resource: 'project' | 'document' | 'entity' | 'fact' | 'user' | 'alert' | 'note' | 'entityNote';
   id: string;
 };
 

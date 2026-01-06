@@ -22,6 +22,7 @@ import {
   ScrollText,
   AlertTriangle,
   Home,
+  StickyNote,
 } from 'lucide-react';
 import { VellumButton } from '@/components/Vellum';
 import { RecentProjects } from '@/components/RecentProjects';
@@ -151,6 +152,19 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               </p>
             )}
 
+            <ProjectNavItem projectId={projectId} to="canon" icon={BookOpen} collapsed={collapsed}>
+              Canon Browser
+            </ProjectNavItem>
+
+            <ProjectNavItem
+              projectId={projectId}
+              to="notes"
+              icon={StickyNote}
+              collapsed={collapsed}
+            >
+              Project Notes
+            </ProjectNavItem>
+
             <ProjectNavItem
               projectId={projectId}
               to="documents"
@@ -158,10 +172,6 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
               collapsed={collapsed}
             >
               Documents
-            </ProjectNavItem>
-
-            <ProjectNavItem projectId={projectId} to="canon" icon={BookOpen} collapsed={collapsed}>
-              Canon Browser
             </ProjectNavItem>
 
             <ProjectNavItem projectId={projectId} to="entities" icon={Users} collapsed={collapsed}>
@@ -336,7 +346,7 @@ function NavItem({ to, icon: Icon, children, collapsed }: NavItemProps) {
 
 type ProjectNavItemProps = {
   projectId: string;
-  to: 'documents' | 'canon' | 'entities' | 'facts' | 'alerts' | 'review';
+  to: 'documents' | 'canon' | 'entities' | 'facts' | 'alerts' | 'review' | 'notes';
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
@@ -350,6 +360,7 @@ const projectRoutes = {
   facts: '/projects/$projectId/facts',
   alerts: '/projects/$projectId/alerts',
   review: '/projects/$projectId/review',
+  notes: '/projects/$projectId/notes',
 } as const;
 
 function ProjectNavItem({

@@ -147,6 +147,7 @@ describe('projects', () => {
         entityCount: 0,
         factCount: 0,
         alertCount: 0,
+        noteCount: 0,
       });
     });
 
@@ -331,6 +332,7 @@ describe('projects', () => {
             entityCount: 10,
             factCount: 20,
             alertCount: 2,
+            noteCount: 0,
           },
         });
       });
@@ -346,6 +348,7 @@ describe('projects', () => {
         entityCount: 10,
         factCount: 20,
         alertCount: 2,
+        noteCount: 0,
       });
     });
   });

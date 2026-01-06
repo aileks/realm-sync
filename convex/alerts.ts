@@ -244,6 +244,7 @@ export const resolve = mutation({
           entityCount: 0,
           factCount: 0,
           alertCount: 0,
+          noteCount: 0,
         };
         await ctx.db.patch(alert.projectId, {
           updatedAt: Date.now(),
@@ -281,6 +282,7 @@ export const dismiss = mutation({
           entityCount: 0,
           factCount: 0,
           alertCount: 0,
+          noteCount: 0,
         };
         await ctx.db.patch(alert.projectId, {
           updatedAt: Date.now(),
@@ -315,6 +317,7 @@ export const reopen = mutation({
           entityCount: 0,
           factCount: 0,
           alertCount: 0,
+          noteCount: 0,
         };
         await ctx.db.patch(alert.projectId, {
           updatedAt: Date.now(),
@@ -343,6 +346,7 @@ export const remove = mutation({
           entityCount: 0,
           factCount: 0,
           alertCount: 0,
+          noteCount: 0,
         };
         await ctx.db.patch(alert.projectId, {
           updatedAt: Date.now(),
@@ -448,6 +452,7 @@ export const resolveWithCanonUpdate = mutation({
           entityCount: 0,
           factCount: 0,
           alertCount: 0,
+          noteCount: 0,
         };
         await ctx.db.patch(alert.projectId, {
           updatedAt: Date.now(),
@@ -495,7 +500,7 @@ export const resolveAll = mutation({
     };
     await ctx.db.patch(projectId, {
       updatedAt: now,
-      stats: { ...stats, alertCount: 0 },
+      stats: { ...stats, alertCount: 0, noteCount: 0 },
     });
 
     return openAlerts.length;
@@ -537,7 +542,7 @@ export const dismissAll = mutation({
     };
     await ctx.db.patch(projectId, {
       updatedAt: now,
-      stats: { ...stats, alertCount: 0 },
+      stats: { ...stats, alertCount: 0, noteCount: 0 },
     });
 
     return openAlerts.length;

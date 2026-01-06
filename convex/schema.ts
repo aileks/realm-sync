@@ -26,6 +26,17 @@ export default defineSchema({
       v.object({
         theme: v.optional(v.string()),
         notifications: v.optional(v.boolean()),
+        projectModes: v.optional(
+          v.array(
+            v.union(
+              v.literal('ttrpg'),
+              v.literal('original-fiction'),
+              v.literal('fanfiction'),
+              v.literal('game-design'),
+              v.literal('general')
+            )
+          )
+        ),
       })
     ),
   }).index('by_email', ['email']),
@@ -36,6 +47,15 @@ export default defineSchema({
     name: v.string(),
     description: v.optional(v.string()),
     isTutorial: v.optional(v.boolean()),
+    projectType: v.optional(
+      v.union(
+        v.literal('ttrpg'),
+        v.literal('original-fiction'),
+        v.literal('fanfiction'),
+        v.literal('game-design'),
+        v.literal('general')
+      )
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
     stats: v.optional(
@@ -44,6 +64,7 @@ export default defineSchema({
         entityCount: v.number(),
         factCount: v.number(),
         alertCount: v.number(),
+        noteCount: v.optional(v.number()),
       })
     ),
   }).index('by_user', ['userId', 'updatedAt']),
@@ -89,6 +110,8 @@ export default defineSchema({
     aliases: v.array(v.string()),
     firstMentionedIn: v.optional(v.id('documents')),
     status: v.union(v.literal('pending'), v.literal('confirmed')),
+    revealedToViewers: v.optional(v.boolean()),
+    revealedAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -191,4 +214,33 @@ export default defineSchema({
     createdAt: v.number(),
     expiresAt: v.number(),
   }).index('by_hash', ['inputHash', 'promptVersion']),
+
+  // Notes (project-level)
+  notes: defineTable({
+    projectId: v.id('projects'),
+    userId: v.id('users'),
+    title: v.string(),
+    content: v.string(),
+    tags: v.optional(v.array(v.string())),
+    pinned: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_project', ['projectId', 'pinned', 'updatedAt'])
+    .searchIndex('search_content', {
+      searchField: 'content',
+      filterFields: ['projectId'],
+    }),
+
+  // Entity Notes (entity-level annotations)
+  entityNotes: defineTable({
+    entityId: v.id('entities'),
+    projectId: v.id('projects'),
+    userId: v.id('users'),
+    content: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_entity', ['entityId', 'updatedAt'])
+    .index('by_project', ['projectId']),
 });

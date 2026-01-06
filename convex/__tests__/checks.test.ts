@@ -25,7 +25,7 @@ async function setupProjectWithCanon(t: ReturnType<typeof convexTest>, userId: I
       name: 'Test Project',
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      stats: { documentCount: 1, entityCount: 2, factCount: 2, alertCount: 0 },
+      stats: { documentCount: 1, entityCount: 2, factCount: 2, alertCount: 0, noteCount: 0 },
     });
 
     const documentId = await ctx.db.insert('documents', {

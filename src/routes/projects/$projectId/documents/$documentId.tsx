@@ -12,9 +12,9 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '../../convex/_generated/api';
+import { api } from '../../../../../convex/_generated/api';
 import { type FunctionReference } from 'convex/server';
-import type { Id } from '../../convex/_generated/dataModel';
+import type { Id } from '../../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,7 +26,7 @@ function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-export const Route = createFileRoute('/projects_/$projectId_/documents/$documentId')({
+export const Route = createFileRoute('/projects/$projectId/documents/$documentId')({
   component: DocumentEditorPage,
 });
 

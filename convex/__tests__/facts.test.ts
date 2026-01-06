@@ -26,7 +26,7 @@ async function setupProjectWithEntityAndDoc(t: ReturnType<typeof convexTest>, us
       name: 'Test Project',
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      stats: { documentCount: 1, entityCount: 1, factCount: 0, alertCount: 0 },
+      stats: { documentCount: 1, entityCount: 1, factCount: 0, alertCount: 0, noteCount: 0 },
     });
 
     const documentId = await ctx.db.insert('documents', {
@@ -356,7 +356,7 @@ describe('facts', () => {
           name: 'Test',
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0 },
+          stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0, noteCount: 0 },
         });
         const dId = await ctx.db.insert('documents', {
           projectId: pId,
@@ -630,7 +630,7 @@ describe('facts', () => {
           name: 'Test',
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0 },
+          stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0, noteCount: 0 },
         });
         const dId = await ctx.db.insert('documents', {
           projectId: pId,
@@ -694,7 +694,7 @@ describe('facts', () => {
           name: 'Test',
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0 },
+          stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 0, noteCount: 0 },
         });
         const dId = await ctx.db.insert('documents', {
           projectId: pId,

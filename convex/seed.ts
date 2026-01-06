@@ -18,7 +18,7 @@ export const seedDemoData = internalMutation({
         'A fantasy epic set in a frozen kingdom where winter has lasted for generations.',
       createdAt: now,
       updatedAt: now,
-      stats: { documentCount: 2, entityCount: 12, factCount: 8, alertCount: 0 },
+      stats: { documentCount: 2, entityCount: 12, factCount: 8, alertCount: 0, noteCount: 0 },
     });
 
     const fantasyDoc1 = await ctx.db.insert('documents', {
@@ -337,7 +337,7 @@ Magister Crow was silent for a long moment. When he spoke again, his voice was b
         'A D&D 5e campaign set in a cursed kingdom where the dead king still rules from his throne.',
       createdAt: now,
       updatedAt: now,
-      stats: { documentCount: 2, entityCount: 8, factCount: 6, alertCount: 0 },
+      stats: { documentCount: 2, entityCount: 8, factCount: 6, alertCount: 0, noteCount: 0 },
     });
 
     const dndDoc1 = await ctx.db.insert('documents', {
@@ -566,11 +566,10 @@ The session ended with the party retreating to the tunnels, planning their next 
     const fanficProjectId = await ctx.db.insert('projects', {
       userId,
       name: 'The Lost Apprentice',
-      description:
-        'A Harry Potter fanfic exploring what if Snape had a secret apprentice during the war.',
-      createdAt: now,
-      updatedAt: now,
-      stats: { documentCount: 2, entityCount: 6, factCount: 5, alertCount: 0 },
+      description: 'A third demo project',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      stats: { documentCount: 2, entityCount: 6, factCount: 5, alertCount: 0, noteCount: 0 },
     });
 
     const fanficDoc1 = await ctx.db.insert('documents', {

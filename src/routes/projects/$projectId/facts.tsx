@@ -2,8 +2,8 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, usePaginatedQuery } from 'convex/react';
 import { useState, useMemo } from 'react';
 import { Lightbulb, Search, ArrowLeft, Filter } from 'lucide-react';
-import { api } from '../../convex/_generated/api';
-import type { Id, Doc } from '../../convex/_generated/dataModel';
+import { api } from '../../../../convex/_generated/api';
+import type { Id, Doc } from '../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FactCard } from '@/components/FactCard';
@@ -22,7 +22,7 @@ const PAGE_SIZE = 24;
 
 type FactStatus = 'pending' | 'confirmed' | 'rejected';
 
-export const Route = createFileRoute('/projects_/$projectId_/facts')({
+export const Route = createFileRoute('/projects/$projectId/facts')({
   component: FactsPage,
 });
 

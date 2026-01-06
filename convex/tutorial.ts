@@ -25,7 +25,7 @@ export const seedTutorialProject = mutation({
       isTutorial: true,
       createdAt: now,
       updatedAt: now,
-      stats: { documentCount: 3, entityCount: 12, factCount: 10, alertCount: 2 },
+      stats: { documentCount: 3, entityCount: 12, factCount: 10, alertCount: 2, noteCount: 0 },
     });
 
     const doc1Id = await ctx.db.insert('documents', {
