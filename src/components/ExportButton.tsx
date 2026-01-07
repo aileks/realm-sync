@@ -142,9 +142,9 @@ export function ExportButton({ projectId, projectName, className }: ExportButton
               <Select value={scope} onValueChange={(val) => setScope(val as ExportScope)}>
                 <SelectTrigger id="exportScope" className="w-full">
                   <SelectValue>
-                  {(value) =>
-                    SCOPE_OPTIONS.find((option) => option.value === value)?.label ?? 'All Info'
-                  }
+                    {(value) =>
+                      SCOPE_OPTIONS.find((option) => option.value === value)?.label ?? 'All Info'
+                    }
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent side="bottom" align="start" sideOffset={4}>

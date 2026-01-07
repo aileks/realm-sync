@@ -64,9 +64,7 @@ function formatAsMarkdown(data: ExportData): string {
       for (const doc of data.documents) {
         lines.push(`### ${doc.title}`);
         lines.push('');
-        lines.push(
-          `*${doc.contentType}, ${doc.wordCount} words, ${doc.processingStatus}*`
-        );
+        lines.push(`*${doc.contentType}, ${doc.wordCount} words, ${doc.processingStatus}*`);
         if (doc.content !== undefined && doc.content !== '') {
           lines.push('');
           lines.push(doc.content);
@@ -180,11 +178,13 @@ export const gatherExportData = query({
 
     const shouldFilterRevealed = project.projectType === 'ttrpg' && includeUnrevealed === false;
     const includeDocumentContent = !shouldFilterRevealed;
-    const visibleEntities = shouldFilterRevealed ?
+    const visibleEntities =
+      shouldFilterRevealed ?
         entities.filter((entity) => entity.revealedToViewers === true)
       : entities;
     const visibleEntityIds = new Set(visibleEntities.map((entity) => entity._id));
-    const visibleFacts = shouldFilterRevealed ?
+    const visibleFacts =
+      shouldFilterRevealed ?
         facts.filter((fact) => !fact.entityId || visibleEntityIds.has(fact.entityId))
       : facts;
 
