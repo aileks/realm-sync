@@ -34,8 +34,8 @@ const FORMAT_OPTIONS: Array<{ value: ExportFormat; label: string; icon: typeof F
 ];
 
 const SCOPE_OPTIONS: Array<{ value: ExportScope; label: string }> = [
-  { value: 'all', label: 'All info (includes hidden)' },
-  { value: 'revealed', label: 'Revealed only (player-safe)' },
+  { value: 'all', label: 'All Info' },
+  { value: 'revealed', label: 'Player Safe' },
 ];
 
 type ExportButtonProps = {
@@ -142,10 +142,9 @@ export function ExportButton({ projectId, projectName, className }: ExportButton
               <Select value={scope} onValueChange={(val) => setScope(val as ExportScope)}>
                 <SelectTrigger id="exportScope" className="w-full">
                   <SelectValue>
-                    {(value) =>
-                      SCOPE_OPTIONS.find((option) => option.value === value)?.label ??
-                      'All info (includes hidden)'
-                    }
+                  {(value) =>
+                    SCOPE_OPTIONS.find((option) => option.value === value)?.label ?? 'All Info'
+                  }
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent side="bottom" align="start" sideOffset={4}>
