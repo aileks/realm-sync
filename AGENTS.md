@@ -81,6 +81,10 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | `KeyboardShortcutsProvider` | `src/components/KeyboardShortcuts.tsx` | Global keyboard shortcut handling |
 | `OnboardingModal` | `src/components/OnboardingModal.tsx` | New user onboarding modal |
 | `seedTutorialProject` | `convex/tutorial.ts` | Creates demo "The Verdant Realm" project |
+| `EntityForm` | `src/components/EntityForm.tsx` | Manual entity creation/edit form |
+| `FactForm` | `src/components/FactForm.tsx` | Manual fact creation/edit form |
+| `revealToPlayers` | `convex/entities.ts` | TTRPG entity reveal mutation |
+| `hideFromPlayers` | `convex/entities.ts` | TTRPG entity hide mutation |
 
 ## CONVENTIONS
 
@@ -124,7 +128,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 pnpm dev              # Dev server (port 3000, Sentry injected)
 pnpm run build        # Production build
 pnpm run start        # Production server
-pnpm test             # Vitest (243 tests)
+pnpm test             # Vitest (265 tests)
 pnpm run lint         # Oxlint with --fix, --type-aware
 pnpm run typecheck    # tsc --noEmit
 pnpm run format       # Prettier (with Tailwind plugin)
@@ -147,7 +151,7 @@ pnpm docs:list        # List docs with front-matter check
 | Core routing  | Working | TanStack Start file-based + SSR               |
 | Backend       | Working | Convex schema, auth, CRUD                     |
 | UI components | Ready   | 17 Shadcn/Base UI primitives                  |
-| Testing       | Working | Vitest + convex-test, 243 passing             |
+| Testing       | Working | Vitest + convex-test, 265 passing             |
 | CI/CD         | Working | 4 parallel jobs: lint, typecheck, test, build |
 | Auth          | Working | Google OAuth + Password                       |
 | Themes        | Ready   | 3 OKLCH themes in styles.css                  |
