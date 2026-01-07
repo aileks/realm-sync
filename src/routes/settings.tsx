@@ -363,7 +363,7 @@ function ProjectModesSection({
 }: {
   user: NonNullable<typeof api.users.viewerProfile._returnType>;
 }) {
-  const currentModes = (user.settings?.projectModes ?? []);
+  const currentModes = user.settings?.projectModes ?? [];
   const [selectedModes, setSelectedModes] = useState<ProjectMode[]>(currentModes);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
