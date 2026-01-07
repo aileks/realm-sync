@@ -103,6 +103,27 @@ export function DocumentForm({ projectId, onSuccess }: DocumentFormProps) {
 }
 ```
 
+### Error Handling Pattern
+
+```typescript
+const [error, setError] = useState<string | null>(null);
+const [isLoading, setIsLoading] = useState(false);
+
+const handleSubmit = async () => {
+  setError(null);
+  setIsLoading(true);
+  try {
+    await mutation(data);
+    toast.success('Success');
+  } catch (err) {
+    setError(formatError(err));
+    toast.error(formatError(err));
+  } finally {
+    setIsLoading(false);
+  }
+};
+```
+
 ## ENTITY TYPE COLORS
 
 Entity types use predefined OKLCH colors (from styles.css):

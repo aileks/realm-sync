@@ -498,6 +498,22 @@ export const chunkAndExtract = action({
     ctx,
     { documentId }
   ): Promise<{ entitiesCreated: number; factsCreated: number }> => {
+    const doc = await ctx.runQuery(api.documents.get, { id: documentId });
+    if (!doc) throw new Error('Document not found');
+
+    const project = await ctx.runQuery(api.projects.get, { id: doc.projectId });
+    if (!project) throw new Error('Project not found');
+
+    const limitCheck = await ctx.runQuery(internal.usage.checkExtractionLimit, {
+      userId: project.userId,
+    });
+
+    if (!limitCheck.allowed) {
+      throw new Error(
+        `Monthly extraction limit reached. Free tier allows 20 extractions/month. Upgrade to Realm Unlimited for unlimited extractions.`
+      );
+    }
+
     await ctx.runMutation(api.documents.updateProcessingStatus, {
       id: documentId,
       status: 'processing',
@@ -509,10 +525,16 @@ export const chunkAndExtract = action({
         { documentId }
       );
 
-      return await ctx.runMutation(internal.llm.extract.processExtractionResult, {
+      const processResult = await ctx.runMutation(internal.llm.extract.processExtractionResult, {
         documentId,
         result,
       });
+
+      await ctx.runMutation(internal.usage.incrementExtractionUsage, {
+        userId: project.userId,
+      });
+
+      return processResult;
     } catch (error) {
       await ctx.runMutation(api.documents.updateProcessingStatus, {
         id: documentId,

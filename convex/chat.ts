@@ -1,5 +1,5 @@
 import { action, httpAction, mutation, query } from './_generated/server';
-import { components } from './_generated/api';
+import { components, internal } from './_generated/api';
 import { v } from 'convex/values';
 import {
   PersistentTextStreaming,
@@ -38,8 +38,17 @@ export const sendMessage = action({
         content: v.string(),
       })
     ),
+    userId: v.id('users'),
   },
-  handler: async (_ctx, { messages }) => {
+  handler: async (ctx, { messages, userId }) => {
+    const limitCheck = await ctx.runQuery(internal.usage.checkChatLimit, { userId });
+
+    if (!limitCheck.allowed) {
+      throw new Error(
+        `Monthly chat limit reached. Free tier allows 50 messages/month. Upgrade to Realm Unlimited for unlimited chat.`
+      );
+    }
+
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       throw new Error('OPENROUTER_API_KEY not configured');
@@ -79,6 +88,8 @@ export const sendMessage = action({
     if (!content) {
       throw new Error('Invalid response from OpenRouter API');
     }
+
+    await ctx.runMutation(internal.usage.incrementChatUsage, { userId });
 
     return content;
   },

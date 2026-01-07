@@ -13,7 +13,7 @@ routes/
 ├── __root.tsx                      # Root route + HTML shell + providers
 ├── auth.tsx                        # Auth pages (login/signup)
 ├── dev.chat.tsx                    # Dev chat route
-├── entities.$entityId.tsx          # Entity detail page (complexity hotspot)
+├── entities.$entityId.tsx          # Entity detail page (complexity hotspot - 877 lines)
 ├── index.tsx                       # Home page
 ├── vellum.chat.tsx                 # Vellum chat page
 ├── projects.tsx                    # Projects layout (renders Outlet for children)
@@ -89,7 +89,7 @@ function ProjectsLayout() {
 ## CONVENTIONS
 
 - **Folder structure**: Use folders for nested routes, `route.tsx` for layouts
-- **Index routes**: `folder/index.tsx` for the default view
+- **Index routes**: `folder/index.tsx` for default view
 - **Params**: `$paramName` in folder/file names (e.g., `$projectId`)
 - **Layouts**: Must render `<Outlet />` from `@tanstack/react-router`
 - **Auto-generated**: `routeTree.gen.ts` - NEVER EDIT
@@ -106,11 +106,11 @@ function ProjectsLayout() {
 
 ## COMPLEXITY HOTSPOTS
 
-| File                     | Notes                                         |
-| ------------------------ | --------------------------------------------- |
-| `entities.$entityId.tsx` | Entity detail + edit form; consider splitting |
-| `canon/timeline.tsx`     | D3 visualization                              |
-| `auth.tsx`               | Login/signup forms                            |
+| File | Notes |
+| --- | --- |
+| `entities.$entityId.tsx` | Entity detail + edit form (877 lines) - consider splitting |
+| `canon/timeline.tsx` | D3 visualization |
+| `auth.tsx` | Login/signup forms |
 
 ## NOTES
 

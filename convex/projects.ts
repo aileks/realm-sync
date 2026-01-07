@@ -2,10 +2,11 @@ import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
-import { getAuthUserId, requireAuth } from './lib/auth';
+import { getAuthUserId, requireAuth, requireAuthUser } from './lib/auth';
 import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
 import { unwrapOrThrow } from './lib/result';
 import { getProjectRole, canReadProject } from './lib/projectAccess';
+import { getProjectCount, checkResourceLimit } from './lib/subscription';
 
 async function verifyProjectAccess(
   ctx: MutationCtx,
@@ -66,11 +67,20 @@ export const create = mutation({
     projectType: projectTypeValidator,
   },
   handler: async (ctx, { name, description, projectType }) => {
-    const userId = await requireAuth(ctx);
+    const user = await requireAuthUser(ctx);
     const now = Date.now();
 
+    const projectCount = await getProjectCount(ctx, user._id);
+    const limitCheck = checkResourceLimit(user, 'projects', projectCount);
+
+    if (!limitCheck.allowed) {
+      throw new Error(
+        `Project limit reached. Free tier allows ${limitCheck.limit} projects. Upgrade to Realm Unlimited for unlimited projects.`
+      );
+    }
+
     return await ctx.db.insert('projects', {
-      userId,
+      userId: user._id,
       name,
       description,
       projectType,

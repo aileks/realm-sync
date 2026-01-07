@@ -187,24 +187,17 @@ function FactsPage() {
             />
         }
         renderItem={(fact: Doc<'facts'>) => (
-          <div
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
             className="w-full cursor-pointer text-left"
             onClick={() => setSelectedFact(fact)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setSelectedFact(fact);
-              }
-            }}
           >
             <FactCard
               fact={fact}
               onConfirm={(id) => confirmFact({ id })}
               onReject={(id) => rejectFact({ id })}
             />
-          </div>
+          </button>
         )}
       />
 

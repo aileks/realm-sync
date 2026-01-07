@@ -6,6 +6,7 @@ import { useConvexAuth } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import {
   BookOpen,
+  Crown,
   ChevronLeft,
   ChevronRight,
   Sparkles,
@@ -64,6 +65,7 @@ function getStoredTheme(): Theme {
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.users.viewerProfile);
+  const subscription = useQuery(api.users.getSubscription);
   const params = useParams({ strict: false });
   const search = useSearch({ strict: false });
   const navigate = useNavigate();
@@ -269,7 +271,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                 : <User className="size-5" />}
               </div>
               {!collapsed && (
-                <span className="ml-3 truncate text-sm font-medium">{user?.name ?? 'Account'}</span>
+                <div className="ml-3 flex items-center gap-2">
+                  <span className="truncate text-sm font-medium">{user?.name ?? 'Account'}</span>
+                  {subscription?.tier === 'unlimited' && (
+                    <Crown className="size-3.5 text-[var(--entity-item)]" />
+                  )}
+                </div>
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-48">
@@ -311,7 +318,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
 }
 
 type NavItemProps = {
-  to: '/' | '/projects' | '/auth';
+  to: '/' | '/projects' | '/sign-in';
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
@@ -545,7 +552,7 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
 }
 
 type MobileNavItemProps = {
-  to: '/' | '/projects' | '/auth';
+  to: '/' | '/projects' | '/sign-in';
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   onClick: () => void;

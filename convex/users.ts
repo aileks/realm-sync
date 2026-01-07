@@ -335,12 +335,167 @@ export const completeTutorialTour = mutation({
   },
 });
 
+export const listByEmail = query({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    return await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', email))
+      .collect();
+  },
+});
+
+export const getByPolarCustomerId = query({
+  args: { polarCustomerId: v.string() },
+  handler: async (ctx, { polarCustomerId }) => {
+    return await ctx.db
+      .query('users')
+      .withIndex('by_polar_customer', (q) => q.eq('polarCustomerId', polarCustomerId))
+      .first();
+  },
+});
+
+export const updateSubscription = mutation({
+  args: {
+    userId: v.id('users'),
+    polarCustomerId: v.optional(v.string()),
+    polarSubscriptionId: v.optional(v.string()),
+    subscriptionTier: v.optional(v.union(v.literal('free'), v.literal('unlimited'))),
+    subscriptionStatus: v.optional(
+      v.union(
+        v.literal('active'),
+        v.literal('trialing'),
+        v.literal('canceled'),
+        v.literal('past_due'),
+        v.literal('incomplete'),
+        v.literal('incomplete_expired')
+      )
+    ),
+    trialEndsAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, {
+      polarCustomerId: args.polarCustomerId,
+      polarSubscriptionId: args.polarSubscriptionId,
+      subscriptionTier: args.subscriptionTier,
+      subscriptionStatus: args.subscriptionStatus,
+      trialEndsAt: args.trialEndsAt,
+    });
+    return args.userId;
+  },
+});
+
 const projectModeValidator = v.union(
   v.literal('ttrpg'),
   v.literal('original-fiction'),
   v.literal('fanfiction'),
   v.literal('game-design')
 );
+
+export const getSubscription = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return null;
+
+    const tier = user.subscriptionTier ?? 'free';
+    const projects = await ctx.db
+      .query('projects')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .collect();
+
+    return {
+      tier,
+      status: user.subscriptionStatus ?? 'free',
+      trialActive:
+        user.subscriptionStatus === 'trialing' && user.trialEndsAt && Date.now() < user.trialEndsAt,
+      trialExpired:
+        user.subscriptionStatus === 'trialing' &&
+        user.trialEndsAt &&
+        Date.now() >= user.trialEndsAt,
+      trialEndsAt: user.trialEndsAt,
+      polarCustomerId: user.polarCustomerId,
+      polarSubscriptionId: user.polarSubscriptionId,
+      usage: {
+        projects: {
+          current: projects.length,
+          limit: tier === 'unlimited' ? Infinity : 3,
+        },
+        llmExtractions: {
+          current: user.usage?.llmExtractionsThisMonth ?? 0,
+          limit: tier === 'unlimited' ? Infinity : 20,
+        },
+        chatMessages: {
+          current: user.usage?.chatMessagesThisMonth ?? 0,
+          limit: tier === 'unlimited' ? Infinity : 50,
+        },
+        resetAt: user.usage?.usageResetAt ?? Date.now(),
+      },
+      pricing: {
+        amount: '$5/month',
+        tierName: 'Realm Unlimited',
+      },
+    };
+  },
+});
+
+export const startTrial = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireAuthUser(ctx);
+    if (!user) throw new Error('User not found');
+
+    if (user.subscriptionTier === 'unlimited' && user.subscriptionStatus === 'active') {
+      throw new Error('Already subscribed to Realm Unlimited');
+    }
+
+    if (user.trialEndsAt) {
+      throw new Error('Trial already used');
+    }
+
+    const TRIAL_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+    const trialEndsAt = Date.now() + TRIAL_DURATION_MS;
+
+    await ctx.db.patch(user._id, {
+      subscriptionTier: 'unlimited',
+      subscriptionStatus: 'trialing',
+      trialEndsAt,
+    });
+
+    return { trialEndsAt };
+  },
+});
+
+export const getUsageStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireAuthUser(ctx);
+    if (!user) return null;
+
+    const tier = user.subscriptionTier ?? 'free';
+
+    const projectCount = await ctx.db
+      .query('projects')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .collect();
+
+    return {
+      tier,
+      projects: {
+        current: projectCount.length,
+        limit: tier === 'unlimited' ? Infinity : 3,
+      },
+      llmExtractions: {
+        current: user.usage?.llmExtractionsThisMonth ?? 0,
+        limit: tier === 'unlimited' ? Infinity : 20,
+      },
+      chatMessages: {
+        current: user.usage?.chatMessagesThisMonth ?? 0,
+        limit: tier === 'unlimited' ? Infinity : 50,
+      },
+    };
+  },
+});
 
 export const updateProjectModes = mutation({
   args: { projectModes: v.array(projectModeValidator) },
@@ -353,5 +508,124 @@ export const updateProjectModes = mutation({
     });
 
     return user._id;
+  },
+});
+
+export const deleteAccount = mutation({
+  args: {
+    confirmationPhrase: v.string(),
+  },
+  handler: async (ctx, { confirmationPhrase }) => {
+    if (confirmationPhrase !== 'delete my account') {
+      throw new Error('Confirmation phrase does not match');
+    }
+
+    const user = await requireAuthUser(ctx);
+
+    if (user.polarSubscriptionId) {
+      try {
+        await ctx.scheduler.runAfter(0, api.polar.cancelCurrentSubscription, {});
+      } catch (error) {
+        console.error('Failed to cancel Polar subscription:', error);
+      }
+    }
+
+    const projects = await ctx.db
+      .query('projects')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .collect();
+
+    for (const project of projects) {
+      const documents = await ctx.db
+        .query('documents')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+      for (const doc of documents) {
+        if (doc.storageId) {
+          await ctx.storage.delete(doc.storageId);
+        }
+        await ctx.db.delete(doc._id);
+      }
+
+      const entities = await ctx.db
+        .query('entities')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+      for (const entity of entities) {
+        const entityNotes = await ctx.db
+          .query('entityNotes')
+          .withIndex('by_entity', (q) => q.eq('entityId', entity._id))
+          .collect();
+        for (const note of entityNotes) {
+          await ctx.db.delete(note._id);
+        }
+        await ctx.db.delete(entity._id);
+      }
+
+      const facts = await ctx.db
+        .query('facts')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+      for (const fact of facts) {
+        await ctx.db.delete(fact._id);
+      }
+
+      const alerts = await ctx.db
+        .query('alerts')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+      for (const alert of alerts) {
+        await ctx.db.delete(alert._id);
+      }
+
+      const notes = await ctx.db
+        .query('notes')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+      for (const note of notes) {
+        await ctx.db.delete(note._id);
+      }
+
+      await ctx.db.delete(project._id);
+    }
+
+    const chatMessages = await ctx.db
+      .query('chatMessages')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .collect();
+    for (const msg of chatMessages) {
+      await ctx.db.delete(msg._id);
+    }
+
+    if (user.avatarStorageId) {
+      await ctx.storage.delete(user.avatarStorageId);
+    }
+
+    await ctx.db.delete(user._id);
+
+    return { success: true };
+  },
+});
+
+export const grantLifetimeAccess = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    const users = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', email))
+      .collect();
+
+    if (users.length === 0) {
+      throw new Error(`User not found with email: ${email}`);
+    }
+
+    const user = users[0];
+    await ctx.db.patch(user._id, {
+      subscriptionTier: 'unlimited',
+      subscriptionStatus: 'active',
+      trialEndsAt: undefined,
+    });
+
+    return { userId: user._id, email: user.email };
   },
 });

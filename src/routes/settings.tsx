@@ -7,12 +7,14 @@ import {
   MIN_PASSWORD_LENGTH,
   MAX_PASSWORD_LENGTH,
 } from '../../convex/lib/constants';
-import { useState, useRef, type FormEvent, type ChangeEvent } from 'react';
+import { CheckoutLink } from '@convex-dev/polar/react';
+import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,8 +26,27 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { formatError, cn } from '@/lib/utils';
-import { Loader2, User, Upload, Trash2, Save, Mail, Shield, Check, Layers } from 'lucide-react';
+import {
+  Loader2,
+  User,
+  Upload,
+  Trash2,
+  Save,
+  Mail,
+  Shield,
+  Check,
+  Layers,
+  CreditCard,
+  Sparkles,
+  AlertTriangle,
+} from 'lucide-react';
 import { useConvexAuth } from 'convex/react';
+import { TierBadge } from '@/components/TierBadge';
+import { CustomerPortalLink } from '@convex-dev/polar/react';
+
+type SettingsTab = 'profile' | 'security' | 'subscription' | 'danger';
+
+const SETTINGS_TABS = ['profile', 'security', 'subscription', 'danger'] as const;
 
 const PROJECT_MODES = [
   { id: 'ttrpg', label: 'TTRPG Campaigns', description: 'D&D, Pathfinder, etc.' },
@@ -40,13 +61,27 @@ export const Route = createFileRoute('/settings')({
   component: SettingsPage,
 });
 
-type SettingsTab = 'profile' | 'security';
-
 function SettingsPage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const navigate = useNavigate();
   const user = useQuery(api.users.viewerProfile);
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam && SETTINGS_TABS.includes(tabParam as SettingsTab)) {
+      setActiveTab(tabParam as SettingsTab);
+    }
+  }, []);
+
+  function handleTabChange(value: string) {
+    const tab = value as SettingsTab;
+    setActiveTab(tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    window.history.replaceState({}, '', url.toString());
+  }
 
   if (isAuthLoading) {
     return null;
@@ -61,43 +96,49 @@ function SettingsPage() {
     return null;
   }
 
-  const tabs: {
-    id: SettingsTab;
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-  }[] = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'security', label: 'Security', icon: Shield },
-  ];
-
   return (
-    <div className="animate-in fade-in container mx-auto space-y-8 p-6 duration-500">
+    <div className="container mx-auto space-y-8 p-6">
       <div className="space-y-2">
         <h1 className="font-serif text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">Manage your account settings and preferences.</p>
       </div>
 
-      <div className="flex gap-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-              activeTab === tab.id ?
-                'bg-primary text-primary-foreground'
-              : 'bg-muted text-muted-foreground hover:text-foreground'
-            )}
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList>
+          <TabsTrigger value="profile">
+            <User className="size-4" />
+            Profile
+          </TabsTrigger>
+          <TabsTrigger value="security">
+            <Shield className="size-4" />
+            Security
+          </TabsTrigger>
+          <TabsTrigger value="subscription">
+            <CreditCard className="size-4" />
+            Subscription
+          </TabsTrigger>
+          <TabsTrigger
+            value="danger"
+            className="text-destructive hover:text-destructive data-[active]:text-destructive"
           >
-            <tab.icon className="size-4" />
-            {tab.label}
-          </button>
-        ))}
-      </div>
+            <AlertTriangle className="size-4" />
+            Danger
+          </TabsTrigger>
+        </TabsList>
 
-      {activeTab === 'profile' && <ProfileTab user={user} />}
-      {activeTab === 'security' && <SecurityTab user={user} />}
+        <TabsContent value="profile">
+          <ProfileTab user={user} />
+        </TabsContent>
+        <TabsContent value="security">
+          <SecurityTab user={user} />
+        </TabsContent>
+        <TabsContent value="subscription">
+          <SubscriptionTab />
+        </TabsContent>
+        <TabsContent value="danger">
+          <DangerTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -256,7 +297,7 @@ function AvatarSection({
             )}
           </div>
           <p className="text-muted-foreground text-xs">
-            Recommended: Square JPG, PNG, or WebP, at least 400x400px. Max 5MB.
+            Recommended: JPG, PNG, or WebP, at least 400x400px. Max 5MB.
           </p>
         </div>
       </div>
@@ -680,5 +721,354 @@ function PasswordChangeCard() {
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+function SubscriptionTab() {
+  const subscription = useQuery(api.users.getSubscription);
+  const products = useQuery(api.polar.listAllProducts);
+  const startTrial = useMutation(api.users.startTrial);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const realmUnlimited = products?.find((p) => p.name === 'Realm Unlimited');
+
+  if (subscription === undefined) {
+    return (
+      <div className="text-muted-foreground p-8 text-center">Loading subscription details...</div>
+    );
+  }
+
+  if (subscription === null) {
+    return (
+      <div className="text-muted-foreground p-8 text-center">
+        Please sign in to view subscription details.
+      </div>
+    );
+  }
+
+  async function handleStartTrial() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await startTrial();
+    } catch (err) {
+      setError(formatError(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const isFree = subscription.tier === 'free';
+  const isUnlimited = subscription.tier === 'unlimited';
+  const isTrial = subscription.status === 'trialing';
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-2">
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="size-5" />
+                  Subscription
+                </CardTitle>
+                <CardDescription>Manage your plan and billing.</CardDescription>
+              </div>
+              <TierBadge tier={subscription.tier} className="px-3 py-1 text-sm" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {isTrial &&
+              (() => {
+                const daysRemaining = Math.ceil(
+                  (subscription.trialEndsAt! - Date.now()) / (1000 * 60 * 60 * 24)
+                );
+                const showUpgradeNudge = daysRemaining <= 3;
+                return (
+                  <div className="bg-primary/10 text-primary border-primary/20 rounded-lg border p-4">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Sparkles className="size-4" />
+                      Free Trial Active
+                    </div>
+                    <p className="mt-1 text-sm opacity-90">
+                      Your trial ends on {new Date(subscription.trialEndsAt!).toLocaleDateString()}.
+                      {showUpgradeNudge && ' Upgrade now to keep access to premium features.'}
+                    </p>
+                  </div>
+                );
+              })()}
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-muted-foreground text-sm font-medium">Usage this month</h3>
+                <span className="text-muted-foreground text-xs">
+                  Resets {new Date(subscription.usage.resetAt).toLocaleDateString()}
+                </span>
+              </div>
+
+              <UsageBar
+                label="Projects"
+                current={subscription.usage.projects.current}
+                limit={subscription.usage.projects.limit}
+              />
+              <UsageBar
+                label="Document Extractions"
+                current={subscription.usage.llmExtractions.current}
+                limit={subscription.usage.llmExtractions.limit}
+              />
+              <UsageBar
+                label="Chat Messages"
+                current={subscription.usage.chatMessages.current}
+                limit={subscription.usage.chatMessages.limit}
+              />
+            </div>
+
+            <div className="border-border flex flex-col gap-3 border-t pt-4">
+              {isFree && !subscription.trialExpired && !subscription.trialActive && (
+                <Button
+                  onClick={handleStartTrial}
+                  disabled={isLoading}
+                  size="lg"
+                  className="w-full"
+                >
+                  {isLoading ?
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  : <Sparkles className="mr-2 size-4" />}
+                  Start 7-Day Free Trial
+                </Button>
+              )}
+
+              {isFree && realmUnlimited && (
+                <CheckoutLink
+                  polarApi={{
+                    generateCheckoutLink: api.polar.generateCheckoutLink,
+                  }}
+                  productIds={[realmUnlimited.id]}
+                  embed={false}
+                  className={cn(
+                    buttonVariants({
+                      variant: subscription.trialExpired ? 'default' : 'outline',
+                      size: 'lg',
+                    }),
+                    'w-full'
+                  )}
+                >
+                  {subscription.trialExpired ? 'Upgrade to Realm Unlimited' : 'Upgrade Plan'}
+                </CheckoutLink>
+              )}
+
+              {isFree && products === undefined && (
+                <p className="text-muted-foreground text-center text-sm">Loading...</p>
+              )}
+
+              {isTrial && realmUnlimited && (
+                <>
+                  <CheckoutLink
+                    polarApi={{
+                      generateCheckoutLink: api.polar.generateCheckoutLink,
+                    }}
+                    productIds={[realmUnlimited.id]}
+                    embed={false}
+                    className={cn(
+                      buttonVariants({
+                        variant: 'default',
+                        size: 'lg',
+                      }),
+                      'w-full'
+                    )}
+                  >
+                    Upgrade to Full Access
+                  </CheckoutLink>
+
+                  <CustomerPortalLink
+                    polarApi={{
+                      generateCustomerPortalUrl: api.polar.generateCustomerPortalUrl,
+                    }}
+                    className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'w-full')}
+                  >
+                    Manage Subscription
+                  </CustomerPortalLink>
+                </>
+              )}
+
+              {isTrial && !realmUnlimited && (
+                <Button variant="default" size="lg" className="w-full" disabled>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Loading...
+                </Button>
+              )}
+
+              {isUnlimited && !isTrial && (
+                <CustomerPortalLink
+                  polarApi={{
+                    generateCustomerPortalUrl: api.polar.generateCustomerPortalUrl,
+                  }}
+                  className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
+                >
+                  Manage Subscription
+                </CustomerPortalLink>
+              )}
+            </div>
+
+            {error && <div className="text-destructive text-center text-sm">{error}</div>}
+          </CardContent>
+        </Card>
+      </div>
+
+      {isFree && (
+        <Card className="bg-muted/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="text-primary size-5" />
+              Why Upgrade?
+            </CardTitle>
+            <CardDescription>Unlock the full potential of your creative process.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ul className="space-y-3">
+              {[
+                'Unlimited projects & documents',
+                'Unlimited document extractions',
+                'Unlimited chat messages',
+                'Early access to new features',
+              ].map((benefit) => (
+                <li key={benefit} className="flex items-start gap-2.5 text-sm">
+                  <div className="bg-primary/10 text-primary mt-0.5 rounded-full p-0.5">
+                    <Check className="size-3" />
+                  </div>
+                  <span>{benefit}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function UsageBar({ label, current, limit }: { label: string; current: number; limit: number }) {
+  const percentage = Math.min(100, Math.max(0, (current / limit) * 100));
+  const isUnlimited = limit === Infinity;
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex justify-between text-sm">
+        <span>{label}</span>
+        <span className="text-muted-foreground font-mono text-xs">
+          {current} / {isUnlimited ? '∞' : limit}
+        </span>
+      </div>
+      <div className="bg-secondary h-2 w-full overflow-hidden rounded-full">
+        <div
+          className={cn(
+            'bg-primary h-full transition-all duration-500',
+            !isUnlimited && current >= limit && 'bg-destructive'
+          )}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function DangerTab() {
+  const navigate = useNavigate();
+  const deleteAccount = useMutation(api.users.deleteAccount);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [confirmPhrase, setConfirmPhrase] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const phraseMatches = confirmPhrase === 'delete my account';
+
+  async function handleDeleteAccount() {
+    if (!phraseMatches) return;
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      await deleteAccount({ confirmationPhrase: confirmPhrase });
+      void navigate({ to: '/' });
+    } catch (err) {
+      setError(formatError(err));
+      setIsDeleting(false);
+    }
+  }
+
+  return (
+    <div className="max-w-2xl">
+      <Card className="border-destructive/50 bg-destructive/5">
+        <CardHeader>
+          <CardTitle className="text-destructive flex items-center gap-2">
+            <AlertTriangle className="size-5" />
+            Danger Zone
+          </CardTitle>
+          <CardDescription className="text-destructive/80">
+            Irreversible actions that will permanently affect your account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="border-destructive/30 rounded-lg border p-4">
+            <h3 className="font-medium">Delete Account</h3>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Permanently delete your account and all associated data. This includes all projects,
+              documents, entities, facts, notes, and chat history. This action cannot be undone.
+            </p>
+            <Button variant="destructive" className="mt-4" onClick={() => setShowDeleteModal(true)}>
+              <Trash2 className="mr-2 size-4" />
+              Delete Account
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="size-5" />
+              Delete Account
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <p>
+                This will permanently delete your account and all associated data. This action
+                cannot be undone.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-phrase">
+                  Type <span className="font-mono font-semibold">delete my account</span> to
+                  confirm:
+                </Label>
+                <Input
+                  id="confirm-phrase"
+                  value={confirmPhrase}
+                  onChange={(e) => setConfirmPhrase(e.target.value)}
+                  placeholder="delete my account"
+                  disabled={isDeleting}
+                />
+              </div>
+              {error && <p className="text-destructive text-sm">{error}</p>}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} onClick={() => setConfirmPhrase('')}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={!phraseMatches || isDeleting}
+            >
+              {isDeleting && <Loader2 className="mr-2 size-4 animate-spin" />}
+              Delete Account
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

@@ -23,9 +23,10 @@ export const seedTutorialProject = mutation({
       description:
         "A sample fantasy world to explore Realm Sync's features. Discover characters, locations, and even some continuity issues for Vellum to catch!",
       isTutorial: true,
+      projectType: 'ttrpg',
       createdAt: now,
       updatedAt: now,
-      stats: { documentCount: 3, entityCount: 12, factCount: 10, alertCount: 2, noteCount: 0 },
+      stats: { documentCount: 3, entityCount: 12, factCount: 10, alertCount: 2, noteCount: 3 },
     });
 
     const doc1Id = await ctx.db.insert('documents', {
@@ -100,6 +101,8 @@ At the Festival of Green Leaves, celebrated on the first full moon of spring, th
       aliases: ['The Knight Commander', 'Commander Aldric'],
       firstMentionedIn: doc1Id,
       status: 'confirmed',
+      revealedToViewers: true,
+      revealedAt: now,
       createdAt: now,
       updatedAt: now,
     });
@@ -150,6 +153,8 @@ At the Festival of Green Leaves, celebrated on the first full moon of spring, th
       aliases: ['The Dragon', 'Ashfall'],
       firstMentionedIn: doc2Id,
       status: 'confirmed',
+      revealedToViewers: true,
+      revealedAt: now,
       createdAt: now,
       updatedAt: now,
     });
@@ -163,6 +168,7 @@ At the Festival of Green Leaves, celebrated on the first full moon of spring, th
       aliases: ['The Ancient Evil', 'The Sleeper'],
       firstMentionedIn: doc2Id,
       status: 'pending',
+      revealedToViewers: false,
       createdAt: now,
       updatedAt: now,
     });
@@ -175,6 +181,8 @@ At the Festival of Green Leaves, celebrated on the first full moon of spring, th
       aliases: ['Spirit of the Wood', 'The Ancient One'],
       firstMentionedIn: doc1Id,
       status: 'confirmed',
+      revealedToViewers: true,
+      revealedAt: now,
       createdAt: now,
       updatedAt: now,
     });
@@ -437,6 +445,72 @@ At the Festival of Green Leaves, celebrated on the first full moon of spring, th
         "This may be intentional—Chapter 3 reveals the 'true' origin. Consider adding a note that Chapter 1's account is the commonly believed (but false) history.",
       status: 'open',
       createdAt: now,
+    });
+
+    await ctx.db.insert('notes', {
+      projectId,
+      userId,
+      title: 'Campaign Overview',
+      content:
+        'The Verdant Realm is a fantasy setting focused on the city of Thornhaven and the surrounding lands. Key plot points involve the Emerald Crown, the awakening Shadowbane, and the Festival of Green Leaves. Players will discover that ancient histories may not be what they seem.',
+      tags: ['ttrpg', 'overview'],
+      pinned: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('notes', {
+      projectId,
+      userId,
+      title: 'Session Notes - Week 1',
+      content:
+        'Party arrived in Thornhaven seeking work. Met Sir Aldric at the gates. Discussed rumors of the Dragon of Ashfall appearing in the north. Lady Mira invited them to the Eastern Tower for tea.',
+      tags: ['session', 'week-1'],
+      pinned: false,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('notes', {
+      projectId,
+      userId,
+      title: 'DM Secrets',
+      content:
+        'TRUE LORE: The Shadowbane is not a creature but a curse placed by Elara\'s betrayed court mage. The Emerald Crown was a gift from the Forest Spirit, not forged by ancient smiths. The "Year of Falling Stars" is a fabricated history meant to hide the true origin. Only the DM knows this until players discover Chapter 3\'s revelation.',
+      tags: ['dm-only', 'secrets'],
+      pinned: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entityNotes', {
+      entityId: aldricId,
+      projectId,
+      userId,
+      content:
+        "DM NOTE: Sir Aldric's age inconsistency between Chapter 1 (60 winters) and Chapter 2 (50 winters) is intentional. Chapter 2 may be a flashback or the contradiction represents unreliable narration. Keep this open for players to notice.",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entityNotes', {
+      entityId: crownId,
+      projectId,
+      userId,
+      content:
+        'DM NOTE: The Emerald Crown\'s dual origin is a key plot twist. The "forged in Year of Falling Stars" story is what historians believe. Chapter 3 reveals the TRUTH: it was a gift from the Forest Spirit to Elara. This should only be revealed if players investigate deeply.',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entityNotes', {
+      entityId: shadowbaneId,
+      projectId,
+      userId,
+      content:
+        'DM NOTE: Shadowbane is NOT a creature. It is a curse placed by a betrayed court mage. This is the central secret of the campaign. Do not reveal until players find the ancient tome in Chapter 3.',
+      createdAt: now,
+      updatedAt: now,
     });
 
     return { projectId, alreadyExists: false };

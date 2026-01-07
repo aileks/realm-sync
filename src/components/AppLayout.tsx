@@ -37,7 +37,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     setIsLoaded(true);
   }, []);
 
-  const isAuthPage = routerState.location.pathname === '/auth';
+  const isAuthPage =
+    routerState.location.pathname === '/sign-in' || routerState.location.pathname === '/sign-up';
   const isLandingPage = routerState.location.pathname === '/' && !isAuthenticated;
 
   useEffect(() => {
@@ -85,7 +86,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-2">
             {!isLoading && !isAuthenticated && (
-              <Button size="sm" onClick={() => navigate({ to: '/auth' })}>
+              <Button size="sm" onClick={() => navigate({ to: '/sign-in' })}>
                 Sign In
               </Button>
             )}

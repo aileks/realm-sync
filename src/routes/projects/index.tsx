@@ -44,7 +44,7 @@ function ProjectsPage() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      void navigate({ to: '/auth' });
+      void navigate({ to: '/sign-in' });
     }
   }, [authLoading, isAuthenticated, navigate]);
 
