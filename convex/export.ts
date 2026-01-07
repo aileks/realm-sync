@@ -133,8 +133,8 @@ function formatAsCsv(data: ExportData): string {
 }
 
 export const gatherExportData = query({
-  args: { projectId: v.id('projects') },
-  handler: async (ctx, { projectId }): Promise<ExportData | null> => {
+  args: { projectId: v.id('projects'), includeUnrevealed: v.optional(v.boolean()) },
+  handler: async (ctx, { projectId, includeUnrevealed }): Promise<ExportData | null> => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
 
@@ -156,8 +156,17 @@ export const gatherExportData = query({
       .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('status', 'confirmed'))
       .collect();
 
+    const shouldFilterRevealed = project.projectType === 'ttrpg' && includeUnrevealed === false;
+    const visibleEntities = shouldFilterRevealed ?
+        entities.filter((entity) => entity.revealedToViewers === true)
+      : entities;
+    const visibleEntityIds = new Set(visibleEntities.map((entity) => entity._id));
+    const visibleFacts = shouldFilterRevealed ?
+        facts.filter((fact) => !fact.entityId || visibleEntityIds.has(fact.entityId))
+      : facts;
+
     const entityMap = new Map<string, string>();
-    for (const entity of entities) {
+    for (const entity of visibleEntities) {
       entityMap.set(entity._id, entity.name);
     }
 
@@ -173,14 +182,14 @@ export const gatherExportData = query({
         wordCount: doc.wordCount,
         processingStatus: doc.processingStatus,
       })),
-      entities: entities.map((entity) => ({
+      entities: visibleEntities.map((entity) => ({
         name: entity.name,
         type: entity.type,
         description: entity.description,
         aliases: entity.aliases,
         status: entity.status,
       })),
-      facts: facts.map((fact) => ({
+      facts: visibleFacts.map((fact) => ({
         entityName: fact.entityId ? (entityMap.get(fact.entityId) ?? 'Unknown') : 'Unlinked',
         subject: fact.subject,
         predicate: fact.predicate,
@@ -197,12 +206,13 @@ export const exportProject = action({
   args: {
     projectId: v.id('projects'),
     format: formatValidator,
+    includeUnrevealed: v.optional(v.boolean()),
   },
-  handler: async (ctx, { projectId, format }): Promise<string | null> => {
+  handler: async (ctx, { projectId, format, includeUnrevealed }): Promise<string | null> => {
     const data = await ctx.runQuery(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       'export:gatherExportData' as any,
-      { projectId }
+      { projectId, includeUnrevealed }
     );
 
     if (!data) return null;

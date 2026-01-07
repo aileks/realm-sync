@@ -182,5 +182,100 @@ describe('export', () => {
       expect(result!.entities).toHaveLength(2);
       expect(result!.facts).toHaveLength(1);
     });
+
+    it('filters unrevealed entities and related facts when includeUnrevealed is false', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const projectId = await t.run(async (ctx) => {
+        return await ctx.db.insert('projects', {
+          userId,
+          name: 'DM Campaign',
+          projectType: 'ttrpg',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          stats: { documentCount: 1, entityCount: 2, factCount: 2, alertCount: 0, noteCount: 0 },
+        });
+      });
+
+      const docId = await t.run(async (ctx) => {
+        return await ctx.db.insert('documents', {
+          projectId,
+          title: 'Session 1',
+          content: 'A secret is revealed.',
+          contentType: 'text',
+          orderIndex: 0,
+          wordCount: 4,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          processingStatus: 'completed',
+        });
+      });
+
+      const revealedEntityId = await t.run(async (ctx) => {
+        return await ctx.db.insert('entities', {
+          projectId,
+          name: 'Revealed NPC',
+          type: 'character',
+          aliases: [],
+          status: 'confirmed',
+          revealedToViewers: true,
+          revealedAt: Date.now(),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      });
+
+      const hiddenEntityId = await t.run(async (ctx) => {
+        return await ctx.db.insert('entities', {
+          projectId,
+          name: 'Hidden NPC',
+          type: 'character',
+          aliases: [],
+          status: 'confirmed',
+          revealedToViewers: false,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      });
+
+      await t.run(async (ctx) => {
+        await ctx.db.insert('facts', {
+          projectId,
+          entityId: revealedEntityId,
+          documentId: docId,
+          subject: 'Revealed NPC',
+          predicate: 'is',
+          object: 'known to players',
+          confidence: 0.9,
+          evidenceSnippet: 'The party meets the NPC.',
+          status: 'confirmed',
+          createdAt: Date.now(),
+        });
+
+        await ctx.db.insert('facts', {
+          projectId,
+          entityId: hiddenEntityId,
+          documentId: docId,
+          subject: 'Hidden NPC',
+          predicate: 'is',
+          object: 'a secret',
+          confidence: 0.9,
+          evidenceSnippet: 'A secret identity.',
+          status: 'confirmed',
+          createdAt: Date.now(),
+        });
+      });
+
+      const result = await asUser.query(api.export.gatherExportData, {
+        projectId,
+        includeUnrevealed: false,
+      });
+
+      expect(result!.entities).toHaveLength(1);
+      expect(result!.entities[0].name).toBe('Revealed NPC');
+      expect(result!.facts).toHaveLength(1);
+      expect(result!.facts[0].subject).toBe('Revealed NPC');
+    });
   });
 });
