@@ -1,6 +1,12 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useAction, useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import {
+  MAX_AVATAR_SIZE,
+  ALLOWED_AVATAR_TYPES,
+  MIN_PASSWORD_LENGTH,
+  MAX_PASSWORD_LENGTH,
+} from '../../convex/lib/constants';
 import { useState, useRef, type FormEvent, type ChangeEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -137,12 +143,11 @@ function AvatarSection({
     setIsLoading(true);
 
     try {
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > MAX_AVATAR_SIZE) {
         throw new Error('File size exceeds 5MB limit.');
       }
 
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(file.type)) {
+      if (!ALLOWED_AVATAR_TYPES.includes(file.type as (typeof ALLOWED_AVATAR_TYPES)[number])) {
         throw new Error('Invalid file type. Please use JPG, PNG, or WebP.');
       }
 
@@ -596,10 +601,6 @@ function PasswordChangeCard() {
     setIsLoading(true);
 
     try {
-      if (newPassword.length < 8) {
-        throw new Error('New password must be at least 8 characters long.');
-      }
-
       await changePassword({
         currentPassword,
         newPassword,
@@ -658,8 +659,8 @@ function PasswordChangeCard() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
-              minLength={8}
-              maxLength={128}
+              minLength={MIN_PASSWORD_LENGTH}
+              maxLength={MAX_PASSWORD_LENGTH}
               disabled={isLoading}
             />
           </div>

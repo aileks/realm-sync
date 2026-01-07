@@ -4,6 +4,12 @@ import { z } from 'zod';
 import { api, internal } from './_generated/api';
 import { getCurrentUser, requireAuthUser } from './lib/auth';
 import { getAuthUserId, retrieveAccount, modifyAccountCredentials } from '@convex-dev/auth/server';
+import {
+  MAX_AVATAR_SIZE,
+  ALLOWED_AVATAR_TYPES,
+  MIN_PASSWORD_LENGTH,
+  MAX_PASSWORD_LENGTH,
+} from './lib/constants';
 
 export const viewer = query({
   args: {},
@@ -73,24 +79,24 @@ export const updateAvatar = mutation({
       throw new Error('File not found');
     }
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    const maxSize = 5 * 1024 * 1024;
-
-    if (!allowedTypes.includes(meta.contentType ?? '')) {
+    if (!ALLOWED_AVATAR_TYPES.includes(meta.contentType as (typeof ALLOWED_AVATAR_TYPES)[number])) {
       await ctx.storage.delete(storageId);
       throw new Error('Invalid file type. Use JPG, PNG, or WebP.');
     }
 
-    if (meta.size > maxSize) {
+    if (meta.size > MAX_AVATAR_SIZE) {
       await ctx.storage.delete(storageId);
       throw new Error('File too large. Maximum size is 5MB.');
     }
 
-    if (user.avatarStorageId) {
-      await ctx.storage.delete(user.avatarStorageId);
-    }
+    const oldAvatarId = user.avatarStorageId;
 
     await ctx.db.patch(user._id, { avatarStorageId: storageId });
+
+    if (oldAvatarId) {
+      await ctx.storage.delete(oldAvatarId);
+    }
+
     return storageId;
   },
 });
@@ -120,12 +126,12 @@ export const changePassword = action({
       throw new Error('Unauthorized: Authentication required');
     }
 
-    if (newPassword.length < 8) {
-      throw new Error('Password must be at least 8 characters');
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      throw new Error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
     }
 
-    if (newPassword.length > 128) {
-      throw new Error('Password must be 128 characters or less');
+    if (newPassword.length > MAX_PASSWORD_LENGTH) {
+      throw new Error(`Password must be ${MAX_PASSWORD_LENGTH} characters or less`);
     }
 
     const user = await ctx.runQuery(api.users.viewer);

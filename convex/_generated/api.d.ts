@@ -23,6 +23,7 @@ import type * as export_ from "../export.js";
 import type * as facts from "../facts.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_constants from "../lib/constants.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_projectAccess from "../lib/projectAccess.js";
 import type * as lib_result from "../lib/result.js";
@@ -60,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   facts: typeof facts;
   http: typeof http;
   "lib/auth": typeof lib_auth;
+  "lib/constants": typeof lib_constants;
   "lib/errors": typeof lib_errors;
   "lib/projectAccess": typeof lib_projectAccess;
   "lib/result": typeof lib_result;
