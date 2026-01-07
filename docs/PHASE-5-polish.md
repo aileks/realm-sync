@@ -174,6 +174,11 @@ Users should own their data. Exporting allows for external backups and wiki gene
 - **Markdown:** Wiki-style pages with cross-links between entities.
 - **CSV:** Tabular format for entities and facts for spreadsheet analysis.
 
+### Visibility
+
+- **All info:** Includes full document content.
+- **Player-safe (TTRPG only):** Excludes unrevealed entities and related facts; omits document content.
+
 ### Convex Implementation
 
 ```typescript

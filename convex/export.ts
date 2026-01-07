@@ -18,6 +18,7 @@ type ExportData = {
     contentType: string;
     wordCount: number;
     processingStatus: string;
+    content?: string;
   }>;
   entities: Array<{
     name: string;
@@ -58,8 +59,24 @@ function formatAsMarkdown(data: ExportData): string {
   if (data.documents.length === 0) {
     lines.push('*No documents*');
   } else {
-    for (const doc of data.documents) {
-      lines.push(`- **${doc.title}** (${doc.wordCount} words, ${doc.processingStatus})`);
+    const hasDocumentContent = data.documents.some((doc) => doc.content !== undefined);
+    if (hasDocumentContent) {
+      for (const doc of data.documents) {
+        lines.push(`### ${doc.title}`);
+        lines.push('');
+        lines.push(
+          `*${doc.contentType}, ${doc.wordCount} words, ${doc.processingStatus}*`
+        );
+        if (doc.content !== undefined && doc.content !== '') {
+          lines.push('');
+          lines.push(doc.content);
+        }
+        lines.push('');
+      }
+    } else {
+      for (const doc of data.documents) {
+        lines.push(`- **${doc.title}** (${doc.wordCount} words, ${doc.processingStatus})`);
+      }
     }
   }
   lines.push('');
@@ -99,14 +116,16 @@ function formatAsMarkdown(data: ExportData): string {
   return lines.join('\n');
 }
 
+const escapeCsvValue = (value: string) => value.replace(/"/g, '""');
+
 function formatAsCsv(data: ExportData): string {
   const lines: string[] = [];
 
   lines.push('# ENTITIES');
   lines.push('Name,Type,Description,Aliases,Status');
   for (const entity of data.entities) {
-    const escapedDesc = (entity.description ?? '').replace(/"/g, '""');
-    const escapedAliases = entity.aliases.join('; ').replace(/"/g, '""');
+    const escapedDesc = escapeCsvValue(entity.description ?? '');
+    const escapedAliases = escapeCsvValue(entity.aliases.join('; '));
     lines.push(
       `"${entity.name}","${entity.type}","${escapedDesc}","${escapedAliases}","${entity.status}"`
     );
@@ -116,7 +135,7 @@ function formatAsCsv(data: ExportData): string {
   lines.push('# FACTS');
   lines.push('Entity,Subject,Predicate,Object,Confidence,Evidence,Status');
   for (const fact of data.facts) {
-    const escapedEvidence = fact.evidenceSnippet.replace(/"/g, '""');
+    const escapedEvidence = escapeCsvValue(fact.evidenceSnippet);
     lines.push(
       `"${fact.entityName}","${fact.subject}","${fact.predicate}","${fact.object}",${fact.confidence},"${escapedEvidence}","${fact.status}"`
     );
@@ -124,9 +143,12 @@ function formatAsCsv(data: ExportData): string {
   lines.push('');
 
   lines.push('# DOCUMENTS');
-  lines.push('Title,ContentType,WordCount,Status');
+  lines.push('Title,ContentType,WordCount,Status,Content');
   for (const doc of data.documents) {
-    lines.push(`"${doc.title}","${doc.contentType}",${doc.wordCount},"${doc.processingStatus}"`);
+    const escapedContent = escapeCsvValue(doc.content ?? '');
+    lines.push(
+      `"${doc.title}","${doc.contentType}",${doc.wordCount},"${doc.processingStatus}","${escapedContent}"`
+    );
   }
 
   return lines.join('\n');
@@ -157,6 +179,7 @@ export const gatherExportData = query({
       .collect();
 
     const shouldFilterRevealed = project.projectType === 'ttrpg' && includeUnrevealed === false;
+    const includeDocumentContent = !shouldFilterRevealed;
     const visibleEntities = shouldFilterRevealed ?
         entities.filter((entity) => entity.revealedToViewers === true)
       : entities;
@@ -181,6 +204,9 @@ export const gatherExportData = query({
         contentType: doc.contentType,
         wordCount: doc.wordCount,
         processingStatus: doc.processingStatus,
+        ...(includeDocumentContent && {
+          content: doc.content ?? (doc.storageId ? '[file stored]' : ''),
+        }),
       })),
       entities: visibleEntities.map((entity) => ({
         name: entity.name,

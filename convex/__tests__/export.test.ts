@@ -143,6 +143,7 @@ describe('export', () => {
       expect(result!.project.description).toBe('A fantasy setting');
       expect(result!.documents).toHaveLength(1);
       expect(result!.documents[0].title).toBe('Chapter 1');
+      expect(result!.documents[0].content).toBe('The hero arrived.');
       expect(result!.entities).toHaveLength(2);
       expect(result!.facts).toHaveLength(1);
     });
@@ -276,6 +277,7 @@ describe('export', () => {
       expect(result!.entities[0].name).toBe('Revealed NPC');
       expect(result!.facts).toHaveLength(1);
       expect(result!.facts[0].subject).toBe('Revealed NPC');
+      expect(result!.documents[0].content).toBeUndefined();
     });
   });
 });
