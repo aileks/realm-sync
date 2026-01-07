@@ -42,7 +42,6 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   const params = useParams({ strict: false });
   const projectId = (params as { projectId?: string }).projectId as Id<'projects'> | undefined;
   const user = useQuery(api.users.viewer);
-  const isLoading = user === undefined;
 
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [commandPaletteView, setCommandPaletteView] = useState<'commands' | 'shortcuts'>(
@@ -52,7 +51,6 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   const chordTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function openCommandPalette() {
-    if (isLoading) return;
     if (!user) return;
     setCommandPaletteOpen(true);
   }
