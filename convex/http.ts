@@ -18,6 +18,9 @@ polar.registerRoutes(http, {
       email: data.customer.email,
     });
     if (users.length === 0) return;
+    if (users.length > 1) {
+      console.warn(`Multiple users with email ${data.customer.email}, using first match`);
+    }
 
     const userId = users[0]._id;
 

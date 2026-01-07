@@ -522,6 +522,14 @@ export const deleteAccount = mutation({
 
     const user = await requireAuthUser(ctx);
 
+    if (user.polarSubscriptionId) {
+      try {
+        await ctx.scheduler.runAfter(0, api.polar.cancelCurrentSubscription, {});
+      } catch (error) {
+        console.error('Failed to cancel Polar subscription:', error);
+      }
+    }
+
     const projects = await ctx.db
       .query('projects')
       .withIndex('by_user', (q) => q.eq('userId', user._id))
