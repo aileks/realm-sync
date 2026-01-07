@@ -124,10 +124,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
     'mod+shift+k',
     (e) => {
       e.preventDefault();
-      if (isLoading) return;
-      if (!user) {
-        return;
-      }
+      if (!user) return;
       setCommandPaletteView('shortcuts');
       setCommandPaletteOpen(true);
     },
