@@ -318,7 +318,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
 }
 
 type NavItemProps = {
-  to: '/' | '/projects' | '/auth';
+  to: '/' | '/projects' | '/sign-in';
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   collapsed: boolean;
@@ -552,7 +552,7 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
 }
 
 type MobileNavItemProps = {
-  to: '/' | '/projects' | '/auth';
+  to: '/' | '/projects' | '/sign-in';
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   onClick: () => void;

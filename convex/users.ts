@@ -395,7 +395,7 @@ const projectModeValidator = v.union(
 export const getSubscription = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requireAuthUser(ctx);
+    const user = await getCurrentUser(ctx);
     if (!user) return null;
 
     const tier = user.subscriptionTier ?? 'free';

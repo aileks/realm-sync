@@ -37,7 +37,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     setIsLoaded(true);
   }, []);
 
-  const isAuthPage = routerState.location.pathname === '/auth';
+  const isAuthPage =
+    routerState.location.pathname === '/sign-in' || routerState.location.pathname === '/sign-up';
   const isLandingPage = routerState.location.pathname === '/' && !isAuthenticated;
 
   useEffect(() => {

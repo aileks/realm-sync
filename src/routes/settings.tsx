@@ -849,6 +849,19 @@ function SubscriptionTab() {
                 </CheckoutLink>
               )}
 
+              {isFree && products === undefined && (
+                <Button variant="outline" size="lg" className="w-full" disabled>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Loading...
+                </Button>
+              )}
+
+              {isFree && products !== undefined && !products.realmUnlimited && (
+                <p className="text-muted-foreground text-center text-sm">
+                  Upgrade temporarily unavailable. Please try again later.
+                </p>
+              )}
+
               {isTrial && products?.realmUnlimited && (
                 <>
                   <CheckoutLink
@@ -877,6 +890,13 @@ function SubscriptionTab() {
                     Manage Subscription
                   </CustomerPortalLink>
                 </>
+              )}
+
+              {isTrial && products === undefined && (
+                <Button variant="default" size="lg" className="w-full" disabled>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Loading...
+                </Button>
               )}
 
               {isUnlimited && !isTrial && (
