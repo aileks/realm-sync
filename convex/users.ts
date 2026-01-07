@@ -1,6 +1,7 @@
-import { action, mutation, query } from './_generated/server';
+import { action, internalMutation, mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { z } from 'zod';
+import { api, internal } from './_generated/api';
 import { getCurrentUser, requireAuthUser } from './lib/auth';
 import { getAuthUserId, retrieveAccount, modifyAccountCredentials } from '@convex-dev/auth/server';
 
@@ -127,10 +128,7 @@ export const changePassword = action({
       throw new Error('Password must be 128 characters or less');
     }
 
-    const user = await ctx.runQuery(
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require('./_generated/api').api.users.viewer
-    );
+    const user = await ctx.runQuery(api.users.viewer);
     if (!user?.email) {
       throw new Error('User email not found. Password login may not be configured.');
     }
@@ -159,12 +157,54 @@ export const changePassword = action({
   },
 });
 
-export const updateEmail = mutation({
+export const updateEmailInternal = internalMutation({
+  args: {
+    userId: v.id('users'),
+    oldEmail: v.string(),
+    newEmail: v.string(),
+  },
+  handler: async (ctx, { userId, oldEmail, newEmail }) => {
+    await ctx.db.patch(userId, { email: newEmail });
+
+    const authAccount = await ctx.db
+      .query('authAccounts')
+      .withIndex('providerAndAccountId', (q) =>
+        q.eq('provider', 'password').eq('providerAccountId', oldEmail)
+      )
+      .first();
+
+    if (authAccount) {
+      await ctx.db.patch(authAccount._id, { providerAccountId: newEmail });
+    }
+
+    return userId;
+  },
+});
+
+export const checkEmailAvailable = query({
+  args: {
+    email: v.string(),
+    excludeUserId: v.id('users'),
+  },
+  handler: async (ctx, { email, excludeUserId }) => {
+    const existing = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', email))
+      .first();
+
+    return !existing || existing._id === excludeUserId;
+  },
+});
+
+export const updateEmail = action({
   args: {
     newEmail: v.string(),
   },
   handler: async (ctx, { newEmail }) => {
-    const user = await requireAuthUser(ctx);
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error('Unauthorized: Authentication required');
+    }
 
     const normalized = newEmail.toLowerCase().trim();
 
@@ -174,18 +214,31 @@ export const updateEmail = mutation({
       throw new Error('Invalid email format');
     }
 
-    const existing = await ctx.db
-      .query('users')
-      .withIndex('by_email', (q) => q.eq('email', normalized))
-      .first();
+    const user = await ctx.runQuery(api.users.viewer);
+    if (!user) {
+      throw new Error('User not found');
+    }
 
-    if (existing && existing._id !== user._id) {
+    if (user.email === normalized) {
+      throw new Error('New email is the same as current email');
+    }
+
+    const isAvailable = await ctx.runQuery(api.users.checkEmailAvailable, {
+      email: normalized,
+      excludeUserId: userId,
+    });
+
+    if (!isAvailable) {
       throw new Error('Email already in use');
     }
 
-    await ctx.db.patch(user._id, { email: normalized });
+    await ctx.runMutation(internal.users.updateEmailInternal, {
+      userId,
+      oldEmail: user.email ?? '',
+      newEmail: normalized,
+    });
 
-    return user._id;
+    return userId;
   },
 });
 

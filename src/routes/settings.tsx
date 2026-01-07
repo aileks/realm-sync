@@ -474,7 +474,7 @@ function EmailChangeCard({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const updateEmail = useMutation(api.users.updateEmail);
+  const updateEmail = useAction(api.users.updateEmail);
 
   function handleRequestChange(e: FormEvent) {
     e.preventDefault();

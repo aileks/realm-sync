@@ -244,12 +244,12 @@ describe('profile', () => {
     });
   });
 
-  describe('updateEmail mutation', () => {
+  describe('updateEmail action', () => {
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, getModules());
 
       await expect(
-        t.mutation(api.users.updateEmail, { newEmail: 'new@example.com' })
+        t.action(api.users.updateEmail, { newEmail: 'new@example.com' })
       ).rejects.toThrow(/unauthorized/i);
     });
 
@@ -258,7 +258,7 @@ describe('profile', () => {
       const { asUser } = await setupAuthenticatedUser(t);
 
       await expect(
-        asUser.mutation(api.users.updateEmail, { newEmail: 'notanemail' })
+        asUser.action(api.users.updateEmail, { newEmail: 'notanemail' })
       ).rejects.toThrow(/invalid email/i);
     });
 
@@ -275,15 +275,15 @@ describe('profile', () => {
       });
 
       await expect(
-        asUser.mutation(api.users.updateEmail, { newEmail: 'taken@example.com' })
+        asUser.action(api.users.updateEmail, { newEmail: 'taken@example.com' })
       ).rejects.toThrow(/already in use/i);
     });
 
-    it('updates email directly', async () => {
+    it('updates email in users table', async () => {
       const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
-      await asUser.mutation(api.users.updateEmail, { newEmail: 'new@example.com' });
+      await asUser.action(api.users.updateEmail, { newEmail: 'new@example.com' });
 
       const user = await t.run(async (ctx) => ctx.db.get(userId));
       expect(user?.email).toBe('new@example.com');
@@ -293,10 +293,46 @@ describe('profile', () => {
       const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
-      await asUser.mutation(api.users.updateEmail, { newEmail: 'NEW@EXAMPLE.COM' });
+      await asUser.action(api.users.updateEmail, { newEmail: 'NEW@EXAMPLE.COM' });
 
       const user = await t.run(async (ctx) => ctx.db.get(userId));
       expect(user?.email).toBe('new@example.com');
+    });
+
+    it('rejects when new email is same as current', async () => {
+      const t = convexTest(schema, getModules());
+      const { asUser } = await setupAuthenticatedUser(t);
+
+      await expect(
+        asUser.action(api.users.updateEmail, { newEmail: 'test@example.com' })
+      ).rejects.toThrow(/same as current/i);
+    });
+
+    it('updates authAccounts providerAccountId for password provider', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      await t.run(async (ctx) => {
+        await ctx.db.insert('authAccounts', {
+          userId,
+          provider: 'password',
+          providerAccountId: 'test@example.com',
+        });
+      });
+
+      await asUser.action(api.users.updateEmail, { newEmail: 'new@example.com' });
+
+      const authAccount = await t.run(async (ctx) => {
+        return await ctx.db
+          .query('authAccounts')
+          .withIndex('providerAndAccountId', (q) =>
+            q.eq('provider', 'password').eq('providerAccountId', 'new@example.com')
+          )
+          .first();
+      });
+
+      expect(authAccount).not.toBeNull();
+      expect(authAccount?.providerAccountId).toBe('new@example.com');
     });
   });
 });
