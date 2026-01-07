@@ -4,7 +4,7 @@ read_when: starting any work on this codebase
 
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-01-06 **Commit:** 6c888bd **Branch:** main
+**Generated:** 2026-01-07 **Commit:** 12a947c **Branch:** feat/payments
 
 Be extremely concise. Sacrifice grammar for concision.
 
@@ -20,9 +20,9 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 │   ├── lib/          # Auth, errors, Result pattern → see convex/lib/AGENTS.md
 │   └── llm/          # LLM extraction, caching, chunking → see convex/llm/AGENTS.md
 ├── src/
-│   ├── routes/       # File-based routes (auto-generates routeTree.gen.ts)
-│   ├── components/   # App + UI components
-│   │   └── ui/       # 17 Shadcn/Base UI primitives (CVA + data-slot)
+│   ├── routes/       # File-based routes (auto-generates routeTree.gen.ts) → see src/routes/AGENTS.md
+│   ├── components/   # App + UI components → see src/components/AGENTS.md
+│   │   └── ui/       # 17 Shadcn/Base UI primitives (CVA + data-slot) → see src/components/ui/AGENTS.md
 │   ├── integrations/ # Convex provider bridge
 │   ├── lib/          # Utilities (cn, toId, formatError)
 │   ├── __tests__/    # Frontend test setup
@@ -64,6 +64,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | `cn` | `src/lib/utils.ts` | Tailwind class merging (clsx + twMerge) |
 | `toId` | `src/lib/utils.ts` | Type-safe Convex ID conversion |
 | `unwrapOrThrow` | `convex/lib/result.ts` | Convert Result<T,E> to T or throw |
+| `formatError` | `src/lib/utils.ts` | Maps errors to user-friendly messages |
 | `checkCache` | `convex/llm/cache.ts` | LLM response cache lookup |
 | `saveToCache` | `convex/llm/cache.ts` | LLM response cache storage (7-day TTL) |
 | `chunkDocument` | `convex/llm/chunk.ts` | Document chunking (12000 chars, 800 overlap) |
@@ -98,9 +99,13 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 - **UI primitives**: @base-ui/react + CVA variants + `data-slot` attributes
 - **Styling**: Always use `cn()` for Tailwind conflict resolution
 - **Components**: Named exports only; no default exports in ui/
-- **Error handling**: NeverThrow for Result pattern; avoid try/catch; use lib/errors.ts factories
+- **Error handling**: NeverThrow for Result pattern; use lib/errors.ts factories; formatError() for user messages
 - **Server functions**: Wrap with `Sentry.startSpan({ name: '...' }, async () => {...})`
 - **Build**: `vite build && cp instrument.server.mjs .output/server`
+- **Testing**: Convex tests use edge-runtime, React tests use jsdom; `convex-test` for backend
+- **Data flow**: useQuery/useMutation for all data access; Real-time via Convex subscriptions
+- **Pagination**: usePaginatedQuery for large lists (PAGE_SIZE: 24)
+- **Performance**: React Compiler enabled (no manual memoization); LLM caching (7-day TTL)
 
 ## ANTI-PATTERNS
 
@@ -121,6 +126,8 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | `getAuthUserId` in mutations | Use `requireAuth` instead |
 | Validation in handler (not args) | Use `v` validators in Convex args |
 | Direct LLM calls without cache | Use `checkCache()`/`saveToCache()` pattern |
+| Direct `throw new Error()` | Use error factories from `lib/errors.ts` |
+| Manual memoization | React Compiler handles this |
 
 ## COMMANDS
 
@@ -129,6 +136,7 @@ pnpm dev              # Dev server (port 3000, Sentry injected)
 pnpm run build        # Production build
 pnpm run start        # Production server
 pnpm test             # Vitest (265 tests)
+pnpm test:coverage     # Vitest with coverage reports
 pnpm run lint         # Oxlint with --fix, --type-aware
 pnpm run typecheck    # tsc --noEmit
 pnpm run format       # Prettier (with Tailwind plugin)
@@ -156,20 +164,21 @@ pnpm docs:list        # List docs with front-matter check
 | Auth          | Working | Google OAuth + Password                       |
 | Themes        | Ready   | 3 OKLCH themes in styles.css                  |
 | LLM           | Working | Extraction pipeline with caching + chunking   |
+| Performance   | Working | React Compiler + pagination + LLM caching     |
 
 ## TECH STACK
 
 | Layer      | Technology                | Version |
 | ---------- | ------------------------- | ------- |
-| Framework  | TanStack Start            | 1.132.0 |
+| Framework  | TanStack Start            | 1.145.8 |
 | UI         | React 19 + React Compiler | 19.2.0  |
-| Styling    | Tailwind v4 CSS-first     | 4.0.6   |
-| Backend    | Convex                    | 1.27.3  |
+| Styling    | Tailwind v4 CSS-first     | 4.1.18  |
+| Backend    | Convex                    | 1.31.2  |
 | Auth       | @convex-dev/auth          | 0.0.90  |
 | SSR        | Nitro                     | latest  |
 | Monitoring | Sentry                    | 10.22.0 |
 | Testing    | Vitest + convex-test      | 3.2.4   |
-| Linting    | Oxlint                    | 1.36.0  |
+| Linting    | Oxlint                    | 1.38.0  |
 | Markdown   | marked                    | 17.0.1  |
 
 ## NOTES
@@ -184,5 +193,11 @@ pnpm docs:list        # List docs with front-matter check
 - Entity colors defined: character (red), location (green), item (gold), concept (purple), event (blue)
 - Before commits: `pnpm run format && pnpm run lint && pnpm run typecheck`
 - Follow TDD when implementing new features
-- Large files: entities.ts (844), seed.ts (811), entities.$entityId.tsx (750) - consider splitting
+- Large files: entities.ts (958), seed.ts (811), settings.tsx (1081), entities.$entityId.tsx (877) - consider splitting
 - LLM caching: 7-day TTL, SHA-256 content hash, prompt version for invalidation
+- Stats pattern: Update project.stats on every CRUD operation (22 occurrences - extract to helper)
+- Error handling: Use formatError() for user messages, error factories for internal errors
+- Testing: Convex tests use edge-runtime, React tests use jsdom
+- Pagination: usePaginatedQuery for lists > 24 items
+- Search: Debounce inputs (300ms) before API calls
+- Access control: Queries return null for unauth, mutations throw (requireAuth)

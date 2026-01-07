@@ -11,13 +11,13 @@ read_when: working on Convex backend (database, functions, auth)
 ```
 convex/
 ├── _generated/      # Auto-generated types (NEVER EDIT)
-├── __tests__/       # Test files (convex-test) - 13 test files
+├── __tests__/       # Test files (convex-test) - 24 test files → see convex/__tests__/AGENTS.md
 ├── lib/             # Auth, errors, Result pattern → see convex/lib/AGENTS.md
 ├── llm/             # Extraction pipeline → see convex/llm/AGENTS.md
 ├── auth.config.ts   # Auth provider configuration
 ├── auth.ts          # Convex Auth setup (Google + Password)
 ├── documents.ts     # Document CRUD
-├── entities.ts      # Entity CRUD + merge + timeline (844 lines)
+├── entities.ts      # Entity CRUD + merge + timeline (958 lines)
 ├── facts.ts         # Fact CRUD + confirm/reject
 ├── chat.ts          # Vellum streaming chat
 ├── chatHistory.ts   # Chat message persistence
@@ -35,17 +35,17 @@ convex/
 
 ## WHERE TO LOOK
 
-| Task            | Location                 | Notes                        |
-| --------------- | ------------------------ | ---------------------------- |
-| Define tables   | `schema.ts`              | Use `v` validators           |
-| Write functions | `*.ts` (not \_generated) | Named exports                |
-| Auth helpers    | `lib/auth.ts`            | 4 auth functions             |
-| Error handling  | `lib/errors.ts`          | 5 error types                |
-| Result pattern  | `lib/result.ts`          | unwrapOrThrow, safeJsonParse |
-| LLM operations  | `llm/`                   | Chunk, cache, extract        |
-| Tests           | `__tests__/*.test.ts`    | convex-test                  |
-| Auth details    | `lib/AGENTS.md`          | Auth + error + Result        |
-| LLM details     | `llm/AGENTS.md`          | Chunking, caching            |
+| Task | Location | Notes |
+| --- | --- | --- |
+| Define tables | `schema.ts` | Use `v` validators |
+| Write functions | `*.ts` (not \_generated) | Named exports |
+| Auth helpers | `lib/auth.ts` | 4 auth functions |
+| Error handling | `lib/errors.ts` | 5 error types |
+| Result pattern | `lib/result.ts` | unwrapOrThrow, safeJsonParse |
+| LLM operations | `llm/` | Chunk, cache, extract |
+| Tests | `__tests__/*.test.ts` | convex-test; see convex/**tests**/AGENTS.md |
+| Auth details | `lib/AGENTS.md` | Auth + error + Result |
+| LLM details | `llm/AGENTS.md` | Chunking, caching |
 
 ## SCHEMA
 
@@ -69,19 +69,22 @@ convex/
 - Queries: null/empty for auth failures
 - Mutations: throw for auth failures
 - `unwrapOrThrow()` for Result unwrapping
+- Stats updates on every CRUD operation (22 occurrences)
+- Real-time via Convex subscriptions (useQuery)
 
 ## ANTI-PATTERNS
 
-| Pattern                          | Why                                |
-| -------------------------------- | ---------------------------------- |
-| Indices on `_id`/`_creationTime` | Auto-handled                       |
-| Validation in handler            | Use `v` in args                    |
-| Edit `_generated/*`              | Overwritten                        |
-| Silent failures                  | Throw errors                       |
-| `getAuthUserId` in mutations     | Use `requireAuth`                  |
-| Manual try/catch                 | Use Result pattern                 |
-| Throw in queries                 | Return null/empty                  |
-| Direct LLM calls without cache   | Use `checkCache()`/`saveToCache()` |
+| Pattern                          | Why                                      |
+| -------------------------------- | ---------------------------------------- |
+| Indices on `_id`/`_creationTime` | Auto-handled                             |
+| Validation in handler            | Use `v` in args                          |
+| Edit `_generated/*`              | Overwritten                              |
+| Silent failures                  | Throw errors                             |
+| `getAuthUserId` in mutations     | Use `requireAuth`                        |
+| Manual try/catch                 | Use Result pattern                       |
+| Throw in queries                 | Return null/empty                        |
+| Direct LLM calls without cache   | Use `checkCache()`/`saveToCache()`       |
+| Direct `throw new Error()`       | Use error factories from `lib/errors.ts` |
 
 ## COMMANDS
 
@@ -98,7 +101,9 @@ npx convex deploy        # Deploy to production
 - 265 tests passing
 - Cascade deletes: manual before project
 - Stats sync: every CRUD patches project.stats
-- entities.ts (844 lines) largest
+- entities.ts (958 lines) largest
+- seed.ts (811 lines) - consider splitting per project type
 - LLM caching: 7-day TTL, SHA-256
 - See `lib/AGENTS.md` for auth + error + Result
 - See `llm/AGENTS.md` for chunking + caching
+- See `__tests__/AGENTS.md` for test patterns

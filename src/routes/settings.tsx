@@ -726,10 +726,12 @@ function PasswordChangeCard() {
 
 function SubscriptionTab() {
   const subscription = useQuery(api.users.getSubscription);
-  const products = useQuery(api.polar.getConfiguredProducts);
+  const products = useQuery(api.polar.listAllProducts);
   const startTrial = useMutation(api.users.startTrial);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const realmUnlimited = products?.find((p) => p.name === 'Realm Unlimited');
 
   if (subscription === undefined) {
     return (
@@ -838,12 +840,12 @@ function SubscriptionTab() {
                 </Button>
               )}
 
-              {isFree && products?.realmUnlimited && (
+              {isFree && realmUnlimited && (
                 <CheckoutLink
                   polarApi={{
                     generateCheckoutLink: api.polar.generateCheckoutLink,
                   }}
-                  productIds={[products.realmUnlimited.id]}
+                  productIds={[realmUnlimited.id]}
                   embed={false}
                   className={cn(
                     buttonVariants({
@@ -858,25 +860,16 @@ function SubscriptionTab() {
               )}
 
               {isFree && products === undefined && (
-                <Button variant="outline" size="lg" className="w-full" disabled>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Loading...
-                </Button>
+                <p className="text-muted-foreground text-center text-sm">Loading...</p>
               )}
 
-              {isFree && products !== undefined && !products.realmUnlimited && (
-                <p className="text-muted-foreground text-center text-sm">
-                  Upgrade temporarily unavailable. Please try again later.
-                </p>
-              )}
-
-              {isTrial && products?.realmUnlimited && (
+              {isTrial && realmUnlimited && (
                 <>
                   <CheckoutLink
                     polarApi={{
                       generateCheckoutLink: api.polar.generateCheckoutLink,
                     }}
-                    productIds={[products.realmUnlimited.id]}
+                    productIds={[realmUnlimited.id]}
                     embed={false}
                     className={cn(
                       buttonVariants({
@@ -893,14 +886,14 @@ function SubscriptionTab() {
                     polarApi={{
                       generateCustomerPortalUrl: api.polar.generateCustomerPortalUrl,
                     }}
-                    className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
+                    className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'w-full')}
                   >
                     Manage Subscription
                   </CustomerPortalLink>
                 </>
               )}
 
-              {isTrial && products === undefined && (
+              {isTrial && !realmUnlimited && (
                 <Button variant="default" size="lg" className="w-full" disabled>
                   <Loader2 className="mr-2 size-4 animate-spin" />
                   Loading...

@@ -38,9 +38,11 @@ export function UpgradePrompt({
   current,
   limit,
 }: UpgradePromptProps) {
-  const products = useQuery(api.polar.getConfiguredProducts);
+  const products = useQuery(api.polar.listAllProducts);
   const label = LIMIT_LABELS[limitType];
   const percentage = Math.min(100, Math.max(0, (current / limit) * 100));
+
+  const realmUnlimited = products?.find((p) => p.name === 'Realm Unlimited');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,12 +97,12 @@ export function UpgradePrompt({
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
-          {products?.realmUnlimited && (
+          {realmUnlimited && (
             <CheckoutLink
               polarApi={{
                 generateCheckoutLink: api.polar.generateCheckoutLink,
               }}
-              productIds={[products.realmUnlimited.id]}
+              productIds={[realmUnlimited.id]}
               embed={false}
               className="shadow-primary/20 w-full gap-2 text-base font-semibold shadow-lg"
             >
