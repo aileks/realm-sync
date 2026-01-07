@@ -1,9 +1,22 @@
 import { convexTest } from 'convex-test';
 import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
+import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
 
 const getModules = () => import.meta.glob('../**/*.ts');
+
+async function createStorageBlob(
+  t: ReturnType<typeof convexTest>,
+  contentType: string,
+  size: number
+): Promise<Id<'_storage'>> {
+  return await t.run(async (ctx) => {
+    const content = new Uint8Array(size);
+    const blob = new Blob([content], { type: contentType });
+    return await ctx.storage.store(blob);
+  });
+}
 
 async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
   const userId = await t.run(async (ctx) => {
@@ -146,9 +159,26 @@ describe('profile', () => {
     });
   });
 
-  // NOTE: updateAvatar mutation tests skipped - convex-test storage.store()
-  // fails with jsdom's Blob (missing arrayBuffer method). The mutation is
-  // simple validation + db update, tested manually.
+  describe('updateAvatar mutation', () => {
+    it('stores file in storage with correct size', async () => {
+      const t = convexTest(schema, getModules());
+
+      const storageId = await createStorageBlob(t, 'image/png', 1024);
+
+      const meta = await t.run(async (ctx) => ctx.db.system.get(storageId));
+      expect(meta?.size).toBe(1024);
+    });
+
+    it('throws when not authenticated', async () => {
+      const t = convexTest(schema, getModules());
+
+      const storageId = await createStorageBlob(t, 'image/png', 1024);
+
+      await expect(t.mutation(api.users.updateAvatar, { storageId })).rejects.toThrow(
+        /unauthorized/i
+      );
+    });
+  });
 
   describe('removeAvatar mutation', () => {
     it('removes avatarStorageId from user', async () => {
@@ -176,12 +206,12 @@ describe('profile', () => {
     });
   });
 
-  describe('changePassword mutation', () => {
+  describe('changePassword action', () => {
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, getModules());
 
       await expect(
-        t.mutation(api.users.changePassword, {
+        t.action(api.users.changePassword, {
           currentPassword: 'old',
           newPassword: 'newpassword123',
         })
@@ -193,7 +223,7 @@ describe('profile', () => {
       const { asUser } = await setupAuthenticatedUser(t);
 
       await expect(
-        asUser.mutation(api.users.changePassword, {
+        asUser.action(api.users.changePassword, {
           currentPassword: 'old',
           newPassword: 'short',
         })
@@ -206,7 +236,7 @@ describe('profile', () => {
 
       const longPassword = 'A'.repeat(129);
       await expect(
-        asUser.mutation(api.users.changePassword, {
+        asUser.action(api.users.changePassword, {
           currentPassword: 'old',
           newPassword: longPassword,
         })

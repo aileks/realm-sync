@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useMutation, useQuery } from 'convex/react';
+import { useAction, useMutation, useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useState, useRef, type FormEvent, type ChangeEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -278,9 +278,23 @@ function ProfileFieldsSection({
     setIsLoading(true);
 
     try {
+      const trimmedName = name.trim();
+      const trimmedBio = bio.trim();
+      const originalName = user.name ?? '';
+      const originalBio = user.bio ?? '';
+
+      const hasNameChange = trimmedName !== originalName;
+      const hasBioChange = trimmedBio !== originalBio;
+
+      if (!hasNameChange && !hasBioChange) {
+        setError('No changes to save');
+        setIsLoading(false);
+        return;
+      }
+
       await updateProfile({
-        name: name.trim() || undefined,
-        bio: bio.trim() || undefined,
+        name: hasNameChange ? trimmedName : undefined,
+        bio: hasBioChange ? trimmedBio : undefined,
       });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -573,7 +587,7 @@ function PasswordChangeCard() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const changePassword = useMutation(api.users.changePassword);
+  const changePassword = useAction(api.users.changePassword);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();

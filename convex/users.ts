@@ -1,7 +1,8 @@
-import { mutation, query } from './_generated/server';
+import { action, mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { z } from 'zod';
 import { getCurrentUser, requireAuthUser } from './lib/auth';
+import { getAuthUserId, retrieveAccount, modifyAccountCredentials } from '@convex-dev/auth/server';
 
 export const viewer = query({
   args: {},
@@ -107,17 +108,16 @@ export const removeAvatar = mutation({
   },
 });
 
-export const changePassword = mutation({
+export const changePassword = action({
   args: {
     currentPassword: v.string(),
     newPassword: v.string(),
   },
   handler: async (ctx, { currentPassword, newPassword }) => {
-    const user = await requireAuthUser(ctx);
-
-    // TODO: Validate currentPassword against stored password hash
-    // This requires integrating with @convex-dev/auth's internal password verification
-    void currentPassword;
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error('Unauthorized: Authentication required');
+    }
 
     if (newPassword.length < 8) {
       throw new Error('Password must be at least 8 characters');
@@ -127,9 +127,35 @@ export const changePassword = mutation({
       throw new Error('Password must be 128 characters or less');
     }
 
-    // TODO: Hash newPassword and update user record via @convex-dev/auth
+    const user = await ctx.runQuery(
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      require('./_generated/api').api.users.viewer
+    );
+    if (!user?.email) {
+      throw new Error('User email not found. Password login may not be configured.');
+    }
 
-    return user._id;
+    try {
+      await retrieveAccount(ctx, {
+        provider: 'password',
+        account: {
+          id: user.email,
+          secret: currentPassword,
+        },
+      });
+    } catch {
+      throw new Error('Current password is incorrect');
+    }
+
+    await modifyAccountCredentials(ctx, {
+      provider: 'password',
+      account: {
+        id: user.email,
+        secret: newPassword,
+      },
+    });
+
+    return userId;
   },
 });
 
