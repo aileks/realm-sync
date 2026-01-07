@@ -28,7 +28,7 @@ export function EntityNotesPanel({ entityId, className }: EntityNotesPanelProps)
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
-          <Button variant="outline" size="sm" className={className}>
+          <Button variant="outline" className={className}>
             <StickyNote className="mr-2 size-4" />
             Notes
           </Button>
@@ -111,7 +111,6 @@ function EntityNotesContent({ entityId }: EntityNotesContentProps) {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={3}
-              
             />
             <div className="flex justify-end gap-2">
               <Button

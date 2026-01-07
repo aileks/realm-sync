@@ -383,7 +383,7 @@ export const resolveWithCanonUpdate = mutation({
     let updatedEvidenceSnippet: string | undefined;
     let updatedEvidencePosition = fact.evidencePosition;
 
-    const doc = await ctx.db.get(fact.documentId);
+    const doc = fact.documentId ? await ctx.db.get(fact.documentId) : null;
     if (doc?.content) {
       const replaceInSnippet = (snippet: string) =>
         snippet.includes(previousObject) ? snippet.replace(previousObject, newValue) : null;
@@ -415,7 +415,7 @@ export const resolveWithCanonUpdate = mutation({
         }
       }
 
-      if (updatedContent) {
+      if (updatedContent && fact.documentId) {
         await ctx.db.patch(fact.documentId, {
           content: updatedContent,
           wordCount: countWords(updatedContent),

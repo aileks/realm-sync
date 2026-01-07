@@ -27,11 +27,9 @@ function classifyAuthError(error: unknown): AuthErrorType {
 function getAuthErrorMessage(errorType: AuthErrorType, mode: 'signin' | 'signup'): string {
   switch (errorType) {
     case 'account_not_found':
-      return mode === 'signin' ?
-          'Account not found. Please sign up first.'
-        : 'Failed to create account.';
+      return mode === 'signin' ? 'Email or password incorrect.' : 'Failed to create account.';
     case 'invalid_credentials':
-      return 'Invalid email or password.';
+      return 'Email or password incorrect.';
     case 'unknown':
       return 'Authentication failed. Please try again.';
   }

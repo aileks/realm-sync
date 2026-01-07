@@ -181,12 +181,12 @@ export const gatherExportData = query({
         status: entity.status,
       })),
       facts: facts.map((fact) => ({
-        entityName: entityMap.get(fact.entityId) ?? 'Unknown',
+        entityName: fact.entityId ? (entityMap.get(fact.entityId) ?? 'Unknown') : 'Unlinked',
         subject: fact.subject,
         predicate: fact.predicate,
         object: fact.object,
         confidence: fact.confidence,
-        evidenceSnippet: fact.evidenceSnippet,
+        evidenceSnippet: fact.evidenceSnippet ?? '',
         status: fact.status,
       })),
     };

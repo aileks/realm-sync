@@ -4,7 +4,7 @@ read_when: starting any work on this codebase
 
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-01-06 **Commit:** bedcb4d **Branch:** main
+**Generated:** 2026-01-06 **Commit:** 6c888bd **Branch:** main
 
 Be extremely concise. Sacrifice grammar for concision.
 
@@ -17,6 +17,8 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 ```
 ./
 ├── convex/           # Backend (schema, functions) → see convex/AGENTS.md
+│   ├── lib/          # Auth, errors, Result pattern → see convex/lib/AGENTS.md
+│   └── llm/          # LLM extraction, caching, chunking → see convex/llm/AGENTS.md
 ├── src/
 │   ├── routes/       # File-based routes (auto-generates routeTree.gen.ts)
 │   ├── components/   # App + UI components
@@ -39,14 +41,16 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | --- | --- | --- |
 | Add route | `src/routes/` | File-based; dotted nesting (`projects.$projectId.tsx`) |
 | Backend logic | `convex/` | Schema: `schema.ts`; functions: separate files |
+| Auth helpers | `convex/lib/auth.ts` | getAuthUserId, requireAuth, getCurrentUser, requireAuthUser |
+| Error handling | `convex/lib/errors.ts` | AppError types + neverthrow Result pattern |
+| Result pattern | `convex/lib/result.ts` | unwrapOrThrow, safeJsonParse |
+| LLM operations | `convex/llm/` | Extract, cache, chunk → see convex/llm/AGENTS.md |
 | Env vars | `src/env.ts` | T3Env; add to schema before use |
 | Styling | `src/styles.css` | Tailwind v4 CSS-first; OKLCH only |
 | UI components | `src/components/ui/` | Shadcn/Base UI; use `cn()` always |
 | Root layout | `src/routes/__root.tsx` | HTML shell, providers, no index.html |
 | Server instrumentation | `instrument.server.mjs` | Sentry/OpenTelemetry |
 | Tests | `*.test.ts` alongside source | Vitest; `convex-test` for backend |
-| Auth helpers | `convex/lib/auth.ts` | getAuthUserId, requireAuth, getCurrentUser, requireAuthUser |
-| Error handling | `convex/lib/errors.ts` | AppError types + neverthrow Result pattern |
 
 ## CODE MAP
 
@@ -60,6 +64,11 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | `cn` | `src/lib/utils.ts` | Tailwind class merging (clsx + twMerge) |
 | `toId` | `src/lib/utils.ts` | Type-safe Convex ID conversion |
 | `unwrapOrThrow` | `convex/lib/result.ts` | Convert Result<T,E> to T or throw |
+| `checkCache` | `convex/llm/cache.ts` | LLM response cache lookup |
+| `saveToCache` | `convex/llm/cache.ts` | LLM response cache storage (7-day TTL) |
+| `chunkDocument` | `convex/llm/chunk.ts` | Document chunking (12000 chars, 800 overlap) |
+| `chunkAndExtract` | `convex/llm/extract.ts` | Public LLM extraction entry point |
+| `VELLUM_SYSTEM_PROMPT` | `convex/llm/extract.ts` | Archivist Moth persona for LLM |
 | `ReviewEntityCard` | `src/components/ReviewEntityCard.tsx` | EntityCard wrapper with merge suggestions |
 | `EntityTypeFilter` | `src/components/EntityTypeFilter.tsx` | Filter dropdown for entity types |
 | `AlertCard` | `src/components/AlertCard.tsx` | Alert display card with actions |
@@ -107,6 +116,7 @@ Full-stack React 19 app: TanStack Start (file-based routing + SSR via Nitro), Co
 | Indices on `_id`/`_creationTime` | Convex auto-handles |
 | `getAuthUserId` in mutations | Use `requireAuth` instead |
 | Validation in handler (not args) | Use `v` validators in Convex args |
+| Direct LLM calls without cache | Use `checkCache()`/`saveToCache()` pattern |
 
 ## COMMANDS
 
@@ -141,6 +151,7 @@ pnpm docs:list        # List docs with front-matter check
 | CI/CD         | Working | 4 parallel jobs: lint, typecheck, test, build |
 | Auth          | Working | Google OAuth + Password                       |
 | Themes        | Ready   | 3 OKLCH themes in styles.css                  |
+| LLM           | Working | Extraction pipeline with caching + chunking   |
 
 ## TECH STACK
 
@@ -170,3 +181,4 @@ pnpm docs:list        # List docs with front-matter check
 - Before commits: `pnpm run format && pnpm run lint && pnpm run typecheck`
 - Follow TDD when implementing new features
 - Large files: entities.ts (844), seed.ts (811), entities.$entityId.tsx (750) - consider splitting
+- LLM caching: 7-day TTL, SHA-256 content hash, prompt version for invalidation

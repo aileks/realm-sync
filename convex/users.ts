@@ -92,3 +92,24 @@ export const completeTutorialTour = mutation({
     return { completedSteps: Array.from(mergedSteps), completedAt: now };
   },
 });
+
+const projectModeValidator = v.union(
+  v.literal('ttrpg'),
+  v.literal('original-fiction'),
+  v.literal('fanfiction'),
+  v.literal('game-design')
+);
+
+export const updateProjectModes = mutation({
+  args: { projectModes: v.array(projectModeValidator) },
+  handler: async (ctx, { projectModes }) => {
+    const user = await requireAuthUser(ctx);
+    const settings = user.settings ?? {};
+
+    await ctx.db.patch(user._id, {
+      settings: { ...settings, projectModes },
+    });
+
+    return user._id;
+  },
+});

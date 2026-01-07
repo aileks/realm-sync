@@ -36,32 +36,6 @@ export const list = query({
   },
 });
 
-export const listSharedWithMe = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    const shares = await ctx.db
-      .query('projectShares')
-      .withIndex('by_user', (q) => q.eq('sharedWithUserId', userId))
-      .filter((q) => q.neq(q.field('acceptedAt'), undefined))
-      .collect();
-
-    const projectsWithRole = await Promise.all(
-      shares.map(async (share) => {
-        const project = await ctx.db.get(share.projectId);
-        if (!project) return null;
-        return { ...project, role: share.role };
-      })
-    );
-
-    return projectsWithRole.filter(Boolean) as (Doc<'projects'> & {
-      role: 'editor' | 'viewer';
-    })[];
-  },
-});
-
 export const get = query({
   args: { id: v.id('projects') },
   handler: async (ctx, { id }) => {
@@ -75,12 +49,23 @@ export const get = query({
   },
 });
 
+const projectTypeValidator = v.optional(
+  v.union(
+    v.literal('ttrpg'),
+    v.literal('original-fiction'),
+    v.literal('fanfiction'),
+    v.literal('game-design'),
+    v.literal('general')
+  )
+);
+
 export const create = mutation({
   args: {
     name: v.string(),
     description: v.optional(v.string()),
+    projectType: projectTypeValidator,
   },
-  handler: async (ctx, { name, description }) => {
+  handler: async (ctx, { name, description, projectType }) => {
     const userId = await requireAuth(ctx);
     const now = Date.now();
 
@@ -88,6 +73,7 @@ export const create = mutation({
       userId,
       name,
       description,
+      projectType,
       createdAt: now,
       updatedAt: now,
       stats: {
@@ -106,14 +92,16 @@ export const update = mutation({
     id: v.id('projects'),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
+    projectType: projectTypeValidator,
   },
-  handler: async (ctx, { id, name, description }) => {
+  handler: async (ctx, { id, name, description, projectType }) => {
     const userId = await requireAuth(ctx);
     const project = unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
 
     const updates: Partial<typeof project> = { updatedAt: Date.now() };
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
+    if (projectType !== undefined) updates.projectType = projectType;
 
     await ctx.db.patch(id, updates);
     return id;
@@ -163,15 +151,6 @@ export const remove = mutation({
 
     for (const alert of alerts) {
       await ctx.db.delete(alert._id);
-    }
-
-    const shares = await ctx.db
-      .query('projectShares')
-      .withIndex('by_project', (q) => q.eq('projectId', id))
-      .collect();
-
-    for (const share of shares) {
-      await ctx.db.delete(share._id);
     }
 
     await ctx.db.delete(id);

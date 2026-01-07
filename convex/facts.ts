@@ -23,12 +23,11 @@ const temporalBoundValidator = v.object({
 async function getProjectAccess(
   ctx: QueryCtx | MutationCtx,
   projectId: Id<'projects'>
-): Promise<{ canRead: boolean; canEdit: boolean; isViewer: boolean }> {
+): Promise<{ canRead: boolean; canEdit: boolean }> {
   const role = await getProjectRole(ctx, projectId);
   return {
     canRead: role !== null,
-    canEdit: role === 'owner' || role === 'editor',
-    isViewer: role === 'viewer',
+    canEdit: role === 'owner',
   };
 }
 
@@ -62,13 +61,13 @@ async function verifyFactAccess(
 export const create = mutation({
   args: {
     projectId: v.id('projects'),
-    entityId: v.id('entities'),
-    documentId: v.id('documents'),
+    entityId: v.optional(v.id('entities')),
+    documentId: v.optional(v.id('documents')),
     subject: v.string(),
     predicate: v.string(),
     object: v.string(),
     confidence: v.number(),
-    evidenceSnippet: v.string(),
+    evidenceSnippet: v.optional(v.string()),
     evidencePosition: v.optional(
       v.object({
         start: v.number(),
@@ -205,14 +204,6 @@ export const listByEntity = query({
     const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return [];
 
-    // Viewers only see confirmed facts
-    if (access.isViewer) {
-      return await ctx.db
-        .query('facts')
-        .withIndex('by_entity', (q) => q.eq('entityId', entityId).eq('status', 'confirmed'))
-        .collect();
-    }
-
     if (status) {
       return await ctx.db
         .query('facts')
@@ -249,16 +240,10 @@ export const listByDocument = query({
     const access = await getProjectAccess(ctx, doc.projectId);
     if (!access.canRead) return [];
 
-    let facts = await ctx.db
+    return await ctx.db
       .query('facts')
       .withIndex('by_document', (q) => q.eq('documentId', documentId))
       .collect();
-
-    if (access.isViewer) {
-      facts = facts.filter((f) => f.status === 'confirmed');
-    }
-
-    return facts;
   },
 });
 
@@ -270,14 +255,6 @@ export const listByProject = query({
   handler: async (ctx, { projectId, status }) => {
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
-
-    // Viewers forced to confirmed only
-    if (access.isViewer) {
-      return await ctx.db
-        .query('facts')
-        .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('status', 'confirmed'))
-        .collect();
-    }
 
     if (status) {
       return await ctx.db
@@ -305,12 +282,10 @@ export const listByProjectPaginated = query({
       return { page: [], isDone: true, continueCursor: '' };
     }
 
-    const effectiveStatus = access.isViewer ? 'confirmed' : status;
-
-    if (effectiveStatus) {
+    if (status) {
       return await ctx.db
         .query('facts')
-        .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('status', effectiveStatus))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('status', status))
         .paginate(paginationOpts);
     }
 
@@ -329,8 +304,6 @@ export const get = query({
 
     const access = await getProjectAccess(ctx, fact.projectId);
     if (!access.canRead) return null;
-
-    if (access.isViewer && fact.status !== 'confirmed') return null;
 
     return fact;
   },

@@ -32,8 +32,7 @@ export default defineSchema({
               v.literal('ttrpg'),
               v.literal('original-fiction'),
               v.literal('fanfiction'),
-              v.literal('game-design'),
-              v.literal('general')
+              v.literal('game-design')
             )
           )
         ),
@@ -111,7 +110,7 @@ export default defineSchema({
     firstMentionedIn: v.optional(v.id('documents')),
     status: v.union(v.literal('pending'), v.literal('confirmed')),
     revealedToViewers: v.optional(v.boolean()),
-    revealedAt: v.optional(v.number()),
+    revealedAt: v.optional(v.union(v.number(), v.null())),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -130,13 +129,13 @@ export default defineSchema({
   // Facts
   facts: defineTable({
     projectId: v.id('projects'),
-    entityId: v.id('entities'),
-    documentId: v.id('documents'),
+    entityId: v.optional(v.id('entities')),
+    documentId: v.optional(v.id('documents')),
     subject: v.string(),
     predicate: v.string(),
     object: v.string(),
     confidence: v.number(),
-    evidenceSnippet: v.string(),
+    evidenceSnippet: v.optional(v.string()),
     evidencePosition: v.optional(
       v.object({
         start: v.number(),
@@ -189,20 +188,6 @@ export default defineSchema({
     content: v.string(),
     createdAt: v.number(),
   }).index('by_user', ['userId', 'createdAt']),
-
-  // Project Shares (DM/Player collaboration)
-  projectShares: defineTable({
-    projectId: v.id('projects'),
-    sharedWithEmail: v.string(),
-    sharedWithUserId: v.optional(v.id('users')), // Populated when user accepts
-    role: v.union(v.literal('editor'), v.literal('viewer')),
-    invitedBy: v.id('users'),
-    acceptedAt: v.optional(v.number()),
-    createdAt: v.number(),
-  })
-    .index('by_project', ['projectId'])
-    .index('by_email', ['sharedWithEmail'])
-    .index('by_user', ['sharedWithUserId']),
 
   // LLM Cache
   llmCache: defineTable({

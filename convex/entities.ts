@@ -22,12 +22,15 @@ const entityStatusValidator = v.union(v.literal('pending'), v.literal('confirmed
 async function getProjectAccess(
   ctx: QueryCtx | MutationCtx,
   projectId: Id<'projects'>
-): Promise<{ canRead: boolean; canEdit: boolean; isViewer: boolean }> {
+): Promise<{
+  canRead: boolean;
+  canEdit: boolean;
+}> {
   const role = await getProjectRole(ctx, projectId);
+
   return {
     canRead: role !== null,
-    canEdit: role === 'owner' || role === 'editor',
-    isViewer: role === 'viewer',
+    canEdit: role === 'owner',
   };
 }
 
@@ -192,43 +195,28 @@ export const listByProject = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
-    const effectiveStatus = access.isViewer ? 'confirmed' : status;
-    let entities;
-
-    if (type && effectiveStatus) {
-      entities = await ctx.db
+    if (type && status) {
+      return await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
         .filter((q) => q.eq(q.field('type'), type))
         .collect();
     } else if (type) {
-      entities = await ctx.db
+      return await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', type))
         .collect();
-      if (access.isViewer) {
-        entities = entities.filter((e) => e.status === 'confirmed');
-      }
-    } else if (effectiveStatus) {
-      entities = await ctx.db
+    } else if (status) {
+      return await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
         .collect();
     } else {
-      entities = await ctx.db
+      return await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .collect();
-      if (access.isViewer) {
-        entities = entities.filter((e) => e.status === 'confirmed');
-      }
     }
-
-    return entities;
   },
 });
 
@@ -245,15 +233,12 @@ export const listByProjectWithStats = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
-    const effectiveStatus = access.isViewer ? 'confirmed' : status;
     let entities;
 
-    if (type && effectiveStatus) {
+    if (type && status) {
       entities = await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
         .filter((q) => q.eq(q.field('type'), type))
         .collect();
     } else if (type) {
@@ -261,24 +246,16 @@ export const listByProjectWithStats = query({
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', type))
         .collect();
-      if (access.isViewer) {
-        entities = entities.filter((e) => e.status === 'confirmed');
-      }
-    } else if (effectiveStatus) {
+    } else if (status) {
       entities = await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
         .collect();
     } else {
       entities = await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .collect();
-      if (access.isViewer) {
-        entities = entities.filter((e) => e.status === 'confirmed');
-      }
     }
 
     const entitiesWithStats = await Promise.all(
@@ -318,16 +295,13 @@ export const getWithFacts = query({
 
     const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return null;
-    if (access.isViewer && entity.status !== 'confirmed') return null;
 
     const facts = await ctx.db
       .query('facts')
       .withIndex('by_entity', (q) => q.eq('entityId', id))
       .collect();
 
-    const filteredFacts = access.isViewer ? facts.filter((f) => f.status === 'confirmed') : facts;
-
-    return { entity, facts: filteredFacts };
+    return { entity, facts };
   },
 });
 
@@ -380,7 +354,6 @@ export const get = query({
 
     const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return null;
-    if (access.isViewer && entity.status !== 'confirmed') return null;
 
     return entity;
   },
@@ -399,8 +372,6 @@ export const findByName = query({
       .query('entities')
       .withIndex('by_name', (q) => q.eq('projectId', projectId).eq('name', name))
       .first();
-
-    if (entity && access.isViewer && entity.status !== 'confirmed') return null;
 
     return entity;
   },
@@ -488,46 +459,23 @@ export const listByProjectPaginated = query({
       return { page: [], isDone: true, continueCursor: '' };
     }
 
-    const effectiveStatus = access.isViewer ? 'confirmed' : status;
-
-    if (type && effectiveStatus) {
+    if (type && status) {
       return await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
         .filter((q) => q.eq(q.field('type'), type))
         .paginate(paginationOpts);
     } else if (type) {
-      if (access.isViewer) {
-        return await ctx.db
-          .query('entities')
-          .withIndex('by_project_status', (q) =>
-            q.eq('projectId', projectId).eq('status', 'confirmed')
-          )
-          .filter((q) => q.eq(q.field('type'), type))
-          .paginate(paginationOpts);
-      }
       return await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', type))
         .paginate(paginationOpts);
-    } else if (effectiveStatus) {
+    } else if (status) {
       return await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
         .paginate(paginationOpts);
     } else {
-      if (access.isViewer) {
-        return await ctx.db
-          .query('entities')
-          .withIndex('by_project_status', (q) =>
-            q.eq('projectId', projectId).eq('status', 'confirmed')
-          )
-          .paginate(paginationOpts);
-      }
       return await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId))
@@ -546,14 +494,10 @@ export const findSimilar = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
-    let allEntities = await ctx.db
+    const allEntities = await ctx.db
       .query('entities')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .collect();
-
-    if (access.isViewer) {
-      allEntities = allEntities.filter((e) => e.status === 'confirmed');
-    }
 
     const normalizedName = name.toLowerCase().trim();
 
@@ -607,7 +551,6 @@ export const search = query({
 
     for (const entity of [...nameResults, ...descriptionResults]) {
       if (!seen.has(entity._id)) {
-        if (access.isViewer && entity.status !== 'confirmed') continue;
         seen.add(entity._id);
         combined.push(entity);
       }
@@ -626,19 +569,18 @@ export const getWithDetails = query({
 
     const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return null;
-    if (access.isViewer && entity.status !== 'confirmed') return null;
 
-    let facts = await ctx.db
+    const facts = await ctx.db
       .query('facts')
       .withIndex('by_entity', (q) => q.eq('entityId', id))
       .filter((q) => q.neq(q.field('status'), 'rejected'))
       .collect();
 
-    if (access.isViewer) {
-      facts = facts.filter((f) => f.status === 'confirmed');
-    }
-
-    const documentIds = [...new Set(facts.map((f) => f.documentId))];
+    const documentIds = [
+      ...new Set(
+        facts.map((f) => f.documentId).filter((id): id is Id<'documents'> => id !== undefined)
+      ),
+    ];
     const documents = await Promise.all(documentIds.map((docId) => ctx.db.get(docId)));
     const appearances = documents
       .filter((doc): doc is Doc<'documents'> => doc !== null)
@@ -871,15 +813,11 @@ export const getRelationshipGraph = query({
       .filter((q) => q.eq(q.field('status'), 'confirmed'))
       .collect();
 
-    let allFacts = await ctx.db
+    const allFacts = await ctx.db
       .query('facts')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .filter((q) => q.neq(q.field('status'), 'rejected'))
       .collect();
-
-    if (access.isViewer) {
-      allFacts = allFacts.filter((f) => f.status === 'confirmed');
-    }
 
     type Edge = {
       source: Id<'entities'>;
@@ -892,6 +830,7 @@ export const getRelationshipGraph = query({
     const connectedEntityIds = new Set<Id<'entities'>>();
 
     for (const fact of allFacts) {
+      if (!fact.entityId) continue;
       const sourceEntity = allEntities.find((e) => e._id === fact.entityId);
       if (!sourceEntity) continue;
 
@@ -950,5 +889,59 @@ export const getRelationshipGraph = query({
       }));
 
     return { nodes, edges: filteredEdges };
+  },
+});
+
+export const revealToPlayers = mutation({
+  args: {
+    entityId: v.id('entities'),
+  },
+  handler: async (ctx, { entityId }) => {
+    const userId = await requireAuth(ctx);
+    const entity = await ctx.db.get(entityId);
+    if (!entity) throw new Error('Entity not found');
+
+    const project = await ctx.db.get(entity.projectId);
+    if (!project || project.userId !== userId) {
+      throw new Error('Not authorized');
+    }
+
+    if (project.projectType !== 'ttrpg') {
+      throw new Error('Reveal is only available for TTRPG projects');
+    }
+
+    await ctx.db.patch(entityId, {
+      revealedToViewers: true,
+      revealedAt: Date.now(),
+    });
+
+    return entityId;
+  },
+});
+
+export const hideFromPlayers = mutation({
+  args: {
+    entityId: v.id('entities'),
+  },
+  handler: async (ctx, { entityId }) => {
+    const userId = await requireAuth(ctx);
+    const entity = await ctx.db.get(entityId);
+    if (!entity) throw new Error('Entity not found');
+
+    const project = await ctx.db.get(entity.projectId);
+    if (!project || project.userId !== userId) {
+      throw new Error('Not authorized');
+    }
+
+    if (project.projectType !== 'ttrpg') {
+      throw new Error('Hide is only available for TTRPG projects');
+    }
+
+    await ctx.db.patch(entityId, {
+      revealedToViewers: false,
+      revealedAt: null,
+    });
+
+    return entityId;
   },
 });

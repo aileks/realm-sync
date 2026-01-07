@@ -17,6 +17,10 @@ import {
   Plus,
   Loader2,
   HelpCircle,
+  Eye,
+  EyeOff,
+  Lock,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
@@ -33,6 +37,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { LoadingState } from '@/components/LoadingState';
 import { EmptyState } from '@/components/EmptyState';
 import { EntityNotesPanel } from '@/components/EntityNotesPanel';
@@ -85,10 +99,34 @@ function EntityDetailPage() {
   const navigate = useNavigate();
   const { entityId } = Route.useParams();
   const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const data = useQuery(api.entities.getWithDetails, {
     id: entityId as Id<'entities'>,
   });
+
+  const entityProjectId = data?.entity.projectId;
+  const project = useQuery(api.projects.get, entityProjectId ? { id: entityProjectId } : 'skip');
+  const isTtrpgProject = project?.projectType === 'ttrpg';
+
+  const revealEntity = useMutation(api.entities.revealToPlayers);
+  const hideEntity = useMutation(api.entities.hideFromPlayers);
+  const removeEntity = useMutation(api.entities.remove);
+
+  const isManuallyCreated = data ? !data.entity.firstMentionedIn : false;
+
+  const handleDelete = async () => {
+    if (!data) return;
+    try {
+      await removeEntity({ id: data.entity._id });
+      void navigate({
+        to: '/projects/$projectId/entities',
+        params: { projectId: data.entity.projectId },
+      });
+    } catch {
+      toast.error('Failed to delete entity');
+    }
+  };
 
   if (data === undefined) {
     return <LoadingState message="Loading entity..." />;
@@ -133,7 +171,16 @@ function EntityDetailPage() {
           onSave={() => setIsEditing(false)}
         />
       : <>
-          <EntityHeader entity={entity} config={config} onEdit={() => setIsEditing(true)} />
+          <EntityHeader
+            entity={entity}
+            config={config}
+            onEdit={() => setIsEditing(true)}
+            onDelete={() => setShowDeleteDialog(true)}
+            isManuallyCreated={isManuallyCreated}
+            isTtrpgProject={isTtrpgProject}
+            onReveal={() => revealEntity({ entityId: entity._id })}
+            onHide={() => hideEntity({ entityId: entity._id })}
+          />
 
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
@@ -151,6 +198,26 @@ function EntityDetailPage() {
               <RelatedEntitiesCard entities={relatedEntities} projectId={projectId} />
             </div>
           </div>
+
+          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Entity?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {isManuallyCreated ?
+                    `Deleting "${entity.name}" is permanent. This entity was manually created and cannot be restored.`
+                  : `Deleting "${entity.name}" may cause continuity inconsistencies. Facts linked to this entity will become orphaned. You can restore it by running a new extraction on your documents.`
+                  }
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction variant="destructive" onClick={handleDelete}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       }
     </div>
@@ -161,9 +228,23 @@ type EntityHeaderProps = {
   entity: Doc<'entities'>;
   config: (typeof typeConfig)[EntityType];
   onEdit: () => void;
+  onDelete?: () => void;
+  isManuallyCreated?: boolean;
+  isTtrpgProject?: boolean;
+  onReveal?: () => void;
+  onHide?: () => void;
 };
 
-function EntityHeader({ entity, config, onEdit }: EntityHeaderProps) {
+function EntityHeader({
+  entity,
+  config,
+  onEdit,
+  onDelete,
+  isManuallyCreated,
+  isTtrpgProject,
+  onReveal,
+  onHide,
+}: EntityHeaderProps) {
   const Icon = config.icon;
 
   return (
@@ -181,6 +262,28 @@ function EntityHeader({ entity, config, onEdit }: EntityHeaderProps) {
           <div className="flex items-center gap-3">
             <h1 className="font-serif text-3xl font-bold">{entity.name}</h1>
             <Badge className={cn('capitalize', config.colorClass)}>{config.label}</Badge>
+            {isTtrpgProject && entity.status === 'confirmed' && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  'gap-1',
+                  entity.revealedToViewers ?
+                    'border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400'
+                  : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                )}
+              >
+                {entity.revealedToViewers ?
+                  <>
+                    <Eye className="size-3" />
+                    Revealed to Players
+                  </>
+                : <>
+                    <Lock className="size-3" />
+                    Hidden from Players
+                  </>
+                }
+              </Badge>
+            )}
           </div>
           {entity.description && (
             <p className="text-muted-foreground max-w-2xl">{entity.description}</p>
@@ -198,11 +301,32 @@ function EntityHeader({ entity, config, onEdit }: EntityHeaderProps) {
         </div>
       </div>
       <div className="flex gap-2">
+        {isTtrpgProject &&
+          entity.status === 'confirmed' &&
+          (entity.revealedToViewers ?
+            <Button variant="outline" onClick={onHide}>
+              <EyeOff className="mr-2 size-4" />
+              Hide from Players
+            </Button>
+          : <Button variant="outline" onClick={onReveal}>
+              <Eye className="mr-2 size-4" />
+              Reveal to Players
+            </Button>)}
         <EntityNotesPanel entityId={entity._id} />
         <Button variant="outline" onClick={onEdit}>
           <Pencil className="mr-2 size-4" />
           Edit
         </Button>
+        {isManuallyCreated && onDelete && (
+          <Button
+            variant="outline"
+            onClick={onDelete}
+            className="text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="mr-2 size-4" />
+            Delete
+          </Button>
+        )}
       </div>
     </div>
   );

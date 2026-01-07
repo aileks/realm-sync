@@ -211,22 +211,15 @@ function NoteCard({ note, onClick, onTogglePin, onDelete }: NoteCardProps) {
   const previewContent = note.content.slice(0, 180) + (note.content.length > 180 ? '...' : '');
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       className={cn(
-        'group bg-card relative flex flex-col justify-between rounded-xl border p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg',
+        'group bg-card relative flex w-full flex-col justify-between rounded-xl border p-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg',
         note.pinned ?
           'border-primary/20 bg-primary/5 shadow-sm'
         : 'border-border/40 hover:border-border/80'
       )}
       onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
     >
       <div className="mb-3">
         <div className="mb-2 flex items-start justify-between gap-2">
@@ -301,6 +294,6 @@ function NoteCard({ note, onClick, onTogglePin, onDelete }: NoteCardProps) {
           </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }

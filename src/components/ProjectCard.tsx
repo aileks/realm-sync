@@ -44,15 +44,15 @@ export function ProjectCard({ project, onEdit, onDelete, onShare: _onShare }: Pr
   };
 
   return (
-    <Link to="/projects/$projectId" params={{ projectId: project._id }} className="block">
-      <Card className="group hover:ring-primary/20 transition-all duration-200 hover:ring-2">
-        <CardHeader>
+    <Link to="/projects/$projectId" params={{ projectId: project._id }} className="block h-full">
+      <Card className="group hover:ring-primary/20 flex h-full flex-col gap-4 py-6 transition-all duration-200 hover:ring-2">
+        <CardHeader className="px-4">
           <CardTitle className="group-hover:text-primary font-serif text-lg transition-colors">
             {project.name}
           </CardTitle>
-          {project.description && (
-            <CardDescription className="line-clamp-2">{project.description}</CardDescription>
-          )}
+          <CardDescription className="line-clamp-3 min-h-[3.75rem]">
+            {project.description || '\u00A0'}
+          </CardDescription>
           <CardAction>
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -86,9 +86,14 @@ export function ProjectCard({ project, onEdit, onDelete, onShare: _onShare }: Pr
             </DropdownMenu>
           </CardAction>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <StatBadge icon={FileText} count={stats.documentCount} label="docs" />
+        <CardContent className="mt-auto px-4">
+          <div className="flex items-center gap-2">
+            <StatBadge
+              icon={FileText}
+              count={stats.documentCount}
+              label="docs"
+              variant="entity-location"
+            />
             <StatBadge
               icon={Users}
               count={stats.entityCount}
@@ -120,7 +125,7 @@ type StatBadgeProps = {
   icon: React.ComponentType<{ className?: string }>;
   count: number;
   label: string;
-  variant?: 'default' | 'destructive' | 'entity-character' | 'entity-concept';
+  variant?: 'default' | 'destructive' | 'entity-character' | 'entity-concept' | 'entity-location';
 };
 
 function StatBadge({ icon: Icon, count, label, variant = 'default' }: StatBadgeProps) {
@@ -130,7 +135,8 @@ function StatBadge({ icon: Icon, count, label, variant = 'default' }: StatBadgeP
       className={cn(
         'gap-1',
         variant === 'entity-character' && 'bg-entity-character/10 text-entity-character',
-        variant === 'entity-concept' && 'bg-entity-concept/10 text-entity-concept'
+        variant === 'entity-concept' && 'bg-entity-concept/10 text-entity-concept',
+        variant === 'entity-location' && 'bg-entity-location/10 text-entity-location'
       )}
     >
       <Icon className="size-3" />

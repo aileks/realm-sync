@@ -1,16 +1,33 @@
 import type { FormEvent } from 'react';
 import { useState } from 'react';
-import { useMutation } from 'convex/react';
+import { useMutation, useQuery } from 'convex/react';
 import { Loader2 } from 'lucide-react';
 import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import type { Doc, Id } from '../../convex/_generated/dataModel';
 import { formatError } from '@/lib/utils';
 
 type Project = Doc<'projects'>;
+
+type ProjectType = 'ttrpg' | 'original-fiction' | 'fanfiction' | 'game-design' | 'general';
+
+const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
+  ttrpg: 'TTRPG Campaign',
+  'original-fiction': 'Original Fiction',
+  fanfiction: 'Fanfiction',
+  'game-design': 'Game Design',
+  general: 'General Worldbuilding',
+};
 
 type ProjectFormProps = {
   project?: Project;
@@ -19,7 +36,11 @@ type ProjectFormProps = {
 };
 
 export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) {
+  const user = useQuery(api.users.viewer);
   const [name, setName] = useState(project?.name ?? '');
+  const [projectType, setProjectType] = useState<ProjectType>(
+    (project?.projectType as ProjectType) ?? 'general'
+  );
   const [description, setDescription] = useState(project?.description ?? '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +49,13 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
   const updateProject = useMutation(api.projects.update);
 
   const isEditing = !!project;
+
+  // Filter types based on user's onboarding preferences; general always available
+  const userModes = user?.settings?.projectModes as ProjectType[] | undefined;
+  const availableTypes: ProjectType[] =
+    userModes && userModes.length > 0 ?
+      ([...new Set([...userModes, 'general' as const])] as ProjectType[])
+    : ['ttrpg', 'original-fiction', 'fanfiction', 'game-design', 'general'];
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -40,12 +68,14 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
           id: project._id,
           name: name.trim(),
           description: description.trim() || undefined,
+          projectType,
         });
         onSuccess?.(project._id);
       } else {
         const projectId = await createProject({
           name: name.trim(),
           description: description.trim() || undefined,
+          projectType,
         });
         onSuccess?.(projectId);
       }
@@ -72,6 +102,26 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
           required
           disabled={isLoading}
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="projectType">Project Type</Label>
+        <Select
+          value={projectType}
+          onValueChange={(val) => setProjectType(val as ProjectType)}
+          disabled={isLoading}
+        >
+          <SelectTrigger id="projectType">
+            <SelectValue>Select project type</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {availableTypes.map((type) => (
+              <SelectItem key={type} value={type}>
+                {PROJECT_TYPE_LABELS[type]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">

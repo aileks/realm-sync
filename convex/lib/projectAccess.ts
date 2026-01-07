@@ -2,7 +2,7 @@ import type { Doc, Id } from '../_generated/dataModel';
 import type { MutationCtx, QueryCtx } from '../_generated/server';
 import { getAuthUserId } from './auth';
 
-export type ProjectRole = 'owner' | 'editor' | 'viewer' | null;
+export type ProjectRole = 'owner' | null;
 
 export async function getProjectRole(
   ctx: QueryCtx | MutationCtx,
@@ -16,17 +16,6 @@ export async function getProjectRole(
 
   if (project.userId === userId) {
     return 'owner';
-  }
-
-  const share = await ctx.db
-    .query('projectShares')
-    .withIndex('by_user', (q) => q.eq('sharedWithUserId', userId))
-    .filter((q) => q.eq(q.field('projectId'), projectId))
-    .filter((q) => q.neq(q.field('acceptedAt'), undefined))
-    .first();
-
-  if (share) {
-    return share.role;
   }
 
   return null;
@@ -45,7 +34,7 @@ export async function canEditProject(
   projectId: Id<'projects'>
 ): Promise<boolean> {
   const role = await getProjectRole(ctx, projectId);
-  return role === 'owner' || role === 'editor';
+  return role === 'owner';
 }
 
 export async function isProjectOwner(
@@ -68,17 +57,6 @@ export async function getProjectWithRole(
 
   if (project.userId === userId) {
     return { project, role: 'owner' };
-  }
-
-  const share = await ctx.db
-    .query('projectShares')
-    .withIndex('by_user', (q) => q.eq('sharedWithUserId', userId))
-    .filter((q) => q.eq(q.field('projectId'), projectId))
-    .filter((q) => q.neq(q.field('acceptedAt'), undefined))
-    .first();
-
-  if (share) {
-    return { project, role: share.role };
   }
 
   return null;

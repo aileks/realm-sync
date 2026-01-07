@@ -32,7 +32,6 @@ import type * as llm_extract from "../llm/extract.js";
 import type * as llm_utils from "../llm/utils.js";
 import type * as migrations from "../migrations.js";
 import type * as notes from "../notes.js";
-import type * as projectShares from "../projectShares.js";
 import type * as projects from "../projects.js";
 import type * as seed from "../seed.js";
 import type * as storage from "../storage.js";
@@ -70,7 +69,6 @@ declare const fullApi: ApiFromModules<{
   "llm/utils": typeof llm_utils;
   migrations: typeof migrations;
   notes: typeof notes;
-  projectShares: typeof projectShares;
   projects: typeof projects;
   seed: typeof seed;
   storage: typeof storage;
