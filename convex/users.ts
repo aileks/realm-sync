@@ -510,3 +510,91 @@ export const updateProjectModes = mutation({
     return user._id;
   },
 });
+
+export const deleteAccount = mutation({
+  args: {
+    confirmationPhrase: v.string(),
+  },
+  handler: async (ctx, { confirmationPhrase }) => {
+    if (confirmationPhrase !== 'delete my account') {
+      throw new Error('Confirmation phrase does not match');
+    }
+
+    const user = await requireAuthUser(ctx);
+
+    const projects = await ctx.db
+      .query('projects')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .collect();
+
+    for (const project of projects) {
+      const documents = await ctx.db
+        .query('documents')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+      for (const doc of documents) {
+        if (doc.storageId) {
+          await ctx.storage.delete(doc.storageId);
+        }
+        await ctx.db.delete(doc._id);
+      }
+
+      const entities = await ctx.db
+        .query('entities')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+      for (const entity of entities) {
+        const entityNotes = await ctx.db
+          .query('entityNotes')
+          .withIndex('by_entity', (q) => q.eq('entityId', entity._id))
+          .collect();
+        for (const note of entityNotes) {
+          await ctx.db.delete(note._id);
+        }
+        await ctx.db.delete(entity._id);
+      }
+
+      const facts = await ctx.db
+        .query('facts')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+      for (const fact of facts) {
+        await ctx.db.delete(fact._id);
+      }
+
+      const alerts = await ctx.db
+        .query('alerts')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+      for (const alert of alerts) {
+        await ctx.db.delete(alert._id);
+      }
+
+      const notes = await ctx.db
+        .query('notes')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+      for (const note of notes) {
+        await ctx.db.delete(note._id);
+      }
+
+      await ctx.db.delete(project._id);
+    }
+
+    const chatMessages = await ctx.db
+      .query('chatMessages')
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
+      .collect();
+    for (const msg of chatMessages) {
+      await ctx.db.delete(msg._id);
+    }
+
+    if (user.avatarStorageId) {
+      await ctx.storage.delete(user.avatarStorageId);
+    }
+
+    await ctx.db.delete(user._id);
+
+    return { success: true };
+  },
+});

@@ -14,6 +14,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,12 +38,15 @@ import {
   Layers,
   CreditCard,
   Sparkles,
+  AlertTriangle,
 } from 'lucide-react';
 import { useConvexAuth } from 'convex/react';
 import { TierBadge } from '@/components/TierBadge';
 import { CustomerPortalLink } from '@convex-dev/polar/react';
 
-type SettingsTab = 'profile' | 'security' | 'subscription';
+type SettingsTab = 'profile' | 'security' | 'subscription' | 'danger';
+
+const SETTINGS_TABS = ['profile', 'security', 'subscription', 'danger'] as const;
 
 const PROJECT_MODES = [
   { id: 'ttrpg', label: 'TTRPG Campaigns', description: 'D&D, Pathfinder, etc.' },
@@ -63,16 +67,16 @@ function SettingsPage() {
   const user = useQuery(api.users.viewerProfile);
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
 
-  // Read URL params after mount (SSR-safe)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
-    if (tabParam && ['profile', 'security', 'subscription'].includes(tabParam)) {
+    if (tabParam && SETTINGS_TABS.includes(tabParam as SettingsTab)) {
       setActiveTab(tabParam as SettingsTab);
     }
   }, []);
 
-  function handleTabChange(tab: SettingsTab) {
+  function handleTabChange(value: string) {
+    const tab = value as SettingsTab;
     setActiveTab(tab);
     const url = new URL(window.location.href);
     url.searchParams.set('tab', tab);
@@ -92,45 +96,49 @@ function SettingsPage() {
     return null;
   }
 
-  const tabs: {
-    id: SettingsTab;
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-  }[] = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'subscription', label: 'Subscription', icon: CreditCard },
-  ];
-
   return (
-    <div className="animate-in fade-in container mx-auto space-y-8 p-6 duration-500">
+    <div className="container mx-auto space-y-8 p-6">
       <div className="space-y-2">
         <h1 className="font-serif text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">Manage your account settings and preferences.</p>
       </div>
 
-      <div className="flex gap-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => handleTabChange(tab.id)}
-            className={cn(
-              'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-              activeTab === tab.id ?
-                'bg-primary text-primary-foreground'
-              : 'bg-muted text-muted-foreground hover:text-foreground'
-            )}
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList>
+          <TabsTrigger value="profile">
+            <User className="size-4" />
+            Profile
+          </TabsTrigger>
+          <TabsTrigger value="security">
+            <Shield className="size-4" />
+            Security
+          </TabsTrigger>
+          <TabsTrigger value="subscription">
+            <CreditCard className="size-4" />
+            Subscription
+          </TabsTrigger>
+          <TabsTrigger
+            value="danger"
+            className="text-destructive hover:text-destructive data-[active]:text-destructive"
           >
-            <tab.icon className="size-4" />
-            {tab.label}
-          </button>
-        ))}
-      </div>
+            <AlertTriangle className="size-4" />
+            Danger
+          </TabsTrigger>
+        </TabsList>
 
-      {activeTab === 'profile' && <ProfileTab user={user} />}
-      {activeTab === 'security' && <SecurityTab user={user} />}
-      {activeTab === 'subscription' && <SubscriptionTab />}
+        <TabsContent value="profile">
+          <ProfileTab user={user} />
+        </TabsContent>
+        <TabsContent value="security">
+          <SecurityTab user={user} />
+        </TabsContent>
+        <TabsContent value="subscription">
+          <SubscriptionTab />
+        </TabsContent>
+        <TabsContent value="danger">
+          <DangerTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -289,7 +297,7 @@ function AvatarSection({
             )}
           </div>
           <p className="text-muted-foreground text-xs">
-            Recommended: Square JPG, PNG, or WebP, at least 400x400px. Max 5MB.
+            Recommended: JPG, PNG, or WebP, at least 400x400px. Max 5MB.
           </p>
         </div>
       </div>
@@ -969,6 +977,105 @@ function UsageBar({ label, current, limit }: { label: string; current: number; l
           style={{ width: `${percentage}%` }}
         />
       </div>
+    </div>
+  );
+}
+
+function DangerTab() {
+  const navigate = useNavigate();
+  const deleteAccount = useMutation(api.users.deleteAccount);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [confirmPhrase, setConfirmPhrase] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const phraseMatches = confirmPhrase === 'delete my account';
+
+  async function handleDeleteAccount() {
+    if (!phraseMatches) return;
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      await deleteAccount({ confirmationPhrase: confirmPhrase });
+      void navigate({ to: '/' });
+    } catch (err) {
+      setError(formatError(err));
+      setIsDeleting(false);
+    }
+  }
+
+  return (
+    <div className="max-w-2xl">
+      <Card className="border-destructive/50 bg-destructive/5">
+        <CardHeader>
+          <CardTitle className="text-destructive flex items-center gap-2">
+            <AlertTriangle className="size-5" />
+            Danger Zone
+          </CardTitle>
+          <CardDescription className="text-destructive/80">
+            Irreversible actions that will permanently affect your account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="border-destructive/30 rounded-lg border p-4">
+            <h3 className="font-medium">Delete Account</h3>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Permanently delete your account and all associated data. This includes all projects,
+              documents, entities, facts, notes, and chat history. This action cannot be undone.
+            </p>
+            <Button variant="destructive" className="mt-4" onClick={() => setShowDeleteModal(true)}>
+              <Trash2 className="mr-2 size-4" />
+              Delete Account
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="size-5" />
+              Delete Account
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <p>
+                This will permanently delete your account and all associated data. This action
+                cannot be undone.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="confirm-phrase">
+                  Type <span className="font-mono font-semibold">delete my account</span> to
+                  confirm:
+                </Label>
+                <Input
+                  id="confirm-phrase"
+                  value={confirmPhrase}
+                  onChange={(e) => setConfirmPhrase(e.target.value)}
+                  placeholder="delete my account"
+                  disabled={isDeleting}
+                />
+              </div>
+              {error && <p className="text-destructive text-sm">{error}</p>}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting} onClick={() => setConfirmPhrase('')}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={!phraseMatches || isDeleting}
+            >
+              {isDeleting && <Loader2 className="mr-2 size-4 animate-spin" />}
+              Delete Account
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
