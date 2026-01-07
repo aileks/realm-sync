@@ -146,13 +146,6 @@ describe('profile', () => {
     });
   });
 
-  describe('updateAvatar mutation', () => {
-    it.todo('sets avatarStorageId on user - requires edge-runtime environment');
-    it.todo('rejects non-image files - requires edge-runtime environment');
-    it.todo('rejects files over 5MB - requires edge-runtime environment');
-    it.todo('throws when not authenticated - requires edge-runtime environment');
-  });
-
   describe('removeAvatar mutation', () => {
     it('removes avatarStorageId from user', async () => {
       const t = convexTest(schema, getModules());
