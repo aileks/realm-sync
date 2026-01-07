@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { VellumChat } from '@/components/VellumChat';
 import { MothIcon } from '@/components/ui/moth-icon';
+import { BetaTag } from '@/components/BetaTag';
 
 export const Route = createFileRoute('/vellum/chat')({
   component: VellumChatPage,
@@ -14,7 +15,9 @@ function VellumChatPage() {
           <MothIcon className="size-6" />
         </div>
         <div>
-          <h1 className="font-serif text-lg font-semibold">Vellum</h1>
+          <h1 className="flex items-center gap-2 font-serif text-lg font-semibold">
+            Vellum <BetaTag />
+          </h1>
           <p className="text-muted-foreground text-xs">Your Archive Assistant</p>
         </div>
       </div>

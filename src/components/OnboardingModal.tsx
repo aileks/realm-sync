@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner';
 import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
+import { BetaTag } from '@/components/BetaTag';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -162,7 +163,9 @@ export function OnboardingModal() {
           <div className="bg-primary/10 mx-auto mb-4 flex size-16 items-center justify-center rounded-full">
             <step.icon className="text-primary size-8" />
           </div>
-          <AlertDialogTitle className="font-serif text-xl">{step.title}</AlertDialogTitle>
+          <AlertDialogTitle className="font-serif text-xl">
+            {step.title} {step.id === 'welcome' && <BetaTag />}
+          </AlertDialogTitle>
           <AlertDialogDescription className="text-base leading-relaxed">
             {step.description}
           </AlertDialogDescription>

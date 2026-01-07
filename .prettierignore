@@ -26,3 +26,4 @@ out/
 *.swo
 .DS_Store
 Thumbs.db
+public/site.webmanifest

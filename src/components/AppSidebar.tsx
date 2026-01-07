@@ -23,9 +23,11 @@ import {
   AlertTriangle,
   Home,
   StickyNote,
+  Settings,
 } from 'lucide-react';
 import { VellumButton } from '@/components/Vellum';
 import { RecentProjects } from '@/components/RecentProjects';
+import { BetaTag } from '@/components/BetaTag';
 import { cn } from '@/lib/utils';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -61,7 +63,7 @@ function getStoredTheme(): Theme {
 
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { isAuthenticated } = useConvexAuth();
-  const user = useQuery(api.users.viewer);
+  const user = useQuery(api.users.viewerProfile);
   const params = useParams({ strict: false });
   const search = useSearch({ strict: false });
   const navigate = useNavigate();
@@ -114,10 +116,8 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           <Link to="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="Realm Sync" className="size-12 rounded-full" />
             <div className="flex flex-col">
-              <span className="font-serif text-lg leading-tight font-semibold">Realm Sync</span>
-              <span className="text-muted-foreground text-[10px] font-medium tracking-widest uppercase">
-                Beta
-              </span>
+              <h4 className="font-serif text-xl leading-tight font-semibold">Realm Sync</h4>
+              <BetaTag />
             </div>
           </Link>
         )}
@@ -246,19 +246,19 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             <DropdownMenuTrigger
               className={cn(
                 buttonVariants({ variant: 'ghost', size: 'sm' }),
-                'w-full cursor-pointer',
+                'w-full cursor-pointer py-6',
                 collapsed ? 'justify-center px-0' : 'justify-start'
               )}
             >
-              <div className="relative flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full">
-                {user?.image ?
+              <div className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full">
+                {user?.avatarUrl ?
                   <img
-                    src={user.image}
+                    src={user.avatarUrl}
                     alt={user.name ?? 'User'}
                     className="aspect-square h-full w-full object-cover"
                   />
                 : user?.name ?
-                  <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center text-[8px] font-medium">
+                  <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center text-xs font-medium">
                     {user.name
                       .split(' ')
                       .map((n) => n[0])
@@ -266,16 +266,18 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                       .slice(0, 2)
                       .toUpperCase()}
                   </div>
-                : <User className="size-4" />}
+                : <User className="size-5" />}
               </div>
-              {!collapsed && <span className="ml-2 truncate">{user?.name ?? 'Account'}</span>}
+              {!collapsed && (
+                <span className="ml-3 truncate text-sm font-medium">{user?.name ?? 'Account'}</span>
+              )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-48">
               <DropdownMenuGroup>
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuItem disabled className="text-muted-foreground">
-                  <User className="mr-2 size-4" />
-                  Profile (coming soon)
+                <DropdownMenuItem onClick={() => void navigate({ to: '/settings' })}>
+                  <Settings className="mr-2 size-4" />
+                  Settings
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
@@ -406,7 +408,7 @@ function ProjectNavItem({
 
 export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
   const { isAuthenticated } = useConvexAuth();
-  const user = useQuery(api.users.viewer);
+  const user = useQuery(api.users.viewerProfile);
   const navigate = useNavigate();
   const { signOut } = useAuthActions();
 
@@ -484,18 +486,18 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
             <DropdownMenuTrigger
               className={cn(
                 buttonVariants({ variant: 'ghost', size: 'sm' }),
-                'w-full cursor-pointer justify-start'
+                'w-full cursor-pointer justify-start py-6'
               )}
             >
-              <div className="relative flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full">
-                {user?.image ?
+              <div className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full">
+                {user?.avatarUrl ?
                   <img
-                    src={user.image}
+                    src={user.avatarUrl}
                     alt={user.name ?? 'User'}
                     className="aspect-square h-full w-full object-cover"
                   />
                 : user?.name ?
-                  <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center text-[8px] font-medium">
+                  <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center text-xs font-medium">
                     {user.name
                       .split(' ')
                       .map((n) => n[0])
@@ -503,9 +505,9 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
                       .slice(0, 2)
                       .toUpperCase()}
                   </div>
-                : <User className="size-4" />}
+                : <User className="size-5" />}
               </div>
-              <span className="ml-2 truncate">{user?.name ?? 'Account'}</span>
+              <span className="ml-3 truncate text-sm font-medium">{user?.name ?? 'Account'}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="bottom">
               <DropdownMenuGroup>
@@ -518,6 +520,15 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
                 >
                   <FolderOpen className="mr-2 size-4" />
                   Projects
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    onClose();
+                    void navigate({ to: '/settings' });
+                  }}
+                >
+                  <Settings className="mr-2 size-4" />
+                  Settings
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />

@@ -38,6 +38,8 @@ export default defineSchema({
         ),
       })
     ),
+    bio: v.optional(v.string()),
+    avatarStorageId: v.optional(v.id('_storage')),
   }).index('by_email', ['email']),
 
   // Projects
