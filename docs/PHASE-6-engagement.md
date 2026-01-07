@@ -325,24 +325,26 @@ Project categories enable users to select what kind of projects they work on, wi
 | Category | Slug | Use Case |
 | --- | --- | --- |
 | **TTRPG / DM Mode** | `ttrpg` | Tabletop RPG game masters - hidden content, reveal mechanics |
-| **Worldbuilding** | `worldbuilding` | General worldbuilding - wiki-style canon tracking |
-| **Game Design** | `game_dev` | Video games, board games - asset tracking |
-| **Screenplay** | `screenplay` | Scripts and screenplays |
-| **General** | `general` | Default mode |
+| **Original Fiction** | `original-fiction` | Novels, short stories - timeline tracking |
+| **Fanfiction** | `fanfiction` | Stories in existing universes |
+| **Game Design** | `game-design` | Video games, board games - asset tracking |
+| **General** | `general` | Default mode - wiki-style canon tracking |
 
 ### Data Model
 
-#### Project Type (Required)
+#### Project Type (Optional)
 
 ```typescript
 projects: defineTable({
   // ... existing fields
-  projectType: v.union(
-    v.literal('ttrpg'),
-    v.literal('worldbuilding'),
-    v.literal('game_dev'),
-    v.literal('screenplay'),
-    v.literal('general')
+  projectType: v.optional(
+    v.union(
+      v.literal('ttrpg'),
+      v.literal('original-fiction'),
+      v.literal('fanfiction'),
+      v.literal('game-design'),
+      v.literal('general')
+    )
   ),
 });
 ```
