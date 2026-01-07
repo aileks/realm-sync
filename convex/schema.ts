@@ -110,7 +110,7 @@ export default defineSchema({
     firstMentionedIn: v.optional(v.id('documents')),
     status: v.union(v.literal('pending'), v.literal('confirmed')),
     revealedToViewers: v.optional(v.boolean()),
-    revealedAt: v.optional(v.number()),
+    revealedAt: v.optional(v.union(v.number(), v.null())),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
