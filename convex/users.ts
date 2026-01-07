@@ -606,3 +606,26 @@ export const deleteAccount = mutation({
     return { success: true };
   },
 });
+
+export const grantLifetimeAccess = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, { email }) => {
+    const users = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', email))
+      .collect();
+
+    if (users.length === 0) {
+      throw new Error(`User not found with email: ${email}`);
+    }
+
+    const user = users[0];
+    await ctx.db.patch(user._id, {
+      subscriptionTier: 'unlimited',
+      subscriptionStatus: 'active',
+      trialEndsAt: undefined,
+    });
+
+    return { userId: user._id, email: user.email };
+  },
+});
