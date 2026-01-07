@@ -50,7 +50,7 @@ Phase 6 transforms Realm Sync from a tool into an experience. The Vellum moth ma
 | Project Categories | Complete | TTRPG/Fiction/Game Design/General modes + reveal mechanics (PR #42) |
 | Notes | Complete | Project/entity notes with CRUD, UI routes, sidebar nav; tests pending |
 | User Profiles | Complete | Name, bio, avatar uploads, email/password change (MVP flow) |
-| Polar.sh Integration | Pending | Sponsorship, funding, premium features |
+| Polar.sh Integration | Complete | Subscription tiers, webhook handler, limit enforcement (PR #TBD) |
 
 ---
 
@@ -884,73 +884,122 @@ pendingEmailSetAt: v.optional(v.number()),
 
 ---
 
-## 7. Polar.sh Monetization
+## 7. Polar.sh Monetization (COMPLETE)
 
-Integrate [Polar.sh](https://polar.sh) for sustainable open-source funding.
+Integrated [Polar.sh](https://polar.sh) for sustainable subscription-based monetization.
 
-### Why Polar.sh
+### Implementation Status
 
-- **GitHub-native:** Seamless integration with existing workflow
-- **Flexible:** Sponsorships, subscriptions, and one-time payments
-- **Transparent:** Open-source friendly, community-focused
-- **Low friction:** Users can sponsor directly from GitHub
+| Component | Status | Notes |
+| --- | --- | --- |
+| Schema changes | ✅ | `subscriptionTier`, `subscriptionStatus`, `polarCustomerId`, `polarSubscriptionId`, `trialEndsAt`, `usage` object on users |
+| Tier system | ✅ | Free (limited) vs Unlimited ($5/month) with 7-day trial |
+| Limit helpers | ✅ | `convex/lib/limits.ts`, `convex/lib/subscription.ts` |
+| Subscription functions | ✅ | Queries + mutations in `convex/subscription.ts` |
+| Limit enforcement | ✅ | projects, documents, entities, LLM extractions, chat |
+| Polar webhook | ✅ | `/webhooks/polar` in `convex/http.ts` |
+| Frontend components | ✅ | TierBadge, UpgradePrompt, Settings subscription tab |
+| Tests | ✅ | 47 subscription tests passing |
 
-### Integration Points
+### Pricing Model
 
-#### 4.1 Sponsorship Tiers
+| Tier | Price | Limits |
+| --- | --- | --- |
+| **Free** | $0 | 3 projects, 10 docs/project, 50 entities/project, 20 extractions/month, 50 chat/month |
+| **Realm Unlimited** | $5/month | Unlimited everything |
 
-| Tier           | Price  | Benefits                               |
-| -------------- | ------ | -------------------------------------- |
-| **Supporter**  | $5/mo  | Early access to features, Discord role |
-| **Patron**     | $15/mo | Priority bug fixes, vote on roadmap    |
-| **Benefactor** | $50/mo | Direct feature requests, 1:1 support   |
+**Trial:** 7-day free trial of Unlimited tier.
 
-#### 4.2 Premium Features (Future)
-
-Potential sponsor-only features:
-
-- **Extended AI chat:** More Vellum conversations per month
-- **Advanced exports:** PDF world bibles, player handouts
-- **Team workspaces:** Shared projects with role management
-- **Custom themes:** Beyond the 3 default themes
-- **Priority extraction:** Faster AI processing queue
-
-#### 4.3 Implementation
+### Data Model
 
 ```typescript
-// src/routes/sponsors.tsx
-export function SponsorsPage() {
-  return (
-    <div className="container py-12">
-      <h1>Support Realm Sync</h1>
-      <p>Help keep the archives open for all worldbuilders.</p>
-
-      {/* Polar.sh embed or link */}
-      <a
-        href="https://polar.sh/realm-sync"
-        className={buttonVariants({ variant: 'default' })}
-      >
-        Become a Sponsor
-      </a>
-
-      {/* Sponsor wall */}
-      <SponsorWall />
-    </div>
-  );
-}
+// Users table additions
+subscriptionTier: v.optional(v.union(v.literal('free'), v.literal('unlimited'))),
+subscriptionStatus: v.optional(v.union(
+  v.literal('active'),
+  v.literal('canceled'),
+  v.literal('past_due'),
+  v.literal('trialing')
+)),
+polarCustomerId: v.optional(v.string()),
+polarSubscriptionId: v.optional(v.string()),
+trialEndsAt: v.optional(v.number()),
+usage: v.optional(v.object({
+  llmExtractionsThisMonth: v.number(),
+  chatMessagesThisMonth: v.number(),
+  usageResetAt: v.number(),
+})),
 ```
 
-#### 4.4 Sponsor Recognition
+### Backend Functions
 
-- **In-app badge:** Sponsors get a visual indicator on their profile
-- **Sponsor wall:** Public recognition page listing all sponsors
-- **Release notes:** Sponsors mentioned in changelogs
-- **Vellum's gratitude:** Special Vellum message for sponsors
+#### Queries
+
+- `getSubscription` - Returns tier, status, limits, trial info
+- `getUsageStats` - Returns current usage with limits and percentages
+
+#### Mutations
+
+- `startTrial` - Starts 7-day trial for free users
+- `handleSubscriptionActivated` - Called by webhook on subscription.activated
+- `handleSubscriptionCanceled` - Called by webhook on subscription.canceled
+
+#### Internal Functions (for limit checks)
+
+- `checkExtractionLimit` / `incrementExtractionUsage`
+- `checkChatLimit` / `incrementChatUsage`
+
+### Limit Enforcement
+
+| Resource | Check Location | Error |
+| --- | --- | --- |
+| Projects | `convex/projects.ts` create | "Project limit reached" |
+| Documents | `convex/documents.ts` create | "Document limit reached" |
+| Entities | `convex/entities.ts` create | "Entity limit reached" |
+| Extractions | `convex/llm/extract.ts` chunkAndExtract | "Monthly extraction limit reached" |
+| Chat | `convex/chat.ts` sendMessage | "Monthly chat limit reached" |
+
+### Webhook Handler
 
 ```typescript
-// Vellum greeting for sponsors
-const SPONSOR_GREETING =
-  'Ah, a patron of the archives! Your support keeps these old wings fluttering. How may I assist you today?';
+// convex/http.ts - /webhooks/polar
+// Verifies HMAC signature with POLAR_WEBHOOK_SECRET
+// Handles events:
+// - subscription.created (no-op, wait for activated)
+// - subscription.activated → handleSubscriptionActivated
+// - subscription.canceled → handleSubscriptionCanceled
+// - subscription.revoked → handleSubscriptionCanceled
+```
+
+### Frontend Components
+
+#### TierBadge
+
+Shows "Free" (muted) or "Realm Unlimited" (gold/amber) badge.
+
+#### UpgradePrompt
+
+Modal showing:
+
+- Current usage vs limits
+- Benefits of upgrading
+- "Upgrade - $5/month" button → Polar checkout
+- "Start 7-day Free Trial" button
+
+#### Settings Subscription Tab
+
+- Current tier with badge
+- Usage progress bars (extractions, chat)
+- Start trial / Upgrade buttons
+
+### Environment Variables
+
+```
+# Server
+POLAR_WEBHOOK_SECRET=whsec_...
+
+# Client
+VITE_POLAR_CHECKOUT_URL=https://polar.sh/realm-sync/subscribe
 ```
 
 ---

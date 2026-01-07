@@ -40,7 +40,31 @@ export default defineSchema({
     ),
     bio: v.optional(v.string()),
     avatarStorageId: v.optional(v.id('_storage')),
-  }).index('by_email', ['email']),
+    // Subscription fields (Polar.sh integration)
+    subscriptionTier: v.optional(v.union(v.literal('free'), v.literal('unlimited'))),
+    subscriptionStatus: v.optional(
+      v.union(
+        v.literal('active'),
+        v.literal('trialing'),
+        v.literal('canceled'),
+        v.literal('past_due'),
+        v.literal('incomplete')
+      )
+    ),
+    polarCustomerId: v.optional(v.string()),
+    polarSubscriptionId: v.optional(v.string()),
+    trialEndsAt: v.optional(v.number()),
+    // Usage tracking (resets monthly)
+    usage: v.optional(
+      v.object({
+        llmExtractionsThisMonth: v.number(),
+        chatMessagesThisMonth: v.number(),
+        usageResetAt: v.number(), // Timestamp when usage was last reset
+      })
+    ),
+  })
+    .index('by_email', ['email'])
+    .index('by_polar_customer', ['polarCustomerId']),
 
   // Projects
   projects: defineTable({

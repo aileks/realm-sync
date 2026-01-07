@@ -27,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ProjectForm } from '@/components/ProjectForm';
 import { LoadingState } from '@/components/LoadingState';
 import { ExportButton } from '@/components/ExportButton';
@@ -79,19 +80,6 @@ function ProjectDashboard() {
   async function handleDelete() {
     await deleteProject({ id: projectId as Id<'projects'> });
     void navigate({ to: '/projects' });
-  }
-
-  if (isEditing) {
-    return (
-      <div className="container mx-auto max-w-2xl p-6">
-        <h1 className="mb-6 font-serif text-2xl font-bold">Edit Project</h1>
-        <ProjectForm
-          project={project}
-          onSuccess={() => setIsEditing(false)}
-          onCancel={() => setIsEditing(false)}
-        />
-      </div>
-    );
   }
 
   return (
@@ -245,6 +233,19 @@ function ProjectDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-xl">Edit Project</DialogTitle>
+          </DialogHeader>
+          <ProjectForm
+            project={project}
+            onSuccess={() => setIsEditing(false)}
+            onCancel={() => setIsEditing(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

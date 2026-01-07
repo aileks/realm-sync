@@ -2,10 +2,11 @@ import { v } from 'convex/values';
 import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
-import { requireAuth } from './lib/auth';
+import { requireAuth, requireAuthUser } from './lib/auth';
 import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
 import { unwrapOrThrow } from './lib/result';
 import { canReadProject, canEditProject } from './lib/projectAccess';
+import { getDocumentCount, checkResourceLimit } from './lib/subscription';
 
 const contentTypeValidator = v.union(v.literal('text'), v.literal('markdown'), v.literal('file'));
 
@@ -86,8 +87,17 @@ export const create = mutation({
     contentType: contentTypeValidator,
   },
   handler: async (ctx, { projectId, title, content, storageId, contentType }) => {
-    const userId = await requireAuth(ctx);
-    unwrapOrThrow(await verifyProjectOwnership(ctx, projectId, userId));
+    const user = await requireAuthUser(ctx);
+    unwrapOrThrow(await verifyProjectOwnership(ctx, projectId, user._id));
+
+    const docCount = await getDocumentCount(ctx, projectId);
+    const limitCheck = checkResourceLimit(user, 'documentsPerProject', docCount);
+
+    if (!limitCheck.allowed) {
+      throw new Error(
+        `Document limit reached. Free tier allows ${limitCheck.limit} documents per project. Upgrade to Realm Unlimited for unlimited documents.`
+      );
+    }
 
     const existingDocs = await ctx.db
       .query('documents')

@@ -35,13 +35,14 @@ describe('tutorial.seedTutorialProject', () => {
     expect(project).not.toBeNull();
     expect(project?.name).toBe('The Verdant Realm');
     expect(project?.isTutorial).toBe(true);
+    expect(project?.projectType).toBe('ttrpg');
     expect(project?.userId).toBe(userId);
     expect(project?.stats).toEqual({
       documentCount: 3,
       entityCount: 12,
       factCount: 10,
       alertCount: 2,
-      noteCount: 0,
+      noteCount: 3,
     });
   });
 
@@ -93,6 +94,12 @@ describe('tutorial.seedTutorialProject', () => {
     const crown = entities.find((e) => e.name === 'The Emerald Crown');
     expect(crown).toBeDefined();
     expect(crown?.type).toBe('item');
+
+    const revealedEntities = entities.filter((e) => e.revealedToViewers === true);
+    const hiddenEntities = entities.filter((e) => e.revealedToViewers === false);
+
+    expect(revealedEntities).toHaveLength(3);
+    expect(hiddenEntities).toHaveLength(1);
   });
 
   it('creates 10 facts with proper relationships', async () => {
@@ -140,6 +147,54 @@ describe('tutorial.seedTutorialProject', () => {
     expect(crownAlert).toBeDefined();
     expect(crownAlert?.type).toBe('contradiction');
     expect(crownAlert?.severity).toBe('warning');
+  });
+
+  it('creates 3 project notes with tags and pinned status', async () => {
+    const t = convexTest(schema, getModules());
+    const { asUser } = await setupAuthenticatedUser(t);
+
+    const result = await asUser.mutation(api.tutorial.seedTutorialProject, {});
+
+    const notes = await t.run(async (ctx) => {
+      return await ctx.db
+        .query('notes')
+        .withIndex('by_project', (q) => q.eq('projectId', result.projectId))
+        .collect();
+    });
+
+    expect(notes).toHaveLength(3);
+
+    const pinnedNotes = notes.filter((n) =>  n.pinned);
+    expect(pinnedNotes).toHaveLength(2);
+
+    const campaignOverview = notes.find((n) => n.title === 'Campaign Overview');
+    expect(campaignOverview).toBeDefined();
+    expect(campaignOverview?.tags).toContain('ttrpg');
+  });
+
+  it('creates 3 entity notes for DM annotations', async () => {
+    const t = convexTest(schema, getModules());
+    const { asUser } = await setupAuthenticatedUser(t);
+
+    const result = await asUser.mutation(api.tutorial.seedTutorialProject, {});
+
+    const aldricEntity = await t.run(async (ctx) => {
+      const entities = await ctx.db
+        .query('entities')
+        .withIndex('by_name', (q) => q.eq('projectId', result.projectId).eq('name', 'Sir Aldric'))
+        .collect();
+      return entities[0];
+    });
+
+    const entityNotes = await t.run(async (ctx) => {
+      return await ctx.db
+        .query('entityNotes')
+        .withIndex('by_entity', (q) => q.eq('entityId', aldricEntity._id))
+        .collect();
+    });
+
+    expect(entityNotes).toHaveLength(1);
+    expect(entityNotes[0].content).toContain('age inconsistency');
   });
 
   it('returns existing project if tutorial already exists', async () => {

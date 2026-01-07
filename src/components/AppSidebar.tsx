@@ -28,6 +28,7 @@ import {
 import { VellumButton } from '@/components/Vellum';
 import { RecentProjects } from '@/components/RecentProjects';
 import { BetaTag } from '@/components/BetaTag';
+import { TierBadge } from '@/components/TierBadge';
 import { cn } from '@/lib/utils';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -64,6 +65,7 @@ function getStoredTheme(): Theme {
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.users.viewerProfile);
+  const subscription = useQuery(api.subscription.getSubscription);
   const params = useParams({ strict: false });
   const search = useSearch({ strict: false });
   const navigate = useNavigate();
@@ -269,7 +271,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                 : <User className="size-5" />}
               </div>
               {!collapsed && (
-                <span className="ml-3 truncate text-sm font-medium">{user?.name ?? 'Account'}</span>
+                <div className="ml-3 flex items-center gap-2">
+                  <span className="truncate text-sm font-medium">{user?.name ?? 'Account'}</span>
+                  {subscription?.tier === 'unlimited' && (
+                    <TierBadge tier="unlimited" className="text-[9px] opacity-70" />
+                  )}
+                </div>
               )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-48">

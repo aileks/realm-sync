@@ -9,7 +9,7 @@ import {
 } from '../../convex/lib/constants';
 import { useState, useRef, type FormEvent, type ChangeEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,8 +24,22 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { formatError, cn } from '@/lib/utils';
-import { Loader2, User, Upload, Trash2, Save, Mail, Shield, Check, Layers } from 'lucide-react';
+import {
+  Loader2,
+  User,
+  Upload,
+  Trash2,
+  Save,
+  Mail,
+  Shield,
+  Check,
+  Layers,
+  CreditCard,
+  Sparkles,
+} from 'lucide-react';
 import { useConvexAuth } from 'convex/react';
+import { TierBadge } from '@/components/TierBadge';
+import { env } from '@/env';
 
 const PROJECT_MODES = [
   { id: 'ttrpg', label: 'TTRPG Campaigns', description: 'D&D, Pathfinder, etc.' },
@@ -40,7 +54,7 @@ export const Route = createFileRoute('/settings')({
   component: SettingsPage,
 });
 
-type SettingsTab = 'profile' | 'security';
+type SettingsTab = 'profile' | 'security' | 'subscription';
 
 function SettingsPage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
@@ -68,6 +82,7 @@ function SettingsPage() {
   }[] = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'security', label: 'Security', icon: Shield },
+    { id: 'subscription', label: 'Subscription', icon: CreditCard },
   ];
 
   return (
@@ -98,6 +113,7 @@ function SettingsPage() {
 
       {activeTab === 'profile' && <ProfileTab user={user} />}
       {activeTab === 'security' && <SecurityTab user={user} />}
+      {activeTab === 'subscription' && <SubscriptionTab />}
     </div>
   );
 }
@@ -680,5 +696,195 @@ function PasswordChangeCard() {
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+function SubscriptionTab() {
+  const subscription = useQuery(api.subscription.getSubscription);
+  const startTrial = useMutation(api.subscription.startTrial);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (subscription === undefined) {
+    return (
+      <div className="text-muted-foreground p-8 text-center">Loading subscription details...</div>
+    );
+  }
+
+  async function handleStartTrial() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await startTrial();
+    } catch (err) {
+      setError(formatError(err));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const isFree = subscription.tier === 'free';
+  const isUnlimited = subscription.tier === 'unlimited';
+  const isTrial = subscription.status === 'trialing';
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-2">
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="size-5" />
+                  Subscription
+                </CardTitle>
+                <CardDescription>Manage your plan and billing.</CardDescription>
+              </div>
+              <TierBadge tier={subscription.tier} className="px-3 py-1 text-sm" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {isTrial && (
+              <div className="bg-primary/10 text-primary border-primary/20 rounded-lg border p-4">
+                <div className="flex items-center gap-2 font-medium">
+                  <Sparkles className="size-4" />
+                  Free Trial Active
+                </div>
+                <p className="mt-1 text-sm opacity-90">
+                  Your trial ends on {new Date(subscription.trialEndsAt!).toLocaleDateString()}.
+                  Upgrade now to keep access to premium features.
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-muted-foreground text-sm font-medium">Usage this month</h3>
+                <span className="text-muted-foreground text-xs">
+                  Resets {new Date(subscription.usage.resetAt).toLocaleDateString()}
+                </span>
+              </div>
+
+              <UsageBar
+                label="Projects"
+                current={subscription.usage.projects.current}
+                limit={subscription.usage.projects.limit}
+              />
+              <UsageBar
+                label="AI Extractions"
+                current={subscription.usage.llmExtractions.current}
+                limit={subscription.usage.llmExtractions.limit}
+              />
+              <UsageBar
+                label="Chat Messages"
+                current={subscription.usage.chatMessages.current}
+                limit={subscription.usage.chatMessages.limit}
+              />
+            </div>
+
+            <div className="border-border flex flex-col gap-3 border-t pt-4">
+              {isFree && !subscription.trialExpired && !subscription.trialActive && (
+                <Button
+                  onClick={handleStartTrial}
+                  disabled={isLoading}
+                  size="lg"
+                  className="w-full"
+                >
+                  {isLoading ?
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                  : <Sparkles className="mr-2 size-4" />}
+                  Start 7-Day Free Trial
+                </Button>
+              )}
+
+              {isFree && (
+                <a
+                  href={env.VITE_POLAR_CHECKOUT_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    buttonVariants({
+                      variant: subscription.trialExpired ? 'default' : 'outline',
+                      size: 'lg',
+                    }),
+                    'w-full'
+                  )}
+                >
+                  {subscription.trialExpired ? 'Upgrade to Realm Unlimited' : 'Upgrade Plan'}
+                </a>
+              )}
+
+              {isUnlimited && !isTrial && (
+                <a
+                  href="https://polar.sh/settings"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
+                >
+                  Manage Subscription
+                </a>
+              )}
+            </div>
+
+            {error && <div className="text-destructive text-center text-sm">{error}</div>}
+          </CardContent>
+        </Card>
+      </div>
+
+      {isFree && (
+        <Card className="bg-muted/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="text-primary size-5" />
+              Why Upgrade?
+            </CardTitle>
+            <CardDescription>Unlock the full potential of your creative process.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ul className="space-y-3">
+              {[
+                'Unlimited projects & documents',
+                'Unlimited AI extractions',
+                'Unlimited chat messages',
+                'Priority support',
+                'Early access to new features',
+              ].map((benefit) => (
+                <li key={benefit} className="flex items-start gap-2.5 text-sm">
+                  <div className="bg-primary/10 text-primary mt-0.5 rounded-full p-0.5">
+                    <Check className="size-3" />
+                  </div>
+                  <span>{benefit}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function UsageBar({ label, current, limit }: { label: string; current: number; limit: number }) {
+  const percentage = Math.min(100, Math.max(0, (current / limit) * 100));
+  const isUnlimited = limit === Infinity;
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex justify-between text-sm">
+        <span>{label}</span>
+        <span className="text-muted-foreground font-mono text-xs">
+          {current} / {isUnlimited ? '∞' : limit}
+        </span>
+      </div>
+      <div className="bg-secondary h-2 w-full overflow-hidden rounded-full">
+        <div
+          className={cn(
+            'bg-primary h-full transition-all duration-500',
+            !isUnlimited && current >= limit && 'bg-destructive'
+          )}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </div>
   );
 }

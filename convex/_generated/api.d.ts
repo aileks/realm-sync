@@ -25,8 +25,10 @@ import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_errors from "../lib/errors.js";
+import type * as lib_limits from "../lib/limits.js";
 import type * as lib_projectAccess from "../lib/projectAccess.js";
 import type * as lib_result from "../lib/result.js";
+import type * as lib_subscription from "../lib/subscription.js";
 import type * as llm_cache from "../llm/cache.js";
 import type * as llm_chunk from "../llm/chunk.js";
 import type * as llm_extract from "../llm/extract.js";
@@ -36,6 +38,7 @@ import type * as notes from "../notes.js";
 import type * as projects from "../projects.js";
 import type * as seed from "../seed.js";
 import type * as storage from "../storage.js";
+import type * as subscription from "../subscription.js";
 import type * as tutorial from "../tutorial.js";
 import type * as users from "../users.js";
 
@@ -63,8 +66,10 @@ declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
   "lib/errors": typeof lib_errors;
+  "lib/limits": typeof lib_limits;
   "lib/projectAccess": typeof lib_projectAccess;
   "lib/result": typeof lib_result;
+  "lib/subscription": typeof lib_subscription;
   "llm/cache": typeof llm_cache;
   "llm/chunk": typeof llm_chunk;
   "llm/extract": typeof llm_extract;
@@ -74,6 +79,7 @@ declare const fullApi: ApiFromModules<{
   projects: typeof projects;
   seed: typeof seed;
   storage: typeof storage;
+  subscription: typeof subscription;
   tutorial: typeof tutorial;
   users: typeof users;
 }>;

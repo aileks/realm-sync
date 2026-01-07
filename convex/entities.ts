@@ -3,11 +3,12 @@ import { paginationOptsValidator } from 'convex/server';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
-import { requireAuth } from './lib/auth';
+import { requireAuth, requireAuthUser } from './lib/auth';
 import { ok, err, authError, notFoundError } from './lib/errors';
 import type { AppError, Result } from './lib/errors';
 import { unwrapOrThrow } from './lib/result';
 import { getProjectRole } from './lib/projectAccess';
+import { getEntityCount, checkResourceLimit } from './lib/subscription';
 
 const entityTypeValidator = v.union(
   v.literal('character'),
@@ -75,8 +76,17 @@ export const create = mutation({
     ctx,
     { projectId, name, type, description, aliases, firstMentionedIn, status }
   ) => {
-    const userId = await requireAuth(ctx);
-    const project = unwrapOrThrow(await verifyProjectAccess(ctx, projectId, userId));
+    const user = await requireAuthUser(ctx);
+    const project = unwrapOrThrow(await verifyProjectAccess(ctx, projectId, user._id));
+
+    const entityCount = await getEntityCount(ctx, projectId);
+    const limitCheck = checkResourceLimit(user, 'entitiesPerProject', entityCount);
+
+    if (!limitCheck.allowed) {
+      throw new Error(
+        `Entity limit reached. Free tier allows ${limitCheck.limit} entities per project. Upgrade to Realm Unlimited for unlimited entities.`
+      );
+    }
 
     const now = Date.now();
     const entityId = await ctx.db.insert('entities', {
