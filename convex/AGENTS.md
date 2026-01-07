@@ -52,9 +52,9 @@ convex/
 | Table | Key Fields | Notes |
 | --- | --- | --- |
 | `users` | name, email, settings | Extended Convex Auth |
-| `projects` | userId, name, stats, isTutorial | User-owned |
+| `projects` | userId, name, stats, isTutorial, projectType | User-owned, type required |
 | `documents` | projectId, title, content, processingStatus | Document storage |
-| `entities` | projectId, name, type, aliases, status | Canon (pending/confirmed) |
+| `entities` | projectId, name, type, aliases, status, revealedToViewers | Canon + TTRPG reveal |
 | `facts` | projectId, entityId, subject, predicate, object, status | Canon (pending/confirmed/rejected) |
 | `alerts` | projectId, type, severity, status | Continuity (open/resolved/dismissed) |
 | `chatMessages` | userId, role, content | Vellum history |
@@ -95,7 +95,7 @@ npx convex deploy        # Deploy to production
 - Schema changes may prompt migration
 - Real-time via Convex hooks (useQuery)
 - Functions auto-reload during dev
-- 173 tests passing
+- 265 tests passing
 - Cascade deletes: manual before project
 - Stats sync: every CRUD patches project.stats
 - entities.ts (844 lines) largest

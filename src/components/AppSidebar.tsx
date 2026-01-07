@@ -113,7 +113,12 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         {!collapsed && (
           <Link to="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="Realm Sync" className="size-12 rounded-full" />
-            <span className="font-serif text-lg font-semibold">Realm Sync</span>
+            <div className="flex flex-col">
+              <span className="font-serif text-lg leading-tight font-semibold">Realm Sync</span>
+              <span className="text-muted-foreground text-[10px] font-medium tracking-widest uppercase">
+                Beta
+              </span>
+            </div>
           </Link>
         )}
         {collapsed && (
