@@ -85,7 +85,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-2">
             {!isLoading && !isAuthenticated && (
-              <Button size="sm" onClick={() => navigate({ to: '/auth' })}>
+              <Button size="sm" onClick={() => navigate({ to: '/sign-in' })}>
                 Sign In
               </Button>
             )}

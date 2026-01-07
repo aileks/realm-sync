@@ -14,7 +14,7 @@ export const polar = new Polar(components.polar, {
     };
   },
   products: {
-    realmUnlimited: process.env.POLAR_PRODUCT_ID_UNLIMITED ?? '',
+    realmUnlimited: process.env.POLAR_PRODUCT_ID ?? '',
   },
   server: (process.env.POLAR_SERVER as 'sandbox' | 'production') ?? 'production',
 });

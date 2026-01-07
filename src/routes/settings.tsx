@@ -8,7 +8,7 @@ import {
   MAX_PASSWORD_LENGTH,
 } from '../../convex/lib/constants';
 import { CheckoutLink } from '@convex-dev/polar/react';
-import { useState, useRef, type FormEvent, type ChangeEvent } from 'react';
+import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,11 +61,16 @@ function SettingsPage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const navigate = useNavigate();
   const user = useQuery(api.users.viewerProfile);
-  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+
+  // Read URL params after mount (SSR-safe)
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
-    return (tabParam as SettingsTab) || 'profile';
-  });
+    if (tabParam && ['profile', 'security', 'subscription'].includes(tabParam)) {
+      setActiveTab(tabParam as SettingsTab);
+    }
+  }, []);
 
   function handleTabChange(tab: SettingsTab) {
     setActiveTab(tab);
@@ -713,6 +718,7 @@ function PasswordChangeCard() {
 
 function SubscriptionTab() {
   const subscription = useQuery(api.users.getSubscription);
+  const products = useQuery(api.polar.getConfiguredProducts);
   const startTrial = useMutation(api.users.startTrial);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -764,18 +770,25 @@ function SubscriptionTab() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {isTrial && (
-              <div className="bg-primary/10 text-primary border-primary/20 rounded-lg border p-4">
-                <div className="flex items-center gap-2 font-medium">
-                  <Sparkles className="size-4" />
-                  Free Trial Active
-                </div>
-                <p className="mt-1 text-sm opacity-90">
-                  Your trial ends on {new Date(subscription.trialEndsAt!).toLocaleDateString()}.
-                  Upgrade now to keep access to premium features.
-                </p>
-              </div>
-            )}
+            {isTrial &&
+              (() => {
+                const daysRemaining = Math.ceil(
+                  (subscription.trialEndsAt! - Date.now()) / (1000 * 60 * 60 * 24)
+                );
+                const showUpgradeNudge = daysRemaining <= 3;
+                return (
+                  <div className="bg-primary/10 text-primary border-primary/20 rounded-lg border p-4">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Sparkles className="size-4" />
+                      Free Trial Active
+                    </div>
+                    <p className="mt-1 text-sm opacity-90">
+                      Your trial ends on {new Date(subscription.trialEndsAt!).toLocaleDateString()}.
+                      {showUpgradeNudge && ' Upgrade now to keep access to premium features.'}
+                    </p>
+                  </div>
+                );
+              })()}
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -791,7 +804,7 @@ function SubscriptionTab() {
                 limit={subscription.usage.projects.limit}
               />
               <UsageBar
-                label="AI Extractions"
+                label="Document Extractions"
                 current={subscription.usage.llmExtractions.current}
                 limit={subscription.usage.llmExtractions.limit}
               />
@@ -817,12 +830,12 @@ function SubscriptionTab() {
                 </Button>
               )}
 
-              {isFree && (
+              {isFree && products?.realmUnlimited && (
                 <CheckoutLink
                   polarApi={{
                     generateCheckoutLink: api.polar.generateCheckoutLink,
                   }}
-                  productIds={['realmUnlimited']}
+                  productIds={[products.realmUnlimited.id]}
                   embed={false}
                   className={cn(
                     buttonVariants({
@@ -836,13 +849,13 @@ function SubscriptionTab() {
                 </CheckoutLink>
               )}
 
-              {isTrial && (
+              {isTrial && products?.realmUnlimited && (
                 <>
                   <CheckoutLink
                     polarApi={{
                       generateCheckoutLink: api.polar.generateCheckoutLink,
                     }}
-                    productIds={['realmUnlimited']}
+                    productIds={[products.realmUnlimited.id]}
                     embed={false}
                     className={cn(
                       buttonVariants({
@@ -896,9 +909,8 @@ function SubscriptionTab() {
             <ul className="space-y-3">
               {[
                 'Unlimited projects & documents',
-                'Unlimited AI extractions',
+                'Unlimited document extractions',
                 'Unlimited chat messages',
-                'Priority support',
                 'Early access to new features',
               ].map((benefit) => (
                 <li key={benefit} className="flex items-start gap-2.5 text-sm">

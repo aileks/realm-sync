@@ -8,7 +8,7 @@ export const env = createEnv({
     MODEL: z.string().optional(),
     POLAR_ORGANIZATION_TOKEN: z.string().optional(),
     POLAR_WEBHOOK_SECRET: z.string().optional(),
-    POLAR_PRODUCT_ID_UNLIMITED: z.string().optional(),
+    POLAR_PRODUCT_ID: z.string().optional(),
     POLAR_SERVER: z.enum(['sandbox', 'production']).optional(),
   },
 

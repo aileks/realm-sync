@@ -37,10 +37,10 @@ function LandingPage() {
           </p>
 
           <div className="mt-8 flex justify-center gap-4">
-            <Button size="lg" onClick={() => navigate({ to: '/auth' })}>
+            <Button size="lg" onClick={() => navigate({ to: '/sign-up' })}>
               Get Started
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate({ to: '/auth' })}>
+            <Button size="lg" variant="outline" onClick={() => navigate({ to: '/sign-in' })}>
               Sign In
             </Button>
           </div>

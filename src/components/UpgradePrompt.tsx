@@ -27,7 +27,7 @@ const LIMIT_LABELS: Record<LimitType, string> = {
   projects: 'Projects',
   documents: 'Documents',
   entities: 'Entities',
-  extractions: 'AI Extractions',
+  extractions: 'Document Extractions',
   chat: 'Chat Messages',
 };
 
@@ -83,8 +83,7 @@ export function UpgradePrompt({
           <ul className="space-y-2.5">
             {[
               `Unlimited ${label}`,
-              'Advanced AI Extraction Models',
-              'Priority Support',
+              'Advanced Document Extraction Models',
               'Early Access to New Features',
             ].map((benefit) => (
               <li key={benefit} className="flex items-start gap-2.5 text-sm">
