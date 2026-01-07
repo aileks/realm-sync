@@ -46,6 +46,9 @@ export const updateProfile = mutation({
 
     if (name !== undefined) {
       const trimmed = name.trim();
+      if (trimmed.length === 0) {
+        throw new Error('Name cannot be empty');
+      }
       if (trimmed.length > 80) {
         throw new Error('Name must be 80 characters or less');
       }

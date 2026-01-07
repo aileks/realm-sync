@@ -330,6 +330,8 @@ function ProfileFieldsSection({
           placeholder="Your name"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          required
+          minLength={1}
           maxLength={80}
           disabled={isLoading}
         />
