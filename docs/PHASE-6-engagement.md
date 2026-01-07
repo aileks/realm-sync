@@ -346,6 +346,7 @@ projects: defineTable({
       v.literal('general')
     )
   ),
+  revealToPlayersEnabled: v.optional(v.boolean()), // TTRPG only: enable player reveal controls
 });
 ```
 
@@ -371,6 +372,7 @@ For TTRPG projects, entities have visibility control:
 - Entity list shows 🔒/👁 badge for TTRPG projects (confirmed entities only)
 - Entity detail page shows reveal/hide button for TTRPG project owners
 - Badge only appears when `onReveal` or `onHide` callbacks are provided
+- Project form prompts for player reveal setting when type is `ttrpg`
 
 #### Mutations
 

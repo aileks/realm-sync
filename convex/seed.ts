@@ -1,6 +1,5 @@
 import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
-import type { Id } from './_generated/dataModel';
 
 export const seedDemoData = internalMutation({
   args: {
@@ -8,350 +7,54 @@ export const seedDemoData = internalMutation({
   },
   handler: async (ctx, { userId }) => {
     const now = Date.now();
-    const projects: { projectId: Id<'projects'>; documentIds: Id<'documents'>[] }[] = [];
 
-    // ========== PROJECT 1: Fantasy Novel ==========
-    const fantasyProjectId = await ctx.db.insert('projects', {
+    const projectId = await ctx.db.insert('projects', {
       userId,
-      name: 'The Northern Chronicles',
+      name: 'The Verdant Realm',
       description:
-        'A fantasy epic set in a frozen kingdom where winter has lasted for generations.',
+        "A sample fantasy world to explore Realm Sync's features. Discover characters, locations, and even some continuity issues for Vellum to catch!",
+      projectType: 'general',
+      isTutorial: true,
       createdAt: now,
       updatedAt: now,
-      stats: { documentCount: 2, entityCount: 12, factCount: 8, alertCount: 0, noteCount: 0 },
+      stats: { documentCount: 3, entityCount: 14, factCount: 10, alertCount: 2, noteCount: 3 },
     });
 
-    const fantasyDoc1 = await ctx.db.insert('documents', {
-      projectId: fantasyProjectId,
-      title: 'Chapter 1: The Frozen Throne',
-      content: `The wind howled across the battlements of Winterhold Castle as King Aldric surveyed his domain. His steel-gray eyes, weathered by countless winters, scanned the endless white expanse stretching to the horizon.
+    const doc1Id = await ctx.db.insert('documents', {
+      projectId,
+      title: 'Chapter 1: The Beginning',
+      content: `In northern reaches of the Verdant Realm, city of Thornhaven stands as a beacon of civilization. Sir Aldric, the aging knight commander at sixty winters old, watches over its walls with unwavering vigilance.
 
-"Your Grace," said Commander Thorne, approaching with measured steps. "The scouts have returned from the Northern Pass. They bring troubling news."
+The Emerald Crown, a relic of immense power, rests in the castle vault. It was forged in the Year of Falling Stars by the First Queen, Elara the Wise. Legend says whoever wears it can command the forest itself.
 
-Aldric turned, his fur-lined cloak swirling around him. At sixty winters, he was still an imposing figure—broad-shouldered and tall, with a crown of iron resting upon his silver hair. The crown had belonged to his father, and his father's father before him, forged from the ore of the Sacred Mountain.
+Lady Mira, Sir Aldric's daughter, studies the arcane arts in the Eastern Tower. At twenty-three summers, she is the youngest mage to ever master the Verdant Blessing—a spell that can heal any wound.
 
-"Speak, Commander. I would hear it plain."
-
-"The Frostborne have been sighted, my lord. A host of them, moving south through the Shattered Peaks. Lady Elara estimates their numbers at three thousand."
-
-The king's jaw tightened. The Frostborne—those cursed beings who had once been men, transformed by the endless winter into something other. Something hungry.
-
-"Send word to the other holds. Summon the Council of Lords. And find my daughter—tell Princess Sera that her nameday celebrations must wait."`,
-      contentType: 'text',
+The Thornwood Forest surrounds the city, ancient and watchful. Within its depths lives the Forest Spirit, a being as old as the realm itself. Some say it protects travelers; others claim it leads them astray.`,
+      contentType: 'markdown',
       orderIndex: 0,
-      wordCount: 198,
+      wordCount: 156,
       createdAt: now,
       updatedAt: now,
       processedAt: now,
       processingStatus: 'completed',
     });
 
-    const fantasyDoc2 = await ctx.db.insert('documents', {
-      projectId: fantasyProjectId,
-      title: 'Chapter 2: The Ancient Pact',
-      content: `Princess Sera stood in the Great Library, her fingers tracing the spines of books older than the kingdom itself. At twenty winters, she had her father's determination but her mother's curiosity—a dangerous combination, the court whispered.
+    const doc2Id = await ctx.db.insert('documents', {
+      projectId,
+      title: 'Chapter 2: The Conflict',
+      content: `The Dragon of Ashfall descends upon Thornhaven at dawn. Sir Aldric, now leading the defense at fifty winters old, realizes the creature is not attacking but fleeing something far worse in the mountains.
 
-"You should not be here alone, Princess," came a voice from the shadows.
+"It's wounded," Lady Mira observes, her silver eyes reflecting the dragon's flames. "Something in the Ashen Peaks has driven it here."
 
-She did not turn. "Neither should you, Magister Crow. This section is forbidden to all but the royal bloodline."
+The Council of Elders convenes in the Great Hall. Lord Thorne, master of coin, argues for negotiation. High Priestess Vera insists the dragon is an omen—the prophecy of the Burning Sky begins.
 
-The old man emerged from between the towering shelves, his black robes rustling like wings. His eyes were milky white—blinded in service to the old magic—yet he moved with uncanny precision.
+Sir Aldric remembers the old tales: when dragons flee, Shadowbane stirs. That ancient evil was sealed beneath the mountains centuries ago by the First Queen herself, using the Emerald Crown's power.
 
-"There are things you seek that should remain buried," he warned. "The Pact of Frost was sealed for good reason."
+"We must retrieve the Crown from the vault," Aldric declares. "It's the only weapon that can stop what's coming."
 
-"A pact made by desperate men who had no other choice," Sera countered. "But the Frostborne still come. Whatever bargain our ancestors struck, it is failing."
-
-Magister Crow was silent for a long moment. When he spoke again, his voice was barely above a whisper. "The Pact was not a bargain, child. It was a binding—a prison. And prisons, given enough time, always fail."`,
-      contentType: 'text',
+But the vault has been sealed since the Great War. And the key was lost when the Last King fell.`,
+      contentType: 'markdown',
       orderIndex: 1,
-      wordCount: 201,
-      createdAt: now,
-      updatedAt: now,
-      processedAt: now,
-      processingStatus: 'completed',
-    });
-
-    const aldricId = await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'King Aldric',
-      type: 'character',
-      description: 'The aging king of the frozen kingdom, sixty winters old.',
-      aliases: ['His Grace', 'The Winter King'],
-      firstMentionedIn: fantasyDoc1,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const seraId = await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'Princess Sera',
-      type: 'character',
-      description: 'The twenty-year-old princess, known for her curiosity.',
-      aliases: [],
-      firstMentionedIn: fantasyDoc1,
-      status: 'pending',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'Commander Thorne',
-      type: 'character',
-      description: 'Military commander serving King Aldric.',
-      aliases: [],
-      firstMentionedIn: fantasyDoc1,
-      status: 'pending',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const crowId = await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'Magister Crow',
-      type: 'character',
-      description: 'A blind old magister who serves the old magic.',
-      aliases: [],
-      firstMentionedIn: fantasyDoc2,
-      status: 'pending',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'Winterhold Castle',
-      type: 'location',
-      description: 'The seat of power for King Aldric.',
-      aliases: ['The Frozen Throne'],
-      firstMentionedIn: fantasyDoc1,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const frostborneId = await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'The Frostborne',
-      type: 'concept',
-      description: 'Cursed beings who were once men, transformed by endless winter.',
-      aliases: [],
-      firstMentionedIn: fantasyDoc1,
-      status: 'pending',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const pactId = await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'The Pact of Frost',
-      type: 'event',
-      description: 'An ancient binding/prison created by desperate ancestors.',
-      aliases: ['The Ancient Pact'],
-      firstMentionedIn: fantasyDoc2,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'The Iron Crown',
-      type: 'item',
-      description: 'Royal crown forged from Sacred Mountain ore, passed through generations.',
-      aliases: ['Crown of Winterhold'],
-      firstMentionedIn: fantasyDoc1,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'The Great Library',
-      type: 'location',
-      description: 'Ancient library containing forbidden texts and royal archives.',
-      aliases: [],
-      firstMentionedIn: fantasyDoc2,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'The Old Magic',
-      type: 'concept',
-      description: 'Ancient magical tradition that Magister Crow serves.',
-      aliases: [],
-      firstMentionedIn: fantasyDoc2,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'The Endless Winter',
-      type: 'event',
-      description: 'A catastrophic winter that has lasted for generations.',
-      aliases: [],
-      firstMentionedIn: fantasyDoc1,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('entities', {
-      projectId: fantasyProjectId,
-      name: 'Council of Lords',
-      type: 'event',
-      description: 'Emergency gathering summoned by King Aldric.',
-      aliases: [],
-      firstMentionedIn: fantasyDoc1,
-      status: 'pending',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: fantasyProjectId,
-      entityId: aldricId,
-      documentId: fantasyDoc1,
-      subject: 'King Aldric',
-      predicate: 'has_age',
-      object: 'sixty winters',
-      confidence: 1.0,
-      evidenceSnippet: 'At sixty winters, he was still an imposing figure',
-      evidencePosition: { start: 456, end: 505 },
-      status: 'confirmed',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: fantasyProjectId,
-      entityId: aldricId,
-      documentId: fantasyDoc1,
-      subject: 'King Aldric',
-      predicate: 'rules_from',
-      object: 'Winterhold Castle',
-      confidence: 1.0,
-      evidenceSnippet: 'King Aldric surveyed his domain',
-      evidencePosition: { start: 62, end: 93 },
-      status: 'confirmed',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: fantasyProjectId,
-      entityId: seraId,
-      documentId: fantasyDoc1,
-      subject: 'Princess Sera',
-      predicate: 'is_daughter_of',
-      object: 'King Aldric',
-      confidence: 1.0,
-      evidenceSnippet: 'find my daughter—tell Princess Sera',
-      evidencePosition: { start: 1147, end: 1183 },
-      status: 'pending',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: fantasyProjectId,
-      entityId: seraId,
-      documentId: fantasyDoc2,
-      subject: 'Princess Sera',
-      predicate: 'has_age',
-      object: 'twenty winters',
-      confidence: 1.0,
-      evidenceSnippet: "At twenty winters, she had her father's determination",
-      evidencePosition: { start: 86, end: 139 },
-      status: 'pending',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: fantasyProjectId,
-      entityId: frostborneId,
-      documentId: fantasyDoc1,
-      subject: 'Frostborne',
-      predicate: 'were_once',
-      object: 'men',
-      confidence: 1.0,
-      evidenceSnippet: 'those cursed beings who had once been men',
-      evidencePosition: { start: 888, end: 929 },
-      status: 'pending',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: fantasyProjectId,
-      entityId: frostborneId,
-      documentId: fantasyDoc1,
-      subject: 'Frostborne army',
-      predicate: 'numbers_approximately',
-      object: 'three thousand',
-      confidence: 0.9,
-      evidenceSnippet: 'Lady Elara estimates their numbers at three thousand',
-      evidencePosition: { start: 760, end: 812 },
-      status: 'pending',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: fantasyProjectId,
-      entityId: crowId,
-      documentId: fantasyDoc2,
-      subject: 'Magister Crow',
-      predicate: 'is',
-      object: 'blind',
-      confidence: 1.0,
-      evidenceSnippet: 'His eyes were milky white—blinded in service to the old magic',
-      evidencePosition: { start: 520, end: 581 },
-      status: 'pending',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: fantasyProjectId,
-      entityId: pactId,
-      documentId: fantasyDoc2,
-      subject: 'The Pact of Frost',
-      predicate: 'was',
-      object: 'a binding/prison, not a bargain',
-      confidence: 0.85,
-      evidenceSnippet: 'The Pact was not a bargain, child. It was a binding—a prison.',
-      evidencePosition: { start: 960, end: 1021 },
-      status: 'pending',
-      createdAt: now,
-    });
-
-    projects.push({ projectId: fantasyProjectId, documentIds: [fantasyDoc1, fantasyDoc2] });
-
-    // ========== PROJECT 2: D&D Campaign ==========
-    const dndProjectId = await ctx.db.insert('projects', {
-      userId,
-      name: 'Curse of the Hollow King',
-      description:
-        'A D&D 5e campaign set in a cursed kingdom where the dead king still rules from his throne.',
-      createdAt: now,
-      updatedAt: now,
-      stats: { documentCount: 2, entityCount: 8, factCount: 6, alertCount: 0, noteCount: 0 },
-    });
-
-    const dndDoc1 = await ctx.db.insert('documents', {
-      projectId: dndProjectId,
-      title: 'Session 1: The Road to Greyhollow',
-      content: `The party met at the Rusty Tankard inn in Millbrook, hired by a mysterious woman named Lady Vesper to investigate disappearances in Greyhollow. She offered 500 gold pieces and passage on a merchant caravan.
-
-Kira the half-elf rogue noticed Lady Vesper wore a signet ring bearing the crest of House Valdris—supposedly extinct for a century. When confronted, Vesper admitted she is the last heir, seeking to reclaim her ancestral home from "the thing wearing my grandfather's crown."
-
-The journey took three days. Tormund the dwarf cleric sensed undead presence growing stronger as they approached. Zara the tiefling warlock's patron, the Raven Queen, sent cryptic warnings through dreams: "The hollow king hungers. His court grows."
-
-They arrived at dusk. Greyhollow was silent—no birds, no insects. Smoke rose from chimneys but no one walked the streets. In the town square stood a statue of King Aldric Valdris III, but someone had chiseled away his face.`,
-      contentType: 'text',
-      orderIndex: 0,
       wordCount: 178,
       createdAt: now,
       updatedAt: now,
@@ -359,414 +62,473 @@ They arrived at dusk. Greyhollow was silent—no birds, no insects. Smoke rose f
       processingStatus: 'completed',
     });
 
-    const dndDoc2 = await ctx.db.insert('documents', {
-      projectId: dndProjectId,
-      title: 'Session 2: The Hollow Court',
-      content: `The party infiltrated Castle Valdris through the old servant tunnels Vesper remembered from childhood. Inside, they found the court frozen in a mockery of life—nobles seated at a banquet table, unmoving, their eyes following the party's movement.
+    const doc3Id = await ctx.db.insert('documents', {
+      projectId,
+      title: 'Chapter 3: The Discovery',
+      content: `Lady Mira discovers an ancient tome in the Eastern Tower's forbidden section. It speaks of Shadowbane's true nature—not a creature, but a curse placed by a betrayed court mage.
 
-On the throne sat the Hollow King himself: King Aldric's corpse, animated by dark magic, a crown of black iron fused to his skull. He spoke in whispers that somehow filled the hall.
+The tome reveals that the Emerald Crown was not forged in the Year of Falling Stars, but was a gift from the Forest Spirit to the First Queen, Elara the Brave, in exchange for a promise never fulfilled.
 
-"More guests for my eternal feast. Lady Vesper... granddaughter... you've returned to take your place."
+"The histories are wrong," Mira whispers, her hands trembling. "Everything we know about the Crown is a lie."
 
-Combat erupted when Tormund attempted to turn undead. The "nobles" rose as wights. Kira landed a critical sneak attack on the Hollow King (47 damage!), but he regenerated. Zara discovered his phylactery was the crown itself.
+Meanwhile, Sir Aldric leads a scouting party into the Ashen Peaks. They find the dragon's lair—empty save for a single obsidian egg and a message carved in stone: "The sleeper wakes when the crown is worn."
 
-The session ended with the party retreating to the tunnels, planning their next assault. They learned the crown must be destroyed in the Sunfire Forge beneath the mountains—the same forge where it was originally made.`,
-      contentType: 'text',
-      orderIndex: 1,
-      wordCount: 182,
+At the Festival of Green Leaves, celebrated on the first full moon of spring, the people of Thornhaven gather unaware of the danger. Lady Mira must choose: reveal the truth and cause panic, or find the vault key before it's too late.`,
+      contentType: 'markdown',
+      orderIndex: 2,
+      wordCount: 185,
       createdAt: now,
       updatedAt: now,
       processedAt: now,
       processingStatus: 'completed',
     });
 
-    const vesperId = await ctx.db.insert('entities', {
-      projectId: dndProjectId,
-      name: 'Lady Vesper Valdris',
+    const aldricId = await ctx.db.insert('entities', {
+      projectId,
+      name: 'Sir Aldric',
       type: 'character',
-      description: 'Last heir of House Valdris, quest giver. Wears family signet ring.',
-      aliases: ['Lady Vesper', 'Vesper'],
-      firstMentionedIn: dndDoc1,
+      description:
+        'The aging knight commander of Thornhaven. A veteran warrior with decades of experience.',
+      aliases: ['The Knight Commander', 'Commander Aldric'],
+      firstMentionedIn: doc1Id,
       status: 'confirmed',
+      revealedToViewers: true,
+      revealedAt: now,
       createdAt: now,
       updatedAt: now,
     });
 
-    const kiraId = await ctx.db.insert('entities', {
-      projectId: dndProjectId,
-      name: 'Kira',
+    const miraId = await ctx.db.insert('entities', {
+      projectId,
+      name: 'Lady Mira',
       type: 'character',
-      description: 'Half-elf rogue, player character. Observant and skilled.',
-      aliases: [],
-      firstMentionedIn: dndDoc1,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('entities', {
-      projectId: dndProjectId,
-      name: 'Tormund',
-      type: 'character',
-      description: 'Dwarf cleric, player character. Can sense undead.',
-      aliases: [],
-      firstMentionedIn: dndDoc1,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const zaraId = await ctx.db.insert('entities', {
-      projectId: dndProjectId,
-      name: 'Zara',
-      type: 'character',
-      description: 'Tiefling warlock, player character. Patron is the Raven Queen.',
-      aliases: [],
-      firstMentionedIn: dndDoc1,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const hollowKingId = await ctx.db.insert('entities', {
-      projectId: dndProjectId,
-      name: 'The Hollow King',
-      type: 'character',
-      description: 'Undead King Aldric Valdris III, main antagonist. Crown is his phylactery.',
-      aliases: ['King Aldric Valdris III'],
-      firstMentionedIn: dndDoc1,
+      description:
+        "Sir Aldric's daughter, a talented mage who mastered the Verdant Blessing at a young age.",
+      aliases: ['Mira', 'The Young Mage'],
+      firstMentionedIn: doc1Id,
       status: 'confirmed',
       createdAt: now,
       updatedAt: now,
     });
 
     await ctx.db.insert('entities', {
-      projectId: dndProjectId,
-      name: 'Greyhollow',
+      projectId,
+      name: 'Commander Thorne',
+      type: 'character',
+      description: 'Military commander serving King Aldric.',
+      aliases: [],
+      firstMentionedIn: doc1Id,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entities', {
+      projectId,
+      name: 'Magister Crow',
+      type: 'character',
+      description: 'A blind old magister who serves the old magic.',
+      aliases: [],
+      firstMentionedIn: doc2Id,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entities', {
+      projectId,
+      name: 'Thornhaven',
       type: 'location',
-      description: 'A cursed town, eerily silent. No wildlife.',
-      aliases: [],
-      firstMentionedIn: dndDoc1,
+      description:
+        'A city in the northern reaches of the Verdant Realm, protected by ancient walls.',
+      aliases: ['The Northern City', 'City of Thorns'],
+      firstMentionedIn: doc1Id,
       status: 'confirmed',
       createdAt: now,
       updatedAt: now,
     });
 
-    await ctx.db.insert('entities', {
-      projectId: dndProjectId,
-      name: 'Castle Valdris',
-      type: 'location',
-      description: 'Ancestral home of House Valdris, now ruled by the Hollow King.',
-      aliases: [],
-      firstMentionedIn: dndDoc2,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('entities', {
-      projectId: dndProjectId,
-      name: 'The Crown of Black Iron',
+    const crownId = await ctx.db.insert('entities', {
+      projectId,
+      name: 'The Emerald Crown',
       type: 'item',
-      description: "The Hollow King's phylactery. Must be destroyed in the Sunfire Forge.",
-      aliases: [],
-      firstMentionedIn: dndDoc2,
-      status: 'pending',
+      description: 'A powerful relic that can command the forest. Its true origins are disputed.',
+      aliases: ['The Crown', 'Crown of the Forest'],
+      firstMentionedIn: doc1Id,
+      status: 'confirmed',
       createdAt: now,
       updatedAt: now,
     });
 
-    await ctx.db.insert('facts', {
-      projectId: dndProjectId,
-      entityId: vesperId,
-      documentId: dndDoc1,
-      subject: 'Lady Vesper',
-      predicate: 'is_last_heir_of',
-      object: 'House Valdris',
-      confidence: 1.0,
-      evidenceSnippet: 'she is the last heir',
-      evidencePosition: { start: 340, end: 360 },
-      status: 'confirmed',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: dndProjectId,
-      entityId: vesperId,
-      documentId: dndDoc1,
-      subject: 'Lady Vesper',
-      predicate: 'offered_reward',
-      object: '500 gold pieces',
-      confidence: 1.0,
-      evidenceSnippet: 'She offered 500 gold pieces',
-      evidencePosition: { start: 150, end: 177 },
-      status: 'confirmed',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: dndProjectId,
-      entityId: zaraId,
-      documentId: dndDoc1,
-      subject: 'Zara',
-      predicate: 'has_patron',
-      object: 'the Raven Queen',
-      confidence: 1.0,
-      evidenceSnippet: "Zara the tiefling warlock's patron, the Raven Queen",
-      evidencePosition: { start: 520, end: 571 },
-      status: 'confirmed',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: dndProjectId,
-      entityId: hollowKingId,
-      documentId: dndDoc2,
-      subject: 'The Hollow King',
-      predicate: 'phylactery_is',
-      object: 'the crown of black iron',
-      confidence: 1.0,
-      evidenceSnippet: 'his phylactery was the crown itself',
-      evidencePosition: { start: 680, end: 715 },
-      status: 'confirmed',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: dndProjectId,
-      entityId: kiraId,
-      documentId: dndDoc2,
-      subject: 'Kira',
-      predicate: 'dealt_damage',
-      object: '47 damage critical sneak attack',
-      confidence: 1.0,
-      evidenceSnippet: 'Kira landed a critical sneak attack on the Hollow King (47 damage!)',
-      evidencePosition: { start: 580, end: 647 },
-      status: 'confirmed',
-      createdAt: now,
-    });
-
-    await ctx.db.insert('facts', {
-      projectId: dndProjectId,
-      entityId: hollowKingId,
-      documentId: dndDoc2,
-      subject: 'The Hollow King',
-      predicate: 'can',
-      object: 'regenerate',
-      confidence: 1.0,
-      evidenceSnippet: 'but he regenerated',
-      evidencePosition: { start: 648, end: 666 },
-      status: 'pending',
-      createdAt: now,
-    });
-
-    projects.push({ projectId: dndProjectId, documentIds: [dndDoc1, dndDoc2] });
-
-    // ========== PROJECT 3: Fanfiction ==========
-    const fanficProjectId = await ctx.db.insert('projects', {
-      userId,
-      name: 'The Lost Apprentice',
-      description: 'A third demo project',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      stats: { documentCount: 2, entityCount: 6, factCount: 5, alertCount: 0, noteCount: 0 },
-    });
-
-    const fanficDoc1 = await ctx.db.insert('documents', {
-      projectId: fanficProjectId,
-      title: 'Chapter 1: The Potions Prodigy',
-      content: `Elara Blackwood had a secret. Every Tuesday and Thursday, while other students attended Quidditch practice or lounged in their common rooms, she descended to the dungeons for private lessons with Professor Snape.
-
-"Your Wolfsbane is adequate," Snape said, examining her cauldron with his characteristic sneer. "Merely adequate. A first-year could achieve adequate."
-
-Elara bit back her retort. She knew his teaching style by now—three years of clandestine tutoring had taught her that his criticism meant she was close to mastery.
-
-"The lunar cycle affects the aconite's potency," she offered. "I compensated with additional moonstone."
-
-For a fraction of a second, something like approval flickered in Snape's dark eyes. "You may yet prove yourself useful, Miss Blackwood. The Dark Lord's return approaches. The Order will need competent potioneers."
-
-It was the closest he'd ever come to admitting she was being trained for the coming war.`,
-      contentType: 'text',
-      orderIndex: 0,
-      wordCount: 163,
-      createdAt: now,
-      updatedAt: now,
-      processedAt: now,
-      processingStatus: 'completed',
-    });
-
-    const fanficDoc2 = await ctx.db.insert('documents', {
-      projectId: fanficProjectId,
-      title: 'Chapter 2: The Spy and the Student',
-      content: `Dumbledore's office was warm, but Elara felt cold. The Headmaster's blue eyes, usually twinkling, were grave.
-
-"Professor Snape tells me you've progressed remarkably," Dumbledore said. "He rarely gives such praise."
-
-"He's never praised me to my face," Elara muttered.
-
-"No, he wouldn't. Severus shows affection through expectation." Dumbledore steepled his fingers. "Which is why I must ask something difficult. We need someone inside Malfoy Manor. Someone young enough to be overlooked, skilled enough to survive."
-
-Elara's blood ran cold. "You want me to spy on the Death Eaters."
-
-"I want you to make your own choice. But know this—Severus argued against this mission. Vehemently. For what it's worth, he believes you're too valuable to risk."
-
-She thought of Snape's endless corrections, his impossible standards, his rare moments of almost-kindness. He'd trained her for this. Whether he wanted to admit it or not.
-
-"I'll do it."`,
-      contentType: 'text',
-      orderIndex: 1,
-      wordCount: 175,
-      createdAt: now,
-      updatedAt: now,
-      processedAt: now,
-      processingStatus: 'completed',
-    });
-
-    const elaraBlackwoodId = await ctx.db.insert('entities', {
-      projectId: fanficProjectId,
-      name: 'Elara Blackwood',
+    const dragonId = await ctx.db.insert('entities', {
+      projectId,
+      name: 'Dragon of Ashfall',
       type: 'character',
-      description: "Snape's secret apprentice, potions prodigy, OC protagonist.",
-      aliases: ['Miss Blackwood'],
-      firstMentionedIn: fanficDoc1,
+      description: 'An ancient dragon that fled from something in the Ashen Peaks.',
+      aliases: ['The Dragon', 'Ashfall'],
+      firstMentionedIn: doc2Id,
       status: 'confirmed',
+      revealedToViewers: true,
+      revealedAt: now,
       createdAt: now,
       updatedAt: now,
     });
 
-    const snapeId = await ctx.db.insert('entities', {
-      projectId: fanficProjectId,
-      name: 'Severus Snape',
-      type: 'character',
-      description: "Potions Master, Elara's secret mentor, Order spy.",
-      aliases: ['Professor Snape', 'Snape'],
-      firstMentionedIn: fanficDoc1,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const dumbledoreId = await ctx.db.insert('entities', {
-      projectId: fanficProjectId,
-      name: 'Albus Dumbledore',
-      type: 'character',
-      description: 'Headmaster of Hogwarts, leader of the Order of the Phoenix.',
-      aliases: ['Dumbledore', 'The Headmaster'],
-      firstMentionedIn: fanficDoc2,
-      status: 'confirmed',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('entities', {
-      projectId: fanficProjectId,
-      name: 'Malfoy Manor',
-      type: 'location',
-      description: 'Death Eater headquarters, target of spy mission.',
-      aliases: [],
-      firstMentionedIn: fanficDoc2,
-      status: 'pending',
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    await ctx.db.insert('entities', {
-      projectId: fanficProjectId,
-      name: 'The Order of the Phoenix',
+    const shadowbaneId = await ctx.db.insert('entities', {
+      projectId,
+      name: 'The Shadowbane',
       type: 'concept',
-      description: 'Secret organization fighting against Voldemort.',
-      aliases: ['The Order'],
-      firstMentionedIn: fanficDoc1,
+      description:
+        'An ancient evil sealed beneath the mountains. Actually a curse, not a creature.',
+      aliases: ['The Ancient Evil', 'The Sleeper'],
+      firstMentionedIn: doc2Id,
+      status: 'pending',
+      revealedToViewers: false,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const forestSpiritId = await ctx.db.insert('entities', {
+      projectId,
+      name: 'The Forest Spirit',
+      type: 'character',
+      description: 'A being as old as the realm that dwells in the Thornwood Forest.',
+      aliases: ['Spirit of the Wood', 'The Ancient One'],
+      firstMentionedIn: doc1Id,
+      status: 'confirmed',
+      revealedToViewers: true,
+      revealedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const elaraId = await ctx.db.insert('entities', {
+      projectId,
+      name: 'Elara First Queen',
+      type: 'character',
+      description: 'The legendary First Queen who sealed the Shadowbane. Her epithet varies.',
+      aliases: ['The First Queen', 'Elara the Wise', 'Elara the Brave'],
+      firstMentionedIn: doc1Id,
       status: 'confirmed',
       createdAt: now,
       updatedAt: now,
     });
 
     await ctx.db.insert('entities', {
-      projectId: fanficProjectId,
-      name: 'Wolfsbane Potion',
-      type: 'item',
-      description: 'Complex potion that helps werewolves retain their minds.',
-      aliases: ['Wolfsbane'],
-      firstMentionedIn: fanficDoc1,
+      projectId,
+      name: 'Thornwood Forest',
+      type: 'location',
+      description: 'An ancient forest surrounding Thornhaven, home to the Forest Spirit.',
+      aliases: ['The Forest', 'The Thornwood'],
+      firstMentionedIn: doc1Id,
+      status: 'confirmed',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entities', {
+      projectId,
+      name: 'The Ashen Peaks',
+      type: 'location',
+      description: 'A mountain range where the Shadowbane was sealed and the dragon originated.',
+      aliases: ['The Mountains', 'Ashfall Mountains'],
+      firstMentionedIn: doc2Id,
+      status: 'confirmed',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const festivalId = await ctx.db.insert('entities', {
+      projectId,
+      name: 'Festival of Green Leaves',
+      type: 'event',
+      description: 'A celebration held on the first full moon of spring in Thornhaven.',
+      aliases: ['The Spring Festival', 'Green Leaves'],
+      firstMentionedIn: doc3Id,
       status: 'pending',
       createdAt: now,
       updatedAt: now,
     });
 
-    await ctx.db.insert('facts', {
-      projectId: fanficProjectId,
-      entityId: elaraBlackwoodId,
-      documentId: fanficDoc1,
-      subject: 'Elara Blackwood',
-      predicate: 'trained_by',
-      object: 'Professor Snape',
+    await ctx.db.insert('entities', {
+      projectId,
+      name: 'The Verdant Blessing',
+      type: 'concept',
+      description: 'A powerful healing spell that can cure any wound.',
+      aliases: ['Blessing of the Forest'],
+      firstMentionedIn: doc1Id,
+      status: 'confirmed',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const aldricAgeFact1 = await ctx.db.insert('facts', {
+      projectId,
+      entityId: aldricId,
+      documentId: doc1Id,
+      subject: 'Sir Aldric',
+      predicate: 'has_age',
+      object: 'sixty winters',
       confidence: 1.0,
-      evidenceSnippet: 'three years of clandestine tutoring',
-      evidencePosition: { start: 340, end: 373 },
+      evidenceSnippet: 'Sir Aldric, the aging knight commander at sixty winters old',
+      evidencePosition: { start: 95, end: 155 },
+      status: 'confirmed',
+      createdAt: now,
+    });
+
+    const aldricAgeFact2 = await ctx.db.insert('facts', {
+      projectId,
+      entityId: aldricId,
+      documentId: doc2Id,
+      subject: 'Sir Aldric',
+      predicate: 'has_age',
+      object: 'fifty winters',
+      confidence: 1.0,
+      evidenceSnippet: 'Sir Aldric, now leading the defense at fifty winters old',
+      evidencePosition: { start: 52, end: 108 },
       status: 'confirmed',
       createdAt: now,
     });
 
     await ctx.db.insert('facts', {
-      projectId: fanficProjectId,
-      entityId: elaraBlackwoodId,
-      documentId: fanficDoc1,
-      subject: 'Elara Blackwood',
-      predicate: 'skilled_in',
-      object: 'potion-making',
+      projectId,
+      entityId: miraId,
+      documentId: doc1Id,
+      subject: 'Lady Mira',
+      predicate: 'is_daughter_of',
+      object: 'Sir Aldric',
       confidence: 1.0,
-      evidenceSnippet: 'compensated with additional moonstone',
-      evidencePosition: { start: 450, end: 486 },
+      evidenceSnippet: "Lady Mira, Sir Aldric's daughter",
+      evidencePosition: { start: 350, end: 382 },
       status: 'confirmed',
       createdAt: now,
     });
 
     await ctx.db.insert('facts', {
-      projectId: fanficProjectId,
-      entityId: snapeId,
-      documentId: fanficDoc2,
-      subject: 'Severus Snape',
-      predicate: 'argued_against',
-      object: "Elara's spy mission",
+      projectId,
+      entityId: miraId,
+      documentId: doc1Id,
+      subject: 'Lady Mira',
+      predicate: 'has_age',
+      object: 'twenty-three summers',
       confidence: 1.0,
-      evidenceSnippet: 'Severus argued against this mission. Vehemently.',
-      evidencePosition: { start: 520, end: 568 },
+      evidenceSnippet: 'At twenty-three summers, she is the youngest mage',
+      evidencePosition: { start: 420, end: 468 },
+      status: 'confirmed',
+      createdAt: now,
+    });
+
+    const crownOriginFact1 = await ctx.db.insert('facts', {
+      projectId,
+      entityId: crownId,
+      documentId: doc1Id,
+      subject: 'The Emerald Crown',
+      predicate: 'was_forged_in',
+      object: 'the Year of Falling Stars by the First Queen',
+      confidence: 1.0,
+      evidenceSnippet:
+        'It was forged in the Year of Falling Stars by the First Queen, Elara the Wise',
+      evidencePosition: { start: 220, end: 298 },
+      status: 'confirmed',
+      createdAt: now,
+    });
+
+    const crownOriginFact2 = await ctx.db.insert('facts', {
+      projectId,
+      entityId: crownId,
+      documentId: doc3Id,
+      subject: 'The Emerald Crown',
+      predicate: 'origin',
+      object: 'a gift from the Forest Spirit to Elara the Brave',
+      confidence: 0.9,
+      evidenceSnippet:
+        'the Emerald Crown was not forged in the Year of Falling Stars, but was a gift from the Forest Spirit to the First Queen, Elara the Brave',
+      evidencePosition: { start: 150, end: 288 },
       status: 'confirmed',
       createdAt: now,
     });
 
     await ctx.db.insert('facts', {
-      projectId: fanficProjectId,
-      entityId: dumbledoreId,
-      documentId: fanficDoc2,
-      subject: 'Dumbledore',
-      predicate: 'wants_spy_at',
-      object: 'Malfoy Manor',
+      projectId,
+      entityId: dragonId,
+      documentId: doc2Id,
+      subject: 'Dragon of Ashfall',
+      predicate: 'is_fleeing_from',
+      object: 'something in the Ashen Peaks',
       confidence: 1.0,
-      evidenceSnippet: 'We need someone inside Malfoy Manor',
-      evidencePosition: { start: 320, end: 355 },
+      evidenceSnippet:
+        'the creature is not attacking but fleeing something far worse in the mountains',
+      evidencePosition: { start: 92, end: 170 },
       status: 'confirmed',
       createdAt: now,
     });
 
     await ctx.db.insert('facts', {
-      projectId: fanficProjectId,
-      entityId: elaraBlackwoodId,
-      documentId: fanficDoc2,
-      subject: 'Elara Blackwood',
-      predicate: 'agrees_to',
-      object: 'spy on Death Eaters',
-      confidence: 1.0,
-      evidenceSnippet: "I'll do it",
-      evidencePosition: { start: 780, end: 790 },
+      projectId,
+      entityId: shadowbaneId,
+      documentId: doc3Id,
+      subject: 'The Shadowbane',
+      predicate: 'true_nature',
+      object: 'a curse placed by a betrayed court mage, not a creature',
+      confidence: 0.85,
+      evidenceSnippet: "the Shadowbane's true nature—not a creature, but a curse",
+      evidencePosition: { start: 80, end: 136 },
       status: 'pending',
       createdAt: now,
     });
 
-    projects.push({ projectId: fanficProjectId, documentIds: [fanficDoc1, fanficDoc2] });
+    await ctx.db.insert('facts', {
+      projectId,
+      entityId: festivalId,
+      documentId: doc3Id,
+      subject: 'Festival of Green Leaves',
+      predicate: 'occurs_on',
+      object: 'the first full moon of spring',
+      confidence: 1.0,
+      evidenceSnippet: 'the Festival of Green Leaves, celebrated on the first full moon of spring',
+      evidencePosition: { start: 580, end: 652 },
+      status: 'pending',
+      createdAt: now,
+    });
 
-    return { projects };
+    await ctx.db.insert('facts', {
+      projectId,
+      entityId: elaraId,
+      documentId: doc1Id,
+      subject: 'Elara First Queen',
+      predicate: 'known_as',
+      object: 'Elara the Wise',
+      confidence: 1.0,
+      evidenceSnippet: 'the First Queen, Elara the Wise',
+      evidencePosition: { start: 267, end: 298 },
+      status: 'confirmed',
+      createdAt: now,
+    });
+
+    await ctx.db.insert('alerts', {
+      projectId,
+      documentId: doc2Id,
+      factIds: [aldricAgeFact1, aldricAgeFact2],
+      entityIds: [aldricId],
+      type: 'contradiction',
+      severity: 'error',
+      title: "Sir Aldric's age is inconsistent",
+      description:
+        "Sir Aldric is described as 'sixty winters old' in Chapter 1, but 'fifty winters old' in Chapter 2. This is a contradiction of 10 years.",
+      evidence: [
+        {
+          snippet: 'Sir Aldric, the aging knight commander at sixty winters old',
+          documentId: doc1Id,
+          documentTitle: 'Canon',
+        },
+        {
+          snippet: 'Sir Aldric, now leading the defense at fifty winters old',
+          documentId: doc2Id,
+          documentTitle: 'Chapter 2: The Conflict',
+        },
+      ],
+      suggestedFix:
+        "Decide on Sir Aldric's canonical age. Consider whether Chapter 2 occurs before Chapter 1, or if this is a typo.",
+      status: 'open',
+      createdAt: now,
+    });
+
+    await ctx.db.insert('alerts', {
+      projectId,
+      documentId: doc3Id,
+      factIds: [crownOriginFact1, crownOriginFact2],
+      entityIds: [crownId, elaraId, forestSpiritId],
+      type: 'contradiction',
+      severity: 'warning',
+      title: 'Conflicting origin stories for the Emerald Crown',
+      description:
+        "Chapter 1 states the Emerald Crown was 'forged in the Year of Falling Stars by the First Queen', but Chapter 3 reveals it was 'a gift from the Forest Spirit'. These origins are mutually exclusive.",
+      evidence: [
+        {
+          snippet: 'It was forged in the Year of Falling Stars by the First Queen, Elara the Wise',
+          documentId: doc1Id,
+          documentTitle: 'Canon',
+        },
+        {
+          snippet:
+            'the Emerald Crown was not forged... but was a gift from the Forest Spirit to the First Queen, Elara the Brave',
+          documentId: doc3Id,
+          documentTitle: 'Chapter 3: The Discovery',
+        },
+      ],
+      suggestedFix:
+        "This may be intentional—Chapter 3 reveals the 'true' origin. Consider adding a note that Chapter 1's account is commonly believed (but false) history.",
+      status: 'open',
+      createdAt: now,
+    });
+
+    await ctx.db.insert('notes', {
+      projectId,
+      userId,
+      title: 'Campaign Overview',
+      content:
+        'The Verdant Realm is a fantasy setting focused on the city of Thornhaven and the surrounding lands. Key plot points involve the Emerald Crown, the awakening Shadowbane, and the Festival of Green Leaves. Players will discover that ancient histories may not be what they seem.',
+      tags: ['ttrpg', 'overview'],
+      pinned: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('notes', {
+      projectId,
+      userId,
+      title: 'Session Notes - Week 1',
+      content:
+        'Party arrived in Thornhaven seeking work. Met Sir Aldric at the gates. Discussed rumors of the Dragon of Ashfall appearing in the north. Lady Mira invited them to the Eastern Tower for tea.',
+      tags: ['session', 'week-1'],
+      pinned: false,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('notes', {
+      projectId,
+      userId,
+      title: 'DM Secrets',
+      content:
+        "TRUE LORE: The Shadowbane is not a creature but a curse placed by Elara's betrayed court mage. The Emerald Crown was a gift from the Forest Spirit, not forged by ancient smiths. The 'Year of Falling Stars' is a fabricated history meant to hide the true origin. Only the DM knows this until players discover Chapter 3's revelation.",
+      tags: ['dm-only', 'secrets'],
+      pinned: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entityNotes', {
+      entityId: aldricId,
+      projectId,
+      userId,
+      content:
+        "DM NOTE: Sir Aldric's age inconsistency between Chapter 1 (60 winters) and Chapter 2 (50 winters) is intentional. Chapter 2 may be a flashback or contradiction represents unreliable narration. Keep this open for players to notice.",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entityNotes', {
+      entityId: crownId,
+      projectId,
+      userId,
+      content:
+        'DM NOTE: The Emerald Crown\'s dual origin is a key plot twist. The "forged in Year of Falling Stars" story is what historians believe. Chapter 3 reveals the TRUTH: it was a gift from the Forest Spirit to Elara. This should only be revealed if players investigate deeply.',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await ctx.db.insert('entityNotes', {
+      entityId: shadowbaneId,
+      projectId,
+      userId,
+      content:
+        'DM NOTE: Shadowbane is NOT a creature. It is a curse placed by a betrayed court mage. This is the central secret of the campaign. Do not reveal until players find the ancient tome in Chapter 3.',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return { projectId, documentIds: [doc1Id, doc2Id, doc3Id] };
   },
 });
 
@@ -793,12 +555,39 @@ export const clearSeedData = internalMutation({
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .collect();
 
+    const alerts = await ctx.db
+      .query('alerts')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .collect();
+
+    const notes = await ctx.db
+      .query('notes')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .collect();
+
+    const entityNotes = await ctx.db
+      .query('entityNotes')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .collect();
+
+    for (const note of entityNotes) {
+      await ctx.db.delete(note._id);
+    }
+
+    for (const alert of alerts) {
+      await ctx.db.delete(alert._id);
+    }
+
     for (const fact of facts) {
       await ctx.db.delete(fact._id);
     }
 
     for (const entity of entities) {
       await ctx.db.delete(entity._id);
+    }
+
+    for (const note of notes) {
+      await ctx.db.delete(note._id);
     }
 
     for (const doc of documents) {

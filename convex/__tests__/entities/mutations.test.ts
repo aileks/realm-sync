@@ -375,6 +375,18 @@ describe('entities mutations', () => {
       );
     });
 
+    it('throws when reveal is disabled on project', async () => {
+      const projectId = await setupProject(t, userId, {
+        projectType: 'ttrpg',
+        revealToPlayersEnabled: false,
+      });
+      const entityId = await setupEntity(t, projectId, { status: 'confirmed' });
+
+      await expect(asUser.mutation(api.entities.revealToPlayers, { entityId })).rejects.toThrow(
+        /reveal is disabled/i
+      );
+    });
+
     it('throws when not project owner', async () => {
       const otherUserId = await setupOtherUser(t);
       const projectId = await setupProject(t, otherUserId, { projectType: 'ttrpg' });
@@ -429,6 +441,21 @@ describe('entities mutations', () => {
 
       await expect(asUser.mutation(api.entities.hideFromPlayers, { entityId })).rejects.toThrow(
         /ttrpg/i
+      );
+    });
+
+    it('throws when reveal is disabled on project', async () => {
+      const projectId = await setupProject(t, userId, {
+        projectType: 'ttrpg',
+        revealToPlayersEnabled: false,
+      });
+      const entityId = await setupEntity(t, projectId, {
+        status: 'confirmed',
+        revealedToViewers: true,
+      });
+
+      await expect(asUser.mutation(api.entities.hideFromPlayers, { entityId })).rejects.toThrow(
+        /reveal is disabled/i
       );
     });
 

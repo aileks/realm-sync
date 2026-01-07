@@ -919,6 +919,9 @@ export const revealToPlayers = mutation({
     if (project.projectType !== 'ttrpg') {
       throw new Error('Reveal is only available for TTRPG projects');
     }
+    if (project.revealToPlayersEnabled === false) {
+      throw new Error('Reveal is disabled for this project');
+    }
 
     await ctx.db.patch(entityId, {
       revealedToViewers: true,
@@ -945,6 +948,9 @@ export const hideFromPlayers = mutation({
 
     if (project.projectType !== 'ttrpg') {
       throw new Error('Hide is only available for TTRPG projects');
+    }
+    if (project.revealToPlayersEnabled === false) {
+      throw new Error('Reveal is disabled for this project');
     }
 
     await ctx.db.patch(entityId, {

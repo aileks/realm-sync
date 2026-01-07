@@ -23,52 +23,59 @@ describe('seed.seedDemoData internal mutation', () => {
     const { userId } = await setupAuthenticatedUser(t);
 
     const result = await t.mutation(internal.seed.seedDemoData, { userId });
-    const firstProject = result.projects[0];
+    const projectId = result.projectId;
 
     const project = await t.run(async (ctx) => {
-      return await ctx.db.get(firstProject.projectId);
+      return await ctx.db.get(projectId);
     });
 
     expect(project).not.toBeNull();
     expect(project?.userId).toBe(userId);
-    expect(project?.name).toBe('The Northern Chronicles');
+    expect(project?.name).toBe('The Verdant Realm');
+    expect(project?.projectType).toBe('general');
+    expect(project?.isTutorial).toBe(true);
     expect(project?.stats).toEqual({
-      documentCount: 2,
-      entityCount: 12,
-      factCount: 8,
-      alertCount: 0,
-      noteCount: 0,
+      documentCount: 3,
+      entityCount: 14,
+      factCount: 10,
+      alertCount: 2,
+      noteCount: 3,
     });
   });
 
-  it('creates two documents with correct content', async () => {
+  it('creates three documents with correct content', async () => {
     const t = convexTest(schema, getModules());
     const { userId } = await setupAuthenticatedUser(t);
 
     const result = await t.mutation(internal.seed.seedDemoData, { userId });
-    const firstProject = result.projects[0];
+    const projectId = result.projectId;
 
     const docs = await t.run(async (ctx) => {
       return await ctx.db
         .query('documents')
-        .withIndex('by_project', (q) => q.eq('projectId', firstProject.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .collect();
     });
 
-    expect(docs).toHaveLength(2);
+    expect(docs).toHaveLength(3);
 
     const doc1 = docs.find((d) => d.title.includes('Chapter 1'));
     const doc2 = docs.find((d) => d.title.includes('Chapter 2'));
+    const doc3 = docs.find((d) => d.title.includes('Chapter 3'));
 
     expect(doc1).toBeDefined();
-    expect(doc1?.title).toBe('Chapter 1: The Frozen Throne');
-    expect(doc1?.contentType).toBe('text');
+    expect(doc1?.title).toBe('Chapter 1: The Beginning');
+    expect(doc1?.contentType).toBe('markdown');
     expect(doc1?.processingStatus).toBe('completed');
     expect(doc1?.orderIndex).toBe(0);
 
     expect(doc2).toBeDefined();
-    expect(doc2?.title).toBe('Chapter 2: The Ancient Pact');
+    expect(doc2?.title).toBe('Chapter 2: The Conflict');
     expect(doc2?.orderIndex).toBe(1);
+
+    expect(doc3).toBeDefined();
+    expect(doc3?.title).toBe('Chapter 3: The Discovery');
+    expect(doc3?.orderIndex).toBe(2);
   });
 
   it('creates entities with correct types and firstMentionedIn', async () => {
@@ -76,47 +83,44 @@ describe('seed.seedDemoData internal mutation', () => {
     const { userId } = await setupAuthenticatedUser(t);
 
     const result = await t.mutation(internal.seed.seedDemoData, { userId });
-    const firstProject = result.projects[0];
+    const projectId = result.projectId;
 
     const entities = await t.run(async (ctx) => {
       return await ctx.db
         .query('entities')
-        .withIndex('by_project', (q) => q.eq('projectId', firstProject.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .collect();
     });
 
-    expect(entities).toHaveLength(12);
+    expect(entities).toHaveLength(14);
 
-    const aldric = entities.find((e) => e.name === 'King Aldric');
+    const aldric = entities.find((e) => e.name === 'Sir Aldric');
     expect(aldric).toBeDefined();
     expect(aldric?.type).toBe('character');
     expect(aldric?.status).toBe('confirmed');
+    expect(aldric?.firstMentionedIn).toBeDefined();
 
-    const sera = entities.find((e) => e.name === 'Princess Sera');
-    expect(sera).toBeDefined();
-    expect(sera?.status).toBe('pending');
-
-    const thorne = entities.find((e) => e.name === 'Commander Thorne');
-    expect(thorne).toBeDefined();
-    expect(thorne?.status).toBe('pending');
+    const mira = entities.find((e) => e.name === 'Lady Mira');
+    expect(mira).toBeDefined();
+    expect(mira?.status).toBe('confirmed');
 
     const crow = entities.find((e) => e.name === 'Magister Crow');
     expect(crow).toBeDefined();
     expect(crow?.status).toBe('pending');
 
-    const winterhold = entities.find((e) => e.name === 'Winterhold Castle');
-    expect(winterhold).toBeDefined();
-    expect(winterhold?.type).toBe('location');
-    expect(winterhold?.status).toBe('confirmed');
+    const thornhaven = entities.find((e) => e.name === 'Thornhaven');
+    expect(thornhaven).toBeDefined();
+    expect(thornhaven?.type).toBe('location');
+    expect(thornhaven?.status).toBe('confirmed');
 
-    const frostborne = entities.find((e) => e.name === 'The Frostborne');
-    expect(frostborne).toBeDefined();
-    expect(frostborne?.type).toBe('concept');
+    const shadowbane = entities.find((e) => e.name === 'The Shadowbane');
+    expect(shadowbane).toBeDefined();
+    expect(shadowbane?.type).toBe('concept');
 
-    const pact = entities.find((e) => e.name === 'The Pact of Frost');
-    expect(pact).toBeDefined();
-    expect(pact?.type).toBe('event');
-    expect(pact?.status).toBe('confirmed');
+    const festival = entities.find((e) => e.name === 'Festival of Green Leaves');
+    expect(festival).toBeDefined();
+    expect(festival?.type).toBe('event');
+    expect(festival?.status).toBe('pending');
   });
 
   it('creates facts with correct evidencePositions', async () => {
@@ -124,42 +128,47 @@ describe('seed.seedDemoData internal mutation', () => {
     const { userId } = await setupAuthenticatedUser(t);
 
     const result = await t.mutation(internal.seed.seedDemoData, { userId });
-    const firstProject = result.projects[0];
+    const projectId = result.projectId;
 
     const facts = await t.run(async (ctx) => {
       return await ctx.db
         .query('facts')
-        .withIndex('by_project', (q) => q.eq('projectId', firstProject.projectId))
+        .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .collect();
     });
 
-    expect(facts).toHaveLength(8);
+    expect(facts).toHaveLength(10);
 
-    const aldricAgeFact = facts.find(
-      (f) => f.subject === 'King Aldric' && f.predicate === 'has_age'
+    const aldricAgeFacts = facts.filter(
+      (f) => f.subject === 'Sir Aldric' && f.predicate === 'has_age'
     );
-    expect(aldricAgeFact).toBeDefined();
-    expect(aldricAgeFact?.evidencePosition).toEqual({ start: 456, end: 505 });
-    expect(aldricAgeFact?.status).toBe('confirmed');
+    expect(aldricAgeFacts).toHaveLength(2);
+    expect(aldricAgeFacts.map((fact) => fact.evidencePosition)).toEqual(
+      expect.arrayContaining([
+        { start: 95, end: 155 },
+        { start: 52, end: 108 },
+      ])
+    );
+    expect(aldricAgeFacts.map((fact) => fact.status)).toEqual(
+      expect.arrayContaining(['confirmed'])
+    );
 
-    const pactFact = facts.find((f) => f.subject.includes('Pact of Frost'));
-    expect(pactFact).toBeDefined();
-    expect(pactFact?.confidence).toBe(0.85);
+    const shadowbaneFact = facts.find(
+      (f) => f.subject === 'The Shadowbane' && f.predicate === 'true_nature'
+    );
+    expect(shadowbaneFact).toBeDefined();
+    expect(shadowbaneFact?.confidence).toBe(0.85);
+    expect(shadowbaneFact?.status).toBe('pending');
   });
 
-  it('returns all 3 projects with their documentIds', async () => {
+  it('returns the seed project with documentIds', async () => {
     const t = convexTest(schema, getModules());
     const { userId } = await setupAuthenticatedUser(t);
 
     const result = await t.mutation(internal.seed.seedDemoData, { userId });
 
-    expect(result.projects).toHaveLength(3);
-    expect(result.projects[0].projectId).toBeDefined();
-    expect(result.projects[0].documentIds).toHaveLength(2);
-    expect(result.projects[1].projectId).toBeDefined();
-    expect(result.projects[1].documentIds).toHaveLength(2);
-    expect(result.projects[2].projectId).toBeDefined();
-    expect(result.projects[2].documentIds).toHaveLength(2);
+    expect(result.projectId).toBeDefined();
+    expect(result.documentIds).toHaveLength(3);
   });
 });
 
@@ -169,7 +178,7 @@ describe('seed.clearSeedData internal mutation', () => {
     const { userId } = await setupAuthenticatedUser(t);
 
     const seedResult = await t.mutation(internal.seed.seedDemoData, { userId });
-    const projectId = seedResult.projects[0].projectId;
+    const projectId = seedResult.projectId;
 
     await t.mutation(internal.seed.clearSeedData, { projectId });
 

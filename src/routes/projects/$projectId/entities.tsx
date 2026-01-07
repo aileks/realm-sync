@@ -49,7 +49,8 @@ function EntitiesPage() {
   const revealEntity = useMutation(api.entities.revealToPlayers);
   const hideEntity = useMutation(api.entities.hideFromPlayers);
 
-  const isTtrpgProject = project?.projectType === 'ttrpg';
+  const canRevealToPlayers =
+    project?.projectType === 'ttrpg' && project.revealToPlayersEnabled !== false;
 
   const paginatedArgs = useMemo(
     () => ({
@@ -188,7 +189,7 @@ function EntitiesPage() {
           >
             <EntityCard
               entity={entity}
-              isTtrpgProject={isTtrpgProject}
+              isTtrpgProject={canRevealToPlayers}
               onConfirm={
                 entity.status === 'pending' ?
                   (id) => {
@@ -204,14 +205,14 @@ function EntitiesPage() {
                 : undefined
               }
               onReveal={
-                isTtrpgProject ?
+                canRevealToPlayers ?
                   (id) => {
                     void revealEntity({ entityId: id });
                   }
                 : undefined
               }
               onHide={
-                isTtrpgProject ?
+                canRevealToPlayers ?
                   (id) => {
                     void hideEntity({ entityId: id });
                   }

@@ -77,6 +77,7 @@ World or campaign containers. Each user can manage multiple isolated canons.
 | `updatedAt` | `v.number()` | Last modification timestamp. |
 | `isTutorial` | `v.optional(v.boolean())` | Marks demo/tutorial projects. |
 | `projectType` | `v.optional(v.union(...))` | `"ttrpg"`, `"original-fiction"`, `"fanfiction"`, `"game-design"`, `"general"`. |
+| `revealToPlayersEnabled` | `v.optional(v.boolean())` | TTRPG only: enables player reveal controls. |
 | `stats` | `v.optional(v.object({...}))` | Cached counts: `documentCount`, `noteCount`, `entityCount`, `factCount`, `alertCount`. |
 
 **Indexes:**

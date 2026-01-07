@@ -52,6 +52,7 @@ type ProjectOverrides = {
     noteCount: number;
   };
   projectType?: 'general' | 'fiction' | 'ttrpg' | 'worldbuilding' | 'game_dev' | 'screenplay';
+  revealToPlayersEnabled?: boolean;
 };
 
 export async function setupProject(
@@ -59,7 +60,13 @@ export async function setupProject(
   userId: Id<'users'>,
   overrides: ProjectOverrides = {}
 ) {
-  const { name = 'Test Project', withStats = true, stats, projectType } = overrides;
+  const {
+    name = 'Test Project',
+    withStats = true,
+    stats,
+    projectType,
+    revealToPlayersEnabled,
+  } = overrides;
 
   return await t.run(async (ctx) => {
     return await ctx.db.insert('projects', {
@@ -69,6 +76,7 @@ export async function setupProject(
       updatedAt: Date.now(),
       ...(withStats && { stats: stats ?? defaultStats() }),
       ...(projectType && { projectType }),
+      ...(revealToPlayersEnabled !== undefined && { revealToPlayersEnabled }),
     });
   });
 }

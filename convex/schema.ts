@@ -82,6 +82,7 @@ export default defineSchema({
         v.literal('general')
       )
     ),
+    revealToPlayersEnabled: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
     stats: v.optional(

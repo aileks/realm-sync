@@ -547,6 +547,60 @@ export const deleteAccount = mutation({
       }
     }
 
+    const authSessions = await ctx.db
+      .query('authSessions')
+      .withIndex('userId', (q) => q.eq('userId', user._id))
+      .collect();
+
+    const authAccounts = await ctx.db
+      .query('authAccounts')
+      .filter((q) => q.eq(q.field('userId'), user._id))
+      .collect();
+
+    const refreshTokensResults = await Promise.all(
+      authSessions.map((session) =>
+        ctx.db
+          .query('authRefreshTokens')
+          .withIndex('sessionId', (q) => q.eq('sessionId', session._id))
+          .collect()
+      )
+    );
+    const refreshTokens = refreshTokensResults.flat();
+
+    const verificationCodesResults = await Promise.all(
+      authAccounts.map((account) =>
+        ctx.db
+          .query('authVerificationCodes')
+          .withIndex('accountId', (q) => q.eq('accountId', account._id))
+          .collect()
+      )
+    );
+    const verificationCodes = verificationCodesResults.flat();
+
+    const verifiersResults = await Promise.all(
+      authSessions.map((session) =>
+        ctx.db
+          .query('authVerifiers')
+          .filter((q) => q.eq(q.field('sessionId'), session._id))
+          .collect()
+      )
+    );
+    const verifiers = verifiersResults.flat();
+
+    await Promise.all([
+      ...refreshTokens.map((token) => ctx.db.delete(token._id)),
+      ...verificationCodes.map((code) => ctx.db.delete(code._id)),
+      ...verifiers.map((verifier) => ctx.db.delete(verifier._id)),
+      ...authSessions.map((session) => ctx.db.delete(session._id)),
+      ...authAccounts.map((account) => ctx.db.delete(account._id)),
+    ]);
+
+    console.log(
+      `[deleteAccount] Auth cleanup for user ${user._id}: ` +
+        `${refreshTokens.length} refreshTokens, ${verificationCodes.length} verificationCodes, ` +
+        `${verifiers.length} verifiers, ${authSessions.length} sessions, ${authAccounts.length} accounts`
+    );
+
     const projects = await ctx.db
       .query('projects')
       .withIndex('by_user', (q) => q.eq('userId', user._id))
@@ -606,6 +660,8 @@ export const deleteAccount = mutation({
       await ctx.db.delete(project._id);
     }
 
+    console.log(`[deleteAccount] Deleted ${projects.length} projects for user ${user._id}`);
+
     const chatMessages = await ctx.db
       .query('chatMessages')
       .withIndex('by_user', (q) => q.eq('userId', user._id))
@@ -614,11 +670,18 @@ export const deleteAccount = mutation({
       await ctx.db.delete(msg._id);
     }
 
+    console.log(
+      `[deleteAccount] Deleted ${chatMessages.length} chat messages for user ${user._id}`
+    );
+
     if (user.avatarStorageId) {
       await ctx.storage.delete(user.avatarStorageId);
+      console.log(`[deleteAccount] Deleted avatar storage for user ${user._id}`);
     }
 
     await ctx.db.delete(user._id);
+
+    console.log(`[deleteAccount] Successfully deleted user ${user._id} (${user.email})`);
 
     return { success: true };
   },
