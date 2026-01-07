@@ -26,7 +26,22 @@ export function getAuthErrorMessage(errorType: AuthErrorType, mode: 'signin' | '
 
 export const signInSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password must be 128 characters or less')
+    .refine((password) => /[A-Z]/.test(password), {
+      message: 'Password must contain at least one uppercase letter',
+    })
+    .refine((password) => /[a-z]/.test(password), {
+      message: 'Password must contain at least one lowercase letter',
+    })
+    .refine((password) => /\d/.test(password), {
+      message: 'Password must contain at least one number',
+    })
+    .refine((password) => /[!@#$%^&*()_+\-=[\]{}|\\:;"'<>,.?/]/.test(password), {
+      message: 'Password must contain at least one special character',
+    }),
 });
 
 export const signUpSchema = signInSchema

@@ -137,6 +137,23 @@ export const changePassword = action({
       throw new Error(`Password must be ${MAX_PASSWORD_LENGTH} characters or less`);
     }
 
+    // Enforce password complexity requirements
+    if (!/[A-Z]/.test(newPassword)) {
+      throw new Error('Password must contain at least one uppercase letter');
+    }
+
+    if (!/[a-z]/.test(newPassword)) {
+      throw new Error('Password must contain at least one lowercase letter');
+    }
+
+    if (!/\d/.test(newPassword)) {
+      throw new Error('Password must contain at least one number');
+    }
+
+    if (!/[!@#$%^&*()_+\-=[\]{}|\\:;"'<>,.?/]/.test(newPassword)) {
+      throw new Error('Password must contain at least one special character');
+    }
+
     const user = await ctx.runQuery(api.users.viewer);
     if (!user?.email) {
       throw new Error('User email not found. Password login may not be configured.');
