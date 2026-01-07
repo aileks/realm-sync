@@ -426,7 +426,7 @@ function ProjectModesSection({
                 );
               }}
               className={cn(
-                'hover:bg-primary/20 flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-all',
+                'hover:bg-predicate/20 flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-all',
                 selectedModes.includes(mode.id) ? 'border-primary bg-primary/5' : 'border-border'
               )}
             >
