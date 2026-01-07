@@ -22,7 +22,13 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   callbacks: {
     async createOrUpdateUser(ctx: MutationCtx, args) {
       if (args.existingUserId) {
-        return args.existingUserId;
+        // Verify the user actually exists in the database
+        const existingUser = await ctx.db.get(args.existingUserId);
+        if (existingUser) {
+          return args.existingUserId;
+        }
+        // User doesn't exist despite having a session ID - create new user
+        // This handles orphaned sessions from deleted accounts
       }
       return ctx.db.insert('users', {
         ...args.profile,
