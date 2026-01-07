@@ -327,7 +327,7 @@ function NavItem({ to, icon: Icon, children, collapsed }: NavItemProps) {
       className={cn(
         'flex items-center gap-3 rounded-lg p-3 transition-colors',
         collapsed && 'justify-center',
-        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-predicate/20 text-foreground'
+        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-primary/20 text-foreground'
       )}
     >
       <Icon className="size-5" />
@@ -386,7 +386,7 @@ function ProjectNavItem({
       className={cn(
         'my-1 flex items-center gap-3 rounded-lg p-3 transition-colors',
         collapsed && 'justify-center',
-        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-predicate/20 text-foreground'
+        isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-primary/20 text-foreground'
       )}
     >
       <Icon className="size-5" />

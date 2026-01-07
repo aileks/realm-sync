@@ -206,7 +206,8 @@ function AvatarSection({
             <div className="text-muted-foreground flex h-full w-full items-center justify-center text-3xl font-medium">
               {user.name
                 .split(' ')
-                .map((n) => n[0] ?? '')
+                .filter(Boolean)
+                .map((n) => n[0])
                 .filter((c) => /[a-zA-Z]/.test(c))
                 .join('')
                 .slice(0, 2)
@@ -287,7 +288,6 @@ function ProfileFieldsSection({
       const hasBioChange = trimmedBio !== originalBio;
 
       if (!hasNameChange && !hasBioChange) {
-        setError('No changes to save');
         setIsLoading(false);
         return;
       }
@@ -426,7 +426,7 @@ function ProjectModesSection({
                 );
               }}
               className={cn(
-                'hover:bg-predicate/20 flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-all',
+                'hover:bg-primary/20 flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-left transition-all',
                 selectedModes.includes(mode.id) ? 'border-primary bg-primary/5' : 'border-border'
               )}
             >

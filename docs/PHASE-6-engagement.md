@@ -49,7 +49,7 @@ Phase 6 transforms Realm Sync from a tool into an experience. The Vellum moth ma
 | Project Sharing | Removed | Simplified to owner-only; no collaboration for MVP |
 | Project Categories | Complete | TTRPG/Fiction/Game Design/General modes + reveal mechanics (PR #42) |
 | Notes | Complete | Project/entity notes with CRUD, UI routes, sidebar nav; tests pending |
-| User Profiles | Pending | Email/password change, bio, avatar uploads via Convex storage |
+| User Profiles | Complete | Name, bio, avatar uploads, email/password change (MVP flow) |
 | Polar.sh Integration | Pending | Sponsorship, funding, premium features |
 
 ---
@@ -716,632 +716,171 @@ Collapsible section on entity detail:
 
 ---
 
-## 6. User Profiles
+## 6. User Profiles (COMPLETE)
 
-Enable users to manage their account settings, profile information, and security credentials. This feature allows users to update their email, password, display name, bio, and profile picture using Convex's built-in file storage.
+Enable users to manage their account settings, profile information, and security credentials. Users can update their email, password, display name, bio, and profile picture using Convex's built-in file storage.
 
-### Current State Analysis
+### Implementation Status
 
-**Existing User Schema (from `convex/schema.ts`):**
+**Completed in PR #45:**
 
-```typescript
-users: defineTable({
-  // Identity fields (from Convex Auth)
-  name: v.optional(v.string()),          // ✅ Display name exists
-  email: v.optional(v.string()),         // ✅ Email field exists
-  emailVerificationTime: v.optional(v.float64()),
-  image: v.optional(v.string()),         // ✅ Avatar URL (for OAuth)
-  isAnonymous: v.optional(v.boolean()),
-
-  // App-specific fields
-  createdAt: v.number(),
-  onboardingCompleted: v.optional(v.boolean()),
-
-  // Tutorial state (nested object)
-  tutorialState: v.optional(v.object({
-    hasSeenTour: v.boolean(),
-    completedSteps: v.array(v.string()),
-    tourStartedAt: v.optional(v.number()),
-    tourCompletedAt: v.optional(v.number()),
-  })),
-
-  // User preferences (nested object)
-  settings: v.optional(v.object({
-    theme: v.optional(v.string()),
-    notifications: v.optional(v.boolean()),
-  })),
-}).index('by_email', ['email']),
-```
-
-**Auth Functions Available (from `convex/lib/auth.ts`):**
-
-- `getAuthUserId()` - Get user ID (null if not authenticated)
-- `requireAuth()` - Require authenticated user ID
-- `getCurrentUser()` - Get full user object (null if not authenticated)
-- `requireAuthUser()` - Require and return full user object
-
-**Existing User Functions (from `convex/users.ts`):**
-
-- `viewer` - Query to get current user
-- `completeOnboarding` - Complete onboarding
-- Tutorial-related mutations only
-
-**Critical Gaps Identified:**
-
-| Feature | Status | Notes |
+| Component | Status | Notes |
 | --- | --- | --- |
-| Password update mutations | ❌ NOT IMPLEMENTED | No `changePassword` function exists |
-| Email update mutations | ❌ NOT IMPLEMENTED | No `updateEmail` function exists |
-| Profile update mutations | ❌ NOT IMPLEMENTED | Only onboarding/tutorial mutations exist |
-| Bio field | ❌ NOT IMPLEMENTED | Not in user schema |
-| Avatar upload flow | ❌ NOT IMPLEMENTED | Only has `image` string field for OAuth |
+| Schema changes | ✅ | `bio`, `avatarStorageId` on users table |
+| Profile mutations | ✅ | `updateProfile`, `updateAvatar`, `removeAvatar` |
+| Email change | ✅ | Direct update (MVP - no email verification) |
+| Password change | ✅ | `changePassword` action with current password verification |
+| Settings UI | ✅ | Profile tab (avatar, name, bio, categories) + Security tab (email, password) |
+| Tests | ✅ | Profile, avatar, email, password tests passing |
 
 ### Architecture
 
-**Two-Layer Approach:**
+**Single-Layer Approach (MVP):**
 
-1. **Profile Layer** - Public profile fields (name, bio, avatar) via standard `patch` mutations on `users` table
-2. **Credentials Layer** - Sensitive data (email, password) via `@convex-dev/auth` server APIs + verification + session invalidation
+- **Profile Fields**: Name, bio, avatar via standard `patch` mutations on `users` table
+- **Email Change**: Direct update after uniqueness check (no OTP verification - no email service configured)
+- **Password Change**: Requires current password verification via `@convex-dev/auth` `retrieveAccount`
 
 **Avatar Storage Pattern:**
 
-- Store file reference as `storageId: v.id('_storage')` in user schema
+- Store file reference as `avatarStorageId: v.id('_storage')` in user schema
 - Use existing `convex/storage.ts` functions: `generateUploadUrl`, `getFileUrl`, `deleteFile`
-- Follow `DocumentForm.tsx` pattern: upload URL → direct POST → store `storageId` → derive URL
+- Server-side validation: content type (JPG/PNG/WebP) and size (max 5MB)
 - Delete old file on avatar replacement to prevent storage bloat
 
-### Schema Changes
-
-Add to `convex/schema.ts` in the `users` table:
+### Schema
 
 ```typescript
 users: defineTable({
   // ... existing fields ...
-
-  // Profile fields (NEW)
-  bio: v.optional(v.string()), // User bio/about section
-  avatarStorageId: v.optional(v.id('_storage')), // Convex file storage reference
-
-  // Email change verification (NEW, for secure email updates)
-  pendingEmail: v.optional(v.string()), // Awaiting verification
-  pendingEmailSetAt: v.optional(v.number()), // When email change requested
+  bio: v.optional(v.string()),
+  avatarStorageId: v.optional(v.id('_storage')),
 });
 ```
-
-**Migration:** No backfill required. All new fields are `optional`, so existing users remain unaffected.
 
 **Avatar Display Logic:**
 
 ```typescript
-// Prefer uploaded avatar, fallback to OAuth URL
 const avatarUrl =
-  user.avatarStorageId ?
-    await ctx.storage.getUrl(user.avatarStorageId)
-  : (user.image ?? null);
+  user.avatarStorageId ? await ctx.storage.getUrl(user.avatarStorageId) : null;
 ```
 
-### Backend Mutations
+### Backend Functions
 
-#### 4.1 Profile Queries
-
-**File:** `convex/users.ts` (extend existing file or create `convex/profile.ts`)
+#### Profile Query
 
 ```typescript
-// Extend or replace existing `viewer` query
 export const viewerProfile = query({
   args: {},
   handler: async (ctx) => {
-    const user = await requireAuthUser(ctx);
+    const user = await getCurrentUser(ctx);
+    if (!user) return null;
 
-    // Compute avatar URL from storage
     const avatarUrl =
       user.avatarStorageId ?
         await ctx.storage.getUrl(user.avatarStorageId)
-      : (user.image ?? null);
+      : null;
 
-    return {
-      ...user,
-      avatarUrl,
-      // Don't leak sensitive fields
-    };
+    return { ...user, avatarUrl };
   },
 });
 ```
 
-#### 4.2 Profile Fields Mutation
+#### Profile Mutations
 
 ```typescript
-export const updateProfile = mutation({
-  args: {
-    name: v.optional(v.string()),
-    bio: v.optional(v.string()),
-  },
-  handler: async (ctx, { name, bio }) => {
-    const user = await requireAuthUser(ctx);
-
-    // Build updates object only for provided fields
-    const updates: Record<string, unknown> = {};
-    if (name !== undefined) updates.name = name.trim();
-    if (bio !== undefined) updates.bio = bio.trim();
-
-    if (Object.keys(updates).length === 0) {
-      throw new Error('No fields to update');
-    }
-
-    await ctx.db.patch(user._id, updates);
-    return user._id;
-  },
-});
+export const updateProfile = mutation({...}); // Name + bio with validation
+export const updateAvatar = mutation({...});  // Validates type/size, deletes old
+export const removeAvatar = mutation({...});  // Removes and deletes from storage
 ```
 
-#### 4.3 Avatar Mutations
-
-Uses existing `convex/storage.ts` functions:
+#### Email Change (MVP)
 
 ```typescript
-// Validate and set avatar from uploaded file
-export const updateAvatar = mutation({
-  args: { storageId: v.id('_storage') },
-  handler: async (ctx, { storageId }) => {
-    const user = await requireAuthUser(ctx);
-
-    // Server-side validation of uploaded file
-    const meta = await ctx.db.system.get(storageId);
-    if (!meta) {
-      throw new Error('File not found');
-    }
-
-    // Enforce avatar constraints
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    const maxSize = 5 * 1024 * 1024; // 5MB
-
-    if (!allowedTypes.includes(meta.contentType)) {
-      await ctx.storage.delete(storageId); // Cleanup invalid file
-      throw new Error('Invalid file type. Use JPG, PNG, or WebP.');
-    }
-
-    if (meta.size > maxSize) {
-      await ctx.storage.delete(storageId); // Cleanup oversized file
-      throw new Error('File too large. Maximum size is 5MB.');
-    }
-
-    // Delete old avatar file if exists
-    if (user.avatarStorageId) {
-      await ctx.storage.delete(user.avatarStorageId);
-    }
-
-    // Update user with new avatar
-    await ctx.db.patch(user._id, { avatarStorageId: storageId });
-    return storageId;
-  },
-});
-
-// Remove avatar and revert to OAuth image
-export const removeAvatar = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const user = await requireAuthUser(ctx);
-
-    if (user.avatarStorageId) {
-      await ctx.storage.delete(user.avatarStorageId);
-      await ctx.db.patch(user._id, { avatarStorageId: undefined });
-    }
-
-    return user._id;
-  },
-});
-```
-
-#### 4.4 Password Change Mutation
-
-Requires `@convex-dev/auth` server APIs:
-
-```typescript
-import {
-  modifyAccountCredentials,
-  invalidateSessions,
-} from '@convex-dev/auth/server';
-
-export const changePassword = mutation({
-  args: {
-    currentPassword: v.string(),
-    newPassword: v.string(),
-  },
-  handler: async (ctx, { currentPassword, newPassword }) => {
-    const user = await requireAuthUser(ctx);
-
-    // NOTE: Password verification should be done on client via re-auth flow
-    // (signIn with current password) before calling this mutation.
-    // Backend can optionally enforce "recent session" if tracked.
-
-    // Validate password strength
-    if (newPassword.length < 8) {
-      throw new Error('Password must be at least 8 characters');
-    }
-
-    // Update credential via convex-auth
-    // NOTE: You must align with your password provider configuration
-    const accountId = user.email; // Or however password accounts are identified
-    await modifyAccountCredentials(ctx, {
-      provider: 'password',
-      account: {
-        id: accountId,
-        secret: newPassword,
-      },
-    });
-
-    // Invalidate all sessions (force re-login)
-    await invalidateSessions(ctx, { userId: user._id });
-
-    return user._id;
-  },
-});
-```
-
-**Client Flow:**
-
-1. User enters current password → click "Change Password"
-2. Client calls `signIn('password', { flow: 'signIn', email, password: currentPassword })` to re-auth
-3. On success, call `changePassword({ currentPassword, newPassword })` mutation
-4. Redirect to login page with toast: "Password changed. Please sign in again."
-
-#### 4.5 Email Change Mutations
-
-Two-step verification flow (recommended for security):
-
-```typescript
-// Step 1: Request email change
-export const requestEmailChange = mutation({
+export const updateEmail = mutation({
   args: { newEmail: v.string() },
   handler: async (ctx, { newEmail }) => {
     const user = await requireAuthUser(ctx);
-
-    // Normalize email
     const normalized = newEmail.toLowerCase().trim();
 
-    // Check email format
-    if (!normalized.includes('@')) {
-      throw new Error('Invalid email format');
-    }
+    // Zod email validation
+    // Uniqueness check via by_email index
+    // Direct update (no OTP - no email service)
 
-    // Check email uniqueness
-    const existing = await ctx.db
-      .query('users')
-      .withIndex('by_email', (q) => q.eq('email', normalized))
-      .first();
-
-    if (existing && existing._id !== user._id) {
-      throw new Error('Email already in use');
-    }
-
-    // Set pending email
-    await ctx.db.patch(user._id, {
-      pendingEmail: normalized,
-      pendingEmailSetAt: Date.now(),
-    });
-
-    // Trigger verification email via convex-auth Password provider
-    // (Configure OTP flow in `convex/auth.ts` if not already set up)
-
-    return user._id;
-  },
-});
-
-// Step 2: Confirm email change with verification code
-export const confirmEmailChange = mutation({
-  args: { newEmail: v.string(), code: v.string() },
-  handler: async (ctx, { newEmail, code }) => {
-    const user = await requireAuthUser(ctx);
-
-    // Verify code (via convex-auth OTP flow)
-    // This should be handled by calling `signIn` from client with verification code
-    // The mutation finalizes the change after successful verification
-
-    // Verify pending email matches
-    if (user.pendingEmail !== newEmail) {
-      throw new Error('Email verification expired or invalid');
-    }
-
-    // Update email
-    await ctx.db.patch(user._id, {
-      email: newEmail,
-      pendingEmail: undefined,
-      pendingEmailSetAt: undefined,
-    });
-
-    // Update convex-auth account identifier if needed
-    // (Depends on your auth provider configuration)
-
-    // Invalidate sessions (force re-login)
-    await invalidateSessions(ctx, { userId: user._id });
-
+    await ctx.db.patch(user._id, { email: normalized });
     return user._id;
   },
 });
 ```
 
-**Client Flow (Email Change):**
+**Note:** Two-step email verification (OTP) is documented below but not implemented. Requires email service integration. Current MVP allows direct email change after uniqueness check.
 
-1. User enters new email → click "Send Verification Code"
-2. Call `requestEmailChange({ newEmail })` mutation
-3. Receive verification code in email
-4. Enter code → call `confirmEmailChange({ newEmail, code })` mutation
-5. Redirect to login page with toast: "Email updated. Please sign in again."
+#### Password Change
 
-**MVP Alternative (Simpler, Less Secure):**
-
-Skip OTP verification, require current password + immediate change:
-
-- Add `password: v.string()` arg to `updateEmail` mutation
-- Verify password via convex-auth (or skip verification)
-- Update email immediately
-- Invalidate sessions
-
-### Validation Rules
-
-**Name:**
-
-- Trim whitespace
-- Min 1, max 80 characters
-- Allow Unicode letters and common punctuation
-
-**Bio:**
-
-- Trim whitespace
-- Max 500 characters
-- Support plain text (or markdown with sanitization)
-
-**Email:**
-
-- Valid email format (client: Zod `email()`, server: basic validation)
-- Enforce uniqueness via `by_email` index
-- Normalize: lowercase, trim
-
-**Password:**
-
-- Min 8 characters (recommend 12)
-- Max 128 characters (DoS protection)
-- Optionally: Require 3 of 4: lowercase, uppercase, number, symbol
-- No common passwords (optional)
-
-**Avatar:**
-
-- Allowed types: `image/jpeg`, `image/png`, `image/webp`
-- Max size: 5MB
-- Server-side validation in `updateAvatar` (never trust client)
+```typescript
+export const changePassword = action({
+  args: { currentPassword: v.string(), newPassword: v.string() },
+  handler: async (ctx, { currentPassword, newPassword }) => {
+    // Validate new password (8-128 chars)
+    // Verify current password via retrieveAccount
+    // Update via modifyAccountCredentials
+    // Note: Only works for password-based accounts
+  },
+});
+```
 
 ### Frontend Components
 
-#### Route
+#### Settings Page (`src/routes/settings.tsx`)
 
-Add `src/routes/settings.tsx`:
+Two tabs:
 
-```typescript
-import { createFileRoute } from '@tanstack/react-router';
-
-export const Route = createFileRoute('/settings')({
-  component: SettingsPage,
-});
-
-function SettingsPage() {
-  return (
-    <div className="container py-12 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-8">Account Settings</h1>
-
-      <div className="grid gap-8">
-        <ProfileSection />
-        <AvatarSection />
-        <EmailSection />
-        <PasswordSection />
-      </div>
-    </div>
-  );
-}
-```
+- **Profile Tab**: Avatar upload, name/bio form, project categories
+- **Security Tab**: Email change (with confirmation modal), password change
 
 #### Component Structure
 
-Create `src/components/profile/`:
-
 ```
-src/components/profile/
-├── ProfileSettingsPage.tsx   # Container (or use route component)
-├── ProfileFieldsForm.tsx      # Name + bio form
-├── AvatarPicker.tsx           # Upload/remove avatar
-├── EmailChangeForm.tsx        # Email update with verification
-└── PasswordChangeForm.tsx     # Password update
+ProfileTab
+├── AvatarSection      # Upload/remove avatar
+├── ProfileFieldsForm  # Name + bio
+└── ProjectModesSection # Category preferences
+
+SecurityTab
+├── EmailChangeCard    # Current email, new email input, confirm dialog
+└── PasswordChangeCard # Current + new password
 ```
 
-**Example: AvatarPicker.tsx**
+### Validation Rules
 
-```typescript
-import { useMutation, useQuery } from 'convex/react';
-import { api } from 'convex/_generated/api';
-import { Id } from 'convex/_generated/dataModel';
-
-export function AvatarPicker() {
-  const user = useQuery(api.users.viewerProfile);
-  const generateUploadUrl = useMutation(api.storage.generateUploadUrl);
-  const updateAvatar = useMutation(api.users.updateAvatar);
-  const removeAvatar = useMutation(api.users.removeAvatar);
-
-  const [uploading, setUploading] = useState(false);
-
-  async function handleFileSelect(file: File) {
-    // Client-side validation
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      alert('Invalid file type');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      alert('File too large');
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      // Step 1: Get upload URL
-      const uploadUrl = await generateUploadUrl();
-
-      // Step 2: Upload file directly
-      const result = await fetch(uploadUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      });
-
-      const { storageId } = await result.json();
-
-      // Step 3: Update user with storageId
-      await updateAvatar({ storageId });
-    } catch (error) {
-      console.error('Upload failed', error);
-      alert('Upload failed. Please try again.');
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  return (
-    <div className="card">
-      <h2 className="text-xl font-semibold mb-4">Profile Picture</h2>
-
-      <div className="flex items-center gap-6">
-        {/* Avatar preview */}
-        {user?.avatarUrl ? (
-          <img
-            src={user.avatarUrl}
-            alt="Avatar"
-            className="w-24 h-24 rounded-full object-cover"
-          />
-        ) : (
-          <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
-            <span className="text-2xl font-bold">
-              {user?.name?.charAt(0) || '?'}
-            </span>
-          </div>
-        )}
-
-        <div className="flex gap-2">
-          <label className="btn btn-primary">
-            Upload
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleFileSelect(file);
-              }}
-              disabled={uploading}
-            />
-          </label>
-
-          {user?.avatarStorageId && (
-            <button
-              className="btn btn-ghost"
-              onClick={() => removeAvatar()}
-            >
-              Remove
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-```
+| Field    | Rules                                   |
+| -------- | --------------------------------------- |
+| Name     | Trim, max 80 chars                      |
+| Bio      | Trim, max 500 chars                     |
+| Email    | Zod email validation, lowercase, unique |
+| Password | Min 8, max 128 chars                    |
+| Avatar   | JPG/PNG/WebP only, max 5MB              |
 
 ### Security Considerations
 
-**Session Invalidation:**
+- **Server-side validation**: Never trust client for avatar type/size
+- **Password verification**: Current password required before change
+- **Uniqueness enforcement**: Email checked via database index
+- **File cleanup**: Old avatars deleted on replace/remove
 
-- Always call `invalidateSessions()` after email/password changes
-- Force users to re-login to prevent session hijacking
+### Future Enhancements
 
-**Reauthentication Requirement:**
+When email service is configured, implement two-step verification:
 
-- Password/email changes require recent authentication
-- Implement UI flow: re-sign-in → show settings → allow change
-- Optionally track "last auth time" and enforce max age (e.g., 15 min)
+1. `requestEmailChange` - Sets pending email, sends OTP
+2. `confirmEmailChange` - Verifies OTP, updates email, invalidates sessions
 
-**Never Store Passwords:**
+Schema fields for future use:
 
-- Use `@convex-dev/auth` backing tables only
-- Never add `password` field to `users` schema
-
-**Server-Side Validation:**
-
-- Never trust client-side validation for avatars
-- Validate `contentType` and `size` in `updateAvatar` mutation
-- Delete invalid uploads to prevent storage bloat
-
-**Email Verification:**
-
-- Prove control of new email before changing (OTP/link)
-- Otherwise account takeover via session theft is too easy
-- Use convex-auth Password provider's OTP flow if configured
-
-**Rate Limiting (Optional):**
-
-- Store timestamps in user doc
-- Reject too-frequent password/email attempts (e.g., max 1 per minute)
-
-### Testing Strategy
-
-#### Backend Tests (`convex-test`)
-
-**Profile Tests:**
-
-- Unauthenticated `updateProfile` → AUTH_ERROR
-- Update name trims whitespace and persists
-- Bio max length enforcement (500 chars)
-
-**Avatar Tests:**
-
-- Unauthenticated `updateAvatar` → AUTH_ERROR
-- Rejects invalid `contentType` (mock `_storage` system doc)
-- Rejects oversized files
-- Deletes old avatar on replace (assert delete called)
-
-**Email Tests:**
-
-- Uniqueness check rejects already-used email
-- `pendingEmail` set / cleared appropriately
-- Confirm flow invalidates sessions
-
-**Password Tests:**
-
-- Password policy rejects weak password (< 8 chars)
-- Successful change triggers `invalidateSessions`
-
-#### Frontend Tests (Vitest)
-
-**Component Tests:**
-
-- `AvatarPicker` calls `generateUploadUrl` → `fetch` → `updateAvatar`
-- Forms show validation errors (Zod)
-- Successful submit shows success toast / disables button while loading
-
-**E2E Tests (Optional):**
-
-- Full avatar upload flow (file select → upload → display)
-- Password change flow (re-auth → update → redirect to login)
-
-### Effort Estimate
-
-| Scope | Duration | Notes |
-| --- | --- | --- |
-| **Minimum** | 1-2 days | Profile fields + avatar + password change (skip email verification) |
-| **Full** | 3-4 days | Add verified email change + re-auth UX + comprehensive tests |
-
-### Dependencies
-
-- `@convex-dev/auth` server APIs (`modifyAccountCredentials`, `invalidateSessions`)
-- Existing `convex/storage.ts` functions
-- Pattern: `DocumentForm.tsx` upload flow
-- Zod for client validation (already installed)
+```typescript
+pendingEmail: v.optional(v.string()),
+pendingEmailSetAt: v.optional(v.number()),
+```
 
 ---
 
