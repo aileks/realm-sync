@@ -36,32 +36,6 @@ export const list = query({
   },
 });
 
-export const listSharedWithMe = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
-    const shares = await ctx.db
-      .query('projectShares')
-      .withIndex('by_user', (q) => q.eq('sharedWithUserId', userId))
-      .filter((q) => q.neq(q.field('acceptedAt'), undefined))
-      .collect();
-
-    const projectsWithRole = await Promise.all(
-      shares.map(async (share) => {
-        const project = await ctx.db.get(share.projectId);
-        if (!project) return null;
-        return { ...project, role: share.role };
-      })
-    );
-
-    return projectsWithRole.filter(Boolean) as (Doc<'projects'> & {
-      role: 'editor' | 'viewer';
-    })[];
-  },
-});
-
 export const get = query({
   args: { id: v.id('projects') },
   handler: async (ctx, { id }) => {
@@ -184,15 +158,6 @@ export const remove = mutation({
 
     for (const alert of alerts) {
       await ctx.db.delete(alert._id);
-    }
-
-    const shares = await ctx.db
-      .query('projectShares')
-      .withIndex('by_project', (q) => q.eq('projectId', id))
-      .collect();
-
-    for (const share of shares) {
-      await ctx.db.delete(share._id);
     }
 
     await ctx.db.delete(id);

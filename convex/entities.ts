@@ -25,32 +25,13 @@ async function getProjectAccess(
 ): Promise<{
   canRead: boolean;
   canEdit: boolean;
-  isViewer: boolean;
-  isTtrpgViewer: boolean;
 }> {
   const role = await getProjectRole(ctx, projectId);
-  const isViewer = role === 'viewer';
-
-  let isTtrpgViewer = false;
-  if (isViewer) {
-    const project = await ctx.db.get(projectId);
-    isTtrpgViewer = project?.projectType === 'ttrpg';
-  }
 
   return {
     canRead: role !== null,
-    canEdit: role === 'owner' || role === 'editor',
-    isViewer,
-    isTtrpgViewer,
+    canEdit: role === 'owner',
   };
-}
-
-function filterForTtrpgViewer(
-  entities: Doc<'entities'>[],
-  isTtrpgViewer: boolean
-): Doc<'entities'>[] {
-  if (!isTtrpgViewer) return entities;
-  return entities.filter((e) => e.revealedToViewers === true);
 }
 
 async function verifyProjectAccess(
@@ -214,43 +195,28 @@ export const listByProject = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
-    const effectiveStatus = access.isViewer ? 'confirmed' : status;
-    let entities;
-
-    if (type && effectiveStatus) {
-      entities = await ctx.db
+    if (type && status) {
+      return await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
         .filter((q) => q.eq(q.field('type'), type))
         .collect();
     } else if (type) {
-      entities = await ctx.db
+      return await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', type))
         .collect();
-      if (access.isViewer) {
-        entities = entities.filter((e) => e.status === 'confirmed');
-      }
-    } else if (effectiveStatus) {
-      entities = await ctx.db
+    } else if (status) {
+      return await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
         .collect();
     } else {
-      entities = await ctx.db
+      return await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .collect();
-      if (access.isViewer) {
-        entities = entities.filter((e) => e.status === 'confirmed');
-      }
     }
-
-    return entities;
   },
 });
 
@@ -267,15 +233,12 @@ export const listByProjectWithStats = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
-    const effectiveStatus = access.isViewer ? 'confirmed' : status;
     let entities;
 
-    if (type && effectiveStatus) {
+    if (type && status) {
       entities = await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
         .filter((q) => q.eq(q.field('type'), type))
         .collect();
     } else if (type) {
@@ -283,24 +246,16 @@ export const listByProjectWithStats = query({
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', type))
         .collect();
-      if (access.isViewer) {
-        entities = entities.filter((e) => e.status === 'confirmed');
-      }
-    } else if (effectiveStatus) {
+    } else if (status) {
       entities = await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
         .collect();
     } else {
       entities = await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId))
         .collect();
-      if (access.isViewer) {
-        entities = entities.filter((e) => e.status === 'confirmed');
-      }
     }
 
     const entitiesWithStats = await Promise.all(
@@ -340,16 +295,13 @@ export const getWithFacts = query({
 
     const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return null;
-    if (access.isViewer && entity.status !== 'confirmed') return null;
 
     const facts = await ctx.db
       .query('facts')
       .withIndex('by_entity', (q) => q.eq('entityId', id))
       .collect();
 
-    const filteredFacts = access.isViewer ? facts.filter((f) => f.status === 'confirmed') : facts;
-
-    return { entity, facts: filteredFacts };
+    return { entity, facts };
   },
 });
 
@@ -402,7 +354,6 @@ export const get = query({
 
     const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return null;
-    if (access.isViewer && entity.status !== 'confirmed') return null;
 
     return entity;
   },
@@ -421,8 +372,6 @@ export const findByName = query({
       .query('entities')
       .withIndex('by_name', (q) => q.eq('projectId', projectId).eq('name', name))
       .first();
-
-    if (entity && access.isViewer && entity.status !== 'confirmed') return null;
 
     return entity;
   },
@@ -510,78 +459,23 @@ export const listByProjectPaginated = query({
       return { page: [], isDone: true, continueCursor: '' };
     }
 
-    const effectiveStatus = access.isViewer ? 'confirmed' : status;
-
-    if (type && effectiveStatus) {
-      const result = await ctx.db
+    if (type && status) {
+      return await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
-        .filter((q) => {
-          const typeMatch = q.eq(q.field('type'), type);
-          if (access.isTtrpgViewer) {
-            return q.and(typeMatch, q.eq(q.field('revealedToViewers'), true));
-          }
-          return typeMatch;
-        })
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
+        .filter((q) => q.eq(q.field('type'), type))
         .paginate(paginationOpts);
-      return result;
     } else if (type) {
-      if (access.isViewer) {
-        const result = await ctx.db
-          .query('entities')
-          .withIndex('by_project_status', (q) =>
-            q.eq('projectId', projectId).eq('status', 'confirmed')
-          )
-          .filter((q) => {
-            const typeMatch = q.eq(q.field('type'), type);
-            if (access.isTtrpgViewer) {
-              return q.and(typeMatch, q.eq(q.field('revealedToViewers'), true));
-            }
-            return typeMatch;
-          })
-          .paginate(paginationOpts);
-        return result;
-      }
       return await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', type))
         .paginate(paginationOpts);
-    } else if (effectiveStatus) {
-      if (access.isTtrpgViewer) {
-        return await ctx.db
-          .query('entities')
-          .withIndex('by_project_status', (q) =>
-            q.eq('projectId', projectId).eq('status', effectiveStatus)
-          )
-          .filter((q) => q.eq(q.field('revealedToViewers'), true))
-          .paginate(paginationOpts);
-      }
+    } else if (status) {
       return await ctx.db
         .query('entities')
-        .withIndex('by_project_status', (q) =>
-          q.eq('projectId', projectId).eq('status', effectiveStatus)
-        )
+        .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', status))
         .paginate(paginationOpts);
     } else {
-      if (access.isViewer) {
-        if (access.isTtrpgViewer) {
-          return await ctx.db
-            .query('entities')
-            .withIndex('by_project_status', (q) =>
-              q.eq('projectId', projectId).eq('status', 'confirmed')
-            )
-            .filter((q) => q.eq(q.field('revealedToViewers'), true))
-            .paginate(paginationOpts);
-        }
-        return await ctx.db
-          .query('entities')
-          .withIndex('by_project_status', (q) =>
-            q.eq('projectId', projectId).eq('status', 'confirmed')
-          )
-          .paginate(paginationOpts);
-      }
       return await ctx.db
         .query('entities')
         .withIndex('by_project', (q) => q.eq('projectId', projectId))
@@ -600,17 +494,10 @@ export const findSimilar = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
-    let allEntities = await ctx.db
+    const allEntities = await ctx.db
       .query('entities')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .collect();
-
-    if (access.isViewer) {
-      allEntities = allEntities.filter((e) => e.status === 'confirmed');
-    }
-
-    // Filter for TTRPG viewers - only show revealed entities
-    allEntities = filterForTtrpgViewer(allEntities, access.isTtrpgViewer);
 
     const normalizedName = name.toLowerCase().trim();
 
@@ -664,8 +551,6 @@ export const search = query({
 
     for (const entity of [...nameResults, ...descriptionResults]) {
       if (!seen.has(entity._id)) {
-        if (access.isViewer && entity.status !== 'confirmed') continue;
-        if (access.isTtrpgViewer && entity.revealedToViewers !== true) continue;
         seen.add(entity._id);
         combined.push(entity);
       }
@@ -684,18 +569,12 @@ export const getWithDetails = query({
 
     const access = await getProjectAccess(ctx, entity.projectId);
     if (!access.canRead) return null;
-    if (access.isViewer && entity.status !== 'confirmed') return null;
-    if (access.isTtrpgViewer && entity.revealedToViewers !== true) return null;
 
-    let facts = await ctx.db
+    const facts = await ctx.db
       .query('facts')
       .withIndex('by_entity', (q) => q.eq('entityId', id))
       .filter((q) => q.neq(q.field('status'), 'rejected'))
       .collect();
-
-    if (access.isViewer) {
-      facts = facts.filter((f) => f.status === 'confirmed');
-    }
 
     const documentIds = [
       ...new Set(
@@ -762,13 +641,11 @@ export const listEvents = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return [];
 
-    let events = await ctx.db
+    const events = await ctx.db
       .query('entities')
       .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('type', 'event'))
       .filter((q) => q.eq(q.field('status'), 'confirmed'))
       .collect();
-
-    events = filterForTtrpgViewer(events, access.isTtrpgViewer);
 
     const eventsWithDocs = await Promise.all(
       events.map(async (event) => {
@@ -801,13 +678,11 @@ export const getTimeline = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return { events: [], appearances: [], entities: [] };
 
-    let allEntities = await ctx.db
+    const allEntities = await ctx.db
       .query('entities')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .filter((q) => q.eq(q.field('status'), 'confirmed'))
       .collect();
-
-    allEntities = filterForTtrpgViewer(allEntities, access.isTtrpgViewer);
 
     const events = allEntities.filter((e) => e.type === 'event');
 
@@ -932,23 +807,17 @@ export const getRelationshipGraph = query({
     const access = await getProjectAccess(ctx, projectId);
     if (!access.canRead) return { nodes: [], edges: [] };
 
-    let allEntities = await ctx.db
+    const allEntities = await ctx.db
       .query('entities')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .filter((q) => q.eq(q.field('status'), 'confirmed'))
       .collect();
 
-    allEntities = filterForTtrpgViewer(allEntities, access.isTtrpgViewer);
-
-    let allFacts = await ctx.db
+    const allFacts = await ctx.db
       .query('facts')
       .withIndex('by_project', (q) => q.eq('projectId', projectId))
       .filter((q) => q.neq(q.field('status'), 'rejected'))
       .collect();
-
-    if (access.isViewer) {
-      allFacts = allFacts.filter((f) => f.status === 'confirmed');
-    }
 
     type Edge = {
       source: Id<'entities'>;

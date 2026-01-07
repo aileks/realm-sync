@@ -189,20 +189,6 @@ export default defineSchema({
     createdAt: v.number(),
   }).index('by_user', ['userId', 'createdAt']),
 
-  // Project Shares (DM/Player collaboration)
-  projectShares: defineTable({
-    projectId: v.id('projects'),
-    sharedWithEmail: v.string(),
-    sharedWithUserId: v.optional(v.id('users')), // Populated when user accepts
-    role: v.union(v.literal('editor'), v.literal('viewer')),
-    invitedBy: v.id('users'),
-    acceptedAt: v.optional(v.number()),
-    createdAt: v.number(),
-  })
-    .index('by_project', ['projectId'])
-    .index('by_email', ['sharedWithEmail'])
-    .index('by_user', ['sharedWithUserId']),
-
   // LLM Cache
   llmCache: defineTable({
     inputHash: v.string(),
