@@ -62,7 +62,7 @@ function getStoredTheme(): Theme {
 
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { isAuthenticated } = useConvexAuth();
-  const user = useQuery(api.users.viewer);
+  const user = useQuery(api.users.viewerProfile);
   const params = useParams({ strict: false });
   const search = useSearch({ strict: false });
   const navigate = useNavigate();
@@ -247,19 +247,19 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             <DropdownMenuTrigger
               className={cn(
                 buttonVariants({ variant: 'ghost', size: 'sm' }),
-                'w-full cursor-pointer',
+                'w-full cursor-pointer py-6',
                 collapsed ? 'justify-center px-0' : 'justify-start'
               )}
             >
-              <div className="relative flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full">
-                {user?.image ?
+              <div className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full">
+                {user?.avatarUrl ?
                   <img
-                    src={user.image}
+                    src={user.avatarUrl}
                     alt={user.name ?? 'User'}
                     className="aspect-square h-full w-full object-cover"
                   />
                 : user?.name ?
-                  <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center text-[8px] font-medium">
+                  <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center text-xs font-medium">
                     {user.name
                       .split(' ')
                       .map((n) => n[0])
@@ -267,9 +267,11 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                       .slice(0, 2)
                       .toUpperCase()}
                   </div>
-                : <User className="size-4" />}
+                : <User className="size-5" />}
               </div>
-              {!collapsed && <span className="ml-2 truncate">{user?.name ?? 'Account'}</span>}
+              {!collapsed && (
+                <span className="ml-3 truncate text-sm font-medium">{user?.name ?? 'Account'}</span>
+              )}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-48">
               <DropdownMenuGroup>
@@ -407,7 +409,7 @@ function ProjectNavItem({
 
 export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
   const { isAuthenticated } = useConvexAuth();
-  const user = useQuery(api.users.viewer);
+  const user = useQuery(api.users.viewerProfile);
   const navigate = useNavigate();
   const { signOut } = useAuthActions();
 
@@ -485,18 +487,18 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
             <DropdownMenuTrigger
               className={cn(
                 buttonVariants({ variant: 'ghost', size: 'sm' }),
-                'w-full cursor-pointer justify-start'
+                'w-full cursor-pointer justify-start py-6'
               )}
             >
-              <div className="relative flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full">
-                {user?.image ?
+              <div className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full">
+                {user?.avatarUrl ?
                   <img
-                    src={user.image}
+                    src={user.avatarUrl}
                     alt={user.name ?? 'User'}
                     className="aspect-square h-full w-full object-cover"
                   />
                 : user?.name ?
-                  <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center text-[8px] font-medium">
+                  <div className="bg-primary text-primary-foreground flex h-full w-full items-center justify-center text-xs font-medium">
                     {user.name
                       .split(' ')
                       .map((n) => n[0])
@@ -504,9 +506,9 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
                       .slice(0, 2)
                       .toUpperCase()}
                   </div>
-                : <User className="size-4" />}
+                : <User className="size-5" />}
               </div>
-              <span className="ml-2 truncate">{user?.name ?? 'Account'}</span>
+              <span className="ml-3 truncate text-sm font-medium">{user?.name ?? 'Account'}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" side="bottom">
               <DropdownMenuGroup>
