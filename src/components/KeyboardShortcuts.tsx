@@ -51,7 +51,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   const chordTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function openCommandPalette() {
-    if (!user) return;
+    if (user === null) return;
     setCommandPaletteOpen(true);
   }
 
@@ -124,7 +124,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
     'mod+shift+k',
     (e) => {
       e.preventDefault();
-      if (!user) return;
+      if (user === null) return;
       setCommandPaletteView('shortcuts');
       setCommandPaletteOpen(true);
     },
