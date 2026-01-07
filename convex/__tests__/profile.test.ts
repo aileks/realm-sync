@@ -217,12 +217,12 @@ describe('profile', () => {
     });
   });
 
-  describe('requestEmailChange mutation', () => {
+  describe('updateEmail mutation', () => {
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, getModules());
 
       await expect(
-        t.mutation(api.users.requestEmailChange, { newEmail: 'new@example.com' })
+        t.mutation(api.users.updateEmail, { newEmail: 'new@example.com' })
       ).rejects.toThrow(/unauthorized/i);
     });
 
@@ -231,7 +231,7 @@ describe('profile', () => {
       const { asUser } = await setupAuthenticatedUser(t);
 
       await expect(
-        asUser.mutation(api.users.requestEmailChange, { newEmail: 'notanemail' })
+        asUser.mutation(api.users.updateEmail, { newEmail: 'notanemail' })
       ).rejects.toThrow(/invalid email/i);
     });
 
@@ -248,29 +248,28 @@ describe('profile', () => {
       });
 
       await expect(
-        asUser.mutation(api.users.requestEmailChange, { newEmail: 'taken@example.com' })
+        asUser.mutation(api.users.updateEmail, { newEmail: 'taken@example.com' })
       ).rejects.toThrow(/already in use/i);
     });
 
-    it('sets pendingEmail and pendingEmailSetAt', async () => {
+    it('updates email directly', async () => {
       const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
-      await asUser.mutation(api.users.requestEmailChange, { newEmail: 'new@example.com' });
+      await asUser.mutation(api.users.updateEmail, { newEmail: 'new@example.com' });
 
       const user = await t.run(async (ctx) => ctx.db.get(userId));
-      expect(user?.pendingEmail).toBe('new@example.com');
-      expect(user?.pendingEmailSetAt).toBeDefined();
+      expect(user?.email).toBe('new@example.com');
     });
 
     it('normalizes email to lowercase', async () => {
       const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
-      await asUser.mutation(api.users.requestEmailChange, { newEmail: 'NEW@EXAMPLE.COM' });
+      await asUser.mutation(api.users.updateEmail, { newEmail: 'NEW@EXAMPLE.COM' });
 
       const user = await t.run(async (ctx) => ctx.db.get(userId));
-      expect(user?.pendingEmail).toBe('new@example.com');
+      expect(user?.email).toBe('new@example.com');
     });
   });
 });

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { VellumButton } from '@/components/Vellum';
 import { RecentProjects } from '@/components/RecentProjects';
+import { BetaTag } from '@/components/BetaTag';
 import { cn } from '@/lib/utils';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -115,10 +116,8 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
           <Link to="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="Realm Sync" className="size-12 rounded-full" />
             <div className="flex flex-col">
-              <span className="font-serif text-lg leading-tight font-semibold">Realm Sync</span>
-              <span className="text-muted-foreground text-[10px] font-medium tracking-widest uppercase">
-                Beta
-              </span>
+              <h4 className="font-serif text-xl leading-tight font-semibold">Realm Sync</h4>
+              <BetaTag />
             </div>
           </Link>
         )}

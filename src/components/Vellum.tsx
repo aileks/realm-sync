@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { BetaTag } from '@/components/BetaTag';
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   DropdownMenu,
@@ -20,7 +21,7 @@ import { api } from '../../convex/_generated/api';
 export type VellumMood = 'neutral' | 'alert' | 'success' | 'thinking';
 
 export const VELLUM_MESSAGES = {
-  welcome: "Welcome to your archive. I'm Vellum, and I'll help you keep track of your world.",
+  welcome: 'Welcome to your archive.',
   firstDocument: 'Your first entry! Shall I begin cataloging?',
   extractionComplete: "I've catalogued {count} new entries from {document}.",
   alertFound: 'I noticed something that needs your attention in {document}.',
@@ -45,7 +46,7 @@ type VellumButtonProps = {
 };
 
 export function VellumButton({ collapsed }: VellumButtonProps) {
-  const [tip] = useState(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
+  const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * TIPS.length));
   const [sheetOpen, setSheetOpen] = useState(false);
   const navigate = useNavigate();
   const alertSummary = useQuery(api.alerts.listOpenByUser, { limit: 3 });
@@ -53,6 +54,15 @@ export function VellumButton({ collapsed }: VellumButtonProps) {
   const openCount = alertSummary?.total ?? 0;
   const openAlerts = alertSummary?.alerts ?? [];
   const showAlertCount = alertSummary !== undefined;
+
+  // Cycle tip each time sheet opens
+  useEffect(() => {
+    if (sheetOpen) {
+      setTipIndex((prev) => (prev + 1) % TIPS.length);
+    }
+  }, [sheetOpen]);
+
+  const tip = TIPS[tipIndex];
 
   const handleChatClick = () => {
     void navigate({ to: '/vellum/chat' });
@@ -106,7 +116,9 @@ export function VellumButton({ collapsed }: VellumButtonProps) {
                 <MothIcon className="size-6 text-amber-400" />
               </div>
               <div>
-                <SheetTitle className="font-serif">Vellum</SheetTitle>
+                <SheetTitle className="flex items-center gap-2 font-serif">
+                  Vellum <BetaTag />
+                </SheetTitle>
                 <p className="text-muted-foreground text-xs">Your Archive Assistant</p>
               </div>
             </div>

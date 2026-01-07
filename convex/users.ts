@@ -1,5 +1,6 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
+import { z } from 'zod';
 import { getCurrentUser, requireAuthUser } from './lib/auth';
 
 export const viewer = query({
@@ -111,8 +112,12 @@ export const changePassword = mutation({
     currentPassword: v.string(),
     newPassword: v.string(),
   },
-  handler: async (ctx, { newPassword }) => {
+  handler: async (ctx, { currentPassword, newPassword }) => {
     const user = await requireAuthUser(ctx);
+
+    // TODO: Validate currentPassword against stored password hash
+    // This requires integrating with @convex-dev/auth's internal password verification
+    void currentPassword;
 
     if (newPassword.length < 8) {
       throw new Error('Password must be at least 8 characters');
@@ -122,18 +127,24 @@ export const changePassword = mutation({
       throw new Error('Password must be 128 characters or less');
     }
 
+    // TODO: Hash newPassword and update user record via @convex-dev/auth
+
     return user._id;
   },
 });
 
-export const requestEmailChange = mutation({
-  args: { newEmail: v.string() },
+export const updateEmail = mutation({
+  args: {
+    newEmail: v.string(),
+  },
   handler: async (ctx, { newEmail }) => {
     const user = await requireAuthUser(ctx);
 
     const normalized = newEmail.toLowerCase().trim();
 
-    if (!normalized.includes('@')) {
+    const emailSchema = z.string().email();
+    const result = emailSchema.safeParse(normalized);
+    if (!result.success) {
       throw new Error('Invalid email format');
     }
 
@@ -146,10 +157,7 @@ export const requestEmailChange = mutation({
       throw new Error('Email already in use');
     }
 
-    await ctx.db.patch(user._id, {
-      pendingEmail: normalized,
-      pendingEmailSetAt: Date.now(),
-    });
+    await ctx.db.patch(user._id, { email: normalized });
 
     return user._id;
   },
