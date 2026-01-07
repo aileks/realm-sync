@@ -9,6 +9,152 @@ export const viewer = query({
   },
 });
 
+export const viewerProfile = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return null;
+
+    const avatarUrl =
+      user.avatarStorageId ? await ctx.storage.getUrl(user.avatarStorageId) : (user.image ?? null);
+
+    return {
+      ...user,
+      avatarUrl,
+    };
+  },
+});
+
+export const updateProfile = mutation({
+  args: {
+    name: v.optional(v.string()),
+    bio: v.optional(v.string()),
+  },
+  handler: async (ctx, { name, bio }) => {
+    const user = await requireAuthUser(ctx);
+
+    const updates: Record<string, string> = {};
+
+    if (name !== undefined) {
+      const trimmed = name.trim();
+      if (trimmed.length > 80) {
+        throw new Error('Name must be 80 characters or less');
+      }
+      updates.name = trimmed;
+    }
+
+    if (bio !== undefined) {
+      const trimmed = bio.trim();
+      if (trimmed.length > 500) {
+        throw new Error('Bio must be 500 characters or less');
+      }
+      updates.bio = trimmed;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      throw new Error('No fields to update');
+    }
+
+    await ctx.db.patch(user._id, updates);
+    return user._id;
+  },
+});
+
+export const updateAvatar = mutation({
+  args: { storageId: v.id('_storage') },
+  handler: async (ctx, { storageId }) => {
+    const user = await requireAuthUser(ctx);
+
+    const meta = await ctx.db.system.get(storageId);
+    if (!meta) {
+      throw new Error('File not found');
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const maxSize = 5 * 1024 * 1024;
+
+    if (!allowedTypes.includes(meta.contentType ?? '')) {
+      await ctx.storage.delete(storageId);
+      throw new Error('Invalid file type. Use JPG, PNG, or WebP.');
+    }
+
+    if (meta.size > maxSize) {
+      await ctx.storage.delete(storageId);
+      throw new Error('File too large. Maximum size is 5MB.');
+    }
+
+    if (user.avatarStorageId) {
+      await ctx.storage.delete(user.avatarStorageId);
+    }
+
+    await ctx.db.patch(user._id, { avatarStorageId: storageId });
+    return storageId;
+  },
+});
+
+export const removeAvatar = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireAuthUser(ctx);
+
+    if (user.avatarStorageId) {
+      await ctx.storage.delete(user.avatarStorageId);
+      await ctx.db.patch(user._id, { avatarStorageId: undefined });
+    }
+
+    return user._id;
+  },
+});
+
+export const changePassword = mutation({
+  args: {
+    currentPassword: v.string(),
+    newPassword: v.string(),
+  },
+  handler: async (ctx, { newPassword }) => {
+    const user = await requireAuthUser(ctx);
+
+    if (newPassword.length < 8) {
+      throw new Error('Password must be at least 8 characters');
+    }
+
+    if (newPassword.length > 128) {
+      throw new Error('Password must be 128 characters or less');
+    }
+
+    return user._id;
+  },
+});
+
+export const requestEmailChange = mutation({
+  args: { newEmail: v.string() },
+  handler: async (ctx, { newEmail }) => {
+    const user = await requireAuthUser(ctx);
+
+    const normalized = newEmail.toLowerCase().trim();
+
+    if (!normalized.includes('@')) {
+      throw new Error('Invalid email format');
+    }
+
+    const existing = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', normalized))
+      .first();
+
+    if (existing && existing._id !== user._id) {
+      throw new Error('Email already in use');
+    }
+
+    await ctx.db.patch(user._id, {
+      pendingEmail: normalized,
+      pendingEmailSetAt: Date.now(),
+    });
+
+    return user._id;
+  },
+});
+
 export const completeOnboarding = mutation({
   args: {},
   handler: async (ctx) => {

@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   Home,
   StickyNote,
+  Settings,
 } from 'lucide-react';
 import { VellumButton } from '@/components/Vellum';
 import { RecentProjects } from '@/components/RecentProjects';
@@ -273,9 +274,9 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
             <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-48">
               <DropdownMenuGroup>
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuItem disabled className="text-muted-foreground">
-                  <User className="mr-2 size-4" />
-                  Profile (coming soon)
+                <DropdownMenuItem onClick={() => void navigate({ to: '/settings' })}>
+                  <Settings className="mr-2 size-4" />
+                  Settings
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
@@ -518,6 +519,15 @@ export function MobileSidebarContent({ onClose }: { onClose: () => void }) {
                 >
                   <FolderOpen className="mr-2 size-4" />
                   Projects
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    onClose();
+                    void navigate({ to: '/settings' });
+                  }}
+                >
+                  <Settings className="mr-2 size-4" />
+                  Settings
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />

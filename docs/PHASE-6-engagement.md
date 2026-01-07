@@ -48,7 +48,7 @@ Phase 6 transforms Realm Sync from a tool into an experience. The Vellum moth ma
 | Onboarding Modal | Complete | New user welcome flow |
 | Project Sharing | Removed | Simplified to owner-only; no collaboration for MVP |
 | Project Categories | Complete | TTRPG/Fiction/Game Design/General modes + reveal mechanics (PR #42) |
-| Notes | In Progress | Project notes complete; entity notes backend + UI complete |
+| Notes | Complete | Project/entity notes with CRUD, UI routes, sidebar nav; tests pending |
 | User Profiles | Pending | Email/password change, bio, avatar uploads via Convex storage |
 | Polar.sh Integration | Pending | Sponsorship, funding, premium features |
 

@@ -38,6 +38,10 @@ export default defineSchema({
         ),
       })
     ),
+    bio: v.optional(v.string()),
+    avatarStorageId: v.optional(v.id('_storage')),
+    pendingEmail: v.optional(v.string()),
+    pendingEmailSetAt: v.optional(v.number()),
   }).index('by_email', ['email']),
 
   // Projects

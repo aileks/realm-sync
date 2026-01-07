@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -37,6 +38,11 @@ import { Route as ProjectsProjectIdCanonSearchRouteImport } from './routes/proje
 import { Route as ProjectsProjectIdCanonConnectionsRouteImport } from './routes/projects/$projectId/canon/connections'
 import { Route as ProjectsProjectIdAlertsAlertIdRouteImport } from './routes/projects/$projectId/alerts/$alertId'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
@@ -195,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/projects': typeof ProjectsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/dev/chat': typeof DevChatRoute
   '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/vellum/chat': typeof VellumChatRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/settings': typeof SettingsRoute
   '/dev/chat': typeof DevChatRoute
   '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/vellum/chat': typeof VellumChatRoute
@@ -250,6 +258,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/projects': typeof ProjectsRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/dev/chat': typeof DevChatRoute
   '/entities/$entityId': typeof EntitiesEntityIdRoute
   '/vellum/chat': typeof VellumChatRoute
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/projects'
+    | '/settings'
     | '/dev/chat'
     | '/entities/$entityId'
     | '/vellum/chat'
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/settings'
     | '/dev/chat'
     | '/entities/$entityId'
     | '/vellum/chat'
@@ -335,6 +346,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/projects'
+    | '/settings'
     | '/dev/chat'
     | '/entities/$entityId'
     | '/vellum/chat'
@@ -365,6 +377,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
+  SettingsRoute: typeof SettingsRoute
   DevChatRoute: typeof DevChatRoute
   EntitiesEntityIdRoute: typeof EntitiesEntityIdRoute
   VellumChatRoute: typeof VellumChatRoute
@@ -372,6 +385,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects': {
       id: '/projects'
       path: '/projects'
@@ -675,6 +695,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
+  SettingsRoute: SettingsRoute,
   DevChatRoute: DevChatRoute,
   EntitiesEntityIdRoute: EntitiesEntityIdRoute,
   VellumChatRoute: VellumChatRoute,
