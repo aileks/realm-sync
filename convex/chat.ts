@@ -41,7 +41,7 @@ export const sendMessage = action({
     userId: v.id('users'),
   },
   handler: async (ctx, { messages, userId }) => {
-    const limitCheck = await ctx.runQuery(internal.subscription.checkChatLimit, { userId });
+    const limitCheck = await ctx.runQuery(internal.usage.checkChatLimit, { userId });
 
     if (!limitCheck.allowed) {
       throw new Error(
@@ -89,7 +89,7 @@ export const sendMessage = action({
       throw new Error('Invalid response from OpenRouter API');
     }
 
-    await ctx.runMutation(internal.subscription.incrementChatUsage, { userId });
+    await ctx.runMutation(internal.usage.incrementChatUsage, { userId });
 
     return content;
   },

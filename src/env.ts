@@ -6,7 +6,10 @@ export const env = createEnv({
     SERVER_URL: z.string().url().optional(),
     OPENROUTER_API_KEY: z.string().optional(),
     MODEL: z.string().optional(),
+    POLAR_ORGANIZATION_TOKEN: z.string().optional(),
     POLAR_WEBHOOK_SECRET: z.string().optional(),
+    POLAR_PRODUCT_ID_UNLIMITED: z.string().optional(),
+    POLAR_SERVER: z.enum(['sandbox', 'production']).optional(),
   },
 
   /**
@@ -18,7 +21,6 @@ export const env = createEnv({
   client: {
     VITE_APP_TITLE: z.string().min(1).optional(),
     VITE_CONVEX_URL: z.string().url(),
-    VITE_POLAR_CHECKOUT_URL: z.string().url().optional(),
   },
 
   /**

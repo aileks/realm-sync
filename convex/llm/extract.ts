@@ -504,7 +504,7 @@ export const chunkAndExtract = action({
     const project = await ctx.runQuery(api.projects.get, { id: doc.projectId });
     if (!project) throw new Error('Project not found');
 
-    const limitCheck = await ctx.runQuery(internal.subscription.checkExtractionLimit, {
+    const limitCheck = await ctx.runQuery(internal.usage.checkExtractionLimit, {
       userId: project.userId,
     });
 
@@ -530,7 +530,7 @@ export const chunkAndExtract = action({
         result,
       });
 
-      await ctx.runMutation(internal.subscription.incrementExtractionUsage, {
+      await ctx.runMutation(internal.usage.incrementExtractionUsage, {
         userId: project.userId,
       });
 

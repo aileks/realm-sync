@@ -19,11 +19,11 @@ export function TierBadge({ tier, className }: TierBadgeProps) {
     <Badge
       variant="outline"
       className={cn(
-        'border-violet-400 font-bold font-semibold text-violet-400',
+        'border-[var(--entity-item)]/50 font-medium text-[var(--entity-item)]',
         className
       )}
     >
-      Unlimited
+      Realm Unlimited
     </Badge>
   );
 }

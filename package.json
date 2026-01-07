@@ -19,6 +19,7 @@
     "@base-ui/react": "^1.0.0",
     "@convex-dev/auth": "^0.0.90",
     "@convex-dev/persistent-text-streaming": "^0.3.0",
+    "@convex-dev/polar": "^0.7.3",
     "@convex-dev/react-query": "0.1.0",
     "@fontsource-variable/aleo": "^5.2.7",
     "@fontsource-variable/dm-sans": "^5.2.8",

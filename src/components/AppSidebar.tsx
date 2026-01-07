@@ -6,6 +6,7 @@ import { useConvexAuth } from 'convex/react';
 import { useAuthActions } from '@convex-dev/auth/react';
 import {
   BookOpen,
+  Crown,
   ChevronLeft,
   ChevronRight,
   Sparkles,
@@ -28,7 +29,6 @@ import {
 import { VellumButton } from '@/components/Vellum';
 import { RecentProjects } from '@/components/RecentProjects';
 import { BetaTag } from '@/components/BetaTag';
-import { TierBadge } from '@/components/TierBadge';
 import { cn } from '@/lib/utils';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -65,7 +65,7 @@ function getStoredTheme(): Theme {
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.users.viewerProfile);
-  const subscription = useQuery(api.subscription.getSubscription);
+  const subscription = useQuery(api.users.getSubscription);
   const params = useParams({ strict: false });
   const search = useSearch({ strict: false });
   const navigate = useNavigate();
@@ -274,7 +274,7 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
                 <div className="ml-3 flex items-center gap-2">
                   <span className="truncate text-sm font-medium">{user?.name ?? 'Account'}</span>
                   {subscription?.tier === 'unlimited' && (
-                    <TierBadge tier="unlimited" className="text-[9px] opacity-70" />
+                    <Crown className="size-3.5 text-[var(--entity-item)]" />
                   )}
                 </div>
               )}

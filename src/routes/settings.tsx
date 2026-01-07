@@ -7,6 +7,7 @@ import {
   MIN_PASSWORD_LENGTH,
   MAX_PASSWORD_LENGTH,
 } from '../../convex/lib/constants';
+import { CheckoutLink } from '@convex-dev/polar/react';
 import { useState, useRef, type FormEvent, type ChangeEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -39,7 +40,9 @@ import {
 } from 'lucide-react';
 import { useConvexAuth } from 'convex/react';
 import { TierBadge } from '@/components/TierBadge';
-import { env } from '@/env';
+import { CustomerPortalLink } from '@convex-dev/polar/react';
+
+type SettingsTab = 'profile' | 'security' | 'subscription';
 
 const PROJECT_MODES = [
   { id: 'ttrpg', label: 'TTRPG Campaigns', description: 'D&D, Pathfinder, etc.' },
@@ -54,13 +57,22 @@ export const Route = createFileRoute('/settings')({
   component: SettingsPage,
 });
 
-type SettingsTab = 'profile' | 'security' | 'subscription';
-
 function SettingsPage() {
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const navigate = useNavigate();
   const user = useQuery(api.users.viewerProfile);
-  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    return (tabParam as SettingsTab) || 'profile';
+  });
+
+  function handleTabChange(tab: SettingsTab) {
+    setActiveTab(tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', tab);
+    window.history.replaceState({}, '', url.toString());
+  }
 
   if (isAuthLoading) {
     return null;
@@ -97,7 +109,7 @@ function SettingsPage() {
           <button
             key={tab.id}
             type="button"
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             className={cn(
               'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
               activeTab === tab.id ?
@@ -700,14 +712,22 @@ function PasswordChangeCard() {
 }
 
 function SubscriptionTab() {
-  const subscription = useQuery(api.subscription.getSubscription);
-  const startTrial = useMutation(api.subscription.startTrial);
+  const subscription = useQuery(api.users.getSubscription);
+  const startTrial = useMutation(api.users.startTrial);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (subscription === undefined) {
     return (
       <div className="text-muted-foreground p-8 text-center">Loading subscription details...</div>
+    );
+  }
+
+  if (subscription === null) {
+    return (
+      <div className="text-muted-foreground p-8 text-center">
+        Please sign in to view subscription details.
+      </div>
     );
   }
 
@@ -798,10 +818,12 @@ function SubscriptionTab() {
               )}
 
               {isFree && (
-                <a
-                  href={env.VITE_POLAR_CHECKOUT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <CheckoutLink
+                  polarApi={{
+                    generateCheckoutLink: api.polar.generateCheckoutLink,
+                  }}
+                  productIds={['realmUnlimited']}
+                  embed={false}
                   className={cn(
                     buttonVariants({
                       variant: subscription.trialExpired ? 'default' : 'outline',
@@ -811,18 +833,48 @@ function SubscriptionTab() {
                   )}
                 >
                   {subscription.trialExpired ? 'Upgrade to Realm Unlimited' : 'Upgrade Plan'}
-                </a>
+                </CheckoutLink>
+              )}
+
+              {isTrial && (
+                <>
+                  <CheckoutLink
+                    polarApi={{
+                      generateCheckoutLink: api.polar.generateCheckoutLink,
+                    }}
+                    productIds={['realmUnlimited']}
+                    embed={false}
+                    className={cn(
+                      buttonVariants({
+                        variant: 'default',
+                        size: 'lg',
+                      }),
+                      'w-full'
+                    )}
+                  >
+                    Upgrade to Full Access
+                  </CheckoutLink>
+
+                  <CustomerPortalLink
+                    polarApi={{
+                      generateCustomerPortalUrl: api.polar.generateCustomerPortalUrl,
+                    }}
+                    className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
+                  >
+                    Manage Subscription
+                  </CustomerPortalLink>
+                </>
               )}
 
               {isUnlimited && !isTrial && (
-                <a
-                  href="https://polar.sh/settings"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <CustomerPortalLink
+                  polarApi={{
+                    generateCustomerPortalUrl: api.polar.generateCustomerPortalUrl,
+                  }}
                   className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
                 >
                   Manage Subscription
-                </a>
+                </CustomerPortalLink>
               )}
             </div>
 

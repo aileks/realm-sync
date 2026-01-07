@@ -301,7 +301,7 @@ describe('subscription mutations/queries', () => {
       const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
-      const subscription = await asUser.query(api.subscription.getSubscription, {});
+      const subscription = await asUser.query(api.users.getSubscription, {});
       expect(subscription).not.toBeNull();
       expect(subscription?.tier).toBe('free');
       expect(subscription?.usage.projects.limit).toBe(3);
@@ -313,7 +313,7 @@ describe('subscription mutations/queries', () => {
       const t = convexTest(schema, getModules());
       const { userId, asUser } = await setupAuthenticatedUser(t);
 
-      const result = await asUser.mutation(api.subscription.startTrial, {});
+      const result = await asUser.mutation(api.users.startTrial, {});
       expect(result.trialEndsAt).toBeGreaterThan(Date.now());
 
       const user = await t.run(async (ctx) => ctx.db.get(userId));
@@ -328,9 +328,7 @@ describe('subscription mutations/queries', () => {
         subscriptionStatus: 'active',
       });
 
-      await expect(asUser.mutation(api.subscription.startTrial, {})).rejects.toThrow(
-        'Already subscribed'
-      );
+      await expect(asUser.mutation(api.users.startTrial, {})).rejects.toThrow('Already subscribed');
     });
 
     it('throws if user already used trial', async () => {
@@ -339,9 +337,7 @@ describe('subscription mutations/queries', () => {
         trialEndsAt: Date.now() - 1000,
       });
 
-      await expect(asUser.mutation(api.subscription.startTrial, {})).rejects.toThrow(
-        'Trial already used'
-      );
+      await expect(asUser.mutation(api.users.startTrial, {})).rejects.toThrow('Trial already used');
     });
   });
 
@@ -350,136 +346,58 @@ describe('subscription mutations/queries', () => {
       const t = convexTest(schema, getModules());
       const { asUser } = await setupAuthenticatedUser(t);
 
-      const stats = await asUser.query(api.subscription.getUsageStats, {});
-      expect(stats.tier).toBe('free');
-      expect(stats.projects.allowed).toBe(true);
-      expect(stats.llmExtractions.allowed).toBe(true);
-      expect(stats.chatMessages.allowed).toBe(true);
+      const stats = await asUser.query(api.users.getUsageStats, {});
+      expect(stats).not.toBeNull();
+      expect(stats?.tier).toBe('free');
+      expect(stats?.projects.current).toBeGreaterThanOrEqual(0);
+      expect(stats?.llmExtractions.current).toBeGreaterThanOrEqual(0);
+      expect(stats?.chatMessages.current).toBeGreaterThanOrEqual(0);
     });
   });
 
-  describe('handleSubscriptionActivated', () => {
-    it('upgrades user to unlimited tier', async () => {
-      const t = convexTest(schema, getModules());
-      const { userId } = await setupAuthenticatedUser(t);
-
-      await t.mutation(api.subscription.handleSubscriptionActivated, {
-        polarCustomerId: 'cus_123',
-        polarSubscriptionId: 'sub_456',
-        userId,
+  describe('tier limits', () => {
+    describe('free tier limits', () => {
+      it('has correct project limit', () => {
+        expect(getLimit('free', 'projects')).toBe(3);
       });
 
-      const user = await t.run(async (ctx) => ctx.db.get(userId));
-      expect(user?.subscriptionTier).toBe('unlimited');
-      expect(user?.subscriptionStatus).toBe('active');
-      expect(user?.polarCustomerId).toBe('cus_123');
-      expect(user?.polarSubscriptionId).toBe('sub_456');
-    });
-  });
-
-  describe('handleSubscriptionCanceled', () => {
-    it('downgrades user to free tier', async () => {
-      const t = convexTest(schema, getModules());
-      const { userId } = await setupAuthenticatedUser(t, {
-        subscriptionTier: 'unlimited',
-        subscriptionStatus: 'active',
+      it('has correct documents per project limit', () => {
+        expect(getLimit('free', 'documentsPerProject')).toBe(10);
       });
 
-      await t.mutation(api.subscription.handleSubscriptionCanceled, {
-        userId,
+      it('has correct entities per project limit', () => {
+        expect(getLimit('free', 'entitiesPerProject')).toBe(50);
       });
 
-      const user = await t.run(async (ctx) => ctx.db.get(userId));
-      expect(user?.subscriptionTier).toBe('free');
-      expect(user?.subscriptionStatus).toBe('canceled');
-    });
-  });
-
-  describe('expireTrials', () => {
-    it('expires users with past trial end dates', async () => {
-      const t = convexTest(schema, getModules());
-
-      const userId = await t.run(async (ctx) => {
-        return await ctx.db.insert('users', {
-          name: 'Trial User',
-          email: 'trial@example.com',
-          createdAt: Date.now(),
-          subscriptionTier: 'unlimited',
-          subscriptionStatus: 'trialing',
-          trialEndsAt: Date.now() - 1000,
-        });
+      it('has correct LLM extractions per month limit', () => {
+        expect(getLimit('free', 'llmExtractionsPerMonth')).toBe(20);
       });
 
-      const result = await t.mutation(api.subscription.expireTrials, {});
-      expect(result.expiredCount).toBe(1);
-
-      const user = await t.run(async (ctx) => ctx.db.get(userId));
-      expect(user?.subscriptionTier).toBe('free');
-      expect(user?.subscriptionStatus).toBe('canceled');
+      it('has correct chat messages per month limit', () => {
+        expect(getLimit('free', 'chatMessagesPerMonth')).toBe(50);
+      });
     });
 
-    it('does not expire users with active trials', async () => {
-      const t = convexTest(schema, getModules());
-
-      await t.run(async (ctx) => {
-        await ctx.db.insert('users', {
-          name: 'Active Trial User',
-          email: 'active@example.com',
-          createdAt: Date.now(),
-          subscriptionTier: 'unlimited',
-          subscriptionStatus: 'trialing',
-          trialEndsAt: Date.now() + 1000000,
-        });
+    describe('unlimited tier limits', () => {
+      it('has infinite project limit', () => {
+        expect(getLimit('unlimited', 'projects')).toBe(Infinity);
       });
 
-      const result = await t.mutation(api.subscription.expireTrials, {});
-      expect(result.expiredCount).toBe(0);
-    });
-  });
-});
+      it('has infinite documents per project limit', () => {
+        expect(getLimit('unlimited', 'documentsPerProject')).toBe(Infinity);
+      });
 
-describe('tier limits', () => {
-  describe('free tier limits', () => {
-    it('has correct project limit', () => {
-      expect(getLimit('free', 'projects')).toBe(3);
-    });
+      it('has infinite entities per project limit', () => {
+        expect(getLimit('unlimited', 'entitiesPerProject')).toBe(Infinity);
+      });
 
-    it('has correct documents per project limit', () => {
-      expect(getLimit('free', 'documentsPerProject')).toBe(10);
-    });
+      it('has infinite LLM extractions per month limit', () => {
+        expect(getLimit('unlimited', 'llmExtractionsPerMonth')).toBe(Infinity);
+      });
 
-    it('has correct entities per project limit', () => {
-      expect(getLimit('free', 'entitiesPerProject')).toBe(50);
-    });
-
-    it('has correct LLM extractions per month limit', () => {
-      expect(getLimit('free', 'llmExtractionsPerMonth')).toBe(20);
-    });
-
-    it('has correct chat messages per month limit', () => {
-      expect(getLimit('free', 'chatMessagesPerMonth')).toBe(50);
-    });
-  });
-
-  describe('unlimited tier limits', () => {
-    it('has infinite project limit', () => {
-      expect(getLimit('unlimited', 'projects')).toBe(Infinity);
-    });
-
-    it('has infinite documents per project limit', () => {
-      expect(getLimit('unlimited', 'documentsPerProject')).toBe(Infinity);
-    });
-
-    it('has infinite entities per project limit', () => {
-      expect(getLimit('unlimited', 'entitiesPerProject')).toBe(Infinity);
-    });
-
-    it('has infinite LLM extractions per month limit', () => {
-      expect(getLimit('unlimited', 'llmExtractionsPerMonth')).toBe(Infinity);
-    });
-
-    it('has infinite chat messages per month limit', () => {
-      expect(getLimit('unlimited', 'chatMessagesPerMonth')).toBe(Infinity);
+      it('has infinite chat messages per month limit', () => {
+        expect(getLimit('unlimited', 'chatMessagesPerMonth')).toBe(Infinity);
+      });
     });
   });
 });

@@ -164,7 +164,7 @@ describe('tutorial.seedTutorialProject', () => {
 
     expect(notes).toHaveLength(3);
 
-    const pinnedNotes = notes.filter((n) =>  n.pinned);
+    const pinnedNotes = notes.filter((n) => n.pinned);
     expect(pinnedNotes).toHaveLength(2);
 
     const campaignOverview = notes.find((n) => n.title === 'Campaign Overview');

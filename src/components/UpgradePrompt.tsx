@@ -8,7 +8,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { CheckIcon, LockIcon, SparklesIcon } from 'lucide-react';
+import { CheckIcon, LockIcon } from 'lucide-react';
+import { CheckoutLink } from '@convex-dev/polar/react';
+import { api } from '../../convex/_generated/api';
+import { useQuery } from 'convex/react';
 
 type LimitType = 'projects' | 'documents' | 'entities' | 'extractions' | 'chat';
 
@@ -18,8 +21,6 @@ type UpgradePromptProps = {
   limitType: LimitType;
   current: number;
   limit: number;
-  onUpgrade: () => void;
-  onStartTrial?: () => void;
 };
 
 const LIMIT_LABELS: Record<LimitType, string> = {
@@ -36,9 +37,8 @@ export function UpgradePrompt({
   limitType,
   current,
   limit,
-  onUpgrade,
-  onStartTrial,
 }: UpgradePromptProps) {
+  const products = useQuery(api.polar.getConfiguredProducts);
   const label = LIMIT_LABELS[limitType];
   const percentage = Math.min(100, Math.max(0, (current / limit) * 100));
 
@@ -96,19 +96,17 @@ export function UpgradePrompt({
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
-          <Button
-            size="lg"
-            className="shadow-primary/20 w-full gap-2 text-base font-semibold shadow-lg"
-            onClick={onUpgrade}
-          >
-            <SparklesIcon className="h-4 w-4" />
-            Upgrade - $5/month
-          </Button>
-
-          {onStartTrial && (
-            <Button variant="outline" size="lg" className="w-full" onClick={onStartTrial}>
-              Start 7-day Free Trial
-            </Button>
+          {products?.realmUnlimited && (
+            <CheckoutLink
+              polarApi={{
+                generateCheckoutLink: api.polar.generateCheckoutLink,
+              }}
+              productIds={[products.realmUnlimited.id]}
+              embed={false}
+              className="shadow-primary/20 w-full gap-2 text-base font-semibold shadow-lg"
+            >
+              Upgrade - $5/month
+            </CheckoutLink>
           )}
 
           <Button

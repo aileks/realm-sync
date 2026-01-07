@@ -48,7 +48,8 @@ export default defineSchema({
         v.literal('trialing'),
         v.literal('canceled'),
         v.literal('past_due'),
-        v.literal('incomplete')
+        v.literal('incomplete'),
+        v.literal('incomplete_expired')
       )
     ),
     polarCustomerId: v.optional(v.string()),
