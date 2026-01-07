@@ -204,9 +204,10 @@ function EntityDetailPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Entity?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Deleting "{entity.name}" may cause continuity inconsistencies in your canon. Facts
-                  linked to this entity will become orphaned. You can restore consistency by running
-                  a new extraction on your documents.
+                  {isManuallyCreated ?
+                    `Deleting "${entity.name}" is permanent. This entity was manually created and cannot be restored.`
+                  : `Deleting "${entity.name}" may cause continuity inconsistencies. Facts linked to this entity will become orphaned. You can restore it by running a new extraction on your documents.`
+                  }
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

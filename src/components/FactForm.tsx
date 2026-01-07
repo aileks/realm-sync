@@ -109,14 +109,17 @@ export function FactForm({ projectId, onSuccess, onCancel }: FactFormProps) {
       <div className="space-y-2">
         <Label htmlFor="entity">Link to Entity (optional)</Label>
         <Select
-          value={entityId}
-          onValueChange={(val) => setEntityId(val ?? undefined)}
+          value={entityId ?? ''}
+          onValueChange={(val) => setEntityId(val === '' ? undefined : (val as string))}
           disabled={isLoading}
         >
           <SelectTrigger id="entity">
-            <SelectValue>{entityId ? 'Selected' : 'Select an entity'}</SelectValue>
+            <SelectValue>
+              {entityId ? (entities?.find((e) => e._id === entityId)?.name ?? 'Selected') : 'None'}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="">None</SelectItem>
             {entities?.map((entity: Doc<'entities'>) => (
               <SelectItem key={entity._id} value={entity._id}>
                 {entity.name} ({entity.type})
@@ -129,14 +132,19 @@ export function FactForm({ projectId, onSuccess, onCancel }: FactFormProps) {
       <div className="space-y-2">
         <Label htmlFor="document">Link to Document (optional)</Label>
         <Select
-          value={documentId}
-          onValueChange={(val) => setDocumentId(val ?? undefined)}
+          value={documentId ?? ''}
+          onValueChange={(val) => setDocumentId(val === '' ? undefined : (val as string))}
           disabled={isLoading}
         >
           <SelectTrigger id="document">
-            <SelectValue>{documentId ? 'Selected' : 'Select a document'}</SelectValue>
+            <SelectValue>
+              {documentId ?
+                (documents?.find((d) => d._id === documentId)?.title ?? 'Selected')
+              : 'None'}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="">None</SelectItem>
             {documents?.map((doc: Doc<'documents'>) => (
               <SelectItem key={doc._id} value={doc._id}>
                 {doc.title}

@@ -117,7 +117,7 @@ export function EntityCard({
                 >
                   {entity.status}
                 </Badge>
-                {isTtrpgProject && entity.status === 'confirmed' && (
+                {isTtrpgProject && entity.status === 'confirmed' && (onReveal || onHide) && (
                   <Badge
                     variant="outline"
                     className={cn(

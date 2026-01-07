@@ -69,18 +69,11 @@ export const create = mutation({
     const userId = await requireAuth(ctx);
     const now = Date.now();
 
-    let effectiveProjectType = projectType;
-    if (!effectiveProjectType) {
-      const user = await ctx.db.get(userId);
-      const userModes = user?.settings?.projectModes;
-      effectiveProjectType = userModes?.[0] ?? 'general';
-    }
-
     return await ctx.db.insert('projects', {
       userId,
       name,
       description,
-      projectType: effectiveProjectType,
+      projectType,
       createdAt: now,
       updatedAt: now,
       stats: {

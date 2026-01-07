@@ -939,7 +939,6 @@ export const hideFromPlayers = mutation({
 
     await ctx.db.patch(entityId, {
       revealedToViewers: false,
-      revealedAt: undefined,
     });
 
     return entityId;
