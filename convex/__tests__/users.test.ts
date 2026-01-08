@@ -72,3 +72,72 @@ describe('users tutorial tour', () => {
     );
   });
 });
+
+describe('users deleteAccount', () => {
+  it('removes orphaned user notes after account deletion', async () => {
+    const t = convexTest(schema, getModules());
+    const { userId, asUser } = await setupAuthenticatedUser(t);
+    const now = Date.now();
+
+    const projectId = await t.run(async (ctx) => {
+      return await ctx.db.insert('projects', {
+        userId,
+        name: 'Test Project',
+        createdAt: now,
+        updatedAt: now,
+      });
+    });
+
+    const entityId = await t.run(async (ctx) => {
+      return await ctx.db.insert('entities', {
+        projectId,
+        name: 'Test Entity',
+        type: 'character',
+        aliases: [],
+        status: 'pending',
+        createdAt: now,
+        updatedAt: now,
+      });
+    });
+
+    const noteId = await t.run(async (ctx) => {
+      return await ctx.db.insert('notes', {
+        projectId,
+        userId,
+        title: 'Orphaned note',
+        content: 'Left behind after project removal.',
+        pinned: false,
+        createdAt: now,
+        updatedAt: now,
+      });
+    });
+
+    const entityNoteId = await t.run(async (ctx) => {
+      return await ctx.db.insert('entityNotes', {
+        entityId,
+        projectId,
+        userId,
+        content: 'Orphaned entity note.',
+        createdAt: now,
+        updatedAt: now,
+      });
+    });
+
+    await asUser.mutation(api.projects.remove, { id: projectId });
+    await asUser.mutation(api.users.deleteAccount, {
+      confirmationPhrase: 'delete my account',
+    });
+
+    const remaining = await t.run(async (ctx) => {
+      return {
+        user: await ctx.db.get(userId),
+        note: await ctx.db.get(noteId),
+        entityNote: await ctx.db.get(entityNoteId),
+      };
+    });
+
+    expect(remaining.user).toBeNull();
+    expect(remaining.note).toBeNull();
+    expect(remaining.entityNote).toBeNull();
+  });
+});

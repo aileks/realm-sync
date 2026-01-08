@@ -662,6 +662,26 @@ export const deleteAccount = mutation({
 
     console.log(`[deleteAccount] Deleted ${projects.length} projects for user ${user._id}`);
 
+    const userNotes = await ctx.db
+      .query('notes')
+      .filter((q) => q.eq(q.field('userId'), user._id))
+      .collect();
+    for (const note of userNotes) {
+      await ctx.db.delete(note._id);
+    }
+
+    const userEntityNotes = await ctx.db
+      .query('entityNotes')
+      .filter((q) => q.eq(q.field('userId'), user._id))
+      .collect();
+    for (const note of userEntityNotes) {
+      await ctx.db.delete(note._id);
+    }
+
+    console.log(
+      `[deleteAccount] Deleted ${userNotes.length} notes and ${userEntityNotes.length} entity notes for user ${user._id}`
+    );
+
     const chatMessages = await ctx.db
       .query('chatMessages')
       .withIndex('by_user', (q) => q.eq('userId', user._id))

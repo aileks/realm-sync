@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { passwordComplexitySchema } from '@/lib/auth';
 import { formatError, cn } from '@/lib/utils';
+import { useAuthActions } from '@convex-dev/auth/react';
 import {
   Loader2,
   User,
@@ -985,6 +986,7 @@ function UsageBar({ label, current, limit }: { label: string; current: number; l
 function DangerTab() {
   const navigate = useNavigate();
   const deleteAccount = useMutation(api.users.deleteAccount);
+  const { signOut } = useAuthActions();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [confirmPhrase, setConfirmPhrase] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
@@ -1000,7 +1002,10 @@ function DangerTab() {
 
     try {
       await deleteAccount({ confirmationPhrase: confirmPhrase });
-      void navigate({ to: '/' });
+      await signOut().catch((signOutError) => {
+        console.error('Failed to sign out after account deletion', signOutError);
+      });
+      void navigate({ to: '/', replace: true });
     } catch (err) {
       setError(formatError(err));
       setIsDeleting(false);
