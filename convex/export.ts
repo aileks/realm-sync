@@ -18,6 +18,7 @@ type ExportData = {
     contentType: string;
     wordCount: number;
     processingStatus: string;
+    content?: string;
   }>;
   entities: Array<{
     name: string;
@@ -58,8 +59,22 @@ function formatAsMarkdown(data: ExportData): string {
   if (data.documents.length === 0) {
     lines.push('*No documents*');
   } else {
-    for (const doc of data.documents) {
-      lines.push(`- **${doc.title}** (${doc.wordCount} words, ${doc.processingStatus})`);
+    const hasDocumentContent = data.documents.some((doc) => doc.content !== undefined);
+    if (hasDocumentContent) {
+      for (const doc of data.documents) {
+        lines.push(`### ${doc.title}`);
+        lines.push('');
+        lines.push(`*${doc.contentType}, ${doc.wordCount} words, ${doc.processingStatus}*`);
+        if (doc.content !== undefined && doc.content !== '') {
+          lines.push('');
+          lines.push(doc.content);
+        }
+        lines.push('');
+      }
+    } else {
+      for (const doc of data.documents) {
+        lines.push(`- **${doc.title}** (${doc.wordCount} words, ${doc.processingStatus})`);
+      }
     }
   }
   lines.push('');
@@ -99,14 +114,16 @@ function formatAsMarkdown(data: ExportData): string {
   return lines.join('\n');
 }
 
+const escapeCsvValue = (value: string) => value.replace(/"/g, '""');
+
 function formatAsCsv(data: ExportData): string {
   const lines: string[] = [];
 
   lines.push('# ENTITIES');
   lines.push('Name,Type,Description,Aliases,Status');
   for (const entity of data.entities) {
-    const escapedDesc = (entity.description ?? '').replace(/"/g, '""');
-    const escapedAliases = entity.aliases.join('; ').replace(/"/g, '""');
+    const escapedDesc = escapeCsvValue(entity.description ?? '');
+    const escapedAliases = escapeCsvValue(entity.aliases.join('; '));
     lines.push(
       `"${entity.name}","${entity.type}","${escapedDesc}","${escapedAliases}","${entity.status}"`
     );
@@ -116,7 +133,7 @@ function formatAsCsv(data: ExportData): string {
   lines.push('# FACTS');
   lines.push('Entity,Subject,Predicate,Object,Confidence,Evidence,Status');
   for (const fact of data.facts) {
-    const escapedEvidence = fact.evidenceSnippet.replace(/"/g, '""');
+    const escapedEvidence = escapeCsvValue(fact.evidenceSnippet);
     lines.push(
       `"${fact.entityName}","${fact.subject}","${fact.predicate}","${fact.object}",${fact.confidence},"${escapedEvidence}","${fact.status}"`
     );
@@ -124,17 +141,20 @@ function formatAsCsv(data: ExportData): string {
   lines.push('');
 
   lines.push('# DOCUMENTS');
-  lines.push('Title,ContentType,WordCount,Status');
+  lines.push('Title,ContentType,WordCount,Status,Content');
   for (const doc of data.documents) {
-    lines.push(`"${doc.title}","${doc.contentType}",${doc.wordCount},"${doc.processingStatus}"`);
+    const escapedContent = escapeCsvValue(doc.content ?? '');
+    lines.push(
+      `"${doc.title}","${doc.contentType}",${doc.wordCount},"${doc.processingStatus}","${escapedContent}"`
+    );
   }
 
   return lines.join('\n');
 }
 
 export const gatherExportData = query({
-  args: { projectId: v.id('projects') },
-  handler: async (ctx, { projectId }): Promise<ExportData | null> => {
+  args: { projectId: v.id('projects'), includeUnrevealed: v.optional(v.boolean()) },
+  handler: async (ctx, { projectId, includeUnrevealed }): Promise<ExportData | null> => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return null;
 
@@ -156,8 +176,20 @@ export const gatherExportData = query({
       .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('status', 'confirmed'))
       .collect();
 
+    const shouldFilterRevealed = project.projectType === 'ttrpg' && includeUnrevealed === false;
+    const includeDocumentContent = !shouldFilterRevealed;
+    const visibleEntities =
+      shouldFilterRevealed ?
+        entities.filter((entity) => entity.revealedToViewers === true)
+      : entities;
+    const visibleEntityIds = new Set(visibleEntities.map((entity) => entity._id));
+    const visibleFacts =
+      shouldFilterRevealed ?
+        facts.filter((fact) => !fact.entityId || visibleEntityIds.has(fact.entityId))
+      : facts;
+
     const entityMap = new Map<string, string>();
-    for (const entity of entities) {
+    for (const entity of visibleEntities) {
       entityMap.set(entity._id, entity.name);
     }
 
@@ -172,15 +204,18 @@ export const gatherExportData = query({
         contentType: doc.contentType,
         wordCount: doc.wordCount,
         processingStatus: doc.processingStatus,
+        ...(includeDocumentContent && {
+          content: doc.content ?? (doc.storageId ? '[file stored]' : ''),
+        }),
       })),
-      entities: entities.map((entity) => ({
+      entities: visibleEntities.map((entity) => ({
         name: entity.name,
         type: entity.type,
         description: entity.description,
         aliases: entity.aliases,
         status: entity.status,
       })),
-      facts: facts.map((fact) => ({
+      facts: visibleFacts.map((fact) => ({
         entityName: fact.entityId ? (entityMap.get(fact.entityId) ?? 'Unknown') : 'Unlinked',
         subject: fact.subject,
         predicate: fact.predicate,
@@ -197,12 +232,13 @@ export const exportProject = action({
   args: {
     projectId: v.id('projects'),
     format: formatValidator,
+    includeUnrevealed: v.optional(v.boolean()),
   },
-  handler: async (ctx, { projectId, format }): Promise<string | null> => {
+  handler: async (ctx, { projectId, format, includeUnrevealed }): Promise<string | null> => {
     const data = await ctx.runQuery(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       'export:gatherExportData' as any,
-      { projectId }
+      { projectId, includeUnrevealed }
     );
 
     if (!data) return null;

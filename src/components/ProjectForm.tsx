@@ -29,6 +29,17 @@ const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
   general: 'General Worldbuilding',
 };
 
+const PLAYER_REVEAL_OPTIONS = [
+  {
+    value: 'enabled',
+    label: 'Reveal info to players',
+  },
+  {
+    value: 'disabled',
+    label: 'Keep info hidden from players',
+  },
+] as const;
+
 type ProjectFormProps = {
   project?: Project;
   onSuccess?: (projectId: Id<'projects'>) => void;
@@ -38,8 +49,19 @@ type ProjectFormProps = {
 export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) {
   const user = useQuery(api.users.viewer);
   const [name, setName] = useState(project?.name ?? '');
-  const [projectType, setProjectType] = useState<ProjectType>(
-    (project?.projectType as ProjectType) ?? 'general'
+  const [projectType, setProjectType] = useState<ProjectType>(() => {
+    const currentType = project?.projectType as ProjectType;
+    const validTypes: ProjectType[] = [
+      'ttrpg',
+      'original-fiction',
+      'fanfiction',
+      'game-design',
+      'general',
+    ];
+    return currentType && validTypes.includes(currentType) ? currentType : 'general';
+  });
+  const [revealToPlayersEnabled, setRevealToPlayersEnabled] = useState(
+    project?.revealToPlayersEnabled ?? true
   );
   const [description, setDescription] = useState(project?.description ?? '');
   const [isLoading, setIsLoading] = useState(false);
@@ -69,6 +91,7 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
           name: name.trim(),
           description: description.trim() || undefined,
           projectType,
+          ...(projectType === 'ttrpg' && { revealToPlayersEnabled }),
         });
         onSuccess?.(project._id);
       } else {
@@ -76,6 +99,7 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
           name: name.trim(),
           description: description.trim() || undefined,
           projectType,
+          ...(projectType === 'ttrpg' && { revealToPlayersEnabled }),
         });
         onSuccess?.(projectId);
       }
@@ -111,10 +135,16 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
           onValueChange={(val) => setProjectType(val as ProjectType)}
           disabled={isLoading}
         >
-          <SelectTrigger id="projectType">
-            <SelectValue>Select project type</SelectValue>
+          <SelectTrigger id="projectType" className="w-full">
+            <SelectValue>
+              {(value) =>
+                value && typeof value === 'string' ?
+                  (PROJECT_TYPE_LABELS[value as ProjectType] ?? value)
+                : 'Select project type'
+              }
+            </SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent side="bottom" align="start" sideOffset={4} alignItemWithTrigger={false}>
             {availableTypes.map((type) => (
               <SelectItem key={type} value={type}>
                 {PROJECT_TYPE_LABELS[type]}
@@ -123,6 +153,32 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
           </SelectContent>
         </Select>
       </div>
+
+      {projectType === 'ttrpg' && (
+        <div className="space-y-2">
+          <Label htmlFor="playerRevealMode">Player Reveal</Label>
+          <Select
+            value={revealToPlayersEnabled ? 'enabled' : 'disabled'}
+            onValueChange={(val) => setRevealToPlayersEnabled(val === 'enabled')}
+            disabled={isLoading}
+          >
+            <SelectTrigger id="playerRevealMode" className="w-full">
+              <SelectValue>
+                {(value) =>
+                  value === 'enabled' ? 'Reveal info to players' : 'Keep info hidden from players'
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent side="bottom" align="start" sideOffset={4} alignItemWithTrigger={false}>
+              {PLAYER_REVEAL_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="description">Description (optional)</Label>

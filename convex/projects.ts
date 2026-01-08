@@ -65,8 +65,9 @@ export const create = mutation({
     name: v.string(),
     description: v.optional(v.string()),
     projectType: projectTypeValidator,
+    revealToPlayersEnabled: v.optional(v.boolean()),
   },
-  handler: async (ctx, { name, description, projectType }) => {
+  handler: async (ctx, { name, description, projectType, revealToPlayersEnabled }) => {
     const user = await requireAuthUser(ctx);
     const now = Date.now();
 
@@ -84,6 +85,8 @@ export const create = mutation({
       name,
       description,
       projectType,
+      revealToPlayersEnabled:
+        projectType === 'ttrpg' ? (revealToPlayersEnabled ?? true) : revealToPlayersEnabled,
       createdAt: now,
       updatedAt: now,
       stats: {
@@ -103,8 +106,9 @@ export const update = mutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     projectType: projectTypeValidator,
+    revealToPlayersEnabled: v.optional(v.boolean()),
   },
-  handler: async (ctx, { id, name, description, projectType }) => {
+  handler: async (ctx, { id, name, description, projectType, revealToPlayersEnabled }) => {
     const userId = await requireAuth(ctx);
     const project = unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
 
@@ -112,6 +116,9 @@ export const update = mutation({
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
     if (projectType !== undefined) updates.projectType = projectType;
+    if (revealToPlayersEnabled !== undefined) {
+      updates.revealToPlayersEnabled = revealToPlayersEnabled;
+    }
 
     await ctx.db.patch(id, updates);
     return id;

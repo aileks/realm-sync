@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { passwordComplexitySchema } from '@/lib/auth';
 import { formatError, cn } from '@/lib/utils';
 import {
   Loader2,
@@ -641,6 +642,13 @@ function PasswordChangeCard() {
     e.preventDefault();
     setError(null);
     setSuccess(false);
+
+    const validation = passwordComplexitySchema.safeParse(newPassword);
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message ?? 'Invalid password');
+      return;
+    }
+
     setIsLoading(true);
 
     try {

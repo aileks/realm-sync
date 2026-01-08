@@ -107,7 +107,8 @@ function EntityDetailPage() {
 
   const entityProjectId = data?.entity.projectId;
   const project = useQuery(api.projects.get, entityProjectId ? { id: entityProjectId } : 'skip');
-  const isTtrpgProject = project?.projectType === 'ttrpg';
+  const canRevealToPlayers =
+    project?.projectType === 'ttrpg' && project.revealToPlayersEnabled !== false;
 
   const revealEntity = useMutation(api.entities.revealToPlayers);
   const hideEntity = useMutation(api.entities.hideFromPlayers);
@@ -177,7 +178,7 @@ function EntityDetailPage() {
             onEdit={() => setIsEditing(true)}
             onDelete={() => setShowDeleteDialog(true)}
             isManuallyCreated={isManuallyCreated}
-            isTtrpgProject={isTtrpgProject}
+            canRevealToPlayers={canRevealToPlayers}
             onReveal={() => revealEntity({ entityId: entity._id })}
             onHide={() => hideEntity({ entityId: entity._id })}
           />
@@ -230,7 +231,7 @@ type EntityHeaderProps = {
   onEdit: () => void;
   onDelete?: () => void;
   isManuallyCreated?: boolean;
-  isTtrpgProject?: boolean;
+  canRevealToPlayers?: boolean;
   onReveal?: () => void;
   onHide?: () => void;
 };
@@ -241,7 +242,7 @@ function EntityHeader({
   onEdit,
   onDelete,
   isManuallyCreated,
-  isTtrpgProject,
+  canRevealToPlayers,
   onReveal,
   onHide,
 }: EntityHeaderProps) {
@@ -262,7 +263,7 @@ function EntityHeader({
           <div className="flex items-center gap-3">
             <h1 className="font-serif text-3xl font-bold">{entity.name}</h1>
             <Badge className={cn('capitalize', config.colorClass)}>{config.label}</Badge>
-            {isTtrpgProject && entity.status === 'confirmed' && (
+            {canRevealToPlayers && entity.status === 'confirmed' && (
               <Badge
                 variant="outline"
                 className={cn(
@@ -301,7 +302,7 @@ function EntityHeader({
         </div>
       </div>
       <div className="flex gap-2">
-        {isTtrpgProject &&
+        {canRevealToPlayers &&
           entity.status === 'confirmed' &&
           (entity.revealedToViewers ?
             <Button variant="outline" onClick={onHide}>

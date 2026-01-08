@@ -2,6 +2,8 @@ import { useState, createContext, useContext, useCallback, useEffect, useRef } f
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { toast } from 'sonner';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import type { Id } from '../../convex/_generated/dataModel';
 import { CommandPalette } from './CommandPalette';
 
@@ -39,6 +41,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   const navigate = useNavigate();
   const params = useParams({ strict: false });
   const projectId = (params as { projectId?: string }).projectId as Id<'projects'> | undefined;
+  const user = useQuery(api.users.viewer);
 
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [commandPaletteView, setCommandPaletteView] = useState<'commands' | 'shortcuts'>(
@@ -48,6 +51,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
   const chordTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function openCommandPalette() {
+    if (user === null) return;
     setCommandPaletteOpen(true);
   }
 
@@ -111,7 +115,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
     'mod+k',
     (e) => {
       e.preventDefault();
-      setCommandPaletteOpen(true);
+      openCommandPalette();
     },
     { enableOnFormTags: false }
   );
@@ -120,6 +124,7 @@ export function KeyboardShortcutsProvider({ children }: KeyboardShortcutsProvide
     'mod+shift+k',
     (e) => {
       e.preventDefault();
+      if (user === null) return;
       setCommandPaletteView('shortcuts');
       setCommandPaletteOpen(true);
     },

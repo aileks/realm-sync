@@ -171,6 +171,20 @@ describe('projects', () => {
       expect(project?.name).toBe('No Description');
       expect(project?.description).toBeUndefined();
     });
+
+    it('stores player reveal preference for ttrpg projects', async () => {
+      const t = convexTest(schema, getModules());
+      const { asUser } = await setupAuthenticatedUser(t);
+
+      const projectId = await asUser.mutation(api.projects.create, {
+        name: 'DM Campaign',
+        projectType: 'ttrpg',
+        revealToPlayersEnabled: false,
+      });
+
+      const project = await asUser.query(api.projects.get, { id: projectId });
+      expect(project?.revealToPlayersEnabled).toBe(false);
+    });
   });
 
   describe('update mutation', () => {
