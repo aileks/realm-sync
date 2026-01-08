@@ -1,9 +1,22 @@
 import { convexTest } from 'convex-test';
 import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
+import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
 
 const getModules = () => import.meta.glob('../**/*.ts');
+
+async function createStorageBlob(
+  t: ReturnType<typeof convexTest>,
+  contentType: string,
+  size: number
+): Promise<Id<'_storage'>> {
+  return await t.run(async (ctx) => {
+    const content = new Uint8Array(size);
+    const blob = new Blob([content], { type: contentType });
+    return await ctx.storage.store(blob);
+  });
+}
 
 async function setupAuthenticatedUser(t: ReturnType<typeof convexTest>) {
   const userId = await t.run(async (ctx) => {
@@ -139,5 +152,46 @@ describe('users deleteAccount', () => {
     expect(remaining.user).toBeNull();
     expect(remaining.note).toBeNull();
     expect(remaining.entityNote).toBeNull();
+  });
+
+  it('deletes the account even if document storage is missing', async () => {
+    const t = convexTest(schema, getModules());
+    const { userId, asUser } = await setupAuthenticatedUser(t);
+    const now = Date.now();
+    const storageId = await createStorageBlob(t, 'text/plain', 1024);
+
+    const projectId = await t.run(async (ctx) => {
+      return await ctx.db.insert('projects', {
+        userId,
+        name: 'Storage Project',
+        createdAt: now,
+        updatedAt: now,
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.db.insert('documents', {
+        projectId,
+        title: 'Stored Doc',
+        storageId,
+        contentType: 'file',
+        orderIndex: 0,
+        wordCount: 0,
+        createdAt: now,
+        updatedAt: now,
+        processingStatus: 'pending',
+      });
+    });
+
+    await t.run(async (ctx) => {
+      await ctx.storage.delete(storageId);
+    });
+
+    await asUser.mutation(api.users.deleteAccount, {
+      confirmationPhrase: 'delete my account',
+    });
+
+    const user = await t.run(async (ctx) => ctx.db.get(userId));
+    expect(user).toBeNull();
   });
 });

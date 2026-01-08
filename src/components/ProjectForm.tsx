@@ -91,7 +91,6 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
           name: name.trim(),
           description: description.trim() || undefined,
           projectType,
-          ...(projectType === 'ttrpg' && { revealToPlayersEnabled }),
         });
         onSuccess?.(project._id);
       } else {
@@ -154,7 +153,7 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
         </Select>
       </div>
 
-      {projectType === 'ttrpg' && (
+      {!isEditing && projectType === 'ttrpg' && (
         <div className="space-y-2">
           <Label htmlFor="playerRevealMode">Player Reveal</Label>
           <Select

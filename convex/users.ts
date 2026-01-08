@@ -2,6 +2,7 @@ import { action, internalMutation, mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { z } from 'zod';
 import { api, internal } from './_generated/api';
+import type { Id } from './_generated/dataModel';
 import { getCurrentUser, requireAuthUser } from './lib/auth';
 import { getAuthUserId, retrieveAccount, modifyAccountCredentials } from '@convex-dev/auth/server';
 import {
@@ -538,6 +539,18 @@ export const deleteAccount = mutation({
     }
 
     const user = await requireAuthUser(ctx);
+    const safeDeleteStorage = async (storageId: Id<'_storage'>, label: string) => {
+      try {
+        const meta = await ctx.db.system.get(storageId);
+        if (!meta) {
+          console.warn(`[deleteAccount] Missing storage for ${label}: ${storageId}`);
+          return;
+        }
+        await ctx.storage.delete(storageId);
+      } catch (error) {
+        console.warn(`[deleteAccount] Failed to delete storage for ${label}: ${storageId}`, error);
+      }
+    };
 
     if (user.polarSubscriptionId) {
       try {
@@ -613,7 +626,7 @@ export const deleteAccount = mutation({
         .collect();
       for (const doc of documents) {
         if (doc.storageId) {
-          await ctx.storage.delete(doc.storageId);
+          await safeDeleteStorage(doc.storageId, `document ${doc._id}`);
         }
         await ctx.db.delete(doc._id);
       }
@@ -695,7 +708,7 @@ export const deleteAccount = mutation({
     );
 
     if (user.avatarStorageId) {
-      await ctx.storage.delete(user.avatarStorageId);
+      await safeDeleteStorage(user.avatarStorageId, `avatar ${user._id}`);
       console.log(`[deleteAccount] Deleted avatar storage for user ${user._id}`);
     }
 
