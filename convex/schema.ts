@@ -240,6 +240,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index('by_project', ['projectId', 'pinned', 'updatedAt'])
+    .index('by_user', ['userId'])
     .searchIndex('search_content', {
       searchField: 'content',
       filterFields: ['projectId'],
@@ -255,5 +256,6 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index('by_entity', ['entityId', 'updatedAt'])
-    .index('by_project', ['projectId']),
+    .index('by_project', ['projectId'])
+    .index('by_user', ['userId']),
 });

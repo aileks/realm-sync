@@ -677,7 +677,7 @@ export const deleteAccount = mutation({
 
     const userNotes = await ctx.db
       .query('notes')
-      .filter((q) => q.eq(q.field('userId'), user._id))
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
       .collect();
     for (const note of userNotes) {
       await ctx.db.delete(note._id);
@@ -685,7 +685,7 @@ export const deleteAccount = mutation({
 
     const userEntityNotes = await ctx.db
       .query('entityNotes')
-      .filter((q) => q.eq(q.field('userId'), user._id))
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
       .collect();
     for (const note of userEntityNotes) {
       await ctx.db.delete(note._id);

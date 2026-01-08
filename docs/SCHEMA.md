@@ -163,10 +163,32 @@ Free-form writing space for ideas, drafts, and collaborative brainstorming.
 **Indexes:**
 
 - `by_project`: `["projectId", "pinned", "updatedAt"]` (Ordered list with pinned first)
+- `by_user`: `["userId"]` (User-owned notes)
 
 **Search Index:**
 
 - `search_content`: `searchField: content`, `filterFields: [projectId]`
+
+---
+
+### `entityNotes`
+
+Entity-level annotations tied to a project and user.
+
+| Field | Type | Description |
+| :-- | :-- | :-- |
+| `entityId` | `v.id("entities")` | Parent entity reference. |
+| `projectId` | `v.id("projects")` | Parent project reference. |
+| `userId` | `v.id("users")` | Author reference. |
+| `content` | `v.string()` | Note content. |
+| `createdAt` | `v.number()` | Creation timestamp. |
+| `updatedAt` | `v.number()` | Last edit timestamp. |
+
+**Indexes:**
+
+- `by_entity`: `["entityId", "updatedAt"]` (Ordered notes per entity)
+- `by_project`: `["projectId"]` (Project-wide notes)
+- `by_user`: `["userId"]` (User-owned notes)
 
 ---
 
