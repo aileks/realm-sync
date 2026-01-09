@@ -9,7 +9,6 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "start": "node .output/server/index.mjs",
-    "docs:list": "node scripts/docs.mjs",
     "format": "prettier --write .",
     "lint": "oxlint --fix --fix-suggestions --type-aware -c ./.oxlintrc.json .",
     "typecheck": "tsc --noEmit"
