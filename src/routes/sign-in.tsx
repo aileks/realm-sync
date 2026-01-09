@@ -20,7 +20,26 @@ function SignInPage() {
   const { signIn } = useAuthActions();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleDemoLogin = async () => {
+    setError(null);
+    setIsDemoLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.set('email', 'demo@realm.sync');
+      formData.set('password', 'khn_tfz2fxk4KAZ-dfa');
+      formData.set('flow', 'signIn');
+
+      await signIn('password', formData);
+    } catch (err) {
+      setError(getAuthErrorMessage(classifyAuthError(err), 'signin'));
+    } finally {
+      setIsDemoLoading(false);
+    }
+  };
 
   const form = useForm({
     defaultValues: {
@@ -125,11 +144,31 @@ function SignInPage() {
               )}
             </form.Field>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || isDemoLoading}>
               {isLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
               Sign In
             </Button>
           </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card text-muted-foreground px-2">Or</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={isLoading || isDemoLoading}
+            onClick={handleDemoLogin}
+          >
+            {isDemoLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
+            Try Demo Account
+          </Button>
 
           <div className="text-center text-sm">
             <span className="text-muted-foreground">Don't have an account? </span>
