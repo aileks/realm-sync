@@ -9,4 +9,6 @@ crons.weekly(
   internal.cleanup.cleanupExpiredRefreshTokens
 );
 
+crons.daily('reset demo account', { hourUTC: 8, minuteUTC: 0 }, internal.seed.resetDemoAccount);
+
 export default crons;

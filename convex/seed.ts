@@ -1,5 +1,117 @@
 import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
+import { internal } from './_generated/api';
+
+const DEMO_EMAIL = 'demo@realm.sync';
+
+export const resetDemoAccount = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const demoUser = await ctx.db
+      .query('users')
+      .withIndex('by_email', (q) => q.eq('email', DEMO_EMAIL))
+      .unique();
+
+    if (!demoUser) {
+      console.log('[resetDemoAccount] Demo user not found, skipping reset');
+      return { success: false, reason: 'Demo user not found' };
+    }
+
+    console.log(`[resetDemoAccount] Resetting demo account for user ${demoUser._id}`);
+
+    const projects = await ctx.db
+      .query('projects')
+      .withIndex('by_user', (q) => q.eq('userId', demoUser._id))
+      .collect();
+
+    for (const project of projects) {
+      const documents = await ctx.db
+        .query('documents')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+
+      for (const doc of documents) {
+        if (doc.storageId) {
+          await ctx.storage.delete(doc.storageId).catch(() => {});
+        }
+        await ctx.db.delete(doc._id);
+      }
+
+      const entities = await ctx.db
+        .query('entities')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+
+      for (const entity of entities) {
+        await ctx.db.delete(entity._id);
+      }
+
+      const facts = await ctx.db
+        .query('facts')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+
+      for (const fact of facts) {
+        await ctx.db.delete(fact._id);
+      }
+
+      const alerts = await ctx.db
+        .query('alerts')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+
+      for (const alert of alerts) {
+        await ctx.db.delete(alert._id);
+      }
+
+      const notes = await ctx.db
+        .query('notes')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+
+      for (const note of notes) {
+        await ctx.db.delete(note._id);
+      }
+
+      const entityNotes = await ctx.db
+        .query('entityNotes')
+        .withIndex('by_project', (q) => q.eq('projectId', project._id))
+        .collect();
+
+      for (const note of entityNotes) {
+        await ctx.db.delete(note._id);
+      }
+
+      await ctx.db.delete(project._id);
+    }
+
+    const chatMessages = await ctx.db
+      .query('chatMessages')
+      .withIndex('by_user', (q) => q.eq('userId', demoUser._id))
+      .collect();
+
+    for (const msg of chatMessages) {
+      await ctx.db.delete(msg._id);
+    }
+
+    console.log(
+      `[resetDemoAccount] Deleted ${projects.length} projects, ${chatMessages.length} chat messages`
+    );
+
+    await ctx.db.patch(demoUser._id, {
+      usage: {
+        llmExtractionsThisMonth: 0,
+        chatMessagesThisMonth: 0,
+        usageResetAt: Date.now(),
+      },
+    });
+
+    await ctx.scheduler.runAfter(0, internal.seed.seedDemoData, { userId: demoUser._id });
+
+    console.log('[resetDemoAccount] Demo account reset complete, reseeding scheduled');
+    return { success: true, userId: demoUser._id };
+  },
+});
 
 export const seedDemoData = internalMutation({
   args: {
