@@ -22,7 +22,25 @@ A full-stack creative worldbuilding platform for TTRPG masters, fiction writers,
 - **3 Themes** - Fireside (default), Twilight (blue), Daylight (warm parchment)
 - **Command Palette** - Cmd+K for quick navigation
 
-## Run Locally
+## Quick Start
+
+```bash
+# clone the repo
+git clone https://github.com/tanstack/realm-sync.git
+
+# Install dependencies
+cd realm-sync && pnpm install
+
+# Start development server (port 3000)
+pnpm dev
+```
+
+## Local Development
+
+Requirements:
+
+- [Node.js](https://nodejs.org/en/download/) (v22 or later)
+- [pnpm](https://pnpm.io/installation)
 
 ```bash
 # Install dependencies
@@ -43,14 +61,3 @@ pnpm run lint
 # TypeScript check
 pnpm run typecheck
 ```
-
-## Commands
-
-| Command              | Description                 |
-| -------------------- | --------------------------- |
-| `pnpm dev`           | Dev server with auto-reload |
-| `pnpm run build`     | Production build            |
-| `pnpm run start`     | Run production server       |
-| `pnpm test`          | Vitest run (265 tests)      |
-| `pnpm run lint`      | Oxlint with auto-fix        |
-| `pnpm run typecheck` | TypeScript no-emit check    |
