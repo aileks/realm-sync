@@ -2,6 +2,8 @@
 
 A full-stack creative worldbuilding platform for TTRPG masters, fiction writers, and game designers. Extract entities and facts from documents using AI, track canon consistency, and collaborate in real-time.
 
+![Realm Sync Screnshot](/docs/screenshot.png)
+
 ## Tech Stack
 
 - TanStack Start
