@@ -11,12 +11,15 @@ An AI-powered creative worldbuilding platform for TTRPG masters, fiction writers
 - Tailwind CSS
 - React Compiler
 - [Convex](https://convex.dev)
+- [neverthrow](https://github.com/supermacro/neverthrow)
 - OpenRouter
 
 ## Key Features
 
 - **Project Management** - Organize TTRPG campaigns, fiction, or game design projects
 - **Entity & Fact Tracking** - Extract characters, locations, items, events from documents using AI
+- **Relationship Charts** - Visualize entity connections and relationships in interactive graphs
+- **Player Visibility Flags** - Control what lore players can see vs. DM-only secrets (TTRPG mode)
 - **Canon Consistency** - Detect contradictions, timeline issues, and ambiguities
 - **Real-time Collaboration** - Live updates via Convex subscriptions
 - **3 Themes** - Fireside (default), Twilight (blue), Daylight (warm parchment)
