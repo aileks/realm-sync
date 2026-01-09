@@ -6,6 +6,7 @@ scripts/
 *.local
 count.txt
 .env
+AGENTS.md
 .nitro
 .tanstack
 .wrangler
