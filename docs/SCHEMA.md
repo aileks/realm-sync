@@ -175,14 +175,14 @@ Free-form writing space for ideas, drafts, and collaborative brainstorming.
 
 Entity-level annotations tied to a project and user.
 
-| Field | Type | Description |
-| :-- | :-- | :-- |
-| `entityId` | `v.id("entities")` | Parent entity reference. |
+| Field       | Type               | Description               |
+| :---------- | :----------------- | :------------------------ |
+| `entityId`  | `v.id("entities")` | Parent entity reference.  |
 | `projectId` | `v.id("projects")` | Parent project reference. |
-| `userId` | `v.id("users")` | Author reference. |
-| `content` | `v.string()` | Note content. |
-| `createdAt` | `v.number()` | Creation timestamp. |
-| `updatedAt` | `v.number()` | Last edit timestamp. |
+| `userId`    | `v.id("users")`    | Author reference.         |
+| `content`   | `v.string()`       | Note content.             |
+| `createdAt` | `v.number()`       | Creation timestamp.       |
+| `updatedAt` | `v.number()`       | Last edit timestamp.      |
 
 **Indexes:**
 

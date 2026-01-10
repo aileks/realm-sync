@@ -1,6 +1,5 @@
 import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
-import { internal } from './_generated/api';
 
 const DEMO_EMAIL = 'demo@realm.sync';
 
@@ -104,9 +103,9 @@ export const resetDemoAccount = internalMutation({
         chatMessagesThisMonth: 0,
         usageResetAt: Date.now(),
       },
+      onboardingCompleted: undefined,
+      tutorialState: undefined,
     });
-
-    await ctx.scheduler.runAfter(0, internal.seed.seedDemoData, { userId: demoUser._id });
 
     console.log('[resetDemoAccount] Demo account reset complete, reseeding scheduled');
     return { success: true, userId: demoUser._id };
