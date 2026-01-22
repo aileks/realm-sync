@@ -219,7 +219,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/review': typeof ProjectsProjectIdReviewRouteRouteWithChildren
   '/projects/$projectId/entities': typeof ProjectsProjectIdEntitiesRoute
   '/projects/$projectId/facts': typeof ProjectsProjectIdFactsRoute
-  '/projects/$projectId': typeof ProjectsProjectIdIndexRoute
+  '/projects/$projectId/': typeof ProjectsProjectIdIndexRoute
   '/projects/$projectId/alerts/$alertId': typeof ProjectsProjectIdAlertsAlertIdRoute
   '/projects/$projectId/canon/connections': typeof ProjectsProjectIdCanonConnectionsRoute
   '/projects/$projectId/canon/search': typeof ProjectsProjectIdCanonSearchRoute
@@ -231,7 +231,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/review/$documentId': typeof ProjectsProjectIdReviewDocumentIdRoute
   '/projects/$projectId/canon/': typeof ProjectsProjectIdCanonIndexRoute
   '/projects/$projectId/documents/': typeof ProjectsProjectIdDocumentsIndexRoute
-  '/projects/$projectId/notes': typeof ProjectsProjectIdNotesIndexRoute
+  '/projects/$projectId/notes/': typeof ProjectsProjectIdNotesIndexRoute
   '/projects/$projectId/review/': typeof ProjectsProjectIdReviewIndexRoute
 }
 export interface FileRoutesByTo {
@@ -311,7 +311,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/review'
     | '/projects/$projectId/entities'
     | '/projects/$projectId/facts'
-    | '/projects/$projectId'
+    | '/projects/$projectId/'
     | '/projects/$projectId/alerts/$alertId'
     | '/projects/$projectId/canon/connections'
     | '/projects/$projectId/canon/search'
@@ -323,7 +323,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/review/$documentId'
     | '/projects/$projectId/canon/'
     | '/projects/$projectId/documents/'
-    | '/projects/$projectId/notes'
+    | '/projects/$projectId/notes/'
     | '/projects/$projectId/review/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -464,7 +464,7 @@ declare module '@tanstack/react-router' {
     '/projects/$projectId/': {
       id: '/projects/$projectId/'
       path: '/$projectId'
-      fullPath: '/projects/$projectId'
+      fullPath: '/projects/$projectId/'
       preLoaderRoute: typeof ProjectsProjectIdIndexRouteImport
       parentRoute: typeof ProjectsRoute
     }
@@ -520,7 +520,7 @@ declare module '@tanstack/react-router' {
     '/projects/$projectId/notes/': {
       id: '/projects/$projectId/notes/'
       path: '/$projectId/notes'
-      fullPath: '/projects/$projectId/notes'
+      fullPath: '/projects/$projectId/notes/'
       preLoaderRoute: typeof ProjectsProjectIdNotesIndexRouteImport
       parentRoute: typeof ProjectsRoute
     }
