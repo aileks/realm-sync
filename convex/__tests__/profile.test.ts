@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
+import type { GenericDatabaseWriter, SystemDataModel } from 'convex/server';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -14,7 +15,11 @@ async function createStorageBlob(
   return await t.run(async (ctx) => {
     const content = new Uint8Array(size);
     const blob = new Blob([content], { type: contentType });
-    return await ctx.storage.store(blob);
+    const storageId = await ctx.storage.store(blob);
+    // convex-test omits contentType metadata; patch _storage for avatar validation.
+    const systemDb = ctx.db as unknown as GenericDatabaseWriter<SystemDataModel>;
+    await systemDb.patch('_storage', storageId, { contentType });
+    return storageId;
   });
 }
 
