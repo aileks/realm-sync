@@ -49,7 +49,7 @@ describe('auth helpers', () => {
           const { requireAuth } = await import('../../lib/auth');
           return await requireAuth(ctx);
         })
-      ).rejects.toThrow(/unauthorized/i);
+      ).rejects.toThrow(/unauthenticated/i);
     });
 
     it('returns userId when authenticated', async () => {
@@ -83,7 +83,7 @@ describe('auth helpers', () => {
           const { requireAuthUser } = await import('../../lib/auth');
           return await requireAuthUser(ctx);
         })
-      ).rejects.toThrow(/unauthorized/i);
+      ).rejects.toThrow(/unauthenticated/i);
     });
 
     it('returns full user object when authenticated', async () => {

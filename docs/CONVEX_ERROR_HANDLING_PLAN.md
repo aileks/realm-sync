@@ -14,7 +14,7 @@ Intent: align to Convex boundary contract; remove neverthrow; use ConvexError or
 - [x] Frontend: add `src/lib/errors.ts` to normalize `ConvexError` + unknown; replace `formatError` call sites
 - [x] React boundaries: root/route error components; use new error util; log/report
 - [x] Tests: regression coverage for `ConvexError` payloads + boundary rendering
-- [ ] Verify: `pnpm test`, `pnpm run lint`, `pnpm run typecheck`
+- [x] Verify: `pnpm test`, `pnpm run lint`, `pnpm run typecheck`
 - [ ] Docs + PR: update `README.md` + `docs/SPEC.md`; open PR w/ benefits + code example
 
 ## Notes

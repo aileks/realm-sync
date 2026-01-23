@@ -13,6 +13,7 @@ import {
   setupOtherUser,
   defaultStats,
 } from './helpers';
+import { expectConvexErrorCode } from '../testUtils';
 
 describe('entities mutations', () => {
   describe('create', () => {
@@ -83,26 +84,28 @@ describe('entities mutations', () => {
     });
 
     it('throws when not authenticated', async () => {
-      await expect(
+      await expectConvexErrorCode(
         t.mutation(api.entities.create, {
           projectId,
           name: 'Test',
           type: 'character',
-        })
-      ).rejects.toThrow(/unauthorized/i);
+        }),
+        'unauthenticated'
+      );
     });
 
     it('throws when not project owner', async () => {
       const otherUserId = await setupOtherUser(t);
       const otherProjectId = await setupProject(t, otherUserId);
 
-      await expect(
+      await expectConvexErrorCode(
         asUser.mutation(api.entities.create, {
           projectId: otherProjectId,
           name: 'Test',
           type: 'character',
-        })
-      ).rejects.toThrow(/unauthorized/i);
+        }),
+        'unauthorized'
+      );
     });
   });
 
@@ -392,8 +395,9 @@ describe('entities mutations', () => {
       const projectId = await setupProject(t, otherUserId, { projectType: 'ttrpg' });
       const entityId = await setupEntity(t, projectId, { status: 'confirmed' });
 
-      await expect(asUser.mutation(api.entities.revealToPlayers, { entityId })).rejects.toThrow(
-        /not authorized/i
+      await expectConvexErrorCode(
+        asUser.mutation(api.entities.revealToPlayers, { entityId }),
+        'unauthorized'
       );
     });
 
@@ -401,8 +405,9 @@ describe('entities mutations', () => {
       const projectId = await setupProject(t, userId, { projectType: 'ttrpg' });
       const entityId = await setupEntity(t, projectId, { status: 'confirmed' });
 
-      await expect(t.mutation(api.entities.revealToPlayers, { entityId })).rejects.toThrow(
-        /unauthorized/i
+      await expectConvexErrorCode(
+        t.mutation(api.entities.revealToPlayers, { entityId }),
+        'unauthenticated'
       );
     });
   });
@@ -467,8 +472,9 @@ describe('entities mutations', () => {
         revealedToViewers: true,
       });
 
-      await expect(asUser.mutation(api.entities.hideFromPlayers, { entityId })).rejects.toThrow(
-        /not authorized/i
+      await expectConvexErrorCode(
+        asUser.mutation(api.entities.hideFromPlayers, { entityId }),
+        'unauthorized'
       );
     });
   });

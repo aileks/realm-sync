@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
+import { expectConvexErrorCode } from './testUtils';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -91,13 +92,14 @@ describe('notes', () => {
       const { userId } = await setupAuthenticatedUser(t);
       const { projectId } = await setupProject(t, userId);
 
-      await expect(
+      await expectConvexErrorCode(
         t.mutation(api.notes.create, {
           projectId,
           title: 'Test',
           content: 'Content',
-        })
-      ).rejects.toThrow(/unauthorized/i);
+        }),
+        'unauthenticated'
+      );
     });
 
     it('throws when not project owner', async () => {
@@ -118,13 +120,14 @@ describe('notes', () => {
         });
       });
 
-      await expect(
+      await expectConvexErrorCode(
         asUser.mutation(api.notes.create, {
           projectId: otherProjectId,
           title: 'Test',
           content: 'Content',
-        })
-      ).rejects.toThrow(/unauthorized/i);
+        }),
+        'unauthorized'
+      );
     });
   });
 
@@ -358,9 +361,10 @@ describe('notes', () => {
         });
       });
 
-      await expect(
-        asUser.mutation(api.notes.update, { id: noteId, title: 'Hacked' })
-      ).rejects.toThrow(/unauthorized/i);
+      await expectConvexErrorCode(
+        asUser.mutation(api.notes.update, { id: noteId, title: 'Hacked' }),
+        'unauthorized'
+      );
     });
   });
 

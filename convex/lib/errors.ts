@@ -1,4 +1,4 @@
-import { ConvexError } from 'convex/values';
+import { ConvexError, type Value } from 'convex/values';
 
 export type AppErrorCode =
   | 'unauthenticated'
@@ -15,7 +15,7 @@ export type AppErrorCode =
 export type AppErrorData = {
   code: AppErrorCode;
   message: string;
-  details?: Record<string, unknown>;
+  details?: Record<string, Value>;
 };
 
 type AuthCode = 'unauthenticated' | 'unauthorized';
@@ -45,12 +45,12 @@ const configError = (key: string, message: string): ConvexError<AppErrorData> =>
 const apiError = (
   statusCode: number,
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, Value>
 ): ConvexError<AppErrorData> =>
   toConvexError({
     code: 'api',
     message,
-    details: { statusCode, ...(details ?? {}) },
+    details: { statusCode, ...details },
   });
 
 const limitError = (
@@ -80,7 +80,7 @@ const notAllowedError = (message: string, reason?: string): ConvexError<AppError
 
 const rateLimitError = (
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, Value>
 ): ConvexError<AppErrorData> =>
   toConvexError({
     code: 'rate_limited',

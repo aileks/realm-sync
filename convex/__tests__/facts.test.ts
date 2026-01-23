@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
+import { expectConvexErrorCode } from './testUtils';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -197,7 +198,7 @@ describe('facts', () => {
       const { userId } = await setupAuthenticatedUser(t);
       const { projectId, documentId, entityId } = await setupProjectWithEntityAndDoc(t, userId);
 
-      await expect(
+      await expectConvexErrorCode(
         t.mutation(api.facts.create, {
           projectId,
           entityId,
@@ -207,8 +208,9 @@ describe('facts', () => {
           object: 'test',
           confidence: 1.0,
           evidenceSnippet: 'text',
-        })
-      ).rejects.toThrow(/unauthorized/i);
+        }),
+        'unauthenticated'
+      );
     });
 
     it('throws when not project owner', async () => {
@@ -249,7 +251,7 @@ describe('facts', () => {
         return { projectId: pId, documentId: dId, entityId: eId };
       });
 
-      await expect(
+      await expectConvexErrorCode(
         asUser.mutation(api.facts.create, {
           projectId,
           entityId,
@@ -259,8 +261,9 @@ describe('facts', () => {
           object: 'test',
           confidence: 1.0,
           evidenceSnippet: 'text',
-        })
-      ).rejects.toThrow(/unauthorized/i);
+        }),
+        'unauthorized'
+      );
     });
   });
 
