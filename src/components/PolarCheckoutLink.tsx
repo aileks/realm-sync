@@ -58,8 +58,8 @@ export function PolarCheckoutLink({
         const message = formatError(err);
         if (isActive) {
           setError(message);
+          onError?.(message);
         }
-        onError?.(message);
       }
     })();
 
