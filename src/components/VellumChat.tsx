@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useMutation, useQuery } from 'convex/react';
 import { useStream } from '@convex-dev/persistent-text-streaming/react';
 import type { StreamId } from '@convex-dev/persistent-text-streaming';
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
+import { renderMarkdownToHtml } from '@/lib/markdown';
 import { api } from '../../convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,8 +25,7 @@ function generateId() {
 }
 
 function MarkdownContent({ children }: { children: string }) {
-  const rawHtml = marked.parse(children, { async: false });
-  const sanitizedHtml = DOMPurify.sanitize(rawHtml);
+  const sanitizedHtml = renderMarkdownToHtml(children);
   return <span dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />;
 }
 
