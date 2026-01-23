@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
+import type { GenericDatabaseWriter, SystemDataModel } from 'convex/server';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -14,7 +15,11 @@ async function createStorageBlob(
   return await t.run(async (ctx) => {
     const content = new Uint8Array(size);
     const blob = new Blob([content], { type: contentType });
-    return await ctx.storage.store(blob);
+    const storageId = await ctx.storage.store(blob);
+    // convex-test omits contentType metadata; patch _storage for avatar validation.
+    const systemDb = ctx.db as unknown as GenericDatabaseWriter<SystemDataModel>;
+    await systemDb.patch('_storage', storageId, { contentType });
+    return storageId;
   });
 }
 
@@ -177,6 +182,33 @@ describe('profile', () => {
       await expect(t.mutation(api.users.updateAvatar, { storageId })).rejects.toThrow(
         /unauthorized/i
       );
+    });
+
+    it('deletes previous avatar when replaced', async () => {
+      const t = convexTest(schema, getModules());
+      const oldStorageId = await createStorageBlob(t, 'image/png', 512);
+      const newStorageId = await createStorageBlob(t, 'image/png', 1024);
+
+      const userId = await t.run(async (ctx) => {
+        return await ctx.db.insert('users', {
+          name: 'Avatar User',
+          email: 'avatar-user@example.com',
+          createdAt: Date.now(),
+          avatarStorageId: oldStorageId,
+        });
+      });
+
+      const asUser = t.withIdentity({ subject: userId });
+      await asUser.mutation(api.users.updateAvatar, { storageId: newStorageId });
+
+      const user = await t.run(async (ctx) => ctx.db.get(userId));
+      expect(user?.avatarStorageId).toBe(newStorageId);
+
+      const oldMeta = await t.run(async (ctx) => ctx.db.system.get(oldStorageId));
+      expect(oldMeta).toBeNull();
+
+      const newMeta = await t.run(async (ctx) => ctx.db.system.get(newStorageId));
+      expect(newMeta?._id).toBe(newStorageId);
     });
   });
 

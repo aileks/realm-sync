@@ -12,6 +12,7 @@ import {
   MAX_PASSWORD_LENGTH,
 } from './lib/constants';
 import { DEMO_EMAIL } from './lib/demo';
+import { assertStorageIdAvailableForAvatar } from './lib/storageAccess';
 
 export const viewer = query({
   args: {},
@@ -84,6 +85,10 @@ export const updateAvatar = mutation({
       throw new Error('File not found');
     }
 
+    if (user.avatarStorageId !== storageId) {
+      await assertStorageIdAvailableForAvatar(ctx, storageId, user._id);
+    }
+
     if (!ALLOWED_AVATAR_TYPES.includes(meta.contentType as (typeof ALLOWED_AVATAR_TYPES)[number])) {
       await ctx.storage.delete(storageId);
       throw new Error('Invalid file type. Use JPG, PNG, or WebP.');
@@ -98,7 +103,7 @@ export const updateAvatar = mutation({
 
     await ctx.db.patch(user._id, { avatarStorageId: storageId });
 
-    if (oldAvatarId) {
+    if (oldAvatarId && oldAvatarId !== storageId) {
       await ctx.storage.delete(oldAvatarId);
     }
 
