@@ -1,5 +1,5 @@
 import { PolarEmbedCheckout } from '@polar-sh/checkout/embed';
-import { useEffect, useState, type PropsWithChildren } from 'react';
+import { useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import { useAction } from 'convex/react';
 import type { PolarComponentApi } from '@convex-dev/polar';
 import { cn, formatError } from '@/lib/utils';
@@ -27,6 +27,11 @@ export function PolarCheckoutLink({
   const generateCheckoutLink = useAction(polarApi.generateCheckoutLink);
   const [checkoutLink, setCheckoutLink] = useState<string>();
   const [error, setError] = useState<string | null>(null);
+  const productIdsSerialized = useMemo(() => JSON.stringify(productIds), [productIds]);
+  const stableProductIds = useMemo(
+    () => JSON.parse(productIdsSerialized) as string[],
+    [productIdsSerialized]
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -35,10 +40,13 @@ export function PolarCheckoutLink({
       PolarEmbedCheckout.init();
     }
 
+    setCheckoutLink(undefined);
+    setError(null);
+
     void (async () => {
       try {
         const { url } = await generateCheckoutLink({
-          productIds,
+          productIds: stableProductIds,
           subscriptionId,
           origin: window.location.origin,
           successUrl: window.location.href,
@@ -58,7 +66,7 @@ export function PolarCheckoutLink({
     return () => {
       isActive = false;
     };
-  }, [productIds, subscriptionId, embed, generateCheckoutLink, onError]);
+  }, [stableProductIds, subscriptionId, embed, generateCheckoutLink, onError]);
 
   const isReady = Boolean(checkoutLink);
 

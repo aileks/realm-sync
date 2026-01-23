@@ -1,8 +1,10 @@
-import { HeadContent, Scripts, createRootRoute, Outlet } from '@tanstack/react-router';
+import { HeadContent, Scripts, createRootRoute, Link, Outlet } from '@tanstack/react-router';
 // import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 // import { TanStackDevtools } from '@tanstack/react-devtools';
 
 import { AppLayout } from '../components/AppLayout';
+import { EmptyState } from '../components/EmptyState';
+import { buttonVariants } from '../components/ui/button';
 import { Toaster } from '../components/ui/sonner';
 import { KeyboardShortcutsProvider } from '../components/KeyboardShortcuts';
 import ConvexProvider from '../integrations/convex/provider';
@@ -37,6 +39,7 @@ export const Route = createRootRoute({
 
   component: RootLayout,
   shellComponent: RootDocument,
+  notFoundComponent: RootNotFound,
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -74,5 +77,21 @@ function RootLayout() {
         ]}
       /> */}
     </ConvexProvider>
+  );
+}
+
+function RootNotFound() {
+  return (
+    <div className="flex w-full flex-1 items-center justify-center p-8">
+      <EmptyState
+        title="Page not found"
+        description="That route does not exist or was moved."
+        action={
+          <Link to="/" className={buttonVariants({ variant: 'outline', size: 'lg' })}>
+            Back to dashboard
+          </Link>
+        }
+      />
+    </div>
   );
 }
