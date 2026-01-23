@@ -15,7 +15,7 @@ Intent: align to Convex boundary contract; remove neverthrow; use ConvexError or
 - [x] React boundaries: root/route error components; use new error util; log/report
 - [x] Tests: regression coverage for `ConvexError` payloads + boundary rendering
 - [x] Verify: `pnpm test`, `pnpm run lint`, `pnpm run typecheck`
-- [ ] Docs + PR: update `README.md` + `docs/SPEC.md`; open PR w/ benefits + code example
+- [x] Docs + PR: update `README.md` + `docs/SPEC.md`; open PR w/ benefits + code example
 
 ## Notes
 - Convex boundary: throw `ConvexError` or return union; no `Result` to client.
