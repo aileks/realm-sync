@@ -65,7 +65,8 @@ export default defineSchema({
     ),
   })
     .index('by_email', ['email'])
-    .index('by_polar_customer', ['polarCustomerId']),
+    .index('by_polar_customer', ['polarCustomerId'])
+    .index('by_avatar_storage', ['avatarStorageId']),
 
   // Projects
   projects: defineTable({

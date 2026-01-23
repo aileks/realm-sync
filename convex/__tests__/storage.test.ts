@@ -102,6 +102,64 @@ describe('storage access controls', () => {
     expect(user?.avatarStorageId).toBeUndefined();
   });
 
+  it('blocks avatar updates when storageId is already in use', async () => {
+    const t = convexTest(schema, getModules());
+    const storageId = await createStorageBlob(t, 'image/png', 128);
+    const { userId: ownerId } = await setupAuthenticatedUser(t, {
+      email: 'owner@example.com',
+      avatarStorageId: storageId,
+    });
+    const { asUser: otherUser } = await setupAuthenticatedUser(t, {
+      email: 'other@example.com',
+    });
+
+    await expect(otherUser.mutation(api.users.updateAvatar, { storageId })).rejects.toThrow(
+      'File already in use'
+    );
+
+    const projectId = await createProject(t, ownerId);
+    await createDocument(t, projectId, storageId);
+
+    await expect(otherUser.mutation(api.users.updateAvatar, { storageId })).rejects.toThrow(
+      'File already in use'
+    );
+  });
+
+  it('blocks document create when storageId belongs to an avatar', async () => {
+    const t = convexTest(schema, getModules());
+    const storageId = await createStorageBlob(t, 'text/plain', 128);
+    await setupAuthenticatedUser(t, { avatarStorageId: storageId });
+
+    const { userId, asUser } = await setupAuthenticatedUser(t, { email: 'doc@example.com' });
+    const projectId = await createProject(t, userId);
+
+    await expect(
+      asUser.mutation(api.documents.create, {
+        projectId,
+        title: 'Doc',
+        contentType: 'file',
+        storageId,
+      })
+    ).rejects.toThrow('File already in use');
+  });
+
+  it('blocks document update when storageId is used by another document', async () => {
+    const t = convexTest(schema, getModules());
+    const storageId = await createStorageBlob(t, 'text/plain', 128);
+    const { userId, asUser } = await setupAuthenticatedUser(t);
+    const projectId = await createProject(t, userId);
+
+    await createDocument(t, projectId, storageId);
+    const docB = await createDocument(t, projectId, await createStorageBlob(t, 'text/plain', 64));
+
+    await expect(
+      asUser.mutation(api.documents.update, {
+        id: docB,
+        storageId,
+      })
+    ).rejects.toThrow('File already in use');
+  });
+
   it('blocks access for other users and unauthenticated requests', async () => {
     const t = convexTest(schema, getModules());
     const storageId = await createStorageBlob(t, 'text/plain', 128);

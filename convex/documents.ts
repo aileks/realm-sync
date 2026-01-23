@@ -6,6 +6,7 @@ import { requireAuth, requireAuthUser } from './lib/auth';
 import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
 import { unwrapOrThrow } from './lib/result';
 import { canReadProject, canEditProject } from './lib/projectAccess';
+import { assertStorageIdAvailableForDocument } from './lib/storageAccess';
 import { getDocumentCount, checkResourceLimit } from './lib/subscription';
 
 const contentTypeValidator = v.union(v.literal('text'), v.literal('markdown'), v.literal('file'));
@@ -90,6 +91,10 @@ export const create = mutation({
     const user = await requireAuthUser(ctx);
     unwrapOrThrow(await verifyProjectOwnership(ctx, projectId, user._id));
 
+    if (storageId) {
+      await assertStorageIdAvailableForDocument(ctx, storageId);
+    }
+
     const docCount = await getDocumentCount(ctx, projectId);
     const limitCheck = checkResourceLimit(user, 'documentsPerProject', docCount);
 
@@ -151,7 +156,11 @@ export const update = mutation({
   },
   handler: async (ctx, { id, title, content, storageId, contentType }) => {
     const userId = await requireAuth(ctx);
-    unwrapOrThrow(await verifyDocumentAccess(ctx, id, userId));
+    const doc = unwrapOrThrow(await verifyDocumentAccess(ctx, id, userId));
+
+    if (storageId && storageId !== doc.storageId) {
+      await assertStorageIdAvailableForDocument(ctx, storageId, doc._id);
+    }
 
     await ctx.db.patch(id, {
       updatedAt: Date.now(),
