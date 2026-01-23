@@ -81,7 +81,9 @@ export function PolarCheckoutLink({
       >
         {children}
       </a>
-      {error && !onError && <p className="text-destructive mt-2 text-xs">{error}</p>}
+      {error && !onError && (
+        <p className="text-destructive mt-2 text-xs">An error occured. Please try again later.</p>
+      )}
     </>
   );
 }
