@@ -1,5 +1,5 @@
 ---
-summary: Plan for remaining security issue fixes (#50, #51, #58).
+summary: Plan for remaining security issue fixes (#51, #58).
 read_when: planning or executing remaining security issue fixes
 ---
 
@@ -7,22 +7,19 @@ read_when: planning or executing remaining security issue fixes
 
 ## Guardrails
 
-- Branch per issue (`fix/subscription-webhooks`, `fix/storage-access`, `fix/markdown-sanitize`).
+- Branch per issue (`fix/storage-access`, `fix/markdown-sanitize`).
 - PR summary: issue link + file paths in backticks + why change.
 - Keep changes tight; add regression tests where feasible.
 
 ## Issue #50: Make subscription/webhook helpers internal
 
-- Goal: eliminate public access to subscription mutations/queries.
-- Files: `convex/users.ts`, `convex/http.ts`.
-- Plan:
-  - Convert `listByEmail`, `getByPolarCustomerId` -> `internalQuery`.
-  - Convert `updateSubscription` -> `internalMutation`.
-  - Update Polar webhook handlers in `convex/http.ts` to call `internal.users.*`.
-  - Verify no UI references (search for `listByEmail|getByPolarCustomerId|updateSubscription`).
+- Status: done (branch `fix/subscription-webhooks`; PR pending).
+- Changes:
+  - Converted `listByEmail`, `getByPolarCustomerId` -> `internalQuery`.
+  - Converted `updateSubscription` -> `internalMutation`.
+  - Updated Polar webhook handlers in `convex/http.ts` to call `internal.users.*`.
 - Tests:
-  - Add/extend a test in `convex/__tests__/subscription.test.ts` or `convex/__tests__/users.test.ts` that calls internal update and asserts fields updated.
-  - Note: public access block is type-level; rely on build/typecheck + runtime negative test if feasible via HTTP.
+  - Added coverage in `convex/__tests__/subscription.test.ts` for internal updates/queries.
 
 ## Issue #51: Restrict storage file access + deletes
 
