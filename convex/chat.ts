@@ -1,4 +1,4 @@
-import { action, httpAction, mutation, query } from './_generated/server';
+import { action, httpAction, internalMutation, internalQuery, mutation, query } from './_generated/server';
 import { components, internal } from './_generated/api';
 import { v } from 'convex/values';
 import {
@@ -6,8 +6,70 @@ import {
   type StreamId,
   StreamIdValidator,
 } from '@convex-dev/persistent-text-streaming';
+import { getAuthUserId } from '@convex-dev/auth/server';
+import { requireAuth } from './lib/auth';
 
 const streaming = new PersistentTextStreaming(components.persistentTextStreaming);
+
+const CHAT_LIMIT_MESSAGE =
+  'Monthly chat limit reached. Free tier allows 50 messages/month. Upgrade to Realm Unlimited for unlimited chat.';
+
+const STREAM_TOKEN_TTL_MS = 15 * 60 * 1000;
+
+function createStreamToken(): string {
+  const cryptoRef = globalThis.crypto;
+  if (cryptoRef?.randomUUID) {
+    return cryptoRef.randomUUID();
+  }
+
+  if (cryptoRef?.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    cryptoRef.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  throw new Error('Secure random unavailable');
+}
+
+const ALLOWED_CHAT_ORIGINS = (() => {
+  const origins = new Set<string>();
+  const serverUrl = process.env.SERVER_URL;
+  if (serverUrl) {
+    try {
+      origins.add(new URL(serverUrl).origin);
+    } catch {
+      // Ignore invalid SERVER_URL.
+    }
+  }
+
+  return origins;
+})();
+
+function isLocalOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    return url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
+export function getChatStreamCorsOrigin(request: Request): string | null {
+  const origin = request.headers.get('Origin');
+  if (!origin) return null;
+  if (ALLOWED_CHAT_ORIGINS.has(origin) || isLocalOrigin(origin)) {
+    return origin;
+  }
+  return null;
+}
+
+export function applyChatStreamCors(response: Response, origin: string | null): Response {
+  if (origin) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Vary', 'Origin');
+  }
+  return response;
+}
 
 const VELLUM_CHAT_PROMPT = `You are Vellum, the Archivist Moth — a gentle, meticulous librarian who catalogs fictional worlds.
 You speak with warmth and curiosity, using elegant prose peppered with archival metaphors.
@@ -38,15 +100,17 @@ export const sendMessage = action({
         content: v.string(),
       })
     ),
-    userId: v.id('users'),
   },
-  handler: async (ctx, { messages, userId }) => {
+  handler: async (ctx, { messages }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error('Unauthorized: Authentication required');
+    }
+
     const limitCheck = await ctx.runQuery(internal.usage.checkChatLimit, { userId });
 
     if (!limitCheck.allowed) {
-      throw new Error(
-        `Monthly chat limit reached. Free tier allows 50 messages/month. Upgrade to Realm Unlimited for unlimited chat.`
-      );
+      throw new Error(CHAT_LIMIT_MESSAGE);
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -104,36 +168,183 @@ export const createStreamingChat = mutation({
       })
     ),
   },
-  handler: async (ctx, { messages }) => {
+  handler: async (ctx, { messages: _messages }) => {
+    const userId = await requireAuth(ctx);
+    const limitCheck = await ctx.runQuery(internal.usage.checkChatLimit, { userId });
+
+    if (!limitCheck.allowed) {
+      throw new Error(CHAT_LIMIT_MESSAGE);
+    }
+
     const streamId = await streaming.createStream(ctx);
-    return { streamId, messages };
+    const token = createStreamToken();
+    const now = Date.now();
+
+    await ctx.db.insert('chatStreams', {
+      userId,
+      streamId,
+      token,
+      createdAt: now,
+      expiresAt: now + STREAM_TOKEN_TTL_MS,
+    });
+
+    return { streamId, token };
   },
 });
 
 export const getStreamBody = query({
   args: { streamId: StreamIdValidator },
   handler: async (ctx, { streamId }) => {
+    const userId = await requireAuth(ctx);
+    const stream = await ctx.db
+      .query('chatStreams')
+      .withIndex('by_stream', (q) => q.eq('streamId', streamId))
+      .first();
+
+    if (!stream || stream.userId !== userId) {
+      throw new Error('Unauthorized: Authentication required');
+    }
+
     return await streaming.getStreamBody(ctx, streamId as StreamId);
   },
 });
 
+export const getChatStreamForToken = internalQuery({
+  args: {
+    streamId: v.string(),
+    token: v.string(),
+  },
+  handler: async (ctx, { streamId, token }) => {
+    const stream = await ctx.db
+      .query('chatStreams')
+      .withIndex('by_stream', (q) => q.eq('streamId', streamId))
+      .first();
+
+    if (!stream || stream.token !== token) {
+      return null;
+    }
+
+    return {
+      _id: stream._id,
+      userId: stream.userId,
+      expiresAt: stream.expiresAt,
+      usedAt: stream.usedAt,
+    };
+  },
+});
+
+export const markChatStreamUsed = internalMutation({
+  args: {
+    streamId: v.string(),
+    token: v.string(),
+  },
+  handler: async (ctx, { streamId, token }) => {
+    const stream = await ctx.db
+      .query('chatStreams')
+      .withIndex('by_stream', (q) => q.eq('streamId', streamId))
+      .first();
+
+    if (!stream || stream.token !== token || stream.usedAt) {
+      return false;
+    }
+
+    await ctx.db.patch(stream._id, { usedAt: Date.now() });
+    return true;
+  },
+});
+
 export const streamChat = httpAction(async (ctx, request) => {
-  const body = (await request.json()) as {
-    streamId: string;
-    messages: Array<{ role: string; content: string }>;
+  const origin = getChatStreamCorsOrigin(request);
+  if (!origin) {
+    return new Response('Origin not allowed', { status: 403 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return applyChatStreamCors(new Response('Invalid request body', { status: 400 }), origin);
+  }
+
+  if (!body || typeof body !== 'object') {
+    return applyChatStreamCors(new Response('Invalid request body', { status: 400 }), origin);
+  }
+
+  const { streamId, token, messages } = body as {
+    streamId?: unknown;
+    token?: unknown;
+    messages?: unknown;
   };
+
+  if (typeof streamId !== 'string' || typeof token !== 'string' || !Array.isArray(messages)) {
+    return applyChatStreamCors(new Response('Invalid request body', { status: 400 }), origin);
+  }
+
+  const hasValidMessages = messages.every((item) => {
+    if (!item || typeof item !== 'object') return false;
+    const { role, content } = item as { role?: unknown; content?: unknown };
+    return (
+      (role === 'user' || role === 'assistant' || role === 'system') && typeof content === 'string'
+    );
+  });
+
+  if (!hasValidMessages) {
+    return applyChatStreamCors(new Response('Invalid request body', { status: 400 }), origin);
+  }
+
+  const chatMessages = messages as Array<{
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+  }>;
+
+  const streamRecord = await ctx.runQuery(internal.chat.getChatStreamForToken, {
+    streamId,
+    token,
+  });
+
+  if (!streamRecord) {
+    return applyChatStreamCors(new Response('Unauthorized', { status: 401 }), origin);
+  }
+
+  if (streamRecord.expiresAt < Date.now()) {
+    return applyChatStreamCors(new Response('Stream expired', { status: 401 }), origin);
+  }
+
+  if (streamRecord.usedAt) {
+    return applyChatStreamCors(new Response('Stream already used', { status: 409 }), origin);
+  }
+
+  const limitCheck = await ctx.runQuery(internal.usage.checkChatLimit, {
+    userId: streamRecord.userId,
+  });
+
+  if (!limitCheck.allowed) {
+    return applyChatStreamCors(new Response(CHAT_LIMIT_MESSAGE, { status: 429 }), origin);
+  }
+
+  const markedUsed = await ctx.runMutation(internal.chat.markChatStreamUsed, {
+    streamId,
+    token,
+  });
+
+  if (!markedUsed) {
+    return applyChatStreamCors(new Response('Stream already used', { status: 409 }), origin);
+  }
 
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    return new Response('OPENROUTER_API_KEY not configured', { status: 500 });
+    return applyChatStreamCors(
+      new Response('OPENROUTER_API_KEY not configured', { status: 500 }),
+      origin
+    );
   }
 
   const model = process.env.MODEL;
   if (!model) {
-    return new Response('MODEL not configured', { status: 500 });
+    return applyChatStreamCors(new Response('MODEL not configured', { status: 500 }), origin);
   }
 
-  const apiMessages = [{ role: 'system', content: VELLUM_CHAT_PROMPT }, ...body.messages];
+  const apiMessages = [{ role: 'system', content: VELLUM_CHAT_PROMPT }, ...chatMessages];
 
   const generateChat = async (
     _ctx: unknown,
@@ -194,11 +405,11 @@ export const streamChat = httpAction(async (ctx, request) => {
         }
       }
     }
+
+    await ctx.runMutation(internal.usage.incrementChatUsage, { userId: streamRecord.userId });
   };
 
-  const response = await streaming.stream(ctx, request, body.streamId as StreamId, generateChat);
+  const response = await streaming.stream(ctx, request, streamId as StreamId, generateChat);
 
-  response.headers.set('Access-Control-Allow-Origin', '*');
-  response.headers.set('Vary', 'Origin');
-  return response;
+  return applyChatStreamCors(response, origin);
 });
