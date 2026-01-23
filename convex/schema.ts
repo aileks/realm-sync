@@ -217,6 +217,19 @@ export default defineSchema({
     createdAt: v.number(),
   }).index('by_user', ['userId', 'createdAt']),
 
+  // Chat Streams (ephemeral auth for streaming)
+  chatStreams: defineTable({
+    userId: v.id('users'),
+    streamId: v.string(),
+    token: v.string(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    usedAt: v.optional(v.number()),
+  })
+    .index('by_stream', ['streamId'])
+    .index('by_expires_at', ['expiresAt'])
+    .index('by_user', ['userId', 'createdAt']),
+
   // LLM Cache
   llmCache: defineTable({
     inputHash: v.string(),

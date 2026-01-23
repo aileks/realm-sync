@@ -15,3 +15,19 @@ export const cleanupExpiredRefreshTokens = internalMutation({
     return { deleted: expiredTokens.length };
   },
 });
+
+export const cleanupExpiredChatStreams = internalMutation({
+  handler: async (ctx) => {
+    const now = Date.now();
+    const expiredStreams = await ctx.db
+      .query('chatStreams')
+      .withIndex('by_expires_at', (q) => q.lte('expiresAt', now))
+      .collect();
+
+    for (const stream of expiredStreams) {
+      await ctx.db.delete(stream._id);
+    }
+
+    return { deleted: expiredStreams.length };
+  },
+});

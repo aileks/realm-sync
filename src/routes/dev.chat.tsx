@@ -97,7 +97,7 @@ function DevChat() {
     try {
       const cleanMessages = newMessages.map(({ role, content }) => ({ role, content }));
 
-      const { streamId, messages: chatMessages } = await createStreamingChat({
+      const { streamId, token } = await createStreamingChat({
         messages: cleanMessages,
       });
 
@@ -107,7 +107,7 @@ function DevChat() {
       const response = await fetch(`${convexSiteUrl}/chat-stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ streamId, messages: chatMessages }),
+        body: JSON.stringify({ streamId, token, messages: cleanMessages }),
       });
 
       if (!response.ok) {

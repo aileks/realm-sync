@@ -172,7 +172,7 @@ export function VellumChat() {
         ({ role, content }) => ({ role, content })
       );
 
-      const { streamId, messages: chatMessages } = await createStreamingChat({
+      const { streamId, token } = await createStreamingChat({
         messages: messagesForApi,
       });
 
@@ -191,7 +191,7 @@ export function VellumChat() {
       const response = await fetch(`${CONVEX_SITE_URL}/chat-stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ streamId, messages: chatMessages }),
+        body: JSON.stringify({ streamId, token, messages: messagesForApi }),
       });
 
       if (!response.ok) {
