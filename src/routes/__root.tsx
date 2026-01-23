@@ -86,9 +86,9 @@ function RootLayout() {
 
 function RootNotFound() {
   return (
-    <div className="relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden bg-background px-6 py-10">
+    <div className="bg-background relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden px-6 py-10">
       <div className="pointer-events-none absolute inset-0 opacity-35 [background:radial-gradient(900px_circle_at_50%_-20%,var(--primary)_0%,transparent_60%)]" />
-      <div className="relative w-full max-w-xl rounded-2xl border border-border/70 bg-card/80 p-2 shadow-[0_20px_60px_-35px_oklch(0.72_0.11_65_/_0.35)] backdrop-blur">
+      <div className="border-border/70 bg-card/80 relative w-full max-w-xl rounded-2xl border p-2 shadow-[0_20px_60px_-35px_oklch(0.72_0.11_65_/_0.35)] backdrop-blur">
         <EmptyState
           icon={<Compass className="size-5" />}
           title="Page not found"
