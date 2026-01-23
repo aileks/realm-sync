@@ -1,14 +1,14 @@
 import { Password } from '@convex-dev/auth/providers/Password';
 import { convexAuth } from '@convex-dev/auth/server';
 import type { MutationCtx } from './_generated/server';
-import { ConvexError } from 'convex/values';
+import { validationError } from './lib/errors';
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     Password({
       profile(params) {
         if (typeof params.email !== 'string') {
-          throw new ConvexError('Email is required');
+          throw validationError('email', 'Email is required');
         }
 
         const profile: { email: string; name?: string } = { email: params.email };

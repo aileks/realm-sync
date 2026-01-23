@@ -3,9 +3,7 @@ import type { MutationCtx, QueryCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import { getAuthUserId, requireAuth } from './lib/auth';
-import { ok, err, authError, notFoundError } from './lib/errors';
-import type { AppError, Result } from './lib/errors';
-import { unwrapOrThrow } from './lib/result';
+import { authError, notFoundError, validationError } from './lib/errors';
 
 const alertTypeValidator = v.union(
   v.literal('contradiction'),
@@ -38,20 +36,22 @@ async function verifyProjectOwnership(
   return project.userId === userId;
 }
 
-async function verifyAlertAccess(
+async function requireAlertAccess(
   ctx: MutationCtx,
   alertId: Id<'alerts'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'alerts'>, AppError>> {
+): Promise<Doc<'alerts'>> {
   const alert = await ctx.db.get(alertId);
-  if (!alert) return err(notFoundError('alert', alertId));
+  if (!alert) {
+    throw notFoundError('alert', alertId);
+  }
 
   const project = await ctx.db.get(alert.projectId);
   if (!project || project.userId !== userId) {
-    return err(authError('UNAUTHORIZED', 'Unauthorized'));
+    throw authError('unauthorized', 'You do not have permission to access this alert.');
   }
 
-  return ok(alert);
+  return alert;
 }
 
 export const listByProject = query({
@@ -226,7 +226,7 @@ export const resolve = mutation({
   },
   handler: async (ctx, { id, resolutionNotes }) => {
     const userId = await requireAuth(ctx);
-    const alert = unwrapOrThrow(await verifyAlertAccess(ctx, id, userId));
+    const alert = await requireAlertAccess(ctx, id, userId);
 
     const wasOpen = alert.status === 'open';
 
@@ -264,7 +264,7 @@ export const dismiss = mutation({
   },
   handler: async (ctx, { id, resolutionNotes }) => {
     const userId = await requireAuth(ctx);
-    const alert = unwrapOrThrow(await verifyAlertAccess(ctx, id, userId));
+    const alert = await requireAlertAccess(ctx, id, userId);
 
     const wasOpen = alert.status === 'open';
 
@@ -299,7 +299,7 @@ export const reopen = mutation({
   args: { id: v.id('alerts') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    const alert = unwrapOrThrow(await verifyAlertAccess(ctx, id, userId));
+    const alert = await requireAlertAccess(ctx, id, userId);
 
     const wasNotOpen = alert.status !== 'open';
 
@@ -334,7 +334,7 @@ export const remove = mutation({
   args: { id: v.id('alerts') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    const alert = unwrapOrThrow(await verifyAlertAccess(ctx, id, userId));
+    const alert = await requireAlertAccess(ctx, id, userId);
 
     await ctx.db.delete(id);
 
@@ -368,15 +368,15 @@ export const resolveWithCanonUpdate = mutation({
   },
   handler: async (ctx, { id, factId, newValue, resolutionNotes }) => {
     const userId = await requireAuth(ctx);
-    const alert = unwrapOrThrow(await verifyAlertAccess(ctx, id, userId));
+    const alert = await requireAlertAccess(ctx, id, userId);
 
     const fact = await ctx.db.get(factId);
     if (!fact) {
-      throw new Error('Fact not found');
+      throw notFoundError('fact', factId);
     }
 
     if (!alert.factIds.includes(factId)) {
-      throw new Error('Fact not associated with this alert');
+      throw validationError('factId', 'Fact not associated with this alert');
     }
 
     const previousObject = fact.object;
@@ -475,7 +475,7 @@ export const resolveAll = mutation({
 
     const project = await ctx.db.get(projectId);
     if (!project || project.userId !== userId) {
-      throw new Error('Unauthorized');
+      throw authError('unauthorized', 'You do not have permission to resolve alerts.');
     }
 
     const openAlerts = await ctx.db
@@ -517,7 +517,7 @@ export const dismissAll = mutation({
 
     const project = await ctx.db.get(projectId);
     if (!project || project.userId !== userId) {
-      throw new Error('Unauthorized');
+      throw authError('unauthorized', 'You do not have permission to dismiss alerts.');
     }
 
     const openAlerts = await ctx.db

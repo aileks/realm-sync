@@ -25,6 +25,7 @@ import {
   AlertDialogFooter,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/errors';
 
 const PROJECT_MODES = [
   { id: 'ttrpg', label: 'TTRPG Campaigns', description: 'D&D, Pathfinder, etc.' },
@@ -110,9 +111,9 @@ export function OnboardingModal() {
         setIsOpen(false);
         void navigate({ to: '/projects/$projectId', params: { projectId } });
       } catch (error) {
-        toast.error('Failed to complete onboarding', {
-          description: error instanceof Error ? error.message : 'Please try again.',
-        });
+        const description =
+          typeof error === 'string' ? 'Please try again.' : getErrorMessage(error);
+        toast.error('Failed to complete onboarding', { description });
       } finally {
         setIsLoading(false);
       }
@@ -128,9 +129,9 @@ export function OnboardingModal() {
       setIsOpen(false);
       void navigate({ to: '/projects' });
     } catch (error) {
-      toast.error('Failed to skip onboarding', {
-        description: error instanceof Error ? error.message : 'Please try again.',
-      });
+      const description =
+        typeof error === 'string' ? 'Please try again.' : getErrorMessage(error);
+      toast.error('Failed to skip onboarding', { description });
     } finally {
       setIsLoading(false);
     }

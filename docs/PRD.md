@@ -101,7 +101,7 @@ Realm Sync provides a "canon engine" that automates the archival and verificatio
 | **Runtime**        | pnpm                                              |
 | **Backend**        | Convex (DB, Functions, Auth, Storage)             |
 | **LLM**            | OpenRouter (`tngtech/deepseek-r1t2-chimera:free`) |
-| **Error Handling** | NeverThrow (type-safe Result pattern)             |
+| **Error Handling** | ConvexError + unions (expected error contract)    |
 | **Styling**        | Tailwind v4 (CSS-first, OKLCH colors)             |
 | **UI Components**  | Shadcn / Base UI                                  |
 | **Monitoring**     | Sentry                                            |

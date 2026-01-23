@@ -7,6 +7,7 @@ import { EmptyState } from '../components/EmptyState';
 import { buttonVariants } from '../components/ui/button';
 import { Toaster } from '../components/ui/sonner';
 import { KeyboardShortcutsProvider } from '../components/KeyboardShortcuts';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import ConvexProvider from '../integrations/convex/provider';
 
 import appCss from '../styles.css?url';
@@ -60,9 +61,11 @@ function RootLayout() {
   return (
     <ConvexProvider>
       <KeyboardShortcutsProvider>
-        <AppLayout>
-          <Outlet />
-        </AppLayout>
+        <ErrorBoundary>
+          <AppLayout>
+            <Outlet />
+          </AppLayout>
+        </ErrorBoundary>
         <Toaster position="bottom-right" />
       </KeyboardShortcutsProvider>
       {/* <TanStackDevtools

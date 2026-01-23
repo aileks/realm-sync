@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { formatError } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/errors';
 
 type FactFormProps = {
   projectId: Id<'projects'>;
@@ -56,7 +56,7 @@ export function FactForm({ projectId, onSuccess, onCancel }: FactFormProps) {
       });
       onSuccess?.(factId);
     } catch (err) {
-      setError(formatError(err));
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

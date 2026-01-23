@@ -2,7 +2,8 @@ import { PolarEmbedCheckout } from '@polar-sh/checkout/embed';
 import { useEffect, useMemo, useState, type PropsWithChildren } from 'react';
 import { useAction } from 'convex/react';
 import type { PolarComponentApi } from '@convex-dev/polar';
-import { cn, formatError } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/errors';
 
 type PolarCheckoutLinkProps = PropsWithChildren<{
   polarApi: Pick<PolarComponentApi, 'generateCheckoutLink'>;
@@ -55,7 +56,7 @@ export function PolarCheckoutLink({
           setCheckoutLink(url);
         }
       } catch (err) {
-        const message = formatError(err);
+        const message = getErrorMessage(err);
         if (isActive) {
           setError(message);
           onError?.(message);

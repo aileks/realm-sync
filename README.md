@@ -11,7 +11,6 @@ An AI-powered creative worldbuilding platform for TTRPG masters, fiction writers
 - Tailwind CSS
 - React Compiler
 - [Convex](https://convex.dev)
-- [neverthrow](https://github.com/supermacro/neverthrow)
 - OpenRouter
 
 ## Key Features

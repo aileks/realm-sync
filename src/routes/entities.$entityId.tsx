@@ -51,6 +51,7 @@ import { LoadingState } from '@/components/LoadingState';
 import { EmptyState } from '@/components/EmptyState';
 import { EntityNotesPanel } from '@/components/EntityNotesPanel';
 import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/errors';
 
 export const Route = createFileRoute('/entities/$entityId')({
   component: EntityDetailPage,
@@ -397,7 +398,7 @@ function AttributeList({ facts, entityId, projectId, entityName }: AttributeList
       setShowAddForm(false);
     } catch (error) {
       toast.error('Failed to add attribute', {
-        description: error instanceof Error ? error.message : 'Unknown error',
+        description: getErrorMessage(error),
       });
     } finally {
       setIsAdding(false);
@@ -752,7 +753,7 @@ function EntityEditForm({ entity, onCancel, onSave }: EntityEditFormProps) {
       onSave();
     } catch (error) {
       toast.error('Failed to update entity', {
-        description: error instanceof Error ? error.message : 'Unknown error',
+        description: getErrorMessage(error),
       });
     } finally {
       setIsSaving(false);

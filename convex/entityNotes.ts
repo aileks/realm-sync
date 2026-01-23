@@ -3,43 +3,39 @@ import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx, QueryCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 import { requireAuth } from './lib/auth';
-import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
-import { unwrapOrThrow } from './lib/result';
+import { authError, notFoundError } from './lib/errors';
 import { canReadProject } from './lib/projectAccess';
 
-async function verifyEntityOwnership(
+async function requireEntityOwnership(
   ctx: MutationCtx,
   entityId: Id<'entities'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'entities'>, AppError>> {
+): Promise<Doc<'entities'>> {
   const entity = await ctx.db.get(entityId);
   if (!entity) {
-    return err(notFoundError('entity', entityId));
+    throw notFoundError('entity', entityId);
   }
   const project = await ctx.db.get(entity.projectId);
   if (!project) {
-    return err(notFoundError('project', entity.projectId));
+    throw notFoundError('project', entity.projectId);
   }
   if (project.userId !== userId) {
-    return err(authError('UNAUTHORIZED', 'Unauthorized'));
+    throw authError('unauthorized', 'You do not have permission to access this entity.');
   }
-  return ok(entity);
+  return entity;
 }
 
-async function verifyEntityNoteAccess(
+async function requireEntityNoteAccess(
   ctx: MutationCtx,
   noteId: Id<'entityNotes'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'entityNotes'>, AppError>> {
+): Promise<Doc<'entityNotes'>> {
   const note = await ctx.db.get(noteId);
   if (!note) {
-    return err(notFoundError('entityNote', noteId));
+    throw notFoundError('entityNote', noteId);
   }
-  const entityResult = await verifyEntityOwnership(ctx, note.entityId, userId);
-  if (entityResult.isErr()) {
-    return err(entityResult.error);
-  }
-  return ok(note);
+  await requireEntityOwnership(ctx, note.entityId, userId);
+  return note;
 }
 
 async function canReadEntity(ctx: QueryCtx, entityId: Id<'entities'>): Promise<boolean> {
@@ -82,7 +78,7 @@ export const create = mutation({
   },
   handler: async (ctx, { entityId, content }) => {
     const userId = await requireAuth(ctx);
-    const entity = unwrapOrThrow(await verifyEntityOwnership(ctx, entityId, userId));
+    const entity = await requireEntityOwnership(ctx, entityId, userId);
 
     const now = Date.now();
 
@@ -106,7 +102,7 @@ export const update = mutation({
   },
   handler: async (ctx, { id, content }) => {
     const userId = await requireAuth(ctx);
-    unwrapOrThrow(await verifyEntityNoteAccess(ctx, id, userId));
+    await requireEntityNoteAccess(ctx, id, userId);
 
     await ctx.db.patch(id, {
       content,
@@ -121,7 +117,7 @@ export const remove = mutation({
   args: { id: v.id('entityNotes') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    unwrapOrThrow(await verifyEntityNoteAccess(ctx, id, userId));
+    await requireEntityNoteAccess(ctx, id, userId);
 
     await ctx.db.delete(id);
     return id;

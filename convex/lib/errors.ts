@@ -1,79 +1,106 @@
-import { Result, ResultAsync, ok, err } from 'neverthrow';
+import { ConvexError } from 'convex/values';
 
-type AppError = AuthError | NotFoundError | ValidationError | ConfigurationError | ApiError;
+export type AppErrorCode =
+  | 'unauthenticated'
+  | 'unauthorized'
+  | 'not_found'
+  | 'validation'
+  | 'conflict'
+  | 'limit'
+  | 'configuration'
+  | 'api'
+  | 'not_allowed'
+  | 'rate_limited';
 
-type AuthError = {
-  type: 'AUTH_ERROR';
-  code: 'UNAUTHENTICATED' | 'UNAUTHORIZED';
+export type AppErrorData = {
+  code: AppErrorCode;
   message: string;
+  details?: Record<string, unknown>;
 };
 
-type NotFoundError = {
-  type: 'NOT_FOUND';
-  resource: 'project' | 'document' | 'entity' | 'fact' | 'user' | 'alert' | 'note' | 'entityNote';
-  id: string;
-};
+type AuthCode = 'unauthenticated' | 'unauthorized';
 
-type ValidationError = {
-  type: 'VALIDATION';
-  field: string;
-  reason: string;
-};
+const toConvexError = (data: AppErrorData): ConvexError<AppErrorData> => new ConvexError(data);
 
-type ConfigurationError = {
-  type: 'CONFIG_ERROR';
-  key: string;
-  message: string;
-};
+const authError = (code: AuthCode, message: string): ConvexError<AppErrorData> =>
+  toConvexError({ code, message });
 
-type ApiError = {
-  type: 'API_ERROR';
-  statusCode: number;
-  message: string;
-  details?: unknown;
-};
+const notFoundError = (
+  resource: string,
+  id?: string,
+  message = `${capitalize(resource)} not found`
+): ConvexError<AppErrorData> =>
+  toConvexError({
+    code: 'not_found',
+    message,
+    details: { resource, ...(id ? { id } : {}) },
+  });
 
-const authError = (code: AuthError['code'], message: string): AuthError => ({
-  type: 'AUTH_ERROR',
-  code,
-  message,
-});
+const validationError = (field: string, message: string): ConvexError<AppErrorData> =>
+  toConvexError({ code: 'validation', message, details: { field } });
 
-const notFoundError = (resource: NotFoundError['resource'], id: string): NotFoundError => ({
-  type: 'NOT_FOUND',
-  resource,
-  id,
-});
+const configError = (key: string, message: string): ConvexError<AppErrorData> =>
+  toConvexError({ code: 'configuration', message, details: { key } });
 
-const validationError = (field: string, reason: string): ValidationError => ({
-  type: 'VALIDATION',
-  field,
-  reason,
-});
+const apiError = (
+  statusCode: number,
+  message: string,
+  details?: Record<string, unknown>
+): ConvexError<AppErrorData> =>
+  toConvexError({
+    code: 'api',
+    message,
+    details: { statusCode, ...(details ?? {}) },
+  });
 
-const configError = (key: string, message: string): ConfigurationError => ({
-  type: 'CONFIG_ERROR',
-  key,
-  message,
-});
+const limitError = (
+  resource: string,
+  limit: number,
+  message: string
+): ConvexError<AppErrorData> =>
+  toConvexError({
+    code: 'limit',
+    message,
+    details: { resource, limit },
+  });
 
-const apiError = (statusCode: number, message: string, details?: unknown): ApiError => ({
-  type: 'API_ERROR',
-  statusCode,
-  message,
-  details,
-});
+const conflictError = (message: string, field?: string): ConvexError<AppErrorData> =>
+  toConvexError({
+    code: 'conflict',
+    message,
+    details: field ? { field } : undefined,
+  });
+
+const notAllowedError = (message: string, reason?: string): ConvexError<AppErrorData> =>
+  toConvexError({
+    code: 'not_allowed',
+    message,
+    details: reason ? { reason } : undefined,
+  });
+
+const rateLimitError = (
+  message: string,
+  details?: Record<string, unknown>
+): ConvexError<AppErrorData> =>
+  toConvexError({
+    code: 'rate_limited',
+    message,
+    details,
+  });
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
 
 export {
-  Result,
-  ResultAsync,
-  ok,
-  err,
   authError,
   notFoundError,
   validationError,
   configError,
   apiError,
+  limitError,
+  conflictError,
+  notAllowedError,
+  rateLimitError,
+  toConvexError,
 };
-export type { AppError, AuthError, NotFoundError, ValidationError, ConfigurationError, ApiError };
-export type { Ok, Err } from 'neverthrow';

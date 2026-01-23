@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import { register as registerPersistentTextStreaming } from '@convex-dev/persistent-text-streaming/test';
 import schema from '../schema';
+import { ConvexError } from 'convex/values';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -24,9 +25,15 @@ describe('chat streaming auth', () => {
     const t = convexTest(schema, getModules());
     registerPersistentTextStreaming(t);
 
-    await expect(t.mutation(api.chat.createStreamingChat, { messages: [] })).rejects.toThrow(
-      /unauthorized/i
-    );
+    try {
+      await t.mutation(api.chat.createStreamingChat, { messages: [] });
+      throw new Error('Expected unauthenticated error');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConvexError);
+      if (error instanceof ConvexError) {
+        expect(error.data).toMatchObject({ code: 'unauthenticated' });
+      }
+    }
   });
 
   it('binds stream access to the authenticated user', async () => {
@@ -37,20 +44,32 @@ describe('chat streaming auth', () => {
 
     const { streamId } = await asUser.mutation(api.chat.createStreamingChat, { messages: [] });
 
-    await expect(otherUser.query(api.chat.getStreamBody, { streamId })).rejects.toThrow(
-      /unauthorized/i
-    );
+    try {
+      await otherUser.query(api.chat.getStreamBody, { streamId });
+      throw new Error('Expected unauthorized error');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConvexError);
+      if (error instanceof ConvexError) {
+        expect(error.data).toMatchObject({ code: 'unauthorized' });
+      }
+    }
   });
 
   it('blocks sendMessage without auth', async () => {
     const t = convexTest(schema, getModules());
     registerPersistentTextStreaming(t);
 
-    await expect(
-      t.action(api.chat.sendMessage, {
+    try {
+      await t.action(api.chat.sendMessage, {
         messages: [{ role: 'user', content: 'Hello' }],
-      })
-    ).rejects.toThrow(/unauthorized/i);
+      });
+      throw new Error('Expected unauthenticated error');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConvexError);
+      if (error instanceof ConvexError) {
+        expect(error.data).toMatchObject({ code: 'unauthenticated' });
+      }
+    }
   });
 });
 

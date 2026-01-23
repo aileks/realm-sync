@@ -15,6 +15,7 @@ import {
 } from '@convex-dev/persistent-text-streaming';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { requireAuth } from './lib/auth';
+import { apiError, authError, configError, limitError, notFoundError } from './lib/errors';
 
 const streaming = new PersistentTextStreaming(components.persistentTextStreaming);
 
@@ -35,7 +36,7 @@ function createStreamToken(): string {
     return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
   }
 
-  throw new Error('Secure random unavailable');
+  throw configError('crypto', 'Secure random unavailable');
 }
 
 const ALLOWED_CHAT_ORIGINS = (() => {
@@ -111,23 +112,26 @@ export const sendMessage = action({
   handler: async (ctx, { messages }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error('Unauthorized: Authentication required');
+      throw authError('unauthenticated', 'Please sign in to continue.');
     }
 
     const limitCheck = await ctx.runQuery(internal.usage.checkChatLimit, { userId });
 
     if (!limitCheck.allowed) {
-      throw new Error(CHAT_LIMIT_MESSAGE);
+      if (!('limit' in limitCheck)) {
+        throw notFoundError('user', userId);
+      }
+      throw limitError('chatMessagesPerMonth', limitCheck.limit, CHAT_LIMIT_MESSAGE);
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      throw new Error('OPENROUTER_API_KEY not configured');
+      throw configError('OPENROUTER_API_KEY', 'OPENROUTER_API_KEY not configured');
     }
 
     const model = process.env.MODEL;
     if (!model) {
-      throw new Error('MODEL not configured');
+      throw configError('MODEL', 'MODEL not configured');
     }
 
     const apiMessages = [{ role: 'system', content: VELLUM_CHAT_PROMPT }, ...messages];
@@ -148,16 +152,17 @@ export const sendMessage = action({
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(
-        `OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`
-      );
+      throw apiError(response.status, 'OpenRouter API error', {
+        statusText: response.statusText,
+        errorText,
+      });
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
 
     if (!content) {
-      throw new Error('Invalid response from OpenRouter API');
+      throw apiError(500, 'Invalid response from OpenRouter API');
     }
 
     await ctx.runMutation(internal.usage.incrementChatUsage, { userId });
@@ -180,7 +185,10 @@ export const createStreamingChat = mutation({
     const limitCheck = await ctx.runQuery(internal.usage.checkChatLimit, { userId });
 
     if (!limitCheck.allowed) {
-      throw new Error(CHAT_LIMIT_MESSAGE);
+      if (!('limit' in limitCheck)) {
+        throw notFoundError('user', userId);
+      }
+      throw limitError('chatMessagesPerMonth', limitCheck.limit, CHAT_LIMIT_MESSAGE);
     }
 
     const streamId = await streaming.createStream(ctx);
@@ -209,7 +217,7 @@ export const getStreamBody = query({
       .first();
 
     if (!stream || stream.userId !== userId) {
-      throw new Error('Unauthorized: Authentication required');
+      throw authError('unauthorized', 'You do not have permission to access this stream.');
     }
 
     return await streaming.getStreamBody(ctx, streamId as StreamId);
@@ -376,12 +384,12 @@ export const streamChat = httpAction(async (ctx, request) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
+      throw apiError(response.status, 'OpenRouter API error', { errorText });
     }
 
     const reader = response.body?.getReader();
     if (!reader) {
-      throw new Error('No response body');
+      throw apiError(500, 'No response body');
     }
 
     const decoder = new TextDecoder();

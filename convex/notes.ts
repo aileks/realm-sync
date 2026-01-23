@@ -4,39 +4,35 @@ import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 import { requireAuth } from './lib/auth';
-import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
-import { unwrapOrThrow } from './lib/result';
+import { authError, notFoundError } from './lib/errors';
 import { canReadProject } from './lib/projectAccess';
 
-async function verifyProjectOwnership(
+async function requireProjectOwnership(
   ctx: MutationCtx,
   projectId: Id<'projects'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'projects'>, AppError>> {
+): Promise<Doc<'projects'>> {
   const project = await ctx.db.get(projectId);
   if (!project) {
-    return err(notFoundError('project', projectId));
+    throw notFoundError('project', projectId);
   }
   if (project.userId !== userId) {
-    return err(authError('UNAUTHORIZED', 'Unauthorized'));
+    throw authError('unauthorized', 'You do not have permission to access this project.');
   }
-  return ok(project);
+  return project;
 }
 
-async function verifyNoteAccess(
+async function requireNoteAccess(
   ctx: MutationCtx,
   noteId: Id<'notes'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'notes'>, AppError>> {
+): Promise<Doc<'notes'>> {
   const note = await ctx.db.get(noteId);
   if (!note) {
-    return err(notFoundError('note', noteId));
+    throw notFoundError('note', noteId);
   }
-  const projectResult = await verifyProjectOwnership(ctx, note.projectId, userId);
-  if (projectResult.isErr()) {
-    return err(projectResult.error);
-  }
-  return ok(note);
+  await requireProjectOwnership(ctx, note.projectId, userId);
+  return note;
 }
 
 export const list = query({
@@ -113,7 +109,7 @@ export const create = mutation({
   },
   handler: async (ctx, { projectId, title, content, tags, pinned }) => {
     const userId = await requireAuth(ctx);
-    unwrapOrThrow(await verifyProjectOwnership(ctx, projectId, userId));
+    await requireProjectOwnership(ctx, projectId, userId);
 
     const now = Date.now();
 
@@ -157,7 +153,7 @@ export const update = mutation({
   },
   handler: async (ctx, { id, title, content, tags, pinned }) => {
     const userId = await requireAuth(ctx);
-    unwrapOrThrow(await verifyNoteAccess(ctx, id, userId));
+    await requireNoteAccess(ctx, id, userId);
 
     await ctx.db.patch(id, {
       updatedAt: Date.now(),
@@ -175,7 +171,7 @@ export const remove = mutation({
   args: { id: v.id('notes') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    const note = unwrapOrThrow(await verifyNoteAccess(ctx, id, userId));
+    const note = await requireNoteAccess(ctx, id, userId);
 
     const project = await ctx.db.get(note.projectId);
     if (project) {
@@ -201,7 +197,7 @@ export const togglePin = mutation({
   args: { id: v.id('notes') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    const note = unwrapOrThrow(await verifyNoteAccess(ctx, id, userId));
+    const note = await requireNoteAccess(ctx, id, userId);
 
     await ctx.db.patch(id, {
       pinned: !note.pinned,

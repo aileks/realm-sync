@@ -5,9 +5,7 @@ import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import { requireAuth } from './lib/auth';
 import { getProjectRole } from './lib/projectAccess';
-import { ok, err, authError, notFoundError } from './lib/errors';
-import type { AppError, Result } from './lib/errors';
-import { unwrapOrThrow } from './lib/result';
+import { authError, notFoundError } from './lib/errors';
 
 const factStatusValidator = v.union(
   v.literal('pending'),
@@ -31,31 +29,37 @@ async function getProjectAccess(
   };
 }
 
-async function verifyProjectAccess(
+async function requireProjectAccess(
   ctx: MutationCtx,
   projectId: Id<'projects'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'projects'>, AppError>> {
+): Promise<Doc<'projects'>> {
   const project = await ctx.db.get(projectId);
-  if (!project) return err(notFoundError('project', projectId));
-  if (project.userId !== userId) return err(authError('UNAUTHORIZED', 'Unauthorized'));
-  return ok(project);
+  if (!project) {
+    throw notFoundError('project', projectId);
+  }
+  if (project.userId !== userId) {
+    throw authError('unauthorized', 'You do not have permission to access this project.');
+  }
+  return project;
 }
 
-async function verifyFactAccess(
+async function requireFactAccess(
   ctx: MutationCtx,
   factId: Id<'facts'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'facts'>, AppError>> {
+): Promise<Doc<'facts'>> {
   const fact = await ctx.db.get(factId);
-  if (!fact) return err(notFoundError('fact', factId));
+  if (!fact) {
+    throw notFoundError('fact', factId);
+  }
 
   const project = await ctx.db.get(fact.projectId);
   if (!project || project.userId !== userId) {
-    return err(authError('UNAUTHORIZED', 'Unauthorized'));
+    throw authError('unauthorized', 'You do not have permission to access this fact.');
   }
 
-  return ok(fact);
+  return fact;
 }
 
 export const create = mutation({
@@ -94,7 +98,7 @@ export const create = mutation({
     }
   ) => {
     const userId = await requireAuth(ctx);
-    const project = unwrapOrThrow(await verifyProjectAccess(ctx, projectId, userId));
+    const project = await requireProjectAccess(ctx, projectId, userId);
 
     const factId = await ctx.db.insert('facts', {
       projectId,
@@ -134,7 +138,7 @@ export const confirm = mutation({
   args: { id: v.id('facts') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
+    const fact = await requireFactAccess(ctx, id, userId);
 
     const wasRejected = fact.status === 'rejected';
 
@@ -165,7 +169,7 @@ export const reject = mutation({
   args: { id: v.id('facts') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
+    const fact = await requireFactAccess(ctx, id, userId);
 
     const wasAlreadyRejected = fact.status === 'rejected';
 
@@ -313,7 +317,7 @@ export const remove = mutation({
   args: { id: v.id('facts') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
+    const fact = await requireFactAccess(ctx, id, userId);
 
     await ctx.db.delete(id);
 
@@ -354,7 +358,7 @@ export const update = mutation({
     { id, subject, predicate, object, confidence, evidenceSnippet, temporalBound, status }
   ) => {
     const userId = await requireAuth(ctx);
-    const fact = unwrapOrThrow(await verifyFactAccess(ctx, id, userId));
+    const fact = await requireFactAccess(ctx, id, userId);
 
     const oldStatus = fact.status;
 

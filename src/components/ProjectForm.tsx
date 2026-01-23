@@ -15,7 +15,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import type { Doc, Id } from '../../convex/_generated/dataModel';
-import { formatError } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/errors';
 
 type Project = Doc<'projects'>;
 
@@ -103,7 +103,7 @@ export function ProjectForm({ project, onSuccess, onCancel }: ProjectFormProps) 
         onSuccess?.(projectId);
       }
     } catch (err) {
-      setError(formatError(err));
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,7 @@
 import type { Doc, Id } from '../_generated/dataModel';
 import type { MutationCtx, QueryCtx } from '../_generated/server';
 import { requireAuthUser } from './auth';
+import { authError, conflictError, notFoundError } from './errors';
 
 type StorageAccess = {
   user: Doc<'users'>;
@@ -8,7 +9,7 @@ type StorageAccess = {
 };
 
 function storageIdConflict() {
-  throw new Error('File already in use');
+  throw conflictError('File already in use');
 }
 
 export async function assertStorageIdAvailableForAvatar(
@@ -76,12 +77,12 @@ export async function requireStorageAccess(
     .first();
 
   if (!document) {
-    throw new Error('File not found');
+    throw notFoundError('file', storageId);
   }
 
   const project = await ctx.db.get(document.projectId);
   if (!project || project.userId !== user._id) {
-    throw new Error('Unauthorized');
+    throw authError('unauthorized', 'You do not have permission to access this file.');
   }
 
   return { user, document };
