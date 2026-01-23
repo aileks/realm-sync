@@ -306,7 +306,7 @@ export const streamChat = httpAction(async (ctx, request) => {
     return applyChatStreamCors(new Response('Unauthorized', { status: 401 }), origin);
   }
 
-  if (streamRecord.expiresAt < Date.now()) {
+  if (streamRecord.expiresAt <= Date.now()) {
     return applyChatStreamCors(new Response('Stream expired', { status: 401 }), origin);
   }
 

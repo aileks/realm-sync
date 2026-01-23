@@ -9,6 +9,12 @@ crons.weekly(
   internal.cleanup.cleanupExpiredRefreshTokens
 );
 
+crons.hourly(
+  'cleanup expired chat streams',
+  { minuteUTC: 15 },
+  internal.cleanup.cleanupExpiredChatStreams
+);
+
 crons.daily('reset demo account', { hourUTC: 8, minuteUTC: 0 }, internal.seed.resetDemoAccount);
 
 export default crons;

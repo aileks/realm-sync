@@ -227,6 +227,7 @@ export default defineSchema({
     usedAt: v.optional(v.number()),
   })
     .index('by_stream', ['streamId'])
+    .index('by_expires_at', ['expiresAt'])
     .index('by_user', ['userId', 'createdAt']),
 
   // LLM Cache

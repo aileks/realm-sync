@@ -53,3 +53,86 @@ describe('chat streaming auth', () => {
     ).rejects.toThrow(/unauthorized/i);
   });
 });
+
+describe('chat streaming token enforcement', () => {
+  it('rejects invalid stream tokens', async () => {
+    const t = convexTest(schema, getModules());
+    registerPersistentTextStreaming(t);
+    const { asUser } = await setupAuthenticatedUser(t);
+
+    const { streamId } = await asUser.mutation(api.chat.createStreamingChat, { messages: [] });
+    const response = await t.fetch('/chat-stream', {
+      method: 'POST',
+      headers: { Origin: 'http://localhost:3000', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        streamId,
+        token: 'invalid-token',
+        messages: [],
+      }),
+    });
+
+    expect(response.status).toBe(401);
+  });
+
+  it('rejects expired streams', async () => {
+    const t = convexTest(schema, getModules());
+    registerPersistentTextStreaming(t);
+    const { asUser } = await setupAuthenticatedUser(t);
+
+    const { streamId, token } = await asUser.mutation(api.chat.createStreamingChat, {
+      messages: [],
+    });
+
+    await t.run(async (ctx) => {
+      const stream = await ctx.db
+        .query('chatStreams')
+        .withIndex('by_stream', (q) => q.eq('streamId', streamId))
+        .first();
+      if (!stream) throw new Error('Stream not found');
+      await ctx.db.patch(stream._id, { expiresAt: Date.now() - 1 });
+    });
+
+    const response = await t.fetch('/chat-stream', {
+      method: 'POST',
+      headers: { Origin: 'http://localhost:3000', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        streamId,
+        token,
+        messages: [],
+      }),
+    });
+
+    expect(response.status).toBe(401);
+  });
+
+  it('rejects reuse of a stream token', async () => {
+    const t = convexTest(schema, getModules());
+    registerPersistentTextStreaming(t);
+    const { asUser } = await setupAuthenticatedUser(t);
+
+    const { streamId, token } = await asUser.mutation(api.chat.createStreamingChat, {
+      messages: [],
+    });
+
+    await t.run(async (ctx) => {
+      const stream = await ctx.db
+        .query('chatStreams')
+        .withIndex('by_stream', (q) => q.eq('streamId', streamId))
+        .first();
+      if (!stream) throw new Error('Stream not found');
+      await ctx.db.patch(stream._id, { usedAt: Date.now() });
+    });
+
+    const response = await t.fetch('/chat-stream', {
+      method: 'POST',
+      headers: { Origin: 'http://localhost:3000', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        streamId,
+        token,
+        messages: [],
+      }),
+    });
+
+    expect(response.status).toBe(409);
+  });
+});
