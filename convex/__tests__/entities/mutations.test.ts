@@ -13,7 +13,7 @@ import {
   setupOtherUser,
   defaultStats,
 } from './helpers';
-import { expectConvexErrorCode } from '../testUtils';
+import { expectConvexErrorCode } from '../../../tests/convex/testUtils';
 
 describe('entities mutations', () => {
   describe('create', () => {

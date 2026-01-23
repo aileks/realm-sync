@@ -2,7 +2,7 @@ import { convexTest } from 'convex-test';
 import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import schema from '../schema';
-import { expectConvexErrorCode } from './testUtils';
+import { expectConvexErrorCode } from '../../tests/convex/testUtils';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
