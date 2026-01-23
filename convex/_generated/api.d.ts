@@ -29,6 +29,7 @@ import type * as lib_errors from "../lib/errors.js";
 import type * as lib_limits from "../lib/limits.js";
 import type * as lib_projectAccess from "../lib/projectAccess.js";
 import type * as lib_result from "../lib/result.js";
+import type * as lib_storageAccess from "../lib/storageAccess.js";
 import type * as lib_subscription from "../lib/subscription.js";
 import type * as llm_cache from "../llm/cache.js";
 import type * as llm_chunk from "../llm/chunk.js";
@@ -72,6 +73,7 @@ declare const fullApi: ApiFromModules<{
   "lib/limits": typeof lib_limits;
   "lib/projectAccess": typeof lib_projectAccess;
   "lib/result": typeof lib_result;
+  "lib/storageAccess": typeof lib_storageAccess;
   "lib/subscription": typeof lib_subscription;
   "llm/cache": typeof llm_cache;
   "llm/chunk": typeof llm_chunk;

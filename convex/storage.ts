@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { requireAuth } from './lib/auth';
+import { requireStorageAccess } from './lib/storageAccess';
 
 export const generateUploadUrl = mutation({
   args: {},
@@ -13,6 +14,7 @@ export const generateUploadUrl = mutation({
 export const getFileUrl = query({
   args: { storageId: v.id('_storage') },
   handler: async (ctx, { storageId }) => {
+    await requireStorageAccess(ctx, storageId);
     return await ctx.storage.getUrl(storageId);
   },
 });
@@ -20,14 +22,21 @@ export const getFileUrl = query({
 export const deleteFile = mutation({
   args: { storageId: v.id('_storage') },
   handler: async (ctx, { storageId }) => {
-    await requireAuth(ctx);
+    const { user, document } = await requireStorageAccess(ctx, storageId);
     await ctx.storage.delete(storageId);
+    if (document) {
+      await ctx.db.patch(document._id, { storageId: undefined });
+    }
+    if (user.avatarStorageId === storageId) {
+      await ctx.db.patch(user._id, { avatarStorageId: undefined });
+    }
   },
 });
 
 export const getFileMetadata = query({
   args: { storageId: v.id('_storage') },
   handler: async (ctx, { storageId }) => {
+    await requireStorageAccess(ctx, storageId);
     return await ctx.db.system.get(storageId);
   },
 });

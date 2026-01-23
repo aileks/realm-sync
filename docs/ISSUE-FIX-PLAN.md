@@ -23,21 +23,13 @@ read_when: planning or executing remaining security issue fixes
 
 ## Issue #51: Restrict storage file access + deletes
 
-- Goal: enforce ownership for storage URL/metadata/delete.
-- Files: `convex/storage.ts`, `convex/documents.ts`, `convex/schema.ts`, new helper.
-- Plan:
-  - Add index on documents by `storageId` (already in schema? add if missing).
-  - Add helper `getStorageOwner` (new `convex/lib/storageAccess.ts` or inline) that:
-    - requires auth
-    - allows if storageId matches user `avatarStorageId`
-    - or if storageId belongs to document in a project owned by user
-  - `getFileUrl`/`getFileMetadata`: require auth + ownership; return null or throw on unauthorized (prefer throw for clear error).
-  - `deleteFile`: require auth + ownership; consider clearing `avatarStorageId`/document `storageId` if delete is allowed (decide in implementation).
+- Status: done (branch `fix/storage-access`; PR pending).
+- Changes:
+  - Added `documents` index `by_storage` and storage access helper.
+  - Gate `getFileUrl`, `getFileMetadata`, `deleteFile` on ownership (avatar or document project owner).
+  - Clear `avatarStorageId`/document `storageId` on delete.
 - Tests:
-  - New `convex/__tests__/storage.test.ts`:
-    - owner can get url/metadata/delete
-    - other user denied
-    - unauth denied
+  - Added `convex/__tests__/storage.test.ts` for owner/other/unauth cases.
 
 ## Issue #58: Sanitize markdown rendering in review/dev chat
 
