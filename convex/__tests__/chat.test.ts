@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import { register as registerPersistentTextStreaming } from '@convex-dev/persistent-text-streaming/test';
 import schema from '../schema';
+import { expectConvexErrorCode } from '../../tests/convex/testUtils';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -24,8 +25,9 @@ describe('chat streaming auth', () => {
     const t = convexTest(schema, getModules());
     registerPersistentTextStreaming(t);
 
-    await expect(t.mutation(api.chat.createStreamingChat, { messages: [] })).rejects.toThrow(
-      /unauthorized/i
+    await expectConvexErrorCode(
+      t.mutation(api.chat.createStreamingChat, { messages: [] }),
+      'unauthenticated'
     );
   });
 
@@ -37,8 +39,9 @@ describe('chat streaming auth', () => {
 
     const { streamId } = await asUser.mutation(api.chat.createStreamingChat, { messages: [] });
 
-    await expect(otherUser.query(api.chat.getStreamBody, { streamId })).rejects.toThrow(
-      /unauthorized/i
+    await expectConvexErrorCode(
+      otherUser.query(api.chat.getStreamBody, { streamId }),
+      'unauthorized'
     );
   });
 
@@ -46,11 +49,12 @@ describe('chat streaming auth', () => {
     const t = convexTest(schema, getModules());
     registerPersistentTextStreaming(t);
 
-    await expect(
+    await expectConvexErrorCode(
       t.action(api.chat.sendMessage, {
         messages: [{ role: 'user', content: 'Hello' }],
-      })
-    ).rejects.toThrow(/unauthorized/i);
+      }),
+      'unauthenticated'
+    );
   });
 });
 

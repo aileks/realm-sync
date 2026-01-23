@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
+import { expectConvexErrorCode } from '../../tests/convex/testUtils';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -66,12 +67,13 @@ describe('entityNotes', () => {
       const { userId } = await setupAuthenticatedUser(t);
       const { entityId } = await setupProjectWithEntity(t, userId);
 
-      await expect(
+      await expectConvexErrorCode(
         t.mutation(api.entityNotes.create, {
           entityId,
           content: 'Content',
-        })
-      ).rejects.toThrow(/unauthorized/i);
+        }),
+        'unauthenticated'
+      );
     });
 
     it('throws when not project owner', async () => {
@@ -101,12 +103,13 @@ describe('entityNotes', () => {
         });
       });
 
-      await expect(
+      await expectConvexErrorCode(
         asUser.mutation(api.entityNotes.create, {
           entityId: otherEntityId,
           content: 'Content',
-        })
-      ).rejects.toThrow(/unauthorized/i);
+        }),
+        'unauthorized'
+      );
     });
 
     it('throws when entity not found', async () => {
@@ -359,9 +362,10 @@ describe('entityNotes', () => {
         });
       });
 
-      await expect(
-        asUser.mutation(api.entityNotes.update, { id: noteId, content: 'Hacked' })
-      ).rejects.toThrow(/unauthorized/i);
+      await expectConvexErrorCode(
+        asUser.mutation(api.entityNotes.update, { id: noteId, content: 'Hacked' }),
+        'unauthorized'
+      );
     });
   });
 

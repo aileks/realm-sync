@@ -2,6 +2,7 @@ import { convexTest } from 'convex-test';
 import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import schema from '../schema';
+import { expectConvexErrorCode } from '../../tests/convex/testUtils';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -212,8 +213,9 @@ describe('tutorial.seedTutorialProject', () => {
   it('throws error for unauthenticated user', async () => {
     const t = convexTest(schema, getModules());
 
-    await expect(t.mutation(api.tutorial.seedTutorialProject, {})).rejects.toThrow(
-      'Unauthorized: Authentication required'
+    await expectConvexErrorCode(
+      t.mutation(api.tutorial.seedTutorialProject, {}),
+      'unauthenticated'
     );
   });
 });

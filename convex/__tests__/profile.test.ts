@@ -4,6 +4,7 @@ import { api } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
 import type { GenericDatabaseWriter, SystemDataModel } from 'convex/server';
+import { expectConvexErrorCode } from '../../tests/convex/testUtils';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -129,8 +130,9 @@ describe('profile', () => {
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, getModules());
 
-      await expect(t.mutation(api.users.updateProfile, { name: 'Test' })).rejects.toThrow(
-        /unauthorized/i
+      await expectConvexErrorCode(
+        t.mutation(api.users.updateProfile, { name: 'Test' }),
+        'unauthenticated'
       );
     });
 
@@ -179,8 +181,9 @@ describe('profile', () => {
 
       const storageId = await createStorageBlob(t, 'image/png', 1024);
 
-      await expect(t.mutation(api.users.updateAvatar, { storageId })).rejects.toThrow(
-        /unauthorized/i
+      await expectConvexErrorCode(
+        t.mutation(api.users.updateAvatar, { storageId }),
+        'unauthenticated'
       );
     });
 
@@ -234,7 +237,7 @@ describe('profile', () => {
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, getModules());
 
-      await expect(t.mutation(api.users.removeAvatar, {})).rejects.toThrow(/unauthorized/i);
+      await expectConvexErrorCode(t.mutation(api.users.removeAvatar, {}), 'unauthenticated');
     });
   });
 
@@ -242,12 +245,13 @@ describe('profile', () => {
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, getModules());
 
-      await expect(
+      await expectConvexErrorCode(
         t.action(api.users.changePassword, {
           currentPassword: 'old',
           newPassword: 'newpassword123',
-        })
-      ).rejects.toThrow(/unauthorized/i);
+        }),
+        'unauthenticated'
+      );
     });
 
     it('rejects password less than 8 characters', async () => {
@@ -280,9 +284,10 @@ describe('profile', () => {
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, getModules());
 
-      await expect(
-        t.action(api.users.updateEmail, { newEmail: 'new@example.com' })
-      ).rejects.toThrow(/unauthorized/i);
+      await expectConvexErrorCode(
+        t.action(api.users.updateEmail, { newEmail: 'new@example.com' }),
+        'unauthenticated'
+      );
     });
 
     it('rejects invalid email format', async () => {

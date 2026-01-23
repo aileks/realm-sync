@@ -13,6 +13,13 @@ import {
 } from './lib/constants';
 import { DEMO_EMAIL } from './lib/demo';
 import { assertStorageIdAvailableForAvatar } from './lib/storageAccess';
+import {
+  authError,
+  conflictError,
+  notAllowedError,
+  notFoundError,
+  validationError,
+} from './lib/errors';
 
 export const viewer = query({
   args: {},
@@ -50,10 +57,10 @@ export const updateProfile = mutation({
     if (name !== undefined) {
       const trimmed = name.trim();
       if (trimmed.length === 0) {
-        throw new Error('Name cannot be empty');
+        throw validationError('name', 'Name cannot be empty');
       }
       if (trimmed.length > 80) {
-        throw new Error('Name must be 80 characters or less');
+        throw validationError('name', 'Name must be 80 characters or less');
       }
       updates.name = trimmed;
     }
@@ -61,13 +68,13 @@ export const updateProfile = mutation({
     if (bio !== undefined) {
       const trimmed = bio.trim();
       if (trimmed.length > 500) {
-        throw new Error('Bio must be 500 characters or less');
+        throw validationError('bio', 'Bio must be 500 characters or less');
       }
       updates.bio = trimmed;
     }
 
     if (Object.keys(updates).length === 0) {
-      throw new Error('No fields to update');
+      throw validationError('update', 'No fields to update');
     }
 
     await ctx.db.patch(user._id, updates);
@@ -82,7 +89,7 @@ export const updateAvatar = mutation({
 
     const meta = await ctx.db.system.get(storageId);
     if (!meta) {
-      throw new Error('File not found');
+      throw notFoundError('file', storageId);
     }
 
     if (user.avatarStorageId !== storageId) {
@@ -91,12 +98,12 @@ export const updateAvatar = mutation({
 
     if (!ALLOWED_AVATAR_TYPES.includes(meta.contentType as (typeof ALLOWED_AVATAR_TYPES)[number])) {
       await ctx.storage.delete(storageId);
-      throw new Error('Invalid file type. Use JPG, PNG, or WebP.');
+      throw validationError('avatar', 'Invalid file type. Use JPG, PNG, or WebP.');
     }
 
     if (meta.size > MAX_AVATAR_SIZE) {
       await ctx.storage.delete(storageId);
-      throw new Error('File too large. Maximum size is 5MB.');
+      throw validationError('avatar', 'File too large. Maximum size is 5MB.');
     }
 
     const oldAvatarId = user.avatarStorageId;
@@ -133,37 +140,43 @@ export const changePassword = action({
   handler: async (ctx, { currentPassword, newPassword }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error('Unauthorized: Authentication required');
+      throw authError('unauthenticated', 'Please sign in to continue.');
     }
 
     if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      throw new Error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
+      throw validationError(
+        'newPassword',
+        `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
+      );
     }
 
     if (newPassword.length > MAX_PASSWORD_LENGTH) {
-      throw new Error(`Password must be ${MAX_PASSWORD_LENGTH} characters or less`);
+      throw validationError(
+        'newPassword',
+        `Password must be ${MAX_PASSWORD_LENGTH} characters or less`
+      );
     }
 
     // Enforce password complexity requirements
     if (!/[A-Z]/.test(newPassword)) {
-      throw new Error('Password must contain at least one uppercase letter');
+      throw validationError('newPassword', 'Password must contain at least one uppercase letter');
     }
 
     if (!/[a-z]/.test(newPassword)) {
-      throw new Error('Password must contain at least one lowercase letter');
+      throw validationError('newPassword', 'Password must contain at least one lowercase letter');
     }
 
     if (!/\d/.test(newPassword)) {
-      throw new Error('Password must contain at least one number');
+      throw validationError('newPassword', 'Password must contain at least one number');
     }
 
     if (!/[!@#$%^&*()_+\-=[\]{}|\\:;"'<>,.?/]/.test(newPassword)) {
-      throw new Error('Password must contain at least one special character');
+      throw validationError('newPassword', 'Password must contain at least one special character');
     }
 
     const user = await ctx.runQuery(api.users.viewer);
     if (!user?.email) {
-      throw new Error('User email not found. Password login may not be configured.');
+      throw validationError('email', 'User email not found. Password login may not be configured.');
     }
 
     try {
@@ -175,7 +188,7 @@ export const changePassword = action({
         },
       });
     } catch {
-      throw new Error('Current password is incorrect');
+      throw validationError('currentPassword', 'Current password is incorrect');
     }
 
     await modifyAccountCredentials(ctx, {
@@ -236,7 +249,7 @@ export const updateEmail = action({
   handler: async (ctx, { newEmail }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error('Unauthorized: Authentication required');
+      throw authError('unauthenticated', 'Please sign in to continue.');
     }
 
     const normalized = newEmail.toLowerCase().trim();
@@ -244,16 +257,16 @@ export const updateEmail = action({
     const emailSchema = z.string().email();
     const result = emailSchema.safeParse(normalized);
     if (!result.success) {
-      throw new Error('Invalid email format');
+      throw validationError('email', 'Invalid email format');
     }
 
     const user = await ctx.runQuery(api.users.viewer);
     if (!user) {
-      throw new Error('User not found');
+      throw notFoundError('user', userId);
     }
 
     if (user.email === normalized) {
-      throw new Error('New email is the same as current email');
+      throw conflictError('New email is the same as current email', 'email');
     }
 
     const isAvailable = await ctx.runQuery(api.users.checkEmailAvailable, {
@@ -262,7 +275,7 @@ export const updateEmail = action({
     });
 
     if (!isAvailable) {
-      throw new Error('Email already in use');
+      throw conflictError('Email already in use', 'email');
     }
 
     await ctx.runMutation(internal.users.updateEmailInternal, {
@@ -467,18 +480,17 @@ export const startTrial = mutation({
   args: {},
   handler: async (ctx) => {
     const user = await requireAuthUser(ctx);
-    if (!user) throw new Error('User not found');
 
     if (user.email?.toLowerCase() === DEMO_EMAIL) {
-      throw new Error('Demo accounts cannot start a trial');
+      throw notAllowedError('Demo accounts cannot start a trial');
     }
 
     if (user.subscriptionTier === 'unlimited' && user.subscriptionStatus === 'active') {
-      throw new Error('Already subscribed to Realm Unlimited');
+      throw conflictError('Already subscribed to Realm Unlimited');
     }
 
     if (user.trialEndsAt) {
-      throw new Error('Trial already used');
+      throw conflictError('Trial already used');
     }
 
     const TRIAL_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -545,7 +557,7 @@ export const deleteAccount = mutation({
   },
   handler: async (ctx, { confirmationPhrase }) => {
     if (confirmationPhrase !== 'delete my account') {
-      throw new Error('Confirmation phrase does not match');
+      throw validationError('confirmationPhrase', 'Confirmation phrase does not match');
     }
 
     const user = await requireAuthUser(ctx);
@@ -739,7 +751,7 @@ export const grantLifetimeAccess = internalMutation({
       .collect();
 
     if (users.length === 0) {
-      throw new Error(`User not found with email: ${email}`);
+      throw notFoundError('user', email, `User not found with email: ${email}`);
     }
 
     const user = users[0];

@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/errors';
 
 type ExportFormat = 'json' | 'markdown' | 'csv';
 type ExportScope = 'all' | 'revealed';
@@ -88,7 +89,7 @@ export function ExportButton({ projectId, projectName, className }: ExportButton
       setIsOpen(false);
     } catch (error) {
       toast.error('Export failed', {
-        description: error instanceof Error ? error.message : 'Unknown error',
+        description: getErrorMessage(error),
       });
     } finally {
       setIsExporting(false);

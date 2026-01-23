@@ -40,6 +40,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const isAuthPage =
     routerState.location.pathname === '/sign-in' || routerState.location.pathname === '/sign-up';
   const isLandingPage = routerState.location.pathname === '/' && !isAuthenticated;
+  const isNotFound = routerState.matches.some((match) => match.status === 'notFound');
 
   useEffect(() => {
     if (isLoaded) {
@@ -47,7 +48,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [collapsed, isLoaded]);
 
-  if (isAuthPage || isLandingPage) {
+  if (isAuthPage || isLandingPage || isNotFound) {
     return <>{children}</>;
   }
 

@@ -3,8 +3,8 @@ import type { FunctionReference } from 'convex/server';
 import { internalAction, internalMutation, action } from './_generated/server';
 import { internal, api } from './_generated/api';
 import type { Id } from './_generated/dataModel';
-import { err, apiError } from './lib/errors';
-import { unwrapOrThrow, safeJsonParse } from './lib/result';
+import { apiError, configError, notFoundError } from './lib/errors';
+import { parseJsonOrThrow } from './lib/json';
 
 const PROMPT_VERSION = 'check-v1';
 
@@ -219,14 +219,15 @@ async function callCheckLLM(
 
   if (!response.ok) {
     const errorText = await response.text();
-    unwrapOrThrow(
-      err(apiError(response.status, `OpenRouter API error: ${response.statusText} - ${errorText}`))
-    );
+    throw apiError(response.status, 'OpenRouter API error', {
+      statusText: response.statusText,
+      errorText,
+    });
   }
 
   const data = await response.json();
   if (!data.choices?.[0]?.message?.content) {
-    unwrapOrThrow(err(apiError(500, 'Invalid response from OpenRouter API')));
+    throw apiError(500, 'Invalid response from OpenRouter API');
   }
 
   let llmResponse = data.choices[0].message.content.trim();
@@ -235,7 +236,7 @@ async function callCheckLLM(
     llmResponse = llmResponse.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
   }
 
-  const parsed = unwrapOrThrow(safeJsonParse(llmResponse));
+  const parsed = parseJsonOrThrow(llmResponse);
   return normalizeCheckResult(parsed);
 }
 
@@ -298,12 +299,12 @@ export const runCheck = internalAction({
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      throw new Error('OPENROUTER_API_KEY not configured');
+      throw configError('OPENROUTER_API_KEY', 'OPENROUTER_API_KEY not configured');
     }
 
     const model = process.env.MODEL;
     if (!model) {
-      throw new Error('MODEL not configured');
+      throw configError('MODEL', 'MODEL not configured');
     }
 
     const canonContext = await buildCanonContext(
@@ -508,7 +509,7 @@ export const triggerCheck = action({
   handler: async (ctx, { documentId }): Promise<CheckResult> => {
     const doc = await ctx.runQuery(api.documents.get, { id: documentId });
     if (!doc) {
-      throw new Error('Document not found');
+      throw notFoundError('document', documentId);
     }
 
     return await ctx.runAction(internal.checks.runCheck, { documentId });

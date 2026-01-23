@@ -2,6 +2,7 @@ import { convexTest } from 'convex-test';
 import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import schema from '../schema';
+import { expectConvexErrorCode } from '../../tests/convex/testUtils';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -154,8 +155,9 @@ describe('projects', () => {
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, getModules());
 
-      await expect(t.mutation(api.projects.create, { name: 'Test' })).rejects.toThrow(
-        /unauthorized/i
+      await expectConvexErrorCode(
+        t.mutation(api.projects.create, { name: 'Test' }),
+        'unauthenticated'
       );
     });
 
@@ -228,9 +230,10 @@ describe('projects', () => {
         });
       });
 
-      await expect(
-        asUser.mutation(api.projects.update, { id: projectId, name: 'Hacked' })
-      ).rejects.toThrow(/unauthorized/i);
+      await expectConvexErrorCode(
+        asUser.mutation(api.projects.update, { id: projectId, name: 'Hacked' }),
+        'unauthorized'
+      );
     });
 
     it('throws when project not found', async () => {

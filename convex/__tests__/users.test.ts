@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
+import { expectConvexErrorCode } from '../../tests/convex/testUtils';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -80,9 +81,7 @@ describe('users tutorial tour', () => {
   it('throws for unauthenticated users', async () => {
     const t = convexTest(schema, getModules());
 
-    await expect(t.mutation(api.users.startTutorialTour, {})).rejects.toThrow(
-      'Unauthorized: Authentication required'
-    );
+    await expectConvexErrorCode(t.mutation(api.users.startTutorialTour, {}), 'unauthenticated');
   });
 });
 

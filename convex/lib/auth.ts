@@ -1,6 +1,7 @@
 import { getAuthUserId as convexGetAuthUserId } from '@convex-dev/auth/server';
 import type { Id, Doc } from '../_generated/dataModel';
 import type { MutationCtx, QueryCtx } from '../_generated/server';
+import { authError } from './errors';
 
 async function getAuthUserId(ctx: QueryCtx | MutationCtx): Promise<Id<'users'> | null> {
   return await convexGetAuthUserId(ctx);
@@ -15,7 +16,7 @@ async function getCurrentUser(ctx: QueryCtx | MutationCtx): Promise<Doc<'users'>
 async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<Id<'users'>> {
   const userId = await getAuthUserId(ctx);
   if (!userId) {
-    throw new Error('Unauthorized: Authentication required');
+    throw authError('unauthenticated', 'Please sign in to continue.');
   }
   return userId;
 }
@@ -23,7 +24,7 @@ async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<Id<'users'>> {
 async function requireAuthUser(ctx: QueryCtx | MutationCtx): Promise<Doc<'users'>> {
   const user = await getCurrentUser(ctx);
   if (!user) {
-    throw new Error('Unauthorized: Authentication required');
+    throw authError('unauthenticated', 'Please sign in to continue.');
   }
   return user;
 }

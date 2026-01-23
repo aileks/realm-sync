@@ -13,7 +13,7 @@ read_when: starting any work on this codebase
 | **Runtime** | pnpm | latest | Package manager |
 | **Backend** | Convex | ^1.27.3 | Database, Functions, Auth, Storage |
 | **LLM Provider** | OpenRouter | latest | `tngtech/deepseek-r1t2-chimera:free` |
-| **Error Handling** | NeverThrow | latest | Type-safe Result pattern |
+| **Error Handling** | ConvexError + unions | latest | Expected errors via `ConvexError` or return unions |
 | **Styling** | Tailwind CSS | ^4.0.6 | CSS-first, OKLCH colors |
 | **UI Components** | Shadcn / Base UI | latest | 17 primitives |
 | **Monitoring** | Sentry | ^10.22.0 | Error tracking + instrumentation |
@@ -1246,8 +1246,9 @@ pnpm docs:list             # List all docs
 
 ### Error Handling
 
-- Always throw explicit errors in Convex mutations
-- Use specific error messages (case-insensitive matching in tests)
+- Use Convex boundary contract: return unions for expected errors or throw `ConvexError` with serializable data
+- Throwing in mutations aborts the transaction; use `ConvexError` for expected failures
+- Handle query errors with React error boundaries; handle mutation errors via `.catch`/`try` + UI
 - Never use `as any` or `@ts-ignore`
 
 ### TypeScript
@@ -1307,6 +1308,7 @@ pnpm docs:list             # List all docs
 ### Error Handling
 
 - Never expose internal implementation details in error messages
+- Use `ConvexError` data payloads for expected failures; unexpected errors are redacted in production
 - Log all errors to Sentry
 - Implement graceful degradation when LLM fails
 

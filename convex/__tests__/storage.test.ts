@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import type { Doc, Id } from '../_generated/dataModel';
 import schema from '../schema';
+import { expectConvexErrorCode } from '../../tests/convex/testUtils';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -171,11 +172,13 @@ describe('storage access controls', () => {
       email: 'other@example.com',
     });
 
-    await expect(otherUser.query(api.storage.getFileUrl, { storageId })).rejects.toThrow(
-      'Unauthorized'
+    await expectConvexErrorCode(
+      otherUser.query(api.storage.getFileUrl, { storageId }),
+      'unauthorized'
     );
-    await expect(t.query(api.storage.getFileMetadata, { storageId })).rejects.toThrow(
-      'Unauthorized'
+    await expectConvexErrorCode(
+      t.query(api.storage.getFileMetadata, { storageId }),
+      'unauthenticated'
     );
   });
 });

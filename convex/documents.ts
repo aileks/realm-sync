@@ -3,8 +3,7 @@ import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 import { requireAuth, requireAuthUser } from './lib/auth';
-import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
-import { unwrapOrThrow } from './lib/result';
+import { authError, limitError, notFoundError } from './lib/errors';
 import { canReadProject, canEditProject } from './lib/projectAccess';
 import { assertStorageIdAvailableForDocument } from './lib/storageAccess';
 import { getDocumentCount, checkResourceLimit } from './lib/subscription';
@@ -22,35 +21,32 @@ function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
-async function verifyProjectOwnership(
+async function requireProjectOwnership(
   ctx: MutationCtx,
   projectId: Id<'projects'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'projects'>, AppError>> {
+): Promise<Doc<'projects'>> {
   const project = await ctx.db.get(projectId);
   if (!project) {
-    return err(notFoundError('project', projectId));
+    throw notFoundError('project', projectId);
   }
   if (project.userId !== userId) {
-    return err(authError('UNAUTHORIZED', 'Unauthorized'));
+    throw authError('unauthorized', 'You do not have permission to access this project.');
   }
-  return ok(project);
+  return project;
 }
 
-async function verifyDocumentAccess(
+async function requireDocumentAccess(
   ctx: MutationCtx,
   documentId: Id<'documents'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'documents'>, AppError>> {
+): Promise<Doc<'documents'>> {
   const doc = await ctx.db.get(documentId);
   if (!doc) {
-    return err(notFoundError('document', documentId));
+    throw notFoundError('document', documentId);
   }
-  const projectResult = await verifyProjectOwnership(ctx, doc.projectId, userId);
-  if (projectResult.isErr()) {
-    return err(projectResult.error);
-  }
-  return ok(doc);
+  await requireProjectOwnership(ctx, doc.projectId, userId);
+  return doc;
 }
 
 export const list = query({
@@ -89,7 +85,7 @@ export const create = mutation({
   },
   handler: async (ctx, { projectId, title, content, storageId, contentType }) => {
     const user = await requireAuthUser(ctx);
-    unwrapOrThrow(await verifyProjectOwnership(ctx, projectId, user._id));
+    await requireProjectOwnership(ctx, projectId, user._id);
 
     if (storageId) {
       await assertStorageIdAvailableForDocument(ctx, storageId);
@@ -99,7 +95,9 @@ export const create = mutation({
     const limitCheck = checkResourceLimit(user, 'documentsPerProject', docCount);
 
     if (!limitCheck.allowed) {
-      throw new Error(
+      throw limitError(
+        'documentsPerProject',
+        limitCheck.limit,
         `Document limit reached. Free tier allows ${limitCheck.limit} documents per project. Upgrade to Realm Unlimited for unlimited documents.`
       );
     }
@@ -156,7 +154,7 @@ export const update = mutation({
   },
   handler: async (ctx, { id, title, content, storageId, contentType }) => {
     const userId = await requireAuth(ctx);
-    const doc = unwrapOrThrow(await verifyDocumentAccess(ctx, id, userId));
+    const doc = await requireDocumentAccess(ctx, id, userId);
 
     if (storageId && storageId !== doc.storageId) {
       await assertStorageIdAvailableForDocument(ctx, storageId, doc._id);
@@ -182,7 +180,7 @@ export const remove = mutation({
   args: { id: v.id('documents') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    const doc = unwrapOrThrow(await verifyDocumentAccess(ctx, id, userId));
+    const doc = await requireDocumentAccess(ctx, id, userId);
 
     if (doc.storageId) {
       await ctx.storage.delete(doc.storageId);
@@ -215,7 +213,7 @@ export const reorder = mutation({
   },
   handler: async (ctx, { projectId, documentIds }) => {
     const userId = await requireAuth(ctx);
-    unwrapOrThrow(await verifyProjectOwnership(ctx, projectId, userId));
+    await requireProjectOwnership(ctx, projectId, userId);
 
     for (let i = 0; i < documentIds.length; i++) {
       await ctx.db.patch(documentIds[i], { orderIndex: i });
@@ -232,7 +230,7 @@ export const updateProcessingStatus = mutation({
   },
   handler: async (ctx, { id, status }) => {
     const userId = await requireAuth(ctx);
-    unwrapOrThrow(await verifyDocumentAccess(ctx, id, userId));
+    await requireDocumentAccess(ctx, id, userId);
 
     await ctx.db.patch(id, {
       processingStatus: status,

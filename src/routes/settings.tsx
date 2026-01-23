@@ -25,7 +25,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { passwordComplexitySchema } from '@/lib/auth';
-import { formatError, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/errors';
 import { DEMO_EMAIL } from '@/lib/demo';
 import { useAuthActions } from '@convex-dev/auth/react';
 import { PolarCheckoutLink } from '@/components/PolarCheckoutLink';
@@ -215,7 +216,7 @@ function AvatarSection({
         fileInputRef.current.value = '';
       }
     } catch (err) {
-      setError(formatError(err));
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -230,7 +231,7 @@ function AvatarSection({
     try {
       await removeAvatar();
     } catch (err) {
-      setError(formatError(err));
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -348,7 +349,7 @@ function ProfileFieldsSection({
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(formatError(err));
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -545,7 +546,7 @@ function EmailChangeCard({
       setNewEmail('');
       setTimeout(() => setSuccess(false), 5000);
     } catch (err) {
-      setError(formatError(err));
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -664,7 +665,7 @@ function PasswordChangeCard() {
       setNewPassword('');
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(formatError(err));
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -768,7 +769,7 @@ function SubscriptionTab({
     try {
       await startTrial();
     } catch (err) {
-      setError(formatError(err));
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -1020,7 +1021,7 @@ function DangerTab() {
       });
       void navigate({ to: '/', replace: true });
     } catch (err) {
-      setError(formatError(err));
+      setError(getErrorMessage(err));
       setIsDeleting(false);
     }
   }

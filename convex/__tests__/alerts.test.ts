@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { api } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
+import { expectConvexErrorCode } from '../../tests/convex/testUtils';
 
 const getModules = () => import.meta.glob('../**/*.ts');
 
@@ -508,8 +509,9 @@ describe('alerts', () => {
       const { userId } = await setupAuthenticatedUser(t);
       const { alertId } = await setupProjectWithAlert(t, userId);
 
-      await expect(t.mutation(api.alerts.resolve, { id: alertId })).rejects.toThrow(
-        /unauthorized/i
+      await expectConvexErrorCode(
+        t.mutation(api.alerts.resolve, { id: alertId }),
+        'unauthenticated'
       );
     });
   });

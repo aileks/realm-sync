@@ -4,9 +4,7 @@ import type { MutationCtx, QueryCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 import type { Doc, Id } from './_generated/dataModel';
 import { requireAuth, requireAuthUser } from './lib/auth';
-import { ok, err, authError, notFoundError } from './lib/errors';
-import type { AppError, Result } from './lib/errors';
-import { unwrapOrThrow } from './lib/result';
+import { authError, conflictError, limitError, notAllowedError, notFoundError } from './lib/errors';
 import { getProjectRole } from './lib/projectAccess';
 import { getEntityCount, checkResourceLimit } from './lib/subscription';
 
@@ -35,31 +33,37 @@ async function getProjectAccess(
   };
 }
 
-async function verifyProjectAccess(
+async function requireProjectAccess(
   ctx: MutationCtx,
   projectId: Id<'projects'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'projects'>, AppError>> {
+): Promise<Doc<'projects'>> {
   const project = await ctx.db.get(projectId);
-  if (!project) return err(notFoundError('project', projectId));
-  if (project.userId !== userId) return err(authError('UNAUTHORIZED', 'Unauthorized'));
-  return ok(project);
+  if (!project) {
+    throw notFoundError('project', projectId);
+  }
+  if (project.userId !== userId) {
+    throw authError('unauthorized', 'You do not have permission to access this project.');
+  }
+  return project;
 }
 
-async function verifyEntityAccess(
+async function requireEntityAccess(
   ctx: MutationCtx,
   entityId: Id<'entities'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'entities'>, AppError>> {
+): Promise<Doc<'entities'>> {
   const entity = await ctx.db.get(entityId);
-  if (!entity) return err(notFoundError('entity', entityId));
+  if (!entity) {
+    throw notFoundError('entity', entityId);
+  }
 
   const project = await ctx.db.get(entity.projectId);
   if (!project || project.userId !== userId) {
-    return err(authError('UNAUTHORIZED', 'Unauthorized'));
+    throw authError('unauthorized', 'You do not have permission to access this entity.');
   }
 
-  return ok(entity);
+  return entity;
 }
 
 export const create = mutation({
@@ -77,13 +81,15 @@ export const create = mutation({
     { projectId, name, type, description, aliases, firstMentionedIn, status }
   ) => {
     const user = await requireAuthUser(ctx);
-    const project = unwrapOrThrow(await verifyProjectAccess(ctx, projectId, user._id));
+    const project = await requireProjectAccess(ctx, projectId, user._id);
 
     const entityCount = await getEntityCount(ctx, projectId);
     const limitCheck = checkResourceLimit(user, 'entitiesPerProject', entityCount);
 
     if (!limitCheck.allowed) {
-      throw new Error(
+      throw limitError(
+        'entitiesPerProject',
+        limitCheck.limit,
         `Entity limit reached. Free tier allows ${limitCheck.limit} entities per project. Upgrade to Realm Unlimited for unlimited entities.`
       );
     }
@@ -128,7 +134,7 @@ export const update = mutation({
   },
   handler: async (ctx, { id, name, type, description, aliases, status }) => {
     const userId = await requireAuth(ctx);
-    unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
+    await requireEntityAccess(ctx, id, userId);
 
     await ctx.db.patch(id, {
       updatedAt: Date.now(),
@@ -151,11 +157,11 @@ export const merge = mutation({
   handler: async (ctx, { sourceId, targetId }) => {
     const userId = await requireAuth(ctx);
 
-    const source = unwrapOrThrow(await verifyEntityAccess(ctx, sourceId, userId));
-    const target = unwrapOrThrow(await verifyEntityAccess(ctx, targetId, userId));
+    const source = await requireEntityAccess(ctx, sourceId, userId);
+    const target = await requireEntityAccess(ctx, targetId, userId);
 
     if (source.projectId !== target.projectId) {
-      throw new Error('Cannot merge entities from different projects');
+      throw conflictError('Cannot merge entities from different projects');
     }
 
     const mergedAliases = [...new Set([...target.aliases, source.name, ...source.aliases])];
@@ -319,7 +325,7 @@ export const remove = mutation({
   args: { id: v.id('entities') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    const entity = unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
+    const entity = await requireEntityAccess(ctx, id, userId);
 
     const facts = await ctx.db
       .query('facts')
@@ -391,7 +397,7 @@ export const confirm = mutation({
   args: { id: v.id('entities') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
+    await requireEntityAccess(ctx, id, userId);
 
     await ctx.db.patch(id, {
       status: 'confirmed',
@@ -406,7 +412,7 @@ export const reject = mutation({
   args: { id: v.id('entities') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    const entity = unwrapOrThrow(await verifyEntityAccess(ctx, id, userId));
+    const entity = await requireEntityAccess(ctx, id, userId);
 
     const facts = await ctx.db
       .query('facts')
@@ -909,18 +915,20 @@ export const revealToPlayers = mutation({
   handler: async (ctx, { entityId }) => {
     const userId = await requireAuth(ctx);
     const entity = await ctx.db.get(entityId);
-    if (!entity) throw new Error('Entity not found');
+    if (!entity) {
+      throw notFoundError('entity', entityId);
+    }
 
     const project = await ctx.db.get(entity.projectId);
     if (!project || project.userId !== userId) {
-      throw new Error('Not authorized');
+      throw authError('unauthorized', 'You do not have permission to update this entity.');
     }
 
     if (project.projectType !== 'ttrpg') {
-      throw new Error('Reveal is only available for TTRPG projects');
+      throw notAllowedError('Reveal is only available for TTRPG projects');
     }
     if (project.revealToPlayersEnabled === false) {
-      throw new Error('Reveal is disabled for this project');
+      throw notAllowedError('Reveal is disabled for this project');
     }
 
     await ctx.db.patch(entityId, {
@@ -939,18 +947,20 @@ export const hideFromPlayers = mutation({
   handler: async (ctx, { entityId }) => {
     const userId = await requireAuth(ctx);
     const entity = await ctx.db.get(entityId);
-    if (!entity) throw new Error('Entity not found');
+    if (!entity) {
+      throw notFoundError('entity', entityId);
+    }
 
     const project = await ctx.db.get(entity.projectId);
     if (!project || project.userId !== userId) {
-      throw new Error('Not authorized');
+      throw authError('unauthorized', 'You do not have permission to update this entity.');
     }
 
     if (project.projectType !== 'ttrpg') {
-      throw new Error('Hide is only available for TTRPG projects');
+      throw notAllowedError('Hide is only available for TTRPG projects');
     }
     if (project.revealToPlayersEnabled === false) {
-      throw new Error('Reveal is disabled for this project');
+      throw notAllowedError('Reveal is disabled for this project');
     }
 
     await ctx.db.patch(entityId, {

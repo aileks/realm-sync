@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { formatError } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/errors';
 
 type EntityType = 'character' | 'location' | 'item' | 'concept' | 'event';
 
@@ -64,7 +64,7 @@ export function EntityForm({ projectId, onSuccess, onCancel }: EntityFormProps) 
       });
       onSuccess?.(entityId);
     } catch (err) {
-      setError(formatError(err));
+      setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

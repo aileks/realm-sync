@@ -3,24 +3,23 @@ import type { Doc, Id } from './_generated/dataModel';
 import type { MutationCtx } from './_generated/server';
 import { mutation, query } from './_generated/server';
 import { getAuthUserId, requireAuth, requireAuthUser } from './lib/auth';
-import { ok, err, notFoundError, authError, type Result, type AppError } from './lib/errors';
-import { unwrapOrThrow } from './lib/result';
+import { authError, limitError, notFoundError } from './lib/errors';
 import { getProjectRole, canReadProject } from './lib/projectAccess';
 import { getProjectCount, checkResourceLimit } from './lib/subscription';
 
-async function verifyProjectAccess(
+async function requireProjectAccess(
   ctx: MutationCtx,
   projectId: Id<'projects'>,
   userId: Id<'users'>
-): Promise<Result<Doc<'projects'>, AppError>> {
+): Promise<Doc<'projects'>> {
   const project = await ctx.db.get(projectId);
   if (!project) {
-    return err(notFoundError('project', projectId));
+    throw notFoundError('project', projectId);
   }
   if (project.userId !== userId) {
-    return err(authError('UNAUTHORIZED', 'Unauthorized'));
+    throw authError('unauthorized', 'You do not have permission to access this project.');
   }
-  return ok(project);
+  return project;
 }
 
 export const list = query({
@@ -75,7 +74,9 @@ export const create = mutation({
     const limitCheck = checkResourceLimit(user, 'projects', projectCount);
 
     if (!limitCheck.allowed) {
-      throw new Error(
+      throw limitError(
+        'projects',
+        limitCheck.limit,
         `Project limit reached. Free tier allows ${limitCheck.limit} projects. Upgrade to Realm Unlimited for unlimited projects.`
       );
     }
@@ -110,7 +111,7 @@ export const update = mutation({
   },
   handler: async (ctx, { id, name, description, projectType, revealToPlayersEnabled }) => {
     const userId = await requireAuth(ctx);
-    const project = unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
+    const project = await requireProjectAccess(ctx, id, userId);
 
     const updates: Partial<typeof project> = { updatedAt: Date.now() };
     if (name !== undefined) updates.name = name;
@@ -129,7 +130,7 @@ export const remove = mutation({
   args: { id: v.id('projects') },
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
-    unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
+    await requireProjectAccess(ctx, id, userId);
 
     const documents = await ctx.db
       .query('documents')
@@ -188,7 +189,7 @@ export const updateStats = mutation({
   },
   handler: async (ctx, { id, stats }) => {
     const userId = await requireAuth(ctx);
-    const project = unwrapOrThrow(await verifyProjectAccess(ctx, id, userId));
+    const project = await requireProjectAccess(ctx, id, userId);
 
     const currentStats = project.stats ?? {
       documentCount: 0,

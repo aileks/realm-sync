@@ -3,8 +3,8 @@ import { api, internal } from '../_generated/api';
 import { v } from 'convex/values';
 import type { Id } from '../_generated/dataModel';
 import { chunkDocument, needsChunking, mapEvidenceToDocument, type Chunk } from './chunk';
-import { err, apiError } from '../lib/errors';
-import { unwrapOrThrow, safeJsonParse } from '../lib/result';
+import { apiError, configError, limitError, notFoundError } from '../lib/errors';
+import { parseJsonOrThrow } from '../lib/json';
 
 export const PROMPT_VERSION = 'v1';
 
@@ -144,14 +144,15 @@ async function callLLM(content: string, apiKey: string, model: string): Promise<
 
   if (!response.ok) {
     const errorText = await response.text();
-    unwrapOrThrow(
-      err(apiError(response.status, `OpenRouter API error: ${response.statusText} - ${errorText}`))
-    );
+    throw apiError(response.status, 'OpenRouter API error', {
+      statusText: response.statusText,
+      errorText,
+    });
   }
 
   const data = await response.json();
   if (!data.choices?.[0]?.message?.content) {
-    unwrapOrThrow(err(apiError(500, 'Invalid response from OpenRouter API')));
+    throw apiError(500, 'Invalid response from OpenRouter API');
   }
 
   let llmResponse = data.choices[0].message.content.trim();
@@ -160,7 +161,7 @@ async function callLLM(content: string, apiKey: string, model: string): Promise<
     llmResponse = llmResponse.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
   }
 
-  const parsed = unwrapOrThrow(safeJsonParse(llmResponse));
+  const parsed = parseJsonOrThrow(llmResponse);
   return normalizeExtractionResult(parsed);
 }
 
@@ -354,7 +355,7 @@ export const extractFromDocument = internalAction({
   handler: async (ctx, { documentId }): Promise<ExtractionResult> => {
     const doc = await ctx.runQuery(api.documents.get, { id: documentId });
     if (!doc || !doc.content) {
-      throw new Error('Document not found or empty');
+      throw notFoundError('document', documentId, 'Document not found or empty');
     }
 
     const contentHash: string = await ctx.runQuery(internal.llm.utils.computeHash, {
@@ -372,12 +373,12 @@ export const extractFromDocument = internalAction({
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      throw new Error('OPENROUTER_API_KEY not configured');
+      throw configError('OPENROUTER_API_KEY', 'OPENROUTER_API_KEY not configured');
     }
 
     const model = process.env.MODEL;
     if (!model) {
-      throw new Error('MODEL not configured');
+      throw configError('MODEL', 'MODEL not configured');
     }
 
     let result: ExtractionResult;
@@ -499,18 +500,27 @@ export const chunkAndExtract = action({
     { documentId }
   ): Promise<{ entitiesCreated: number; factsCreated: number }> => {
     const doc = await ctx.runQuery(api.documents.get, { id: documentId });
-    if (!doc) throw new Error('Document not found');
+    if (!doc) {
+      throw notFoundError('document', documentId);
+    }
 
     const project = await ctx.runQuery(api.projects.get, { id: doc.projectId });
-    if (!project) throw new Error('Project not found');
+    if (!project) {
+      throw notFoundError('project', doc.projectId);
+    }
 
     const limitCheck = await ctx.runQuery(internal.usage.checkExtractionLimit, {
       userId: project.userId,
     });
 
     if (!limitCheck.allowed) {
-      throw new Error(
-        `Monthly extraction limit reached. Free tier allows 20 extractions/month. Upgrade to Realm Unlimited for unlimited extractions.`
+      if (!('limit' in limitCheck)) {
+        throw notFoundError('user', project.userId);
+      }
+      throw limitError(
+        'llmExtractionsPerMonth',
+        limitCheck.limit,
+        'Monthly extraction limit reached. Free tier allows 20 extractions/month. Upgrade to Realm Unlimited for unlimited extractions.'
       );
     }
 
@@ -553,7 +563,7 @@ export const processExtractionResult = internalMutation({
   handler: async (ctx, { documentId, result }) => {
     const doc = await ctx.db.get(documentId);
     if (!doc) {
-      throw new Error('Document not found');
+      throw notFoundError('document', documentId);
     }
 
     const projectId = doc.projectId;

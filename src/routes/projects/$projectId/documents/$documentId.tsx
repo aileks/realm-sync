@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/LoadingState';
 import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/errors';
 
 function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
@@ -133,7 +134,7 @@ function DocumentEditorPage() {
     } catch (error) {
       console.error('Extraction failed:', error);
       toast.error('Extraction failed', {
-        description: error instanceof Error ? error.message : 'An unexpected error occurred.',
+        description: getErrorMessage(error),
       });
     } finally {
       setIsExtracting(false);
