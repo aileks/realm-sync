@@ -1,6 +1,6 @@
 import { convexTest } from 'convex-test';
 import { describe, it, expect } from 'vitest';
-import { api } from '../_generated/api';
+import { api, internal } from '../_generated/api';
 import schema from '../schema';
 import {
   getUserTier,
@@ -399,5 +399,59 @@ describe('subscription mutations/queries', () => {
         expect(getLimit('unlimited', 'chatMessagesPerMonth')).toBe(Infinity);
       });
     });
+  });
+});
+
+describe('subscription internal helpers', () => {
+  it('looks up users by email and Polar customer id', async () => {
+    const t = convexTest(schema, getModules());
+    const polarCustomerId = 'polar_customer_123';
+    const email = 'polar@example.com';
+    const userId = await t.run(async (ctx) => {
+      return await ctx.db.insert('users', {
+        name: 'Polar User',
+        email,
+        polarCustomerId,
+        createdAt: Date.now(),
+      });
+    });
+
+    const usersByEmail = await t.query(internal.users.listByEmail, { email });
+    expect(usersByEmail).toHaveLength(1);
+    expect(usersByEmail[0]._id).toBe(userId);
+
+    const userByCustomer = await t.query(internal.users.getByPolarCustomerId, {
+      polarCustomerId,
+    });
+    expect(userByCustomer?._id).toBe(userId);
+  });
+
+  it('updates subscription fields internally', async () => {
+    const t = convexTest(schema, getModules());
+    const userId = await t.run(async (ctx) => {
+      return await ctx.db.insert('users', {
+        name: 'Sub User',
+        email: 'sub@example.com',
+        createdAt: Date.now(),
+      });
+    });
+
+    const trialEndsAt = Date.now() + 1000;
+
+    await t.mutation(internal.users.updateSubscription, {
+      userId,
+      polarCustomerId: 'polar_customer_456',
+      polarSubscriptionId: 'polar_subscription_456',
+      subscriptionTier: 'unlimited',
+      subscriptionStatus: 'active',
+      trialEndsAt,
+    });
+
+    const user = await t.run(async (ctx) => ctx.db.get(userId));
+    expect(user?.subscriptionTier).toBe('unlimited');
+    expect(user?.subscriptionStatus).toBe('active');
+    expect(user?.polarCustomerId).toBe('polar_customer_456');
+    expect(user?.polarSubscriptionId).toBe('polar_subscription_456');
+    expect(user?.trialEndsAt).toBe(trialEndsAt);
   });
 });

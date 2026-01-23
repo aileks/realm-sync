@@ -1,4 +1,4 @@
-import { action, internalMutation, mutation, query } from './_generated/server';
+import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
 import { v } from 'convex/values';
 import { z } from 'zod';
 import { api, internal } from './_generated/api';
@@ -353,7 +353,7 @@ export const completeTutorialTour = mutation({
   },
 });
 
-export const listByEmail = query({
+export const listByEmail = internalQuery({
   args: { email: v.string() },
   handler: async (ctx, { email }) => {
     return await ctx.db
@@ -363,7 +363,7 @@ export const listByEmail = query({
   },
 });
 
-export const getByPolarCustomerId = query({
+export const getByPolarCustomerId = internalQuery({
   args: { polarCustomerId: v.string() },
   handler: async (ctx, { polarCustomerId }) => {
     return await ctx.db
@@ -373,7 +373,7 @@ export const getByPolarCustomerId = query({
   },
 });
 
-export const updateSubscription = mutation({
+export const updateSubscription = internalMutation({
   args: {
     userId: v.id('users'),
     polarCustomerId: v.optional(v.string()),

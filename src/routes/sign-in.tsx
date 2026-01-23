@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { signInSchema, classifyAuthError, getAuthErrorMessage } from '@/lib/auth';
+import { DEMO_EMAIL } from '@/lib/demo';
 
 export const Route = createFileRoute('/sign-in')({
   component: SignInPage,
@@ -29,7 +30,7 @@ function SignInPage() {
 
     try {
       const formData = new FormData();
-      formData.set('email', 'demo@realm.sync');
+      formData.set('email', DEMO_EMAIL);
       formData.set('password', 'khn_tfz2fxk4KAZ-dfa');
       formData.set('flow', 'signIn');
 

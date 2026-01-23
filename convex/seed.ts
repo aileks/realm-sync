@@ -1,7 +1,6 @@
 import { internalMutation } from './_generated/server';
 import { v } from 'convex/values';
-
-const DEMO_EMAIL = 'demo@realm.sync';
+import { DEMO_EMAIL } from './lib/demo';
 
 export const resetDemoAccount = internalMutation({
   args: {},

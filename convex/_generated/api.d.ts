@@ -24,6 +24,7 @@ import type * as facts from "../facts.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_constants from "../lib/constants.js";
+import type * as lib_demo from "../lib/demo.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_limits from "../lib/limits.js";
 import type * as lib_projectAccess from "../lib/projectAccess.js";
@@ -66,6 +67,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "lib/auth": typeof lib_auth;
   "lib/constants": typeof lib_constants;
+  "lib/demo": typeof lib_demo;
   "lib/errors": typeof lib_errors;
   "lib/limits": typeof lib_limits;
   "lib/projectAccess": typeof lib_projectAccess;

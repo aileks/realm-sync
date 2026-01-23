@@ -22,7 +22,7 @@ importers:
         version: 0.3.0(convex@1.31.6(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@convex-dev/polar':
         specifier: ^0.7.3
-        version: 0.7.3(@polar-sh/checkout@0.1.14(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1))(@polar-sh/sdk@0.42.1)(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.3))(hono@4.11.3)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(zod@4.3.5)
+        version: 0.7.3(@polar-sh/checkout@0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1))(@polar-sh/sdk@0.42.1)(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.3))(hono@4.11.3)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(zod@4.3.5)
       '@convex-dev/react-query':
         specifier: 0.1.0
         version: 0.1.0(@tanstack/react-query@5.90.16(react@19.2.3))(convex@1.31.6(react@19.2.3))
@@ -38,6 +38,9 @@ importers:
       '@fontsource/ia-writer-mono':
         specifier: ^5.2.5
         version: 5.2.5
+      '@polar-sh/checkout':
+        specifier: ^0.2.0
+        version: 0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1)
       '@radix-ui/react-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -1327,15 +1330,12 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@polar-sh/checkout@0.1.14':
-    resolution: {integrity: sha512-O5ylbVSCTXq7S+DSaC2c0m4ihb7b9ONFYpkX1WnvxEa1gnmy/DOJcqk6pjkuwb598a2frb0/WjZY+oXGoh2xhQ==}
+  '@polar-sh/checkout@0.2.0':
+    resolution: {integrity: sha512-lkHa7JJtQpbHblsfpEX91bJRV6s7gyBIlehVCy2KRL89vP4t6t2vYKNwIxIHI+EG7RxXKu/4fCMchQYrVSMYuQ==}
     peerDependencies:
       '@stripe/react-stripe-js': ^3.6.0 || ^4.0.2
       '@stripe/stripe-js': ^7.1.0
       react: ^18 || ^19
-
-  '@polar-sh/sdk@0.39.1':
-    resolution: {integrity: sha512-PSWnp2EX+guVxtLyUwk2hCgsV/FTOXf+nI33xXwAGHyakACEmJOIeHMxlja++t4YVHf+5GZouT9iYE1yxnmIjQ==}
 
   '@polar-sh/sdk@0.42.1':
     resolution: {integrity: sha512-4euyChnpZcjho2KhwnSXCBhJr5m8k+oaIicvwFHOZ/cXxKIKh7+EicJagSKg6jmuuq4YMOFhsxreHk3qqKXdWQ==}
@@ -3945,8 +3945,8 @@ packages:
     resolution: {integrity: sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw==}
     engines: {node: '>=10'}
 
-  markdown-to-jsx@7.7.17:
-    resolution: {integrity: sha512-7mG/1feQ0TX5I7YyMZVDgCC/y2I3CiEhIRQIhyov9nGBP5eoVrOXXHuL5ZP8GRfxVZKRiXWJgwXkb9It+nQZfQ==}
+  markdown-to-jsx@8.0.0:
+    resolution: {integrity: sha512-hWEaRxeCDjes1CVUQqU+Ov0mCqBqkGhLKjL98KdbwHSgEWZZSJQeGlJQatVfeZ3RaxrfTrZZ3eczl2dhp5c/pA==}
     engines: {node: '>= 10'}
     peerDependencies:
       react: '>= 0.14.0'
@@ -4388,6 +4388,12 @@ packages:
     resolution: {integrity: sha512-yELu4WmLPw5Mr/lmeEpox5rw3RETacE++JgHqQzd2dg+YbJuat3jH4ingc+WPZhxaoFzdv9y33G+F7Nl5O0GBg==}
     peerDependencies:
       react: ^19.2.3
+
+  react-hook-form@7.70.0:
+    resolution: {integrity: sha512-COOMajS4FI3Wuwrs3GPpi/Jeef/5W1DRR84Yl5/ShlT3dKVFUfoGiEZ/QE6Uw8P4T2/CLJdcTVYKvWBMQTEpvw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17 || ^18 || ^19
 
   react-hook-form@7.71.1:
     resolution: {integrity: sha512-9SUJKCGKo8HUSsCO+y0CtqkqI5nNuaDqTxyqPsZPqIwudpj4rCrAz/jZV+jn57bx5gtZKOh3neQu94DXMc+w5w==}
@@ -5524,9 +5530,9 @@ snapshots:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 
-  '@convex-dev/polar@0.7.3(@polar-sh/checkout@0.1.14(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1))(@polar-sh/sdk@0.42.1)(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.3))(hono@4.11.3)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(zod@4.3.5)':
+  '@convex-dev/polar@0.7.3(@polar-sh/checkout@0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1))(@polar-sh/sdk@0.42.1)(@standard-schema/spec@1.1.0)(convex@1.31.6(react@19.2.3))(hono@4.11.3)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)(zod@4.3.5)':
     dependencies:
-      '@polar-sh/checkout': 0.1.14(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1)
+      '@polar-sh/checkout': 0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1)
       '@polar-sh/sdk': 0.42.1
       buffer: 6.0.3
       convex: 1.31.6(react@19.2.3)
@@ -6129,28 +6135,23 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@polar-sh/checkout@0.1.14(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1)':
+  '@polar-sh/checkout@0.2.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@stripe/stripe-js@7.9.0)(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1)':
     dependencies:
-      '@polar-sh/sdk': 0.39.1
+      '@polar-sh/sdk': 0.42.1
       '@polar-sh/ui': 0.1.2(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1)
       '@stripe/react-stripe-js': 4.0.2(@stripe/stripe-js@7.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@stripe/stripe-js': 7.9.0
       event-source-plus: 0.1.15
       eventemitter3: 5.0.4
-      markdown-to-jsx: 7.7.17(react@19.2.3)
+      markdown-to-jsx: 8.0.0(react@19.2.3)
       react: 19.2.3
-      react-hook-form: 7.71.1(react@19.2.3)
+      react-hook-form: 7.70.0(react@19.2.3)
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
       - react-dom
       - react-is
       - redux
-
-  '@polar-sh/sdk@0.39.1':
-    dependencies:
-      standardwebhooks: 1.0.0
-      zod: 3.25.76
 
   '@polar-sh/sdk@0.42.1':
     dependencies:
@@ -8854,7 +8855,7 @@ snapshots:
     dependencies:
       semver: 7.7.3
 
-  markdown-to-jsx@7.7.17(react@19.2.3):
+  markdown-to-jsx@8.0.0(react@19.2.3):
     optionalDependencies:
       react: 19.2.3
 
@@ -9289,6 +9290,10 @@ snapshots:
     dependencies:
       react: 19.2.3
       scheduler: 0.27.0
+
+  react-hook-form@7.70.0(react@19.2.3):
+    dependencies:
+      react: 19.2.3
 
   react-hook-form@7.71.1(react@19.2.3):
     dependencies:
