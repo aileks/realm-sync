@@ -7,7 +7,6 @@ import {
   MIN_PASSWORD_LENGTH,
   MAX_PASSWORD_LENGTH,
 } from '../../convex/lib/constants';
-import { CheckoutLink } from '@convex-dev/polar/react';
 import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -27,7 +26,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { passwordComplexitySchema } from '@/lib/auth';
 import { formatError, cn } from '@/lib/utils';
+import { DEMO_EMAIL } from '@/lib/demo';
 import { useAuthActions } from '@convex-dev/auth/react';
+import { PolarCheckoutLink } from '@/components/PolarCheckoutLink';
 import {
   Loader2,
   User,
@@ -135,7 +136,7 @@ function SettingsPage() {
           <SecurityTab user={user} />
         </TabsContent>
         <TabsContent value="subscription">
-          <SubscriptionTab />
+          <SubscriptionTab user={user} />
         </TabsContent>
         <TabsContent value="danger">
           <DangerTab />
@@ -733,7 +734,11 @@ function PasswordChangeCard() {
   );
 }
 
-function SubscriptionTab() {
+function SubscriptionTab({
+  user,
+}: {
+  user: NonNullable<typeof api.users.viewerProfile._returnType>;
+}) {
   const subscription = useQuery(api.users.getSubscription);
   const products = useQuery(api.polar.listAllProducts);
   const startTrial = useMutation(api.users.startTrial);
@@ -741,6 +746,7 @@ function SubscriptionTab() {
   const [error, setError] = useState<string | null>(null);
 
   const realmUnlimited = products?.find((p) => p.name === 'Realm Unlimited');
+  const isDemoUser = user.email?.toLowerCase() === DEMO_EMAIL;
 
   if (subscription === undefined) {
     return (
@@ -835,7 +841,12 @@ function SubscriptionTab() {
             </div>
 
             <div className="border-border flex flex-col gap-3 border-t pt-4">
-              {isFree && !subscription.trialExpired && !subscription.trialActive && (
+              {isDemoUser && (
+                <p className="text-muted-foreground text-center text-sm">
+                  Demo accounts cannot start a subscription. Sign up with a real email to upgrade.
+                </p>
+              )}
+              {isFree && !isDemoUser && !subscription.trialExpired && !subscription.trialActive && (
                 <Button
                   onClick={handleStartTrial}
                   disabled={isLoading}
@@ -849,8 +860,8 @@ function SubscriptionTab() {
                 </Button>
               )}
 
-              {isFree && realmUnlimited && (
-                <CheckoutLink
+              {isFree && realmUnlimited && !isDemoUser && (
+                <PolarCheckoutLink
                   polarApi={{
                     generateCheckoutLink: api.polar.generateCheckoutLink,
                   }}
@@ -863,18 +874,19 @@ function SubscriptionTab() {
                     }),
                     'w-full'
                   )}
+                  onError={setError}
                 >
                   {subscription.trialExpired ? 'Upgrade to Realm Unlimited' : 'Upgrade Plan'}
-                </CheckoutLink>
+                </PolarCheckoutLink>
               )}
 
               {isFree && products === undefined && (
                 <p className="text-muted-foreground text-center text-sm">Loading...</p>
               )}
 
-              {isTrial && realmUnlimited && (
+              {isTrial && realmUnlimited && !isDemoUser && (
                 <>
-                  <CheckoutLink
+                  <PolarCheckoutLink
                     polarApi={{
                       generateCheckoutLink: api.polar.generateCheckoutLink,
                     }}
@@ -887,9 +899,10 @@ function SubscriptionTab() {
                       }),
                       'w-full'
                     )}
+                    onError={setError}
                   >
                     Upgrade to Full Access
-                  </CheckoutLink>
+                  </PolarCheckoutLink>
 
                   <CustomerPortalLink
                     polarApi={{
@@ -909,7 +922,7 @@ function SubscriptionTab() {
                 </Button>
               )}
 
-              {isUnlimited && !isTrial && (
+              {isUnlimited && !isTrial && !isDemoUser && (
                 <CustomerPortalLink
                   polarApi={{
                     generateCustomerPortalUrl: api.polar.generateCustomerPortalUrl,

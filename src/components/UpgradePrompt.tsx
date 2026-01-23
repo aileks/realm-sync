@@ -8,10 +8,11 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { DEMO_EMAIL } from '@/lib/demo';
 import { CheckIcon, LockIcon } from 'lucide-react';
-import { CheckoutLink } from '@convex-dev/polar/react';
 import { api } from '../../convex/_generated/api';
 import { useQuery } from 'convex/react';
+import { PolarCheckoutLink } from '@/components/PolarCheckoutLink';
 
 type LimitType = 'projects' | 'documents' | 'entities' | 'extractions' | 'chat';
 
@@ -39,10 +40,12 @@ export function UpgradePrompt({
   limit,
 }: UpgradePromptProps) {
   const products = useQuery(api.polar.listAllProducts);
+  const user = useQuery(api.users.viewerProfile);
   const label = LIMIT_LABELS[limitType];
   const percentage = Math.min(100, Math.max(0, (current / limit) * 100));
 
   const realmUnlimited = products?.find((p) => p.name === 'Realm Unlimited');
+  const isDemoUser = user?.email?.toLowerCase() === DEMO_EMAIL;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -97,8 +100,8 @@ export function UpgradePrompt({
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
-          {realmUnlimited && (
-            <CheckoutLink
+          {realmUnlimited && !isDemoUser && (
+            <PolarCheckoutLink
               polarApi={{
                 generateCheckoutLink: api.polar.generateCheckoutLink,
               }}
@@ -107,7 +110,12 @@ export function UpgradePrompt({
               className="shadow-primary/20 w-full gap-2 text-base font-semibold shadow-lg"
             >
               Upgrade - $5/month
-            </CheckoutLink>
+            </PolarCheckoutLink>
+          )}
+          {realmUnlimited && isDemoUser && (
+            <Button variant="outline" className="w-full" disabled>
+              Demo accounts cannot upgrade
+            </Button>
           )}
 
           <Button

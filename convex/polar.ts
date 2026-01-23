@@ -1,12 +1,16 @@
 import { Polar } from '@convex-dev/polar';
 import { api, components } from './_generated/api';
 import type { Id } from './_generated/dataModel';
+import { DEMO_EMAIL } from './lib/demo';
 
 export const polar = new Polar(components.polar, {
   getUserInfo: async (ctx): Promise<{ userId: Id<'users'>; email: string }> => {
     const user = await ctx.runQuery(api.users.viewer);
     if (!user) {
       throw new Error('User not authenticated');
+    }
+    if (user.email?.toLowerCase() === DEMO_EMAIL) {
+      throw new Error('Demo accounts cannot start a subscription');
     }
     return {
       userId: user._id,
