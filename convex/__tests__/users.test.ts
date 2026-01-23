@@ -81,10 +81,7 @@ describe('users tutorial tour', () => {
   it('throws for unauthenticated users', async () => {
     const t = convexTest(schema, getModules());
 
-    await expectConvexErrorCode(
-      t.mutation(api.users.startTutorialTour, {}),
-      'unauthenticated'
-    );
+    await expectConvexErrorCode(t.mutation(api.users.startTutorialTour, {}), 'unauthenticated');
   });
 });
 

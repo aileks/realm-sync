@@ -237,10 +237,7 @@ describe('profile', () => {
     it('throws when not authenticated', async () => {
       const t = convexTest(schema, getModules());
 
-      await expectConvexErrorCode(
-        t.mutation(api.users.removeAvatar, {}),
-        'unauthenticated'
-      );
+      await expectConvexErrorCode(t.mutation(api.users.removeAvatar, {}), 'unauthenticated');
     });
   });
 

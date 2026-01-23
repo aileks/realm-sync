@@ -176,10 +176,7 @@ export const changePassword = action({
 
     const user = await ctx.runQuery(api.users.viewer);
     if (!user?.email) {
-      throw validationError(
-        'email',
-        'User email not found. Password login may not be configured.'
-      );
+      throw validationError('email', 'User email not found. Password login may not be configured.');
     }
 
     try {

@@ -129,8 +129,7 @@ export function OnboardingModal() {
       setIsOpen(false);
       void navigate({ to: '/projects' });
     } catch (error) {
-      const description =
-        typeof error === 'string' ? 'Please try again.' : getErrorMessage(error);
+      const description = typeof error === 'string' ? 'Please try again.' : getErrorMessage(error);
       toast.error('Failed to skip onboarding', { description });
     } finally {
       setIsLoading(false);

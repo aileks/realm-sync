@@ -3,10 +3,12 @@
 Intent: align to Convex boundary contract; remove neverthrow; use ConvexError or return unions; add React error boundaries; update docs/tests; PR w/ benefits + example.
 
 ## Scope
+
 - In: backend error flow, client error mapping, React error boundaries, docs/tests, PR write-up
 - Out: new features, UI redesign, unrelated deps
 
 ## Action items
+
 - [x] Read Convex error docs + React error boundary docs
 - [x] Inventory current patterns: `throw new Error`, neverthrow `Result`, `formatError` usage
 - [x] Define contract: expected errors via union return or `ConvexError` w/ serializable data; unexpected throw; mapping rules
@@ -18,6 +20,7 @@ Intent: align to Convex boundary contract; remove neverthrow; use ConvexError or
 - [x] Docs + PR: update `README.md` + `docs/SPEC.md`; open PR w/ benefits + code example
 
 ## Notes
+
 - Convex boundary: throw `ConvexError` or return union; no `Result` to client.
 - Sources:
   - https://docs.convex.dev/functions/error-handling/

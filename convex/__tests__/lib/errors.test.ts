@@ -6,7 +6,9 @@ import {
   conflictError,
   configError,
   limitError,
+  notAllowedError,
   notFoundError,
+  rateLimitError,
   validationError,
 } from '../../lib/errors';
 
@@ -109,6 +111,37 @@ describe('error constructors', () => {
         message: 'Email already in use',
         details: { field: 'email' },
       });
+    });
+
+    it('omits details when no field is provided', () => {
+      const error = conflictError('Already subscribed');
+      expect(error.data).toMatchObject({
+        code: 'conflict',
+        message: 'Already subscribed',
+      });
+      expect('details' in error.data).toBe(false);
+    });
+  });
+
+  describe('notAllowedError', () => {
+    it('omits details when no reason is provided', () => {
+      const error = notAllowedError('Demo accounts cannot start a trial');
+      expect(error.data).toMatchObject({
+        code: 'not_allowed',
+        message: 'Demo accounts cannot start a trial',
+      });
+      expect('details' in error.data).toBe(false);
+    });
+  });
+
+  describe('rateLimitError', () => {
+    it('omits details when none are provided', () => {
+      const error = rateLimitError('Too many requests');
+      expect(error.data).toMatchObject({
+        code: 'rate_limited',
+        message: 'Too many requests',
+      });
+      expect('details' in error.data).toBe(false);
     });
   });
 });
