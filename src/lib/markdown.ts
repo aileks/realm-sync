@@ -15,7 +15,11 @@ function escapeHtml(value: string) {
 
 export function renderMarkdownToHtml(markdown: string) {
   const rawHtml = marked.parse(markdown, { async: false });
-  if (typeof DOMPurify.sanitize === 'function') {
+  const canSanitize =
+    typeof window !== 'undefined' &&
+    DOMPurify.isSupported &&
+    typeof DOMPurify.sanitize === 'function';
+  if (canSanitize) {
     return DOMPurify.sanitize(rawHtml);
   }
   return escapeHtml(rawHtml);
