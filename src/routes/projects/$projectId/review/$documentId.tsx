@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation } from 'convex/react';
 import { useState, useMemo } from 'react';
 import { ArrowLeft, FileText, Users, List, CheckCircle2 } from 'lucide-react';
-import { marked } from 'marked';
+import { renderMarkdownToHtml } from '@/lib/markdown';
 import { api } from '../../../../../convex/_generated/api';
 import type { Id } from '../../../../../convex/_generated/dataModel';
 import { Button } from '@/components/ui/button';
@@ -90,7 +90,7 @@ function ReviewDocumentPage() {
   }
 
   function renderMarkdown(content: string) {
-    const html = marked.parse(content, { async: false });
+    const html = renderMarkdownToHtml(content);
     return <div dangerouslySetInnerHTML={{ __html: html }} />;
   }
 
