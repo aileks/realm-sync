@@ -846,7 +846,7 @@ function SubscriptionTab({
                   Demo accounts cannot start a subscription. Sign up with a real email to upgrade.
                 </p>
               )}
-              {isFree && !subscription.trialExpired && !subscription.trialActive && (
+              {isFree && !isDemoUser && !subscription.trialExpired && !subscription.trialActive && (
                 <Button
                   onClick={handleStartTrial}
                   disabled={isLoading}

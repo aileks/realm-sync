@@ -11,6 +11,7 @@ import {
   checkResourceLimit,
 } from '../lib/subscription';
 import { getLimit, MONTHLY_RESET_INTERVAL_MS } from '../lib/limits';
+import { DEMO_EMAIL } from '../lib/demo';
 import type { Doc } from '../_generated/dataModel';
 
 const getModules = () => import.meta.glob('../**/*.ts');
@@ -338,6 +339,17 @@ describe('subscription mutations/queries', () => {
       });
 
       await expect(asUser.mutation(api.users.startTrial, {})).rejects.toThrow('Trial already used');
+    });
+
+    it('blocks demo users from starting a trial', async () => {
+      const t = convexTest(schema, getModules());
+      const { asUser } = await setupAuthenticatedUser(t, {
+        email: DEMO_EMAIL,
+      });
+
+      await expect(asUser.mutation(api.users.startTrial, {})).rejects.toThrow(
+        'Demo accounts cannot start a trial'
+      );
     });
   });
 

@@ -11,6 +11,7 @@ import {
   MIN_PASSWORD_LENGTH,
   MAX_PASSWORD_LENGTH,
 } from './lib/constants';
+import { DEMO_EMAIL } from './lib/demo';
 
 export const viewer = query({
   args: {},
@@ -462,6 +463,10 @@ export const startTrial = mutation({
   handler: async (ctx) => {
     const user = await requireAuthUser(ctx);
     if (!user) throw new Error('User not found');
+
+    if (user.email?.toLowerCase() === DEMO_EMAIL) {
+      throw new Error('Demo accounts cannot start a trial');
+    }
 
     if (user.subscriptionTier === 'unlimited' && user.subscriptionStatus === 'active') {
       throw new Error('Already subscribed to Realm Unlimited');
