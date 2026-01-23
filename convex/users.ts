@@ -103,7 +103,7 @@ export const updateAvatar = mutation({
 
     await ctx.db.patch(user._id, { avatarStorageId: storageId });
 
-    if (oldAvatarId) {
+    if (oldAvatarId && oldAvatarId !== storageId) {
       await ctx.storage.delete(oldAvatarId);
     }
 

@@ -178,6 +178,33 @@ describe('profile', () => {
         /unauthorized/i
       );
     });
+
+    it('deletes previous avatar when replaced', async () => {
+      const t = convexTest(schema, getModules());
+      const oldStorageId = await createStorageBlob(t, 'image/png', 512);
+      const newStorageId = await createStorageBlob(t, 'image/png', 1024);
+
+      const userId = await t.run(async (ctx) => {
+        return await ctx.db.insert('users', {
+          name: 'Avatar User',
+          email: 'avatar-user@example.com',
+          createdAt: Date.now(),
+          avatarStorageId: oldStorageId,
+        });
+      });
+
+      const asUser = t.withIdentity({ subject: userId });
+      await asUser.mutation(api.users.updateAvatar, { storageId: newStorageId });
+
+      const user = await t.run(async (ctx) => ctx.db.get(userId));
+      expect(user?.avatarStorageId).toBe(newStorageId);
+
+      const oldMeta = await t.run(async (ctx) => ctx.db.system.get(oldStorageId));
+      expect(oldMeta).toBeNull();
+
+      const newMeta = await t.run(async (ctx) => ctx.db.system.get(newStorageId));
+      expect(newMeta?._id).toBe(newStorageId);
+    });
   });
 
   describe('removeAvatar mutation', () => {
