@@ -1,6 +1,6 @@
 import { expect } from 'vitest';
 import { ConvexError } from 'convex/values';
-import type { AppErrorCode, AppErrorData } from '../lib/errors';
+import type { AppErrorCode, AppErrorData } from '../../convex/lib/errors';
 
 const isAppErrorData = (value: unknown): value is AppErrorData => {
   if (!value || typeof value !== 'object') return false;
