@@ -43,7 +43,7 @@ This specification details the implementation of project context awareness for V
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              Frontend Layer                                  │
+│                              Frontend Layer                                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  VellumChat.tsx                                                             │
 │  ├── projectId state (current context)                                      │
@@ -55,7 +55,7 @@ This specification details the implementation of project context awareness for V
                                         │ projectId
                                         ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            Backend API Layer                                 │
+│                            Backend API Layer                                │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  chat.ts                                                                    │
 │  ├── detectProject(message) → { projectId, confidence }                     │
@@ -63,7 +63,7 @@ This specification details the implementation of project context awareness for V
 │  ├── getCachedProjectContext(projectId) → Cached or null                    │
 │  ├── cacheProjectContext(projectId, context) → TTL 1hr                      │
 │  └── createStreamingChat(messages, projectId) → Inject context              │
-│                                                                              │
+│                                                                             │
 │  chatHistory.ts                                                             │
 │  ├── send(message, projectId) → Store with projectId                        │
 │  └── list(limit, projectId) → Filter by projectId                           │
@@ -72,32 +72,32 @@ This specification details the implementation of project context awareness for V
                                         │ projectId
                                         ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                            Data Access Layer                                 │
+│                            Data Access Layer                                │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  Access Control                    Cache Pattern                             │
-│  ├── getProjectRole()              ├── checkCache()                          │
-│  ├── canReadProject()              ├── saveToCache()                         │
-│  └── isProjectOwner()              └── invalidateCache()                     │
+│  Access Control                    Cache Pattern                            │
+│  ├── getProjectRole()              ├── checkCache()                         │
+│  ├── canReadProject()              ├── saveToCache()                        │
+│  └── isProjectOwner()              └── invalidateCache()                    │
 └─────────────────────────────────────────────────────────────────────────────┘
                                         │
                                         ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              Database Layer                                  │
+│                              Database Layer                                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  chatMessages                    projects                                    │
-│  ├── userId                       ├── _id                                    │
-│  ├── projectId (NEW)              ├── name                                   │
-│  ├── role                         ├── userId (owner)                         │
-│  ├── content                      └── stats                                  │
-│  └── createdAt                                                         │
-│                                                                              │
-│  entities                         facts                                      │
-│  ├── projectId                    ├── projectId                              │
-│  ├── name                         ├── entityId                                │
-│  ├── type                         ├── subject                                 │
-│  ├── status                       ├── predicate                               │
-│  └── aliases                      ├── object                                  │
-│                                    └── status                                 │
+│  chatMessages                    projects                                   │
+│  ├── userId                       ├── _id                                   │
+│  ├── projectId (NEW)              ├── name                                  │
+│  ├── role                         ├── userId (owner)                        │
+│  ├── content                      └── stats                                 │
+│  └── createdAt                                                              │
+│                                                                             │
+│  entities                         facts                                     │
+│  ├── projectId                    ├── projectId                             │
+│  ├── name                         ├── entityId                              │
+│  ├── type                         ├── subject                               │
+│  ├── status                       ├── predicate                             │
+│  └── aliases                      ├── object                                │
+│                                    └── status                               │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
