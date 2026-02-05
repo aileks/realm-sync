@@ -1,6 +1,5 @@
 import { v } from 'convex/values';
-import type { FunctionReference } from 'convex/server';
-import { internalAction, internalMutation, action } from './_generated/server';
+import { action, internalAction, internalMutation, internalQuery } from './_generated/server';
 import { internal, api } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import { apiError, configError, notFoundError } from './lib/errors';
@@ -118,71 +117,70 @@ type CanonContext = {
   formattedContext: string;
 };
 
-async function buildCanonContext(
-  ctx: {
-    runQuery: <T>(ref: unknown, args: unknown) => Promise<T>;
-  },
-  projectId: Id<'projects'>
-): Promise<CanonContext> {
-  type FactRecord = {
-    _id: Id<'facts'>;
-    status: string;
-    documentId: Id<'documents'>;
-    predicate: string;
-    object: string;
-    evidenceSnippet: string;
-  };
-
-  const entities = await ctx.runQuery<{ _id: Id<'entities'>; name: string; type: string }[]>(
-    api.entities.listByProject,
-    { projectId, status: 'confirmed' }
-  );
-
-  const entitiesWithFacts: CanonContextEntity[] = [];
+function formatCanonContext(entities: CanonContextEntity[]): string {
   let formattedContext = '';
-
   for (const entity of entities) {
-    const entityData = await ctx.runQuery<{
-      entity: { _id: Id<'entities'>; name: string; type: string };
-      facts: FactRecord[];
-    } | null>(api.entities.getWithFacts, { id: entity._id });
-    if (!entityData) continue;
-
-    const confirmedFacts = entityData.facts.filter((f: FactRecord) => f.status === 'confirmed');
-    if (confirmedFacts.length === 0) continue;
-
-    const factsWithDocs = await Promise.all(
-      confirmedFacts.map(async (fact: FactRecord) => {
-        const doc = await ctx.runQuery<{ title: string } | null>(api.documents.get, {
-          id: fact.documentId,
-        });
-        return {
-          id: fact._id,
-          predicate: fact.predicate,
-          object: fact.object,
-          evidence: fact.evidenceSnippet,
-          documentTitle: doc?.title ?? 'Unknown',
-        };
-      })
-    );
-
-    entitiesWithFacts.push({
-      id: entity._id,
-      name: entity.name,
-      type: entity.type,
-      facts: factsWithDocs,
-    });
-
     formattedContext += `\n## Entity: ${entity.name}\n`;
     formattedContext += `Type: ${entity.type}\n`;
     formattedContext += `Facts:\n`;
-    for (const fact of factsWithDocs) {
+    for (const fact of entity.facts) {
       formattedContext += `- ${fact.predicate} ${fact.object} [${fact.documentTitle}]\n`;
     }
   }
-
-  return { entities: entitiesWithFacts, formattedContext };
+  return formattedContext;
 }
+
+export const getDocumentForCheck = internalQuery({
+  args: { documentId: v.id('documents') },
+  handler: async (ctx, { documentId }) => {
+    return await ctx.db.get(documentId);
+  },
+});
+
+export const getCanonContext = internalQuery({
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, { projectId }): Promise<CanonContext> => {
+    const entities = await ctx.db
+      .query('entities')
+      .withIndex('by_project_status', (q) => q.eq('projectId', projectId).eq('status', 'confirmed'))
+      .collect();
+
+    const documents = await ctx.db
+      .query('documents')
+      .withIndex('by_project', (q) => q.eq('projectId', projectId))
+      .collect();
+    const documentTitleById = new Map(documents.map((doc) => [doc._id, doc.title]));
+
+    const entitiesWithFacts: CanonContextEntity[] = [];
+
+    for (const entity of entities) {
+      const confirmedFacts = await ctx.db
+        .query('facts')
+        .withIndex('by_entity', (q) => q.eq('entityId', entity._id).eq('status', 'confirmed'))
+        .collect();
+      if (confirmedFacts.length === 0) continue;
+
+      entitiesWithFacts.push({
+        id: entity._id,
+        name: entity.name,
+        type: entity.type,
+        facts: confirmedFacts.map((fact) => ({
+          id: fact._id,
+          predicate: fact.predicate,
+          object: fact.object,
+          evidence: fact.evidenceSnippet ?? '',
+          documentTitle:
+            fact.documentId ? (documentTitleById.get(fact.documentId) ?? 'Unknown') : 'Unknown',
+        })),
+      });
+    }
+
+    return {
+      entities: entitiesWithFacts,
+      formattedContext: formatCanonContext(entitiesWithFacts),
+    };
+  },
+});
 
 async function callCheckLLM(
   canonContext: string,
@@ -288,7 +286,7 @@ function normalizeCheckResult(raw: unknown): CheckResult {
 export const runCheck = internalAction({
   args: { documentId: v.id('documents') },
   handler: async (ctx, { documentId }): Promise<CheckResult> => {
-    const doc = await ctx.runQuery(api.documents.get, { id: documentId });
+    const doc = await ctx.runQuery(internal.checks.getDocumentForCheck, { documentId });
     // Gracefully handle deleted/empty documents (may have been deleted after scheduling)
     if (!doc || !doc.content) {
       return {
@@ -307,13 +305,9 @@ export const runCheck = internalAction({
       throw configError('MODEL', 'MODEL not configured');
     }
 
-    const canonContext = await buildCanonContext(
-      {
-        runQuery: <T>(ref: unknown, args: unknown) =>
-          ctx.runQuery(ref as FunctionReference<'query'>, args) as Promise<T>,
-      },
-      doc.projectId
-    );
+    const canonContext = await ctx.runQuery(internal.checks.getCanonContext, {
+      projectId: doc.projectId,
+    });
 
     if (!canonContext.formattedContext.trim()) {
       return {

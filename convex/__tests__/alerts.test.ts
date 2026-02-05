@@ -692,6 +692,24 @@ describe('alerts', () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       expect(project?.stats?.alertCount).toBe(0);
     });
+
+    it('preserves noteCount', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId } = await setupProjectWithAlert(t, userId);
+
+      await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        await ctx.db.patch(projectId, {
+          stats: { ...project!.stats!, noteCount: 4 },
+        });
+      });
+
+      await asUser.mutation(api.alerts.resolveAll, { projectId });
+
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.stats?.noteCount).toBe(4);
+    });
   });
 
   describe('dismissAll mutation', () => {
@@ -726,6 +744,24 @@ describe('alerts', () => {
           .collect();
       });
       expect(alerts.every((a) => a.status === 'dismissed')).toBe(true);
+    });
+
+    it('preserves noteCount', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+      const { projectId } = await setupProjectWithAlert(t, userId);
+
+      await t.run(async (ctx) => {
+        const project = await ctx.db.get(projectId);
+        await ctx.db.patch(projectId, {
+          stats: { ...project!.stats!, noteCount: 6 },
+        });
+      });
+
+      await asUser.mutation(api.alerts.dismissAll, { projectId });
+
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.stats?.noteCount).toBe(6);
     });
   });
 });
