@@ -25,7 +25,7 @@ describe('usage', () => {
 
     const result = await t.query(internal.usage.checkExtractionLimit, { userId });
     expect(result.allowed).toBe(true);
-    if (result.allowed) {
+    if (result.allowed && 'current' in result) {
       expect(result.current).toBe(0);
     }
   });
@@ -73,7 +73,7 @@ describe('usage', () => {
 
     const result = await t.query(internal.usage.checkChatLimit, { userId });
     expect(result.allowed).toBe(true);
-    if (result.allowed) {
+    if (result.allowed && 'current' in result) {
       expect(result.current).toBe(0);
     }
   });
