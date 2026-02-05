@@ -1,6 +1,6 @@
 import { convexTest } from 'convex-test';
 import { describe, it, expect } from 'vitest';
-import { internal } from '../_generated/api';
+import { api, internal } from '../_generated/api';
 import type { Id } from '../_generated/dataModel';
 import schema from '../schema';
 
@@ -98,6 +98,59 @@ async function setupProjectWithCanon(t: ReturnType<typeof convexTest>, userId: I
 }
 
 describe('checks', () => {
+  describe('runCheck action', () => {
+    it('returns cached alerts when canonical context exists', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId } = await setupAuthenticatedUser(t);
+      const asUser = t.withIdentity({ subject: userId });
+      const { projectId, documentId } = await setupProjectWithCanon(t, userId);
+
+      const canonContext = await t.query(internal.checks.getCanonContext, { projectId });
+      expect(canonContext.formattedContext.trim()).not.toBe('');
+
+      const doc = await asUser.query(api.documents.get, { id: documentId });
+      expect(doc?.content).toBeDefined();
+
+      const contentHash = await t.query(internal.llm.utils.computeHash, {
+        content: `check-v1:${canonContext.formattedContext}:${doc?.content ?? ''}`,
+      });
+
+      const cachedResult = {
+        alerts: [
+          {
+            type: 'contradiction' as const,
+            severity: 'warning' as const,
+            title: 'Cached continuity issue',
+            description: 'from cache',
+            evidence: [{ source: 'canon' as const, quote: 'cached quote' }],
+          },
+        ],
+        summary: { totalIssues: 1, errors: 0, warnings: 1, checkedEntities: ['Marcus'] },
+      };
+
+      await t.mutation(internal.llm.cache.saveToCache, {
+        inputHash: contentHash,
+        promptVersion: 'check-v1',
+        modelId: 'test-model',
+        response: cachedResult,
+      });
+
+      const originalKey = process.env.OPENROUTER_API_KEY;
+      const originalModel = process.env.MODEL;
+      process.env.OPENROUTER_API_KEY = 'test-key';
+      process.env.MODEL = 'test-model';
+
+      try {
+        const result = await asUser.action(api.checks.triggerCheck, { documentId });
+        expect(result.alerts).toHaveLength(1);
+        expect(result.alerts[0].title).toBe('Cached continuity issue');
+      } finally {
+        process.env.OPENROUTER_API_KEY = originalKey;
+        process.env.MODEL = originalModel;
+      }
+    });
+  });
+
   describe('createAlerts mutation', () => {
     it('creates alerts from check result', async () => {
       const t = convexTest(schema, getModules());
