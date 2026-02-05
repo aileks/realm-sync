@@ -66,6 +66,103 @@ async function requireEntityAccess(
   return entity;
 }
 
+const alertStatuses = ['open', 'resolved', 'dismissed'] as const;
+
+async function listProjectAlerts(
+  ctx: MutationCtx,
+  projectId: Id<'projects'>
+): Promise<Doc<'alerts'>[]> {
+  const alertGroups = await Promise.all(
+    alertStatuses.map(async (status) => {
+      return await ctx.db
+        .query('alerts')
+        .withIndex('by_project', (q) => q.eq('projectId', projectId).eq('status', status))
+        .collect();
+    })
+  );
+  return alertGroups.flat();
+}
+
+async function moveEntityNotes(
+  ctx: MutationCtx,
+  sourceId: Id<'entities'>,
+  targetId: Id<'entities'>
+): Promise<void> {
+  const notes = await ctx.db
+    .query('entityNotes')
+    .withIndex('by_entity', (q) => q.eq('entityId', sourceId))
+    .collect();
+
+  for (const note of notes) {
+    await ctx.db.patch(note._id, {
+      entityId: targetId,
+      updatedAt: Date.now(),
+    });
+  }
+}
+
+async function deleteEntityNotes(ctx: MutationCtx, entityId: Id<'entities'>): Promise<void> {
+  const notes = await ctx.db
+    .query('entityNotes')
+    .withIndex('by_entity', (q) => q.eq('entityId', entityId))
+    .collect();
+
+  for (const note of notes) {
+    await ctx.db.delete(note._id);
+  }
+}
+
+async function rewireAlertsForMerge(
+  ctx: MutationCtx,
+  projectId: Id<'projects'>,
+  sourceId: Id<'entities'>,
+  targetId: Id<'entities'>
+): Promise<void> {
+  const alerts = await listProjectAlerts(ctx, projectId);
+
+  for (const alert of alerts) {
+    if (!alert.entityIds.includes(sourceId)) continue;
+
+    const updatedEntityIds = [...new Set(alert.entityIds.map((id) => (id === sourceId ? targetId : id)))];
+    await ctx.db.patch(alert._id, { entityIds: updatedEntityIds });
+  }
+}
+
+async function cleanupAlertsForRemovedEntity(
+  ctx: MutationCtx,
+  projectId: Id<'projects'>,
+  removedEntityId: Id<'entities'>,
+  removedFactIds: Set<Id<'facts'>>
+): Promise<number> {
+  const alerts = await listProjectAlerts(ctx, projectId);
+  let removedOpenAlerts = 0;
+
+  for (const alert of alerts) {
+    const updatedEntityIds = alert.entityIds.filter((id) => id !== removedEntityId);
+    const updatedFactIds = alert.factIds.filter((id) => !removedFactIds.has(id));
+    const changed =
+      updatedEntityIds.length !== alert.entityIds.length ||
+      updatedFactIds.length !== alert.factIds.length;
+
+    if (!changed) continue;
+
+    if (updatedEntityIds.length === 0 && updatedFactIds.length === 0) {
+      await ctx.db.delete(alert._id);
+      if (alert.status === 'open') {
+        removedOpenAlerts++;
+      }
+      continue;
+    }
+
+    await ctx.db.patch(alert._id, {
+      entityIds: updatedEntityIds,
+      factIds: updatedFactIds,
+    });
+  }
+
+  return removedOpenAlerts;
+}
+
 export const create = mutation({
   args: {
     projectId: v.id('projects'),
@@ -179,6 +276,9 @@ export const merge = mutation({
     for (const fact of factsToUpdate) {
       await ctx.db.patch(fact._id, { entityId: targetId });
     }
+
+    await moveEntityNotes(ctx, sourceId, targetId);
+    await rewireAlertsForMerge(ctx, source.projectId, sourceId, targetId);
 
     await ctx.db.delete(sourceId);
 
@@ -333,9 +433,18 @@ export const remove = mutation({
       .collect();
 
     const nonRejectedCount = facts.filter((f) => f.status !== 'rejected').length;
+    const removedFactIds = new Set(facts.map((fact) => fact._id));
     for (const fact of facts) {
       await ctx.db.delete(fact._id);
     }
+
+    await deleteEntityNotes(ctx, id);
+    const removedOpenAlertCount = await cleanupAlertsForRemovedEntity(
+      ctx,
+      entity.projectId,
+      id,
+      removedFactIds
+    );
 
     await ctx.db.delete(id);
 
@@ -354,6 +463,7 @@ export const remove = mutation({
           ...stats,
           entityCount: Math.max(0, stats.entityCount - 1),
           factCount: Math.max(0, stats.factCount - nonRejectedCount),
+          alertCount: Math.max(0, stats.alertCount - removedOpenAlertCount),
         },
       });
     }
@@ -420,9 +530,18 @@ export const reject = mutation({
       .collect();
 
     const nonRejectedCount = facts.filter((f) => f.status !== 'rejected').length;
+    const removedFactIds = new Set(facts.map((fact) => fact._id));
     for (const fact of facts) {
       await ctx.db.delete(fact._id);
     }
+
+    await deleteEntityNotes(ctx, id);
+    const removedOpenAlertCount = await cleanupAlertsForRemovedEntity(
+      ctx,
+      entity.projectId,
+      id,
+      removedFactIds
+    );
 
     await ctx.db.delete(id);
 
@@ -441,6 +560,7 @@ export const reject = mutation({
           ...stats,
           entityCount: Math.max(0, stats.entityCount - 1),
           factCount: Math.max(0, stats.factCount - nonRejectedCount),
+          alertCount: Math.max(0, stats.alertCount - removedOpenAlertCount),
         },
       });
     }
