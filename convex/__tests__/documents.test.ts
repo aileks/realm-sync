@@ -132,6 +132,199 @@ describe('documents', () => {
     });
   });
 
+  describe('remove mutation', () => {
+    it('cascades delete to document facts and alerts', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const { projectId, documentId, factId, alertId } = await t.run(async (ctx) => {
+        const now = Date.now();
+        const projectId = await ctx.db.insert('projects', {
+          userId,
+          name: 'Cascade Project',
+          createdAt: now,
+          updatedAt: now,
+          stats: { documentCount: 1, entityCount: 1, factCount: 1, alertCount: 1, noteCount: 0 },
+        });
+
+        const documentId = await ctx.db.insert('documents', {
+          projectId,
+          title: 'To delete',
+          content: 'Canon text',
+          contentType: 'text',
+          orderIndex: 0,
+          wordCount: 2,
+          createdAt: now,
+          updatedAt: now,
+          processingStatus: 'completed',
+        });
+
+        const entityId = await ctx.db.insert('entities', {
+          projectId,
+          name: 'Marcus',
+          type: 'character',
+          aliases: [],
+          status: 'confirmed',
+          createdAt: now,
+          updatedAt: now,
+        });
+
+        const factId = await ctx.db.insert('facts', {
+          projectId,
+          entityId,
+          documentId,
+          subject: 'Marcus',
+          predicate: 'has',
+          object: 'blue eyes',
+          confidence: 1,
+          evidenceSnippet: 'Marcus has blue eyes.',
+          status: 'confirmed',
+          createdAt: now,
+        });
+
+        const alertId = await ctx.db.insert('alerts', {
+          projectId,
+          documentId,
+          factIds: [factId],
+          entityIds: [entityId],
+          type: 'contradiction',
+          severity: 'error',
+          title: 'Eye color mismatch',
+          description: 'desc',
+          evidence: [],
+          status: 'open',
+          createdAt: now,
+        });
+
+        return { projectId, documentId, factId, alertId };
+      });
+
+      await asUser.mutation(api.documents.remove, { id: documentId });
+
+      const doc = await t.run(async (ctx) => ctx.db.get(documentId));
+      expect(doc).toBeNull();
+
+      const fact = await t.run(async (ctx) => ctx.db.get(factId));
+      expect(fact).toBeNull();
+
+      const alert = await t.run(async (ctx) => ctx.db.get(alertId));
+      expect(alert).toBeNull();
+
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.stats?.documentCount).toBe(0);
+      expect(project?.stats?.factCount).toBe(0);
+      expect(project?.stats?.alertCount).toBe(0);
+    });
+
+    it('removes alerts in other documents when they reference removed facts', async () => {
+      const t = convexTest(schema, getModules());
+      const { userId, asUser } = await setupAuthenticatedUser(t);
+
+      const { projectId, removeDocId, keepDocId, keepFactId, alertId } = await t.run(async (ctx) => {
+        const now = Date.now();
+        const projectId = await ctx.db.insert('projects', {
+          userId,
+          name: 'Cross-ref Project',
+          createdAt: now,
+          updatedAt: now,
+          stats: { documentCount: 2, entityCount: 1, factCount: 2, alertCount: 1, noteCount: 0 },
+        });
+
+        const removeDocId = await ctx.db.insert('documents', {
+          projectId,
+          title: 'Old Canon',
+          content: 'Old detail',
+          contentType: 'text',
+          orderIndex: 0,
+          wordCount: 2,
+          createdAt: now,
+          updatedAt: now,
+          processingStatus: 'completed',
+        });
+
+        const keepDocId = await ctx.db.insert('documents', {
+          projectId,
+          title: 'New Chapter',
+          content: 'New detail',
+          contentType: 'text',
+          orderIndex: 1,
+          wordCount: 2,
+          createdAt: now,
+          updatedAt: now,
+          processingStatus: 'completed',
+        });
+
+        const entityId = await ctx.db.insert('entities', {
+          projectId,
+          name: 'Marcus',
+          type: 'character',
+          aliases: [],
+          status: 'confirmed',
+          createdAt: now,
+          updatedAt: now,
+        });
+
+        const removedFactId = await ctx.db.insert('facts', {
+          projectId,
+          entityId,
+          documentId: removeDocId,
+          subject: 'Marcus',
+          predicate: 'has',
+          object: 'blue eyes',
+          confidence: 1,
+          evidenceSnippet: 'blue eyes',
+          status: 'confirmed',
+          createdAt: now,
+        });
+
+        const keepFactId = await ctx.db.insert('facts', {
+          projectId,
+          entityId,
+          documentId: keepDocId,
+          subject: 'Marcus',
+          predicate: 'has',
+          object: 'brown eyes',
+          confidence: 1,
+          evidenceSnippet: 'brown eyes',
+          status: 'confirmed',
+          createdAt: now,
+        });
+
+        const alertId = await ctx.db.insert('alerts', {
+          projectId,
+          documentId: keepDocId,
+          factIds: [removedFactId, keepFactId],
+          entityIds: [entityId],
+          type: 'contradiction',
+          severity: 'error',
+          title: 'Color conflict',
+          description: 'desc',
+          evidence: [],
+          status: 'open',
+          createdAt: now,
+        });
+
+        return { projectId, removeDocId, keepDocId, keepFactId, alertId };
+      });
+
+      await asUser.mutation(api.documents.remove, { id: removeDocId });
+
+      const keptDoc = await t.run(async (ctx) => ctx.db.get(keepDocId));
+      expect(keptDoc).not.toBeNull();
+
+      const keptFact = await t.run(async (ctx) => ctx.db.get(keepFactId));
+      expect(keptFact).not.toBeNull();
+
+      const alert = await t.run(async (ctx) => ctx.db.get(alertId));
+      expect(alert).toBeNull();
+
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.stats?.documentCount).toBe(1);
+      expect(project?.stats?.factCount).toBe(1);
+      expect(project?.stats?.alertCount).toBe(0);
+    });
+  });
+
   describe('reorder mutation', () => {
     it('reorders documents', async () => {
       const t = convexTest(schema, getModules());

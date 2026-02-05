@@ -500,7 +500,7 @@ export const resolveAll = mutation({
     };
     await ctx.db.patch(projectId, {
       updatedAt: now,
-      stats: { ...stats, alertCount: 0, noteCount: 0 },
+      stats: { ...stats, alertCount: 0 },
     });
 
     return openAlerts.length;
@@ -542,7 +542,7 @@ export const dismissAll = mutation({
     };
     await ctx.db.patch(projectId, {
       updatedAt: now,
-      stats: { ...stats, alertCount: 0, noteCount: 0 },
+      stats: { ...stats, alertCount: 0 },
     });
 
     return openAlerts.length;

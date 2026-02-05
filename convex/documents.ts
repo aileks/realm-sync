@@ -186,6 +186,39 @@ export const remove = mutation({
       await ctx.storage.delete(doc.storageId);
     }
 
+    const facts = await ctx.db
+      .query('facts')
+      .withIndex('by_document', (q) => q.eq('documentId', id))
+      .collect();
+    const removedFactIds = new Set(facts.map((fact) => fact._id));
+    const removedNonRejectedFacts = facts.filter((fact) => fact.status !== 'rejected').length;
+
+    for (const fact of facts) {
+      await ctx.db.delete(fact._id);
+    }
+
+    const alertStatuses = ['open', 'resolved', 'dismissed'] as const;
+    const alertsByStatus = await Promise.all(
+      alertStatuses.map(async (status) => {
+        return await ctx.db
+          .query('alerts')
+          .withIndex('by_project', (q) => q.eq('projectId', doc.projectId).eq('status', status))
+          .collect();
+      })
+    );
+    const alerts = alertsByStatus.flat();
+
+    let removedOpenAlerts = 0;
+    for (const alert of alerts) {
+      const referencesRemovedFact = alert.factIds.some((factId) => removedFactIds.has(factId));
+      if (alert.documentId !== id && !referencesRemovedFact) continue;
+
+      if (alert.status === 'open') {
+        removedOpenAlerts++;
+      }
+      await ctx.db.delete(alert._id);
+    }
+
     const project = await ctx.db.get(doc.projectId);
     if (project) {
       const stats = project.stats ?? {
@@ -197,7 +230,12 @@ export const remove = mutation({
       };
       await ctx.db.patch(doc.projectId, {
         updatedAt: Date.now(),
-        stats: { ...stats, documentCount: Math.max(0, stats.documentCount - 1) },
+        stats: {
+          ...stats,
+          documentCount: Math.max(0, stats.documentCount - 1),
+          factCount: Math.max(0, stats.factCount - removedNonRejectedFacts),
+          alertCount: Math.max(0, stats.alertCount - removedOpenAlerts),
+        },
       });
     }
 

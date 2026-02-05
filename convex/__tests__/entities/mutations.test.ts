@@ -225,6 +225,52 @@ describe('entities mutations', () => {
         /different projects/i
       );
     });
+
+    it('moves entityNotes and rewires alert references on merge', async () => {
+      const projectId = await setupProject(t, userId, {
+        stats: { ...defaultStats(), entityCount: 2, factCount: 1, alertCount: 1 },
+      });
+      const documentId = await setupDocument(t, projectId);
+      const sourceId = await setupEntity(t, projectId, { name: 'Lord Snow' });
+      const targetId = await setupEntity(t, projectId, { name: 'Jon Snow', status: 'confirmed' });
+      const factId = await setupFact(t, { projectId, entityId: sourceId, documentId }, { status: 'confirmed' });
+
+      const noteId = await t.run(async (ctx) => {
+        return await ctx.db.insert('entityNotes', {
+          entityId: sourceId,
+          projectId,
+          userId,
+          content: 'Source note',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      });
+
+      const alertId = await t.run(async (ctx) => {
+        return await ctx.db.insert('alerts', {
+          projectId,
+          documentId,
+          factIds: [factId],
+          entityIds: [sourceId, targetId],
+          type: 'ambiguity',
+          severity: 'warning',
+          title: 'Potential duplicate',
+          description: 'Merge candidate',
+          evidence: [],
+          status: 'open',
+          createdAt: Date.now(),
+        });
+      });
+
+      await asUser.mutation(api.entities.merge, { sourceId, targetId });
+
+      const note = await t.run(async (ctx) => ctx.db.get(noteId));
+      expect(note?.entityId).toBe(targetId);
+
+      const alert = await t.run(async (ctx) => ctx.db.get(alertId));
+      expect(alert?.entityIds).toEqual([targetId]);
+      expect(alert?.factIds).toEqual([factId]);
+    });
   });
 
   describe('confirm', () => {
@@ -291,6 +337,53 @@ describe('entities mutations', () => {
       expect(project?.stats?.entityCount).toBe(0);
       expect(project?.stats?.factCount).toBe(0);
     });
+
+    it('deletes related entityNotes and alerts when rejecting entity', async () => {
+      const projectId = await setupProject(t, userId, {
+        stats: { ...defaultStats(), entityCount: 1, factCount: 1, alertCount: 1 },
+      });
+      const documentId = await setupDocument(t, projectId);
+      const entityId = await setupEntity(t, projectId, { name: 'To Reject' });
+      const factId = await setupFact(t, { projectId, entityId, documentId }, { status: 'confirmed' });
+
+      const noteId = await t.run(async (ctx) => {
+        return await ctx.db.insert('entityNotes', {
+          entityId,
+          projectId,
+          userId,
+          content: 'Needs cleanup',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      });
+
+      const alertId = await t.run(async (ctx) => {
+        return await ctx.db.insert('alerts', {
+          projectId,
+          documentId,
+          factIds: [factId],
+          entityIds: [entityId],
+          type: 'contradiction',
+          severity: 'error',
+          title: 'Broken ref',
+          description: 'Will dangle after reject',
+          evidence: [],
+          status: 'open',
+          createdAt: Date.now(),
+        });
+      });
+
+      await asUser.mutation(api.entities.reject, { id: entityId });
+
+      const note = await t.run(async (ctx) => ctx.db.get(noteId));
+      expect(note).toBeNull();
+
+      const alert = await t.run(async (ctx) => ctx.db.get(alertId));
+      expect(alert).toBeNull();
+
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.stats?.alertCount).toBe(0);
+    });
   });
 
   describe('remove', () => {
@@ -343,6 +436,67 @@ describe('entities mutations', () => {
       const project = await t.run(async (ctx) => ctx.db.get(projectId));
       expect(project?.stats?.entityCount).toBe(0);
       expect(project?.stats?.factCount).toBe(0);
+    });
+
+    it('keeps alerts with remaining refs after entity removal', async () => {
+      const projectId = await setupProject(t, userId, {
+        stats: { ...defaultStats(), entityCount: 2, factCount: 2, alertCount: 1 },
+      });
+      const documentId = await setupDocument(t, projectId);
+
+      const removedEntityId = await setupEntity(t, projectId, { name: 'Remove Me' });
+      const keptEntityId = await setupEntity(t, projectId, { name: 'Keep Me', status: 'confirmed' });
+
+      const removedFactId = await setupFact(
+        t,
+        { projectId, entityId: removedEntityId, documentId },
+        { status: 'confirmed' }
+      );
+      const keptFactId = await setupFact(
+        t,
+        { projectId, entityId: keptEntityId, documentId },
+        { status: 'confirmed' }
+      );
+
+      const noteId = await t.run(async (ctx) => {
+        return await ctx.db.insert('entityNotes', {
+          entityId: removedEntityId,
+          projectId,
+          userId,
+          content: 'Delete me',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      });
+
+      const alertId = await t.run(async (ctx) => {
+        return await ctx.db.insert('alerts', {
+          projectId,
+          documentId,
+          factIds: [removedFactId, keptFactId],
+          entityIds: [removedEntityId, keptEntityId],
+          type: 'timeline',
+          severity: 'warning',
+          title: 'Mixed refs',
+          description: 'Should survive',
+          evidence: [],
+          status: 'open',
+          createdAt: Date.now(),
+        });
+      });
+
+      await asUser.mutation(api.entities.remove, { id: removedEntityId });
+
+      const alert = await t.run(async (ctx) => ctx.db.get(alertId));
+      expect(alert).not.toBeNull();
+      expect(alert?.entityIds).toEqual([keptEntityId]);
+      expect(alert?.factIds).toEqual([keptFactId]);
+
+      const note = await t.run(async (ctx) => ctx.db.get(noteId));
+      expect(note).toBeNull();
+
+      const project = await t.run(async (ctx) => ctx.db.get(projectId));
+      expect(project?.stats?.alertCount).toBe(1);
     });
   });
 
