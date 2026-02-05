@@ -15,6 +15,12 @@ crons.hourly(
   internal.cleanup.cleanupExpiredChatStreams
 );
 
+crons.daily(
+  'reset stale usage counters',
+  { hourUTC: 2, minuteUTC: 30 },
+  internal.usage.resetStaleUsageCounters
+);
+
 crons.daily('reset demo account', { hourUTC: 8, minuteUTC: 0 }, internal.seed.resetDemoAccount);
 
 export default crons;
