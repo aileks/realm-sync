@@ -1,5 +1,6 @@
 import { internalQuery, internalMutation } from './_generated/server';
 import { v } from 'convex/values';
+import { internal } from './_generated/api';
 import { checkUsageLimit, shouldResetUsage } from './lib/subscription';
 
 export const checkExtractionLimit = internalQuery({
@@ -97,12 +98,15 @@ export const incrementChatUsage = internalMutation({
 });
 
 export const resetStaleUsageCounters = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    const users = await ctx.db.query('users').collect();
+  args: { cursor: v.optional(v.string()) },
+  handler: async (ctx, { cursor }) => {
+    const page = await ctx.db.query('users').paginate({
+      cursor: cursor ?? null,
+      numItems: 250,
+    });
     let resetCount = 0;
 
-    for (const user of users) {
+    for (const user of page.page) {
       if (!user.usage || !shouldResetUsage(user)) continue;
 
       await ctx.db.patch(user._id, {
@@ -115,6 +119,16 @@ export const resetStaleUsageCounters = internalMutation({
       resetCount++;
     }
 
-    return { resetCount };
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(0, internal.usage.resetStaleUsageCounters, {
+        cursor: page.continueCursor,
+      });
+    }
+
+    return {
+      resetCount,
+      isDone: page.isDone,
+      continueCursor: page.isDone ? undefined : page.continueCursor,
+    };
   },
 });
