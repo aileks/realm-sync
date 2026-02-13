@@ -36,8 +36,8 @@ All AI features are powered by [OpenRouter](https://openrouter.ai), giving you a
 ## Quick Start
 
 ```bash
-# clone the repo
-git clone https://github.com/tanstack/realm-sync.git
+# Clone the repo
+git clone https://github.com/aileks/realm-sync.git
 
 # Install dependencies
 cd realm-sync && pnpm install
